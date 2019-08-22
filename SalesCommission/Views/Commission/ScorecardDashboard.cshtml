@@ -1,0 +1,742 @@
+﻿@model SalesCommission.Models.CommissionModel
+
+@{
+    ViewBag.Title = "Scorecard Dashboard";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+
+    decimal StoreTotalprevious2Units = 0;
+    decimal StoreTotalpreviousUnits = 0;
+    decimal StoreTotalhoursWorked = 0;
+    decimal StoreTotalunitGoal = 0;
+    decimal StoreTotalUnitsValidated = 0;
+
+    double StoreTotalAfterSalesPerDeal = 0;
+    double StoreTotaltradePercentage = 0;
+    double StoreTotalbppPercentage = 0;
+    double StoreTotalfinancePercentage = 0;
+    double StoreTotalsvcContractPercentage = 0;
+    decimal StoreTotalcurrentUnits = 0;
+
+    decimal StoreTotalbppCount = 0;
+    decimal StoreTotalfinanceCount = 0;
+    decimal StoreTotalsvcContractCount = 0;
+    decimal StoreTotaltradeCount = 0;
+    decimal StoreOverallTotalGrossProfit = 0;
+
+}
+<style type="text/css">
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    
+        .opps{
+            display:none;
+            font-size:10px;
+        }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        .hide-print {
+            display:none
+        }
+
+        @@page {
+            size: portrait;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Score Card Dashboard</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+            {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    }
+</div>
+
+@if (Model.Associates != null)
+{
+    var autoMallName = "";
+    autoMallName = SalesCommission.Business.Enums.Stores.First(o => o.StoreId == Model.StoreId).Name;
+
+
+
+    var departments = Model.Associates.Select(x => x.AssociateDepartment).Distinct().ToList();
+
+    System.Globalization.DateTimeFormatInfo mfi = new System.Globalization.DateTimeFormatInfo();
+
+    var currentDate = new DateTime(Model.YearId, Model.MonthId, 1);
+
+    var currentMonthName = mfi.GetMonthName(currentDate.Month).ToString();
+    var previousMonthName = mfi.GetMonthName(currentDate.AddMonths(-1).Month).ToString();
+    var previous2MonthName = mfi.GetMonthName(currentDate.AddMonths(-2).Month).ToString();
+
+    <div class="row">
+        <div class="col-md-10">
+            <h3>Sales Associate Score Cards for @autoMallName</h3>
+        </div>
+        @if ((bool)Session["IsCommissionAdmin"] == true)
+        {
+            <div class="col-md-2 text-right" style="margin-top:10px;">
+                <input type="button" class="btn btn-primary" value="Print Summary" onclick="window.print();return false;" />
+            </div>            
+        }
+    </div>
+
+    if (departments.Count > 1)
+    {
+        <div class="row">
+            <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
+                <strong>Show Sales Teams:</strong>
+                @foreach (var department in departments)
+                {
+                    var labelName = department;
+
+                    try
+                    {
+                        labelName = Model.Associates.Find(x => x.AssociateDepartment == department).AssociateDepartmentDescription;
+                    }
+                    catch(Exception ex)
+                    {
+                        //do nothing
+                    }
+
+                    <label style="padding-left:10px;"><input type="checkbox" id="chk-@department" name="chk-@department" checked  />@labelName</label>
+                    <script>
+                        $('#chk-@department').change(function () {
+                                if (this.checked) {
+                                    $('#table-@department').show();
+                                    $('#header-@department').show();
+                                }
+                                else {
+                                    $('#table-@department').hide();
+                                    $('#header-@department').hide();
+                                }
+                            });
+                    </script>
+
+
+                }
+            </div>
+        </div>
+    }
+
+    <div class="row">
+
+
+@foreach (var department in departments)
+{
+    var departmentAssociates = Model.Associates.FindAll(x => x.AssociateDepartment == department);
+    var departmentName = department;
+
+    if(departmentAssociates.Count > 0)
+    {
+        departmentName = departmentAssociates[0].AssociateDepartmentDescription;
+    }
+
+    <h3 id="header-@department">@departmentName</h3>
+        <table class="table table-bordered table-striped" style="font-size:12px" id="table-@department">
+            <thead>
+    @{
+        decimal Totalprevious2Units = 0;
+        decimal TotalpreviousUnits = 0;
+        decimal TotalhoursWorked = 0;
+
+        double TotalAfterSalesPerDeal = 0;
+        double TotaltradePercentage = 0;
+        double TotalbppPercentage = 0;
+        double TotalfinancePercentage = 0;
+        double TotalsvcContractPercentage = 0;
+        decimal TotalcurrentUnits = 0;
+        decimal TotalUnitsValidated = 0;
+        decimal TotalunitGoal = 0;
+
+        decimal TotalbppCount = 0;
+        decimal TotalfinanceCount = 0;
+        decimal TotalsvcContractCount = 0;
+        decimal TotaltradeCount = 0;
+        decimal OverallTotalGrossProfit = 0;
+    }
+                <tr style="background-color:#d9edf7">
+                    <th style="width:200px;">Associate</th>
+                    @*<th class="text-center">Dept</th>*@
+                    <th class="text-center">Hire Date</th>
+                    <th class="text-center">Cert Level</th>
+                    <th class="text-center">@previous2MonthName Mo Units</th>
+                    <th class="text-center" style="border-right: 4px double #808080">@previousMonthName Mo Units</th>
+                    <th class="text-center">MTD Hours Worked</th>
+                    <th class="text-center">MTD @currentMonthName Units</th>
+                    <th class="text-center">@currentMonthName Units Val</th>
+                    <th class="text-center">@currentMonthName Goal</th>
+                    <th class="text-center">@currentMonthName BPP Units / %</th>
+                    <th class="text-center">@currentMonthName Finance Units / %</th>
+                    <th class="text-center">@currentMonthName Svc Cnt Units / %</th>
+                    <th class="text-center">@currentMonthName Trade Units / %</th>                    
+                    <th class="text-center" style="border-right: 4px double #808080">AfterSale $ per Unit</th>
+                    <th class="text-center"><input id="" type="button" value="Details" class="btn btn-primary btnToggleOpps" style="padding: 0px 5px;float:right" />@currentMonthName Opp / %</th>
+                    <th class="text-center opps" style="font-size:12px;">Phone<br/>Sold</th>
+                    <th class="text-center opps" style="font-size:12px;">Int<br />Sold</th>
+                    <th class="text-center opps" style="font-size:12px;">Walkin<br />Sold</th>
+                    <th class="text-center opps" style="font-size:12px;">Appt<br/>Comp</th>
+                </tr>
+            </thead>
+            <tbody>
+
+
+                @foreach (var associate in departmentAssociates)
+                {
+                    var payLevelName = "";
+
+                    foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                    {
+                        if (associate.AssociateLevel == level.PayLevelID)
+                        {
+                            payLevelName = level.Name;
+                            break;
+                        }
+                    }
+
+                    decimal currentUnits = 0;
+                    decimal previousUnits = 0;
+                    decimal previous2Units = 0;
+                    decimal hoursWorked = 0;
+
+                    if (associate.AssociateUnits != null && associate.AssociateUnits.Count > 0)
+                    {
+                        var sortedUnits = associate.AssociateUnits.OrderByDescending(x => x.UnitDate).ToList();
+
+                        if (@sortedUnits[0] != null)
+                        {
+                            currentUnits = sortedUnits[0].UnitCount;
+                        }
+
+                        if (@sortedUnits[1] != null)
+                        {
+                            previousUnits = sortedUnits[1].UnitCount;
+                        }
+
+                        if (@sortedUnits[2] != null)
+                        {
+                            previous2Units = sortedUnits[2].UnitCount;
+                        }
+
+                    }
+
+                    TotalcurrentUnits += currentUnits;
+                    Totalprevious2Units += previous2Units;
+                    TotalpreviousUnits += previousUnits;
+
+                    if (associate.AssociateHours != null)
+                    {
+                        hoursWorked = associate.AssociateHours[0].Hours;
+                    }
+
+                    TotalhoursWorked += hoursWorked;
+
+                    decimal bppCount = 0;
+                    decimal financeCount = 0;
+                    decimal svcContractCount = 0;
+                    decimal tradeCount = 0;
+
+                    decimal unitGoal = 0;
+                    decimal bppGoal = 0;
+                    decimal financeGoal = 0;
+                    decimal svcContractGoal = 0;
+                    decimal tradeGoal = 0;
+
+                    decimal bppPercentage = 0;
+                    decimal financePercentage = 0;
+                    decimal svcContractPercentage = 0;
+                    decimal tradePercentage = 0;
+
+                    decimal totalValidated = 0;
+
+                    double TotalAvgGrossProfit = 0;
+                    double AfterSalesPerDeal = 0;
+
+                    if (associate.AssociateDealCounts != null)
+                    {
+                        bppCount = associate.AssociateDealCounts.BPPCount;
+                        financeCount = associate.AssociateDealCounts.FinanceCount;
+                        svcContractCount = associate.AssociateDealCounts.ServiceContractCount;
+                        tradeCount = associate.AssociateDealCounts.TradeCount;
+
+                        TotalbppCount += bppCount;
+                        TotalfinanceCount += financeCount;
+                        TotalsvcContractCount += svcContractCount;
+                        TotaltradeCount += tradeCount;
+
+                        if (currentUnits > 0)
+                        {
+                            bppPercentage = bppCount / currentUnits;
+                            financePercentage = financeCount / currentUnits;
+                            svcContractPercentage = svcContractCount / currentUnits;
+                            tradePercentage = tradeCount / currentUnits;
+                        }
+
+                    }
+
+                    if (associate.AssociateDeals.Count > 0)
+                    {
+
+                        decimal aftermarketPrice = 0;
+                        decimal aftermarketCost = 0;
+                        decimal aftermarketProfit = 0;
+                        decimal TotalGrossProfit = 0;
+                        decimal afterSalesAmount = 0;
+
+                        foreach (var dealDetail in associate.AssociateDeals)
+                        {
+                            var dealValue = dealDetail.NewDealCount + dealDetail.UsedDealCount;
+                            var approved = Model.DealApprovals.FindAll(x => x.DealKey == dealDetail.DealKey);
+                            if (approved != null && approved.Count > 0)
+                            {
+
+                                totalValidated += dealDetail.NewDealCount + dealDetail.UsedDealCount;
+                            }
+
+
+                            if (dealDetail.FinanceIncomeAmount > 0)
+                            {
+                                afterSalesAmount += dealDetail.FinanceIncomeAmount * dealValue;
+                            }
+                            if (dealDetail.MaintenanceContractAmount > 0)
+                            {
+                                afterSalesAmount += dealDetail.MaintenanceContractAmount * dealValue;
+                            }
+                            if (dealDetail.ServiceContractAmount > 0)
+                            {
+                                afterSalesAmount += dealDetail.ServiceContractAmount * dealValue;
+                            }
+                            if (dealDetail.GAPAmount > 0)
+                            {
+                                afterSalesAmount += dealDetail.GAPAmount * dealValue;
+                            }
+                            if (dealDetail.BPPAmount > 0)
+                            {
+                                afterSalesAmount += dealDetail.BPPAmount * dealValue;
+                            }
+
+                            if (dealDetail.AftermarketCount > 0)
+                            {
+                                var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(dealDetail.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
+                                foreach (var deal in aftermarketItems)
+                                {
+
+                                    if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                                    {
+                                        if (deal.AftermarketId == 16 && deal.AftermarketName == "LEASE FEE")
+                                        {
+                                            //DO NOT ADD TO THE TOTALS
+                                        }
+                                        else
+                                        {
+                                            aftermarketPrice += deal.AftermarketPrice;
+                                            aftermarketCost += deal.AftermarketCost;
+                                            aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost) * dealValue;
+                                        }
+                                    }
+                                    else if (deal.AftermarketId == 1)
+                                    {
+                                        afterSalesAmount += deal.AftermarketPrice * dealValue;
+                                    }
+                                    else if (deal.AftermarketId == 20)
+                                    {
+                                        //MSIDeal = true;
+                                    }
+                                }
+
+                            }
+                        }
+
+                        TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+                        OverallTotalGrossProfit += TotalGrossProfit;
+                        AfterSalesPerDeal = (double)TotalGrossProfit / (double)associate.AssociateDeals.Count;//currentUnits;
+
+                    }
+
+                    var status = "Not Saved";
+                    var associateScorecards = SalesCommission.Business.SqlQueries.GetAssociateScoreCardHistoryByDate(associate.AssociateSSN, Model.YearId, Model.MonthId);
+                    if (associateScorecards != null && associateScorecards.Count > 0)
+                    {
+                        var scorecard = associateScorecards[0];
+
+                        if (scorecard.UpdateUser != null && scorecard.UpdateUser != "")
+                        {
+                            status = "Saved by " + scorecard.UpdateUser + " on " + scorecard.UpdateDate.ToShortDateString();
+                        }
+                        if (scorecard.FinalizeUser != null && scorecard.FinalizeUser != "")
+                        {
+                            status = "Finalized by " + scorecard.FinalizeUser + " on " + scorecard.FinalizeDate.ToShortDateString();
+                        }
+                        if (scorecard.ApprovalUser != null && scorecard.ApprovalUser != "")
+                        {
+                            status = "Approved by " + scorecard.ApprovalUser + " on " + scorecard.ApprovalDate.ToShortDateString();
+                        }
+                    }
+
+                    if (associate.AssociateGoals != null && associate.AssociateGoals.Count > 0)
+                    {
+                        var associateGoal = associate.AssociateGoals[0];
+
+                        unitGoal = associateGoal.DealCount;
+                        //    bppGoal = associateGoal.BPPCount;
+                        //    financeGoal = associateGoal.FinanceCount;
+                        //    svcContractGoal = associateGoal.ServiceCount;
+                        //    tradeGoal = associateGoal.TradeCount;
+
+                        //    if (associateGoal.BPPCount > 0)
+                        //    {
+                        //        bppPercentage = bppCount / associateGoal.BPPCount;
+                        //    }
+
+                        //    if(associateGoal.FinanceCount > 0)
+                        //    {
+                        //        financePercentage = financeCount / associateGoal.FinanceCount;
+                        //    }
+
+                        //    if (associateGoal.ServiceCount > 0)
+                        //    {
+                        //        svcContractPercentage = svcContractCount / associateGoal.ServiceCount;
+                        //    }
+
+                        //    if (associateGoal.TradeCount > 0)
+                        //    {
+                        //        tradePercentage = tradeCount / associateGoal.TradeCount;
+                        //    }
+
+
+
+
+                    }
+
+
+                    decimal PhoneLeadCount = 0;
+                    decimal WalkInLeadCount = 0;
+                    decimal InternetLeadCount = 0;
+
+                    decimal PhoneLeadSoldCount = 0;
+                    decimal WalkInLeadSoldCount = 0;
+                    decimal InternetLeadSoldCount = 0;
+
+                    decimal PhoneLeadSoldPercent = 0;
+                    decimal WalkInLeadSoldPercent = 0;
+                    decimal InternetLeadSoldPercent = 0;
+
+
+                    var VinName = "";
+                    var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+                    var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+                    if (associateUserInfo != null)
+                    {
+                        VinName = associateUserInfo.VinName;
+                    }
+
+                    double TotalLeadCount = 0;
+                    double TotalLeadSoldCount = 0;
+                    double TotalLeadSoldPercent = 0;
+
+                    if (Model.AssociateLeads != null)
+                    {
+                        var associateName = associate.AssociateFullName;
+
+                        var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                        var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                        var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                        if (VinName != null && VinName != "")
+                        {
+                            filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()) && x.LeadCreatedEastTime >= currentDate);
+                        }
+                        else
+                        {
+                            filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName) && x.LeadCreatedEastTime >= currentDate);
+                        }
+
+
+                        var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+                        PhoneLeadCount = phoneLeads.Count;
+                        PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                        if (PhoneLeadCount > 0)
+                        {
+                            PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                        }
+
+                        var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+                        WalkInLeadCount = walkinLeads.Count;
+                        WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (WalkInLeadCount > 0)
+                        {
+                            WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                        }
+
+                        var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet");
+                        InternetLeadCount = internetLeads.Count;
+                        InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (InternetLeadCount > 0)
+                        {
+                            InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                        }
+
+                        TotalLeadCount = filteredLeads.Count;
+                        TotalLeadSoldCount = filteredLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (TotalLeadCount > 0)
+                        {
+                            TotalLeadSoldPercent = TotalLeadSoldCount / TotalLeadCount;
+                        }
+                    }
+
+                    decimal currentAppointmentCount = 0;
+                    decimal currentAppointmentCompleteCount = 0;
+                    decimal currentAppointmentCompletePercent = 0;
+
+                    if (associate.AssociateAppointments != null)
+                    {
+                        var associateName = associate.AssociateFullName;
+
+                        var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                        var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                        var filteredAppointments = new List<SalesCommission.Models.AssociateAppointment>();
+
+                        if (VinName != null && VinName != "")
+                        {
+                            filteredAppointments = associate.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()) && x.AppointmentStartUTCDate >= currentDate);
+                        }
+                        else
+                        {
+                            filteredAppointments = associate.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(lastName) && x.AssociateName.ToLower().Contains(partialFirstName) && x.AppointmentStartUTCDate >= currentDate);
+
+                        }
+                        
+                        var currentAppointments = filteredAppointments.FindAll(x => x.AppointmentStartUTCDate >= currentDate);
+                        currentAppointmentCount = currentAppointments.Count;
+                        currentAppointmentCompleteCount = currentAppointments.FindAll(x => x.AppointmentStatus.ToLower() == "completed").Count;
+
+                        if (currentAppointmentCount > 0)
+                        {
+                            currentAppointmentCompletePercent = currentAppointmentCompleteCount / currentAppointmentCount;
+                        }
+
+                    }
+
+
+
+                    <tr>
+                        <td class="">@associate.AssociateFullName<br/><a class="hide-print" href="@applicationPath/Commission/ScoreCard/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">Score Card</a><br/>                        
+                            @{ 
+                                var color = "";
+                                if (status == "Not Saved")
+                                {
+                                    color = "color:red";
+                                }
+                            }
+                            <span class="hide-print" style="font-size:11px; @color">
+                                @status
+                            </span>
+                        </td>
+                        @*<td class="text-center">@associate.AssociateDepartment</td>*@
+                        <td class="text-center">@associate.AssociateHireDate.ToShortDateString()</td>
+                        <td class="text-center">@payLevelName</td>
+                        <td class="text-center">@previous2Units</td>
+                        <td class="text-center" style="border-right: 4px double #808080">@previousUnits</td>
+                        <td class="text-center">@hoursWorked</td>
+                        <td class="text-center">@currentUnits</td>
+                        <td class="text-center">@totalValidated</td>
+                        <td class="text-center">@unitGoal</td>
+                        <td class="text-center">@bppCount of @currentUnits<br/><b>@bppPercentage.ToString("P", rev)</b></td>
+                        <td class="text-center">@financeCount of @currentUnits<br/><b>@financePercentage.ToString("P", rev)</b></td>
+                        <td class="text-center">@svcContractCount of @currentUnits<br/><b>@svcContractPercentage.ToString("P", rev)</b></td>
+                        <td class="text-center">@tradeCount of @currentUnits<br/><b>@tradePercentage.ToString("P", rev)</b></td>                        
+                        <td class="text-center" style="border-right: 4px double #808080"><a href="@applicationPath/Reports/AfterSalesAssociatesFilter/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId" target="_blank">@AfterSalesPerDeal.ToString("C", rev)</a></td>
+                        <td class="text-center">@TotalLeadSoldCount of @TotalLeadCount<br /><b>@TotalLeadSoldPercent.ToString("P", rev)</b></td>
+                        <td class="text-center opps">@PhoneLeadSoldCount of @PhoneLeadCount<br /><strong>@PhoneLeadSoldPercent.ToString("P", rev)</strong></td>
+                        <td class="text-center opps">@InternetLeadSoldCount of @InternetLeadCount<br /><strong>@InternetLeadSoldPercent.ToString("P", rev)</strong></td>
+                        <td class="text-center opps">@WalkInLeadSoldCount of @WalkInLeadCount<br /><strong>@WalkInLeadSoldPercent.ToString("P", rev)</strong></td>
+                        <td class="text-center opps">@currentAppointmentCompleteCount of @currentAppointmentCount<br /><strong>@currentAppointmentCompletePercent.ToString("P", rev)</strong></td>                        
+                    </tr>
+
+                                    TotalUnitsValidated += totalValidated;
+                                    TotalunitGoal += unitGoal;
+                        }
+            </tbody>
+            <tfoot>
+                @{ 
+                    if (TotalcurrentUnits > 0)
+                    {
+                        TotalbppPercentage = (double)TotalbppCount / (double)TotalcurrentUnits;
+                        TotalfinancePercentage = (double)TotalfinanceCount / (double)TotalcurrentUnits;
+                        TotalsvcContractPercentage = (double)TotalsvcContractCount / (double)TotalcurrentUnits;
+                        TotaltradePercentage = (double)TotaltradeCount / (double)TotalcurrentUnits;
+
+                        TotalAfterSalesPerDeal = (double)OverallTotalGrossProfit / (double)TotalcurrentUnits;
+                    }
+                }
+
+                <tr style="background-color:#d9edf7">
+                    <th colspan="3">@departmentName Totals</th>
+                    <th class="text-center">@Totalprevious2Units</th>
+                    <th class="text-center" style="border-right: 4px double #808080">@TotalpreviousUnits</th>
+                    <th class="text-center">@TotalhoursWorked</th>
+                    <th class="text-center">@TotalcurrentUnits</th>
+                    <th class="text-center">@TotalUnitsValidated</th>
+                    <th class="text-center">@TotalunitGoal</th>
+                    <th class="text-center">@TotalbppCount of @TotalcurrentUnits<br /><b>@TotalbppPercentage.ToString("P", rev)</b></th>
+                    <th class="text-center">@TotalfinanceCount of @TotalcurrentUnits<br /><b>@TotalfinancePercentage.ToString("P", rev)</b></th>
+                    <th class="text-center">@TotalsvcContractCount of @TotalcurrentUnits<br /><b>@TotalsvcContractPercentage.ToString("P", rev)</b></th>
+                    <th class="text-center">@TotaltradeCount of @TotalcurrentUnits<br /><b>@TotaltradePercentage.ToString("P", rev)</b></th>
+                    <th class="text-center" style="border-right: 4px double #808080">@TotalAfterSalesPerDeal.ToString("C", rev)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center opps"></th>
+                    <th class="text-center opps"></th>
+                    <th class="text-center opps"></th>
+                    <th class="text-center opps"></th>
+                </tr>
+            </tfoot>
+        </table>
+
+                        StoreTotalprevious2Units += Totalprevious2Units;
+                        StoreTotalpreviousUnits += TotalpreviousUnits;
+                        StoreTotalhoursWorked += TotalhoursWorked;
+                        StoreTotalcurrentUnits += TotalcurrentUnits;
+                        StoreTotalUnitsValidated += TotalUnitsValidated;
+                        StoreTotalunitGoal += TotalunitGoal;
+                        StoreTotalbppCount += TotalbppCount;
+                        StoreTotalfinanceCount += TotalfinanceCount;
+                        StoreTotalsvcContractCount += TotalsvcContractCount;
+                        StoreTotaltradeCount += TotaltradeCount;
+                        StoreOverallTotalGrossProfit += OverallTotalGrossProfit;
+
+
+                    }
+        @if (departments.Count > 1)
+        {
+            StoreTotalAfterSalesPerDeal = (double)StoreOverallTotalGrossProfit / (double)StoreTotalcurrentUnits;
+
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead style="background-color:#d9edf7">
+                    <tr style="background-color:#d9edf7">
+                        <th style="width:325px;"></th>                        
+                        <th class="text-center">@previous2MonthName Mo Units</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@previousMonthName Mo Units</th>
+                        <th class="text-center">MTD Hours Worked</th>
+                        <th class="text-center">MTD @currentMonthName Units</th>
+                        <th class="text-center">@currentMonthName Units Val</th>
+                        <th class="text-center">@currentMonthName Goal</th>
+                        <th class="text-center">@currentMonthName BPP Units / %</th>
+                        <th class="text-center">@currentMonthName Finance Units / %</th>
+                        <th class="text-center">@currentMonthName Svc Cnt Units / %</th>
+                        <th class="text-center">@currentMonthName Trade Units / %</th>                        
+                        <th class="text-center" style="border-right: 4px double #808080">AfterSale $ per Unit</th>
+                        <th class="text-center">@currentMonthName Opp / %</th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                    </tr>
+                </thead>
+                <tfoot style="background-color:#d9edf7">
+                    <tr style="background-color:#d9edf7">
+                        <th>Store Totals</th>
+                        <th class="text-center">@StoreTotalprevious2Units</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@StoreTotalpreviousUnits</th>
+                        <th class="text-center">@StoreTotalhoursWorked</th>
+                        <th class="text-center">@StoreTotalcurrentUnits</th>
+                        <th class="text-center">@StoreTotalUnitsValidated</th>
+                        <th class="text-center">@StoreTotalunitGoal</th>
+                        <th class="text-center">@StoreTotalbppCount of @StoreTotalcurrentUnits<br /><b>@StoreTotalbppPercentage.ToString("P", rev)</b></th>
+                        <th class="text-center">@StoreTotalfinanceCount of @StoreTotalcurrentUnits<br /><b>@StoreTotalfinancePercentage.ToString("P", rev)</b></th>
+                        <th class="text-center">@StoreTotalsvcContractCount of @StoreTotalcurrentUnits<br /><b>@StoreTotalsvcContractPercentage.ToString("P", rev)</b></th>
+                        <th class="text-center">@StoreTotaltradeCount of @StoreTotalcurrentUnits<br /><b>@StoreTotaltradePercentage.ToString("P", rev)</b></th>                       
+                        <th class="text-center" style="border-right: 4px double #808080">@StoreTotalAfterSalesPerDeal.ToString("C", rev)</th>
+                        <th class="text-center"></th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                        <th class="text-center opps"></th>
+                    </tr>
+                </tfoot>
+            </table>
+            
+        }
+
+    </div>
+}
+
+@section Scripts{
+    
+    <script>
+                $('.btnToggleOpps').click(function () {
+
+                    
+                if ($(".opps").is(':visible')) {
+                    $('.opps').hide();                
+                }
+                else {
+                    $('.opps').show();                    
+                }
+
+                });
+    </script>
+}

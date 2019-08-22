@@ -1,0 +1,1964 @@
+﻿@model SalesCommission.Models.PayscaleModel
+@{
+    ViewBag.Title = "Payscales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .coloreee {
+        background-color: #eeeeee;
+    }
+    .colorddd {
+        background-color: #dddddd;
+    }
+    .form-control {
+        margin: 3px 0px;
+        font-size:13px;
+        height:30px;
+    }
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align:right;
+    }
+    body{
+        font-size:13px;
+    }
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding:4px;
+    }
+
+    .less-padding{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>Payscales</h1>
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>Select a Payscale and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.PayscaleId, new SelectList(SalesCommission.Business.Enums.Payscales, "PayscaleId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@{
+    if (Model.Payscales != null)
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <h3>@Model.PayscaleSetup[0].ps_PlanName</h3>
+            </div>
+        </div>
+        using (Html.BeginForm("Payscales", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.HiddenFor(o => o.PayscaleId);
+            @Html.HiddenFor(o => o.MonthId);
+            @Html.HiddenFor(o => o.YearId);
+
+            <div class="row">
+                <div class="col-sm-3 text-center">
+
+                </div>
+                <div class="col-sm-3 text-center coloreee">
+                    <h4>New</h4>
+                </div>
+                <div class="col-sm-3 text-center colorddd">
+                    <h4>Used</h4>
+                </div>
+
+                @if (Model.PayscaleId != "MOCO")
+                {
+                    <div class="col-sm-3 text-center coloreee">
+                        <h4>Handyman</h4>
+                    </div>
+                }
+
+            </div>
+            <div class="row">
+                <div class="col-sm-3 text-center">
+
+                </div>
+                <div class="col-sm-3 text-center coloreee">
+                    <div class="row">
+@if (Model.PayscaleId != "PROFMA")
+{
+                        <div class="col-sm-4">
+                            <h5>Standard</h5>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Certified</h5>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Certified Elite</h5>
+                        </div>
+}
+else
+{
+                        <div class="col-sm-4">
+                            <h5>Pay Level</h5>
+                        </div>
+}
+                    </div>
+                </div>
+                <div class="col-sm-3 text-center colorddd">
+                    <div class="row">
+@if (Model.PayscaleId != "PROFMA")
+{
+    <div class="col-sm-4">
+        <h5>Standard</h5>
+    </div>
+                        <div class="col-sm-4">
+                            <h5>Certified</h5>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Certified Elite</h5>
+                        </div>
+}
+else
+{
+    <div class="col-sm-4">
+        <h5>Pay Level</h5>
+    </div>
+}                    </div>
+                </div>
+
+                @if (Model.PayscaleId != "MOCO")
+                {
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+ @if (Model.PayscaleId != "PROFMA")
+ {
+    <div class="col-sm-4">
+        <h5>Standard</h5>
+    </div>
+                        <div class="col-sm-4">
+                            <h5>Certified</h5>
+                        </div>
+                        <div class="col-sm-4">
+                            <h5>Certified Elite</h5>
+                        </div>
+ }
+ else
+ {
+    <div class="col-sm-4">
+        <h5>Pay Level</h5>
+    </div>
+ }                       </div>
+                    </div>
+                }
+
+            </div>
+            <div class="row">
+                <div class="col-sm-3 payscale-label">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table">
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Base Commission</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>BPP Full</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>BPP Half</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Trade-In</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Finance or Retail Lease</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Service Contract</strong></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Sell Less than 3 Service Contracts</strong></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Maintenance Contract</strong></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>GAP Insurance</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Internal CSI Survey</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Manufacturer Sales Satisfaction</strong></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Aftermarket Items (each point)</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Manufacturer Spiff Guarantee</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><h4>Volume Bonus</h4></td>
+                                </tr>
+
+                                @if (Model.PayscaleSetup.Count > 0)
+                                {
+                                    var payscaleSetup = Model.PayscaleSetup[0];
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel1Low thru @payscaleSetup.ps_VolumeBonusLevel1High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel2Low thru @payscaleSetup.ps_VolumeBonusLevel2High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel3Low thru @payscaleSetup.ps_VolumeBonusLevel3High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel4Low thru @payscaleSetup.ps_VolumeBonusLevel4High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel5Low thru @payscaleSetup.ps_VolumeBonusLevel5High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel6Low thru @payscaleSetup.ps_VolumeBonusLevel6High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel7Low + (each)</strong></td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 1 thru 5 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 6 thru 10 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 11 thru 15 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 16 thru 20 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 21 thru 25 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 26 thru 30 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 31 + (each)</strong></td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 text-center coloreee">
+                    <div class="row">
+
+                        @if (Model.PayscaleId != "PROFMA")
+                        {
+                        <div class="col-sm-4 less-padding">
+
+                            @{
+                                var psNewStandard = Model.Payscales.Find(o => o.ps_NewUsedHandy == "NEW" && o.ps_PayLevel == "STD");
+                            }
+                            <input type="hidden" id="NewStandard_Key" name="NewStandard_Key" value="@psNewStandard.ps_Key" />
+
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="NewStandard_Base" name="NewStandard_Base" class="form-control" value="@psNewStandard.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_FullBPP" name="NewStandard_FullBPP" class="form-control" value="@psNewStandard.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_HalfBPP" name="NewStandard_HalfBPP" class="form-control" value="@psNewStandard.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_TradeIn" name="NewStandard_TradeIn" class="form-control" value="@psNewStandard.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_FinanceLease" name="NewStandard_FinanceLease" class="form-control" value="@psNewStandard.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_ServiceContract" name="NewStandard_ServiceContract" class="form-control" value="@psNewStandard.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewStandard_LessServiceContracts" name="NewStandard_LessServiceContracts" class="form-control" value="@psNewStandard.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewStandard_Maintenance" name="NewStandard_Maintenance" class="form-control" value="@psNewStandard.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewStandard_GAP" name="NewStandard_GAP" class="form-control" value="@psNewStandard.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewStandard_InternalSurvey" name="NewStandard_InternalSurvey" class="form-control" value="@psNewStandard.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewStandard_ManufacturerSalesSatisfaction" name="NewStandard_ManufacturerSalesSatisfaction" class="form-control" value="@psNewStandard.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewStandard_AftermarketPerItem" name="NewStandard_AftermarketPerItem" class="form-control" value="@psNewStandard.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_ManufacturerSpiffGuarantee" name="NewStandard_ManufacturerSpiffGuarantee" class="form-control" value="@psNewStandard.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel1" name="NewStandard_VolumeBonusLevel1" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel2" name="NewStandard_VolumeBonusLevel2" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel3" name="NewStandard_VolumeBonusLevel3" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel4" name="NewStandard_VolumeBonusLevel4" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel5" name="NewStandard_VolumeBonusLevel5" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel6" name="NewStandard_VolumeBonusLevel6" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel7" name="NewStandard_VolumeBonusLevel7" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+
+                            </table>
+                        </div>
+                        <div class="col-sm-4 less-padding">
+
+                            @{
+                                var psNewCertified = Model.Payscales.Find(o => o.ps_NewUsedHandy == "NEW" && o.ps_PayLevel == "CERT");
+                            }
+                            <input type="hidden" id="NewCertified_Key" name="NewCertified_Key" value="@psNewCertified.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="NewCertified_Base" name="NewCertified_Base" class="form-control" value="@psNewCertified.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_FullBPP" name="NewCertified_FullBPP" class="form-control" value="@psNewCertified.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_HalfBPP" name="NewCertified_HalfBPP" class="form-control" value="@psNewCertified.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_TradeIn" name="NewCertified_TradeIn" class="form-control" value="@psNewCertified.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_FinanceLease" name="NewCertified_FinanceLease" class="form-control" value="@psNewCertified.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_ServiceContract" name="NewCertified_ServiceContract" class="form-control" value="@psNewCertified.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewCertified_LessServiceContracts" name="NewCertified_LessServiceContracts" class="form-control" value="@psNewCertified.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewCertified_Maintenance" name="NewCertified_Maintenance" class="form-control" value="@psNewCertified.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewCertified_GAP" name="NewCertified_GAP" class="form-control" value="@psNewCertified.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewCertified_InternalSurvey" name="NewCertified_InternalSurvey" class="form-control" value="@psNewCertified.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewCertified_ManufacturerSalesSatisfaction" name="NewCertified_ManufacturerSalesSatisfaction" class="form-control" value="@psNewCertified.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewCertified_AftermarketPerItem" name="NewCertified_AftermarketPerItem" class="form-control" value="@psNewCertified.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_ManufacturerSpiffGuarantee" name="NewCertified_ManufacturerSpiffGuarantee" class="form-control" value="@psNewCertified.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel1" name="NewCertified_VolumeBonusLevel1" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel2" name="NewCertified_VolumeBonusLevel2" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel3" name="NewCertified_VolumeBonusLevel3" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel4" name="NewCertified_VolumeBonusLevel4" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel5" name="NewCertified_VolumeBonusLevel5" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel6" name="NewCertified_VolumeBonusLevel6" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewCertified_VolumeBonusLevel7" name="NewCertified_VolumeBonusLevel7" class="form-control" value="@psNewCertified.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                                }
+                        <div class="col-sm-4 less-padding">
+
+                            @{
+                                var psNewElite = Model.Payscales.Find(o => o.ps_NewUsedHandy == "NEW" && o.ps_PayLevel == "CERTELIT");
+                            }
+                            <input type="hidden" id="NewElite_Key" name="NewElite_Key" value="@psNewElite.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="NewElite_Base" name="NewElite_Base" class="form-control" value="@psNewElite.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_FullBPP" name="NewElite_FullBPP" class="form-control" value="@psNewElite.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_HalfBPP" name="NewElite_HalfBPP" class="form-control" value="@psNewElite.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_TradeIn" name="NewElite_TradeIn" class="form-control" value="@psNewElite.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_FinanceLease" name="NewElite_FinanceLease" class="form-control" value="@psNewElite.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_ServiceContract" name="NewElite_ServiceContract" class="form-control" value="@psNewElite.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewElite_LessServiceContracts" name="NewElite_LessServiceContracts" class="form-control" value="@psNewElite.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewElite_Maintenance" name="NewElite_Maintenance" class="form-control" value="@psNewElite.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewElite_GAP" name="NewElite_GAP" class="form-control" value="@psNewElite.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewElite_InternalSurvey" name="NewElite_InternalSurvey" class="form-control" value="@psNewElite.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="NewElite_ManufacturerSalesSatisfaction" name="NewElite_ManufacturerSalesSatisfaction" class="form-control" value="@psNewElite.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="NewElite_AftermarketPerItem" name="NewElite_AftermarketPerItem" class="form-control" value="@psNewElite.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_ManufacturerSpiffGuarantee" name="NewElite_ManufacturerSpiffGuarantee" class="form-control" value="@psNewElite.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel1" name="NewElite_VolumeBonusLevel1" class="form-control" value="@psNewElite.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel2" name="NewElite_VolumeBonusLevel2" class="form-control" value="@psNewElite.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel3" name="NewElite_VolumeBonusLevel3" class="form-control" value="@psNewElite.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel4" name="NewElite_VolumeBonusLevel4" class="form-control" value="@psNewElite.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel5" name="NewElite_VolumeBonusLevel5" class="form-control" value="@psNewElite.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel6" name="NewElite_VolumeBonusLevel6" class="form-control" value="@psNewElite.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewElite_VolumeBonusLevel7" name="NewElite_VolumeBonusLevel7" class="form-control" value="@psNewElite.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 text-center colorddd">
+                    <div class="row">
+                        @if (Model.PayscaleId != "PROFMA")
+                        {
+                        <div class="col-sm-4 less-padding">
+                            @{
+                                var psUsedStandard = Model.Payscales.Find(o => o.ps_NewUsedHandy == "USED" && o.ps_PayLevel == "STD");
+                            }
+                            <input type="hidden" id="UsedStandard_Key" name="UsedStandard_Key" value="@psUsedStandard.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_Base" name="UsedStandard_Base" class="form-control" value="@psUsedStandard.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_FullBPP" name="UsedStandard_FullBPP" class="form-control" value="@psUsedStandard.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_HalfBPP" name="UsedStandard_HalfBPP" class="form-control" value="@psUsedStandard.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_TradeIn" name="UsedStandard_TradeIn" class="form-control" value="@psUsedStandard.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_FinanceLease" name="UsedStandard_FinanceLease" class="form-control" value="@psUsedStandard.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_ServiceContract" name="UsedStandard_ServiceContract" class="form-control" value="@psUsedStandard.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedStandard_LessServiceContracts" name="UsedStandard_LessServiceContracts" class="form-control" value="@psUsedStandard.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_Maintenance" name="UsedStandard_Maintenance" class="form-control" value="@psUsedStandard.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedStandard_GAP" name="UsedStandard_GAP" class="form-control" value="@psUsedStandard.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedStandard_InternalSurvey" name="UsedStandard_InternalSurvey" class="form-control" value="@psUsedStandard.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedStandard_ManufacturerSalesSatisfaction" name="UsedStandard_ManufacturerSalesSatisfaction" class="form-control" value="@psUsedStandard.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_AftermarketPerItem" name="UsedStandard_AftermarketPerItem" class="form-control" value="@psUsedStandard.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_ManufacturerSpiffGuarantee" name="UsedStandard_ManufacturerSpiffGuarantee" class="form-control" value="@psUsedStandard.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel1" name="UsedStandard_VolumeBonusLevel1" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel2" name="UsedStandard_VolumeBonusLevel2" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel3" name="UsedStandard_VolumeBonusLevel3" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel4" name="UsedStandard_VolumeBonusLevel4" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel5" name="UsedStandard_VolumeBonusLevel5" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel6" name="UsedStandard_VolumeBonusLevel6" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel7" name="UsedStandard_VolumeBonusLevel7" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-sm-4 less-padding">
+                            @{
+                                var psUsedCertified = Model.Payscales.Find(o => o.ps_NewUsedHandy == "USED" && o.ps_PayLevel == "CERT");
+                            }
+                            <input type="hidden" id="UsedCertified_Key" name="UsedCertified_Key" value="@psUsedCertified.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_Base" name="UsedCertified_Base" class="form-control" value="@psUsedCertified.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_FullBPP" name="UsedCertified_FullBPP" class="form-control" value="@psUsedCertified.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_HalfBPP" name="UsedCertified_HalfBPP" class="form-control" value="@psUsedCertified.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_TradeIn" name="UsedCertified_TradeIn" class="form-control" value="@psUsedCertified.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_FinanceLease" name="UsedCertified_FinanceLease" class="form-control" value="@psUsedCertified.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_ServiceContract" name="UsedCertified_ServiceContract" class="form-control" value="@psUsedCertified.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedCertified_LessServiceContracts" name="UsedCertified_LessServiceContracts" class="form-control" value="@psUsedCertified.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_Maintenance" name="UsedCertified_Maintenance" class="form-control" value="@psUsedCertified.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedCertified_GAP" name="UsedCertified_GAP" class="form-control" value="@psUsedCertified.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedCertified_InternalSurvey" name="UsedCertified_InternalSurvey" class="form-control" value="@psUsedCertified.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedCertified_ManufacturerSalesSatisfaction" name="UsedCertified_ManufacturerSalesSatisfaction" class="form-control" value="@psUsedCertified.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_AftermarketPerItem" name="UsedCertified_AftermarketPerItem" class="form-control" value="@psUsedCertified.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_ManufacturerSpiffGuarantee" name="UsedCertified_ManufacturerSpiffGuarantee" class="form-control" value="@psUsedCertified.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel1" name="UsedCertified_VolumeBonusLevel1" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel2" name="UsedCertified_VolumeBonusLevel2" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel3" name="UsedCertified_VolumeBonusLevel3" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel4" name="UsedCertified_VolumeBonusLevel4" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel5" name="UsedCertified_VolumeBonusLevel5" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel6" name="UsedCertified_VolumeBonusLevel6" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedCertified_VolumeBonusLevel7" name="UsedCertified_VolumeBonusLevel7" class="form-control" value="@psUsedCertified.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                        }
+                        <div class="col-sm-4 less-padding">
+                            @{
+                                var psUsedElite = Model.Payscales.Find(o => o.ps_NewUsedHandy == "USED" && o.ps_PayLevel == "CERTELIT");
+                            }
+                            <input type="hidden" id="UsedElite_Key" name="UsedElite_Key" value="@psUsedElite.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="UsedElite_Base" name="UsedElite_Base" class="form-control" value="@psUsedElite.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_FullBPP" name="UsedElite_FullBPP" class="form-control" value="@psUsedElite.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_HalfBPP" name="UsedElite_HalfBPP" class="form-control" value="@psUsedElite.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_TradeIn" name="UsedElite_TradeIn" class="form-control" value="@psUsedElite.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_FinanceLease" name="UsedElite_FinanceLease" class="form-control" value="@psUsedElite.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_ServiceContract" name="UsedElite_ServiceContract" class="form-control" value="@psUsedElite.ps_ServiceContract" /></td>
+                                </tr>
+                                @if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedElite_LessServiceContracts" name="UsedElite_LessServiceContracts" class="form-control" value="@psUsedElite.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedElite_Maintenance" name="UsedElite_Maintenance" class="form-control" value="@psUsedElite.ps_Maintenance" /></td>
+                                </tr>
+                                @if (Model.PayscaleId != "MOCO")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedElite_GAP" name="UsedElite_GAP" class="form-control" value="@psUsedElite.ps_GAP" /></td>
+                                    </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedElite_InternalSurvey" name="UsedElite_InternalSurvey" class="form-control" value="@psUsedElite.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="UsedElite_ManufacturerSalesSatisfaction" name="UsedElite_ManufacturerSalesSatisfaction" class="form-control" value="@psUsedElite.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                }
+                                <tr>
+                                    <td><input type="text" id="UsedElite_AftermarketPerItem" name="UsedElite_AftermarketPerItem" class="form-control" value="@psUsedElite.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_ManufacturerSpiffGuarantee" name="UsedElite_ManufacturerSpiffGuarantee" class="form-control" value="@psUsedElite.ps_ManufacturerSpiffGuarantee" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel1" name="UsedElite_VolumeBonusLevel1" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel2" name="UsedElite_VolumeBonusLevel2" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel3" name="UsedElite_VolumeBonusLevel3" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel4" name="UsedElite_VolumeBonusLevel4" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel5" name="UsedElite_VolumeBonusLevel5" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel6" name="UsedElite_VolumeBonusLevel6" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedElite_VolumeBonusLevel7" name="UsedElite_VolumeBonusLevel7" class="form-control" value="@psUsedElite.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.PayscaleId != "MOCO")
+                {
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                        @if (Model.PayscaleId != "PROFMA")
+                        {
+                            <div class="col-sm-4 less-padding">
+                                @{
+                                    var psHandyStandard = Model.Payscales.Find(o => o.ps_NewUsedHandy == "HANDY" && o.ps_PayLevel == "STD");
+                                }
+                                <input type="hidden" id="HandyStandard_Key" name="HandyStandard_Key" value="@psHandyStandard.ps_Key" />
+                                <table class="table">
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_Base" name="HandyStandard_Base" class="form-control" value="@psHandyStandard.ps_BaseCommission" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_FullBPP" name="HandyStandard_FullBPP" class="form-control" value="@psHandyStandard.ps_FullBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_HalfBPP" name="HandyStandard_HalfBPP" class="form-control" value="@psHandyStandard.ps_HalfBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_TradeIn" name="HandyStandard_TradeIn" class="form-control" value="@psHandyStandard.ps_TradeIn" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_FinanceLease" name="HandyStandard_FinanceLease" class="form-control" value="@psHandyStandard.ps_FinanceLease" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_ServiceContract" name="HandyStandard_ServiceContract" class="form-control" value="@psHandyStandard.ps_ServiceContract" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId == "FL")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyStandard_LessServiceContracts" name="HandyStandard_LessServiceContracts" class="form-control" value="@psHandyStandard.ps_LessServiceContracts" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_Maintenance" name="HandyStandard_Maintenance" class="form-control" value="@psHandyStandard.ps_Maintenance" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId != "MOCO")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyStandard_GAP" name="HandyStandard_GAP" class="form-control" value="@psHandyStandard.ps_GAP" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyStandard_InternalSurvey" name="HandyStandard_InternalSurvey" class="form-control" value="@psHandyStandard.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyStandard_ManufacturerSalesSatisfaction" name="HandyStandard_ManufacturerSalesSatisfaction" class="form-control" value="@psHandyStandard.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_AftermarketPerItem" name="HandyStandard_AftermarketPerItem" class="form-control" value="@psHandyStandard.ps_AftermarketPerItem" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_ManufacturerSpiffGuarantee" name="HandyStandard_ManufacturerSpiffGuarantee" class="form-control" value="@psHandyStandard.ps_ManufacturerSpiffGuarantee" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><h4>&nbsp;</h4></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel1" name="HandyStandard_VolumeBonusLevel1" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel1" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel2" name="HandyStandard_VolumeBonusLevel2" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel2" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel3" name="HandyStandard_VolumeBonusLevel3" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel3" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel4" name="HandyStandard_VolumeBonusLevel4" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel4" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel5" name="HandyStandard_VolumeBonusLevel5" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel5" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel6" name="HandyStandard_VolumeBonusLevel6" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel6" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyStandard_VolumeBonusLevel7" name="HandyStandard_VolumeBonusLevel7" class="form-control" value="@psHandyStandard.ps_VolumeBonusLevel7" /></td>
+                                    </tr>
+
+                                </table>
+                            </div>
+                            <div class="col-sm-4 less-padding">
+                                @{
+                                    var psHandyCertified = Model.Payscales.Find(o => o.ps_NewUsedHandy == "HANDY" && o.ps_PayLevel == "CERT");
+                                }
+                                <input type="hidden" id="HandyCertified_Key" name="HandyCertified_Key" value="@psHandyCertified.ps_Key" />
+                                <table class="table">
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_Base" name="HandyCertified_Base" class="form-control" value="@psHandyCertified.ps_BaseCommission" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_FullBPP" name="HandyCertified_FullBPP" class="form-control" value="@psHandyCertified.ps_FullBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_HalfBPP" name="HandyCertified_HalfBPP" class="form-control" value="@psHandyCertified.ps_HalfBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_TradeIn" name="HandyCertified_TradeIn" class="form-control" value="@psHandyCertified.ps_TradeIn" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_FinanceLease" name="HandyCertified_FinanceLease" class="form-control" value="@psHandyCertified.ps_FinanceLease" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_ServiceContract" name="HandyCertified_ServiceContract" class="form-control" value="@psHandyCertified.ps_ServiceContract" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId == "FL")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyCertified_LessServiceContracts" name="HandyCertified_LessServiceContracts" class="form-control" value="@psHandyCertified.ps_LessServiceContracts" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_Maintenance" name="HandyCertified_Maintenance" class="form-control" value="@psHandyCertified.ps_Maintenance" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId != "MOCO")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyCertified_GAP" name="HandyCertified_GAP" class="form-control" value="@psHandyCertified.ps_GAP" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyCertified_InternalSurvey" name="HandyCertified_InternalSurvey" class="form-control" value="@psHandyCertified.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyCertified_ManufacturerSalesSatisfaction" name="HandyCertified_ManufacturerSalesSatisfaction" class="form-control" value="@psHandyCertified.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_AftermarketPerItem" name="HandyCertified_AftermarketPerItem" class="form-control" value="@psHandyCertified.ps_AftermarketPerItem" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_ManufacturerSpiffGuarantee" name="HandyCertified_ManufacturerSpiffGuarantee" class="form-control" value="@psHandyCertified.ps_ManufacturerSpiffGuarantee" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><h4>&nbsp;</h4></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel1" name="HandyCertified_VolumeBonusLevel1" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel1" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel2" name="HandyCertified_VolumeBonusLevel2" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel2" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel3" name="HandyCertified_VolumeBonusLevel3" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel3" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel4" name="HandyCertified_VolumeBonusLevel4" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel4" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel5" name="HandyCertified_VolumeBonusLevel5" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel5" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel6" name="HandyCertified_VolumeBonusLevel6" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel6" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyCertified_VolumeBonusLevel7" name="HandyCertified_VolumeBonusLevel7" class="form-control" value="@psHandyCertified.ps_VolumeBonusLevel7" /></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            }
+                            <div class="col-sm-4 less-padding">
+                                @{
+                                    var psHandyElite = Model.Payscales.Find(o => o.ps_NewUsedHandy == "HANDY" && o.ps_PayLevel == "CERTELIT");
+                                }
+                                <input type="hidden" id="HandyElite_Key" name="HandyElite_Key" value="@psHandyElite.ps_Key" />
+                                <table class="table">
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_Base" name="HandyElite_Base" class="form-control" value="@psHandyElite.ps_BaseCommission" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_FullBPP" name="HandyElite_FullBPP" class="form-control" value="@psHandyElite.ps_FullBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_HalfBPP" name="HandyElite_HalfBPP" class="form-control" value="@psHandyElite.ps_HalfBPP" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_TradeIn" name="HandyElite_TradeIn" class="form-control" value="@psHandyElite.ps_TradeIn" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_FinanceLease" name="HandyElite_FinanceLease" class="form-control" value="@psHandyElite.ps_FinanceLease" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_ServiceContract" name="HandyElite_ServiceContract" class="form-control" value="@psHandyElite.ps_ServiceContract" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId == "FL")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyElite_LessServiceContracts" name="HandyElite_LessServiceContracts" class="form-control" value="@psHandyElite.ps_LessServiceContracts" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_Maintenance" name="HandyElite_Maintenance" class="form-control" value="@psHandyElite.ps_Maintenance" /></td>
+                                    </tr>
+                                    @if (Model.PayscaleId != "MOCO")
+                                    {
+                                        <tr>
+                                            <td><input type="text" id="HandyElite_GAP" name="HandyElite_GAP" class="form-control" value="@psHandyElite.ps_GAP" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyElite_InternalSurvey" name="HandyElite_InternalSurvey" class="form-control" value="@psHandyElite.ps_InternalSurvey" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="text" id="HandyElite_ManufacturerSalesSatisfaction" name="HandyElite_ManufacturerSalesSatisfaction" class="form-control" value="@psHandyElite.ps_ManufacturerSalesSatisfaction" /></td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_AftermarketPerItem" name="HandyElite_AftermarketPerItem" class="form-control" value="@psHandyElite.ps_AftermarketPerItem" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_ManufacturerSpiffGuarantee" name="HandyElite_ManufacturerSpiffGuarantee" class="form-control" value="@psHandyElite.ps_ManufacturerSpiffGuarantee" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><h4>&nbsp;</h4></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel1" name="HandyElite_VolumeBonusLevel1" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel1" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel2" name="HandyElite_VolumeBonusLevel2" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel2" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel3" name="HandyElite_VolumeBonusLevel3" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel3" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel4" name="HandyElite_VolumeBonusLevel4" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel4" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel5" name="HandyElite_VolumeBonusLevel5" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel5" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel6" name="HandyElite_VolumeBonusLevel6" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel6 " /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" id="HandyElite_VolumeBonusLevel7" name="HandyElite_VolumeBonusLevel7" class="form-control" value="@psHandyElite.ps_VolumeBonusLevel7" /></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                                    }
+
+            </div>
+            <div class="row" style="margin-top:15px;">
+                <div class="col-sm-3 text-center">
+
+                </div>
+                <div class="col-sm-9 text-center">
+                    <button class="btn btn-primary" type="submit" value="save" name="Save">Save</button>
+                </div>
+            </div>
+
+            @*<div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Base Commission</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>BPP Full</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>BPP Half</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Trade In</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Finance or Retail Lease</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Service Contract</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Sell Less than 3 Service Contracts</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Maintenance Contract</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>GAP Insurance</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Aftermarket (each)</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <div class="row">
+                        <div class="col-sm-3 payscale-label">
+                            <label>CSI Internal Survey</label>
+                        </div>
+                        <div class="col-sm-3 text-center coloreee">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 text-center colorddd">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 text-center coloreee">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-3 payscale-label">
+                            <label>Manufacturer Sales Satisfaction</label>
+                        </div>
+                        <div class="col-sm-3 text-center coloreee">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 text-center colorddd">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 text-center coloreee">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Manu. Spiff Guarantee</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="row" style="margin-top:10px;">
+                    <div class="col-sm-3 text-right">
+                        <h4>Volume Bonus</h4>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <h5>Standard</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified Elite</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <h5>Standard</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified Elite</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <h5>Standard</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified</h5>
+                            </div>
+                            <div class="col-sm-4">
+                                <h5>Certified Elite</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 1 To 5</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 6 To 10</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 11 To 15</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 16 To 20</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 21 To 25</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 26 To 30</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 payscale-label">
+                        <label>Deliveries 31 and up</label>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="NewStandard" name="NewStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewCertified" name="NewCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="NewElite" name="NewElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center colorddd">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedStandard" name="UsedStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedCertified" name="UsedCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="UsedElite" name="UsedElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 text-center coloreee">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyStandard" name="HandyStandard" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyCertified" name="HandyCertified" class="form-control" />
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" id="HandyElite" name="HandyElite" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+
+            }
+            }
+            }

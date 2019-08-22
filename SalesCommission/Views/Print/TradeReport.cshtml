@@ -1,0 +1,1208 @@
+﻿@model SalesCommission.Models.TradeReportModel
+
+@{
+    ViewBag.Title = "Print Monthly Trade Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    .ftd-entry {
+        display: none;
+    }
+
+    .comments-entry {
+        display: none;
+    }
+
+    th.text-center.extra-left {
+        border-left: 3px solid #dddddd;
+    }
+
+    td.text-center.extra-left {
+        border-left: 3px solid #dddddd;
+    }
+
+    th .extra-right, td .extra-right {
+        border-right: 2px;
+    }
+
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+
+        .page-break {
+            page-break-after: always;
+            page-break-inside: auto;
+            display: block;
+        }
+    }
+</style>
+
+@if (Model.TradeReportDetails != null)
+{
+    <div class="row">
+        <div class="col-md-10">
+            
+        </div>
+        @*<div class="col-md-2 text-right" style="margin-top:10px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>*@
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        @*<table class="table table-bordered table-striped" id="section1">
+            <thead>
+                <tr style="background-color:#d9edf7; display:none;">
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Total Deals</th>
+                    <th class="text-center">Total Trades</th>
+                    <th class="text-center">Total Trade %</th>
+                    <th class="text-center">Retail Deals</th>
+                    <th class="text-center">Retail Trades</th>
+                    <th class="text-center">Retail Trade %</th>
+                    <th class="text-center">Lease Deals</th>
+                    <th class="text-center">Lease Trades</th>
+                    <th class="text-center">Lease Trade %</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @{
+                    double CompanyTotalDealCount = 0;
+                    double CompanyTotalTrades = 0;
+
+                    double CompanyTotalLeaseCount = 0;
+                    double CompanyTotalRetailCount = 0;
+
+                    double CompanyTotalLeaseTradeCount = 0;
+                    double CompanyTotalRetailTradeCount = 0;
+
+                    double CompanyNewTotalDealCount = 0;
+                    double CompanyNewTotalTrades = 0;
+
+                    double CompanyNewTotalLeaseCount = 0;
+                    double CompanyNewTotalRetailCount = 0;
+
+                    double CompanyNewTotalLeaseTradeCount = 0;
+                    double CompanyNewTotalRetailTradeCount = 0;
+
+                    double CompanyUsedTotalDealCount = 0;
+                    double CompanyUsedTotalTrades = 0;
+
+                    double CompanyUsedTotalLeaseCount = 0;
+                    double CompanyUsedTotalRetailCount = 0;
+
+                    double CompanyUsedTotalLeaseTradeCount = 0;
+                    double CompanyUsedTotalRetailTradeCount = 0;
+
+                    
+                }
+
+            *@
+        @{ 
+            var groupIndex = 0;
+        }
+                @foreach (var groupDetail in Model.TradeReportDetails)
+                {
+                    groupIndex += 1;
+
+                    var AutoMallName = groupDetail.TradeReports[0].AutoMall;
+                    foreach (var store in SalesCommission.Business.Enums.Stores)
+                    {
+                        if (store.StoreId.ToLower() == groupDetail.TradeReports[0].AutoMall.ToLower())
+                        {
+                            AutoMallName = store.Name;
+                        }
+                    }
+
+                    <h3>Associate Performance Summary for @AutoMallName (@Model.MonthId/@Model.YearId)</h3>
+
+                    @*
+                    if (groupDetail.TradeReports.Count > 0)
+                    {
+                        
+                        var AutoMallName = groupDetail.TradeReports[0].AutoMall;
+                        foreach (var store in SalesCommission.Business.Enums.Stores)
+                        {
+                            if (store.StoreId.ToLower() == groupDetail.TradeReports[0].AutoMall.ToLower())
+                            {
+                                AutoMallName = store.Name;
+                            }
+                        }
+
+                        <tr style="background-color:#d9edf7; font-weight:bold;">
+                            <td class="text-center" style="background-color:#d9edf7">@AutoMallName</td>
+                            <td class="text-center" style="background-color:#d9edf7">Total Deals</td>
+                            <td class="text-center" style="background-color:#d9edf7">Total Trades</td>
+                            <td class="text-center" style="background-color:#d9edf7">Total Trade %</td>
+                            <td class="text-center" style="background-color:#d9edf7">Retail Deals</td>
+                            <td class="text-center" style="background-color:#d9edf7">Retail Trades</td>
+                            <td class="text-center" style="background-color:#d9edf7">Retail Trade %</td>
+                            <td class="text-center" style="background-color:#d9edf7">Lease Deals</td>
+                            <td class="text-center" style="background-color:#d9edf7">Lease Trades</td>
+                            <td class="text-center" style="background-color:#d9edf7">Lease Trade %</td>
+                        </tr>
+
+                        double TotalDealCount = 0;
+                        double TotalTrades = 0;
+
+                        double TotalLeaseCount = 0;
+                        double TotalRetailCount = 0;
+
+                        double TotalLeaseTradeCount = 0;
+                        double TotalRetailTradeCount = 0;
+
+                        double TotalNewDealCount = 0;
+                        double TotalNewTrades = 0;
+
+                        double TotalNewLeaseCount = 0;
+                        double TotalNewRetailCount = 0;
+
+                        double TotalNewLeaseTradeCount = 0;
+                        double TotalNewRetailTradeCount = 0;
+
+                        double TotalUsedDealCount = 0;
+                        double TotalUsedTrades = 0;
+
+                        double TotalUsedLeaseCount = 0;
+                        double TotalUsedRetailCount = 0;
+
+                        double TotalUsedLeaseTradeCount = 0;
+                        double TotalUsedRetailTradeCount = 0;
+
+                        //groupDetail.TradeReports = groupDetail.TradeReports.OrderBy(o => o.MakeName).ToList();
+
+                        var index = 0;
+                        foreach (var detail in groupDetail.TradeReports)
+                        {
+                            if (detail.BrandId != "AA")
+                            {
+                                index += 1;
+                                var leasePercent = (0).ToString("P", nfi);
+                                var retailPercent = (0).ToString("P", nfi);
+                                var tradePercent = (0).ToString("P", nfi);
+
+                                if (detail.LeaseDealCount > 0)
+                                {
+                                    leasePercent = ((double)detail.LeaseTradeCount / (double)detail.LeaseDealCount).ToString("P", nfi);
+                                }
+
+                                if (detail.RetailDealCount > 0)
+                                {
+                                    retailPercent = ((double)detail.RetailTradeCount / (double)detail.RetailDealCount).ToString("P", nfi);
+                                }
+
+                                if (detail.DealCount > 0)
+                                {
+                                    tradePercent = ((double)detail.TotalTradeCount / (double)detail.DealCount).ToString("P", nfi);
+                                }
+
+                                <tr>
+                                    @if (detail.TotalTradeCount > 0 && Model.IncludeDeals)
+                                    {
+                                        <td class="text-center"><a data-toggle="collapse" id="@detail.MakeName.Replace(" ", "")" style="cursor: pointer;" data-target="#collapse-@detail.MakeId">@detail.MakeName <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                    }
+                                    else
+                                    {
+                                        <td class="text-center"> @detail.MakeName</td>
+                                    }
+                                    <td class="text-center">@detail.DealCount</td>
+                                    <td class="text-center">@detail.TotalTradeCount</td>
+                                    <td class="text-center">@tradePercent</td>
+                                    <td class="text-center">@detail.RetailDealCount</td>
+                                    <td class="text-center">@detail.RetailTradeCount</td>
+                                    <td class="text-center">@retailPercent</td>
+                                    <td class="text-center">@detail.LeaseDealCount</td>
+                                    <td class="text-center">@detail.LeaseTradeCount</td>
+                                    <td class="text-center">@leasePercent</td>
+                                </tr>
+
+                                if (Model.IncludeDeals)
+                                {
+                                    var tradeDeals = groupDetail.TradeDeals.FindAll(o => o.MakeId == detail.MakeId);
+                                    <tr id="collapse-@detail.MakeId" class="collapse out" style="background-color:#f5f5f5">
+                                        <td colspan="10">
+                                            <table class="table table-bordered table-striped" style="font-size:12px;">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">Deal</th>
+                                                        <th class="text-center">R/L</th>
+                                                        <th class="text-center">Deal Date</th>
+                                                        <th class="text-center">Year</th>
+                                                        <th class="text-center">Make</th>
+                                                        <th class="text-center">Model</th>
+                                                        <th class="text-center">Trade 1</th>
+                                                        <th class="text-center">Trade 1 Val</th>
+                                                        <th class="text-center">Trade 1 Cash</th>
+                                                        <th class="text-center">Trade 2</th>
+                                                        <th class="text-center">Trade 2 Val</th>
+                                                        <th class="text-center">Trade 2 Cash</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var deal in tradeDeals)
+                                                    {
+                                                        <tr>
+                                                            <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                                            <td class="text-center">@deal.VehicleCategory</td>
+                                                            <td class="text-center">@deal.DealDate.ToShortDateString()</td>
+                                                            <td class="text-center">@deal.VehicleYear</td>
+                                                            <td class="text-center">@deal.VehicleMake</td>
+                                                            <td class="text-center">@deal.VehicleModel</td>
+                                                            <td class="text-center">@deal.TradeDescription1</td>
+                                                            <td class="text-center">@deal.TradeValue1</td>
+                                                            <td class="text-center">@deal.TradeCashValue1</td>
+                                                            <td class="text-center">@deal.TradeDescription2</td>
+                                                            <td class="text-center">@deal.TradeValue2</td>
+                                                            <td class="text-center">@deal.TradeCashValue2</td>
+                                                        </tr>
+                                                    }
+
+                                                </tbody>
+                                                <tfoot></tfoot>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                }
+
+                                TotalDealCount += detail.DealCount;
+                                TotalTrades += detail.TotalTradeCount;
+
+                                TotalLeaseCount += detail.LeaseDealCount;
+                                TotalRetailCount += detail.RetailDealCount;
+
+                                TotalLeaseTradeCount += detail.LeaseTradeCount;
+                                TotalRetailTradeCount += detail.RetailTradeCount;
+
+                                if (detail.BrandId == "UU")
+                                {
+                                    TotalUsedDealCount += detail.DealCount;
+                                    TotalUsedTrades += detail.TotalTradeCount;
+
+                                    TotalUsedLeaseCount += detail.LeaseDealCount;
+                                    TotalUsedRetailCount += detail.RetailDealCount;
+
+                                    TotalUsedLeaseTradeCount += detail.LeaseTradeCount;
+                                    TotalUsedRetailTradeCount += detail.RetailTradeCount;
+                                }
+                                else
+                                {
+                                    TotalNewDealCount += detail.DealCount;
+                                    TotalNewTrades += detail.TotalTradeCount;
+
+                                    TotalNewLeaseCount += detail.LeaseDealCount;
+                                    TotalNewRetailCount += detail.RetailDealCount;
+
+                                    TotalNewLeaseTradeCount += detail.LeaseTradeCount;
+                                    TotalNewRetailTradeCount += detail.RetailTradeCount;
+                                }
+                            }
+                        }
+
+                        var totalLeasePercent = (0).ToString("P", nfi);
+                        var totalRetailPercent = (0).ToString("P", nfi);
+                        var totalTradePercent = (0).ToString("P", nfi);
+
+                        var totalUsedLeasePercent = (0).ToString("P", nfi);
+                        var totalUsedRetailPercent = (0).ToString("P", nfi);
+                        var totalUsedTradePercent = (0).ToString("P", nfi);
+
+                        var totalNewLeasePercent = (0).ToString("P", nfi);
+                        var totalNewRetailPercent = (0).ToString("P", nfi);
+                        var totalNewTradePercent = (0).ToString("P", nfi);
+
+                        if (TotalLeaseCount > 0)
+                        {
+                            totalLeasePercent = (TotalLeaseTradeCount / TotalLeaseCount).ToString("P", nfi);
+                        }
+
+                        if (TotalRetailCount > 0)
+                        {
+                            totalRetailPercent = (TotalRetailTradeCount / TotalRetailCount).ToString("P", nfi);
+                        }
+
+                        if (TotalDealCount > 0)
+                        {
+                            totalTradePercent = (TotalTrades / TotalDealCount).ToString("P", nfi);
+                        }
+
+                        if (TotalNewLeaseCount > 0)
+                        {
+                            totalNewLeasePercent = (TotalNewLeaseTradeCount / TotalNewLeaseCount).ToString("P", nfi);
+                        }
+
+                        if (TotalNewRetailCount > 0)
+                        {
+                            totalNewRetailPercent = (TotalNewRetailTradeCount / TotalNewRetailCount).ToString("P", nfi);
+                        }
+
+                        if (TotalNewDealCount > 0)
+                        {
+                            totalNewTradePercent = (TotalNewTrades / TotalNewDealCount).ToString("P", nfi);
+                        }
+
+                        if (TotalUsedLeaseCount > 0)
+                        {
+                            totalUsedLeasePercent = (TotalUsedLeaseTradeCount / TotalUsedLeaseCount).ToString("P", nfi);
+                        }
+
+                        if (TotalUsedRetailCount > 0)
+                        {
+                            totalUsedRetailPercent = (TotalUsedRetailTradeCount / TotalUsedRetailCount).ToString("P", nfi);
+                        }
+
+                        if (TotalUsedDealCount > 0)
+                        {
+                            totalUsedTradePercent = (TotalUsedTrades / TotalUsedDealCount).ToString("P", nfi);
+                        }
+
+                        if (TotalNewDealCount > 0)
+                        {
+                            <tr style="background-color:#e9f3f7; font-weight:bold;font-size:12px;">
+                                @if (Model.IncludeDeals)
+                                {
+                                    <td class="text-center" style="background-color:#e9f3f7"><a data-toggle="collapse" id="@groupIndex-NewTotal" style="cursor: pointer;" data-target="#collapse-@groupIndex-NewTotal">New Totals <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                }
+                                else
+                                {
+                                    <td class="text-center" style="background-color:#e9f3f7">New Totals</td>
+                                }
+
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewDealCount</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewTrades</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@totalNewTradePercent</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewRetailCount</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewRetailTradeCount</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@totalNewRetailPercent</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewLeaseCount</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@TotalNewLeaseTradeCount</td>
+                                <td class="text-center" style="background-color:#e9f3f7">@totalNewLeasePercent</td>
+                            </tr>
+
+                            if (Model.IncludeDeals)
+                            {
+                                <tr id="collapse-@groupIndex-NewTotal" class="collapse out" style="background-color:#f5f5f5">
+                                    <td colspan="10">
+                                        <table class="table table-bordered table-striped" style="font-size:12px;">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center" style="background-color:#d9edf7">Sales Associate</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Total Deals</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Total Trades</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Total Trade %</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Retail Deals</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Retail Trades</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Retail Trade %</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Lease Deals</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Lease Trades</th>
+                                                    <th class="text-center" style="background-color:#d9edf7">Lease Trade %</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @{
+                                                    var uniqueAssociates = new List<String>();
+                                                    foreach (var deal in groupDetail.TradeDeals)
+                                                    {
+                                                        if (!uniqueAssociates.Contains(deal.SalesAssociate1Id))
+                                                        {
+                                                            uniqueAssociates.Add(deal.SalesAssociate1Id);
+                                                        }
+                                                    }
+                                                }
+
+                                                @foreach (var associateId in uniqueAssociates)
+                                                {
+                                                    var associateDeals = new SalesCommission.Models.AssociateTradeReport();
+
+
+                                                    associateDeals = Model.AssociateTradeReports.Find(o => o.SalesAssociateId == associateId && o.MallId == groupDetail.AutoMallId && o.VehicleNewUsed == "NEW");
+
+                                                    if (associateDeals != null)
+                                                    {
+                                                        var leasePercent = (0).ToString("P", nfi);
+                                                        var retailPercent = (0).ToString("P", nfi);
+                                                        var tradePercent = (0).ToString("P", nfi);
+
+                                                        if (associateDeals.LeaseDealCount > 0)
+                                                        {
+                                                            leasePercent = ((double)associateDeals.LeaseTradeCount / (double)associateDeals.LeaseDealCount).ToString("P", nfi);
+                                                        }
+
+                                                        if (associateDeals.RetailDealCount > 0)
+                                                        {
+                                                            retailPercent = ((double)associateDeals.RetailTradeCount / (double)associateDeals.RetailDealCount).ToString("P", nfi);
+                                                        }
+
+                                                        if (associateDeals.DealCount > 0)
+                                                        {
+                                                            tradePercent = ((double)associateDeals.TotalTradeCount / (double)associateDeals.DealCount).ToString("P", nfi);
+                                                        }
+
+                                                        <tr>
+                                                            <td class="text-center">@associateDeals.SalesAssociateName</td>
+                                                            <td class="text-center">@associateDeals.DealCount</td>
+                                                            <td class="text-center">@associateDeals.TotalTradeCount</td>
+                                                            <td class="text-center">@tradePercent</td>
+                                                            <td class="text-center">@associateDeals.RetailDealCount</td>
+                                                            <td class="text-center">@associateDeals.RetailTradeCount</td>
+                                                            <td class="text-center">@retailPercent</td>
+                                                            <td class="text-center">@associateDeals.LeaseDealCount</td>
+                                                            <td class="text-center">@associateDeals.LeaseTradeCount</td>
+                                                            <td class="text-center">@leasePercent</td>
+                                                        </tr>
+                                                    }
+                                                }
+
+                                            </tbody>
+                                            <tfoot></tfoot>
+                                        </table>
+                                    </td>
+                                </tr>
+                                                        }
+
+
+
+                                                    }
+                                                    if (TotalUsedDealCount > 0)
+                                                    {
+                                                        <tr style="background-color:#e9f3f7; font-weight:bold;font-size:12px;">
+                                                            @if (Model.IncludeDeals)
+                                                            {
+                                                                <td class="text-center" style="background-color:#e9f3f7"><a data-toggle="collapse" id="@groupIndex-UsedTotal" style="cursor: pointer;" data-target="#collapse-@groupIndex-UsedTotal">Used Totals <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td class="text-center" style="background-color:#e9f3f7">Used Totals</td>
+                                                            }
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedDealCount</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedTrades</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@totalUsedTradePercent</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedRetailCount</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedRetailTradeCount</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@totalUsedRetailPercent</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedLeaseCount</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@TotalUsedLeaseTradeCount</td>
+                                                            <td class="text-center" style="background-color:#e9f3f7">@totalUsedLeasePercent</td>
+                                                        </tr>
+                                                        if (Model.IncludeDeals)
+                                                        {
+                                                            <tr id="collapse-@groupIndex-UsedTotal" class="collapse out" style="background-color:#f5f5f5">
+                                                                <td colspan="10">
+                                                                    <table class="table table-bordered table-striped" style="font-size:12px;">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Sales Associate</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Total Deals</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Total Trades</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Total Trade %</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Retail Deals</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Retail Trades</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Retail Trade %</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Lease Deals</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Lease Trades</th>
+                                                                                <th class="text-center" style="background-color:#d9edf7">Lease Trade %</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @{
+                                                                                var uniqueAssociates = new List<String>();
+                                                                                foreach (var deal in groupDetail.TradeDeals)
+                                                                                {
+                                                                                    if (!uniqueAssociates.Contains(deal.SalesAssociate1Id))// && deal.VehicleNewUsed == "USED")
+                                                                                    {
+                                                                                        uniqueAssociates.Add(deal.SalesAssociate1Id);
+                                                                                    }
+                                                                                }
+                                                                            }
+
+                                                                            @foreach (var associateId in uniqueAssociates)
+                                                                            {
+                                                                                var associateDeals = new SalesCommission.Models.AssociateTradeReport();
+
+                                                                                associateDeals = Model.AssociateTradeReports.Find(o => o.SalesAssociateId == associateId && o.MallId == groupDetail.AutoMallId && o.VehicleNewUsed == "USED");
+
+                                                                                if (associateDeals != null)
+                                                                                {
+                                                                                    var leasePercent = (0).ToString("P", nfi);
+                                                                                    var retailPercent = (0).ToString("P", nfi);
+                                                                                    var tradePercent = (0).ToString("P", nfi);
+
+                                                                                    if (associateDeals.LeaseDealCount > 0)
+                                                                                    {
+                                                                                        leasePercent = ((double)associateDeals.LeaseTradeCount / (double)associateDeals.LeaseDealCount).ToString("P", nfi);
+                                                                                    }
+
+                                                                                    if (associateDeals.RetailDealCount > 0)
+                                                                                    {
+                                                                                        retailPercent = ((double)associateDeals.RetailTradeCount / (double)associateDeals.RetailDealCount).ToString("P", nfi);
+                                                                                    }
+
+                                                                                    if (associateDeals.DealCount > 0)
+                                                                                    {
+                                                                                        tradePercent = ((double)associateDeals.TotalTradeCount / (double)associateDeals.DealCount).ToString("P", nfi);
+                                                                                    }
+
+                                                                                    <tr>
+                                                                                        <td class="text-center">@associateDeals.SalesAssociateName</td>
+                                                                                        <td class="text-center">@associateDeals.DealCount</td>
+                                                                                        <td class="text-center">@associateDeals.TotalTradeCount</td>
+                                                                                        <td class="text-center">@tradePercent</td>
+                                                                                        <td class="text-center">@associateDeals.RetailDealCount</td>
+                                                                                        <td class="text-center">@associateDeals.RetailTradeCount</td>
+                                                                                        <td class="text-center">@retailPercent</td>
+                                                                                        <td class="text-center">@associateDeals.LeaseDealCount</td>
+                                                                                        <td class="text-center">@associateDeals.LeaseTradeCount</td>
+                                                                                        <td class="text-center">@leasePercent</td>
+                                                                                    </tr>
+                                                                                }
+                                                                            }
+
+                                                                        </tbody>
+                                                                        <tfoot></tfoot>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                                                    }
+
+
+                                                                                }
+                                                                                <tr style="background-color:#d9edf7; font-weight:bold;">
+                                                                                    @if (groupDetail.TradeDeals.Count > 0 && Model.IncludeDeals)
+                                                                                    {
+                                                                                        <td class="text-center" style="background-color:#d9edf7"><a data-toggle="collapse" id="@groupIndex-Total" style="cursor: pointer;" data-target="#collapse-@groupIndex-Total">Totals <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <td class="text-center" style="background-color:#d9edf7">Totals</td>
+                                                                                    }
+
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalDealCount</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalTrades</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@totalTradePercent</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalRetailCount</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalRetailTradeCount</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@totalRetailPercent</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalLeaseCount</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@TotalLeaseTradeCount</td>
+                                                                                    <td class="text-center" style="background-color:#d9edf7">@totalLeasePercent</td>
+                                                                                </tr>
+                                                                                if (Model.IncludeDeals)
+                                                                                {
+                                                                                    <tr id="collapse-@groupIndex-Total" class="collapse out" style="background-color:#f5f5f5">
+                                                                                        <td colspan="10">*@
+
+
+                var storeUserGroups = Model.StoreUserGroups.FindAll(x => x.DealerID == groupDetail.DealerId.ToString());
+
+                var uniqueAssociates = new List<String>();
+
+                foreach (var deal in groupDetail.TradeDeals)
+                {
+                    if (!uniqueAssociates.Contains(deal.SalesAssociate1Id))
+                    {
+                        uniqueAssociates.Add(deal.SalesAssociate1Id);
+                    }
+                }
+
+                var AllAssociatesWithDeals = new List<SalesCommission.Models.AssociateNameWithDeals>();
+                foreach (var associateId in uniqueAssociates)
+                {
+                    var associateWithDeals = new SalesCommission.Models.AssociateNameWithDeals();
+                    var associateDeals = Model.AssociateTradeReports.FindAll(o => o.SalesAssociateId == associateId && o.MallId == groupDetail.AutoMallId);
+
+                    var associateName = "";
+
+                    foreach (var deal in associateDeals)
+                    {
+                        associateName = deal.SalesAssociateName;
+                    }
+                    associateWithDeals.AssociateName = associateName;
+                    associateWithDeals.AssociateTradeReports = associateDeals;
+                    AllAssociatesWithDeals.Add(associateWithDeals);
+
+                }
+
+
+
+                foreach (var userGroup in storeUserGroups)
+                {
+
+                    var userGroupAssociates = Model.AssociateUserGroups.FindAll(x => x.UserGroupName == userGroup.UserGroupName && x.DealerID == groupDetail.DealerId.ToString());
+                    if (userGroupAssociates != null && userGroupAssociates.Count > 0)
+                    {
+                        var storeGroupDeals = new SalesCommission.Models.StoreGroupDeals();
+                        storeGroupDeals.StoreGroupName = userGroup.UserGroupName;
+                        storeGroupDeals.AssociateDeals = new List<SalesCommission.Models.AssociateNameWithDeals>();
+                        foreach (var associate in userGroupAssociates)
+                        {
+
+                            var associateTradeDate = AllAssociatesWithDeals.Find(x => x.AssociateName.ToLower() == associate.SalesAssociateName.ToLower());
+                            if (associateTradeDate != null)
+                            {
+                                storeGroupDeals.AssociateDeals.Add(associateTradeDate);
+                            }
+                            else
+                            {
+                                var start = associate.SalesAssociateName.IndexOf(' ') + 1;
+                                var end = associate.SalesAssociateName.LastIndexOf(' ');
+                                var associateLastName = "";
+
+                                if (end > 0 && end > start)
+                                {
+                                    associateLastName = associate.SalesAssociateName.Substring(start, end - start);
+
+                                }
+                                else
+                                {
+                                    associateLastName = associate.SalesAssociateName.Substring(start);
+                                }
+
+                                var associateFirstInitial = associate.SalesAssociateName.Substring(0, 1);
+                                // && x.SalesPerson.ToLower().StartsWith(associateFirstInitial)
+
+                                associateTradeDate = AllAssociatesWithDeals.Find(x => x.AssociateName.ToLower().Contains(associateLastName.ToLower()));
+                                if (associateTradeDate != null)
+                                {
+                                    storeGroupDeals.AssociateDeals.Add(associateTradeDate);
+                                }
+                            }
+
+                        }
+
+
+                        if (storeGroupDeals.AssociateDeals.Count > 0)
+                        {
+                                                                                                        <h4>@storeGroupDeals.StoreGroupName</h4>                                                                                                        
+                                                                                                        <table class="table table-bordered table-striped" style="font-size:12px;">
+                                                                                                            <thead>
+                                                                                                                <tr>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Sales Associate</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Opportunities</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Appraisals</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7;border-right:3px double #aaa;">Ratio</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Total Deals</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Total Trades</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Total Trade %</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Retail Deals</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Retail Trades</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Retail Trade %</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Lease Deals</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Lease Trades</th>
+                                                                                                                    <th class="text-center" style="background-color:#d9edf7">Lease Trade %</th>
+                                                                                                                </tr>
+                                                                                                            </thead>
+                                                                                                            <tbody>
+
+                                                                                                                @foreach (var associateTradeReports in storeGroupDeals.AssociateDeals)
+                                                                                                                {
+                                                                                                                    var associateDeals = associateTradeReports.AssociateTradeReports;
+
+                                                                                                                    var associateName = "";
+                                                                                                                    var associateId = "";
+                                                                                                                    var associateDealsLeaseDealCount = 0;
+                                                                                                                    var associateDealsRetailDealCount = 0;
+                                                                                                                    var associateDealsDealCount = 0;
+
+                                                                                                                    var associateDealsLeaseTradeCount = 0;
+                                                                                                                    var associateDealsRetailTradeCount = 0;
+                                                                                                                    var associateDealsTotalTradeCount = 0;
+
+                                                                                                                    foreach (var deal in associateDeals)
+                                                                                                                    {
+                                                                                                                        associateId = deal.SalesAssociateId;
+                                                                                                                        associateName = deal.SalesAssociateName;
+                                                                                                                        associateDealsLeaseDealCount += deal.LeaseDealCount;
+                                                                                                                        associateDealsRetailDealCount += deal.RetailDealCount;
+                                                                                                                        associateDealsDealCount += deal.DealCount;
+
+                                                                                                                        associateDealsLeaseTradeCount += deal.LeaseTradeCount;
+                                                                                                                        associateDealsRetailTradeCount += deal.RetailTradeCount;
+                                                                                                                        associateDealsTotalTradeCount += deal.TotalTradeCount;
+                                                                                                                    }
+
+                                                                                                                    var leasePercent = (0).ToString("P", nfi);
+                                                                                                                    var retailPercent = (0).ToString("P", nfi);
+                                                                                                                    var tradePercent = (0).ToString("P", nfi);
+
+                                                                                                                    if (associateDealsLeaseDealCount > 0)
+                                                                                                                    {
+                                                                                                                        leasePercent = ((double)associateDealsLeaseTradeCount / (double)associateDealsLeaseDealCount).ToString("P", nfi);
+                                                                                                                    }
+
+                                                                                                                    if (associateDealsRetailDealCount > 0)
+                                                                                                                    {
+                                                                                                                        retailPercent = ((double)associateDealsRetailTradeCount / (double)associateDealsRetailDealCount).ToString("P", nfi);
+                                                                                                                    }
+
+                                                                                                                    if (associateDealsDealCount > 0)
+                                                                                                                    {
+                                                                                                                        tradePercent = ((double)associateDealsTotalTradeCount / (double)associateDealsDealCount).ToString("P", nfi);
+                                                                                                                    }
+
+                                                                                                                    var associateOpportunities = 0;
+                                                                                                                    var associateAppraisals = 0;
+                                                                                                                    double associateRatio = 0;
+
+
+                                                                                                                    if (associateName != "None set")
+                                                                                                                    {
+                                                                                                                        var start = associateName.IndexOf(' ') + 1;
+                                                                                                                        var end = associateName.LastIndexOf(' ');
+                                                                                                                        var associateLastName = "";
+                                                                                                                        var associateFirstName = "";
+
+                                                                                                                        if (associateName.Length > 1)
+                                                                                                                        {
+                                                                                                                            associateFirstName = associateName.Substring(0, 2);
+                                                                                                                        }
+
+
+                                                                                                                        if (end > 0 && end > start)
+                                                                                                                        {
+                                                                                                                            associateLastName = associateName.Substring(start, end - start);
+
+                                                                                                                        }
+                                                                                                                        else
+                                                                                                                        {
+                                                                                                                            associateLastName = associateName.Substring(start);
+                                                                                                                        }
+
+                                                                                                                        var associateAppraisalList = Model.AssociateAppraisals.FindAll(x => x.SalesPerson.ToLower().Contains(associateLastName.ToLower()) && x.SalesPerson.ToLower().Contains(associateFirstName.ToLower()));
+                                                                                                                        var associateOpportunityList = Model.AssociateOpportunities.FindAll(x => x.Sales_LastName.ToLower().Contains(associateLastName.ToLower()) && x.Sales_LastName.ToLower().Contains(associateFirstName.ToLower()));
+
+                                                                                                                        if (associateAppraisalList != null && associateAppraisalList.Count > 0)
+                                                                                                                        {
+                                                                                                                            associateAppraisals = associateAppraisalList.Count;
+                                                                                                                        }
+                                                                                                                        else
+                                                                                                                        {
+                                                                                                                            associateAppraisalList = Model.AssociateAppraisals.FindAll(x => x.SalesPerson.ToLower().Contains(associateLastName.ToLower()));
+                                                                                                                            if (associateAppraisalList != null && associateAppraisalList.Count > 0)
+                                                                                                                            {
+                                                                                                                                associateAppraisals = associateAppraisalList.Count;
+                                                                                                                            }
+                                                                                                                        }
+
+                                                                                                                        if (associateOpportunityList != null && associateOpportunityList.Count > 0)
+                                                                                                                        {
+                                                                                                                            associateOpportunities = associateOpportunityList.Count;
+                                                                                                                        }
+                                                                                                                        else
+                                                                                                                        {
+                                                                                                                            associateOpportunityList = Model.AssociateOpportunities.FindAll(x => x.Sales_LastName.ToLower().Contains(associateLastName.ToLower()));
+                                                                                                                            if (associateOpportunityList != null && associateOpportunityList.Count > 0)
+                                                                                                                            {
+                                                                                                                                associateOpportunities = associateOpportunityList.Count;
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                        //var associateAppraisalData = Model.AssociateAppraisalsOld.FindAll(x => x.SalesPerson.ToLower() == associateName.ToLower());
+                                                                                                                        //if (associateAppraisalData != null && associateAppraisalData.Count > 0)
+                                                                                                                        //{
+                                                                                                                        //    foreach (var data in associateAppraisalData)
+                                                                                                                        //    {
+                                                                                                                        //        associateOpportunities += data.TotOpp;
+                                                                                                                        //        associateAppraisals += data.TotAppraisals;
+                                                                                                                        //    }
+                                                                                                                        //}
+
+                                                                                                                        //else
+                                                                                                                        //{
+                                                                                                                        //    var start = associateName.IndexOf(' ') + 1;
+                                                                                                                        //    var end = associateName.LastIndexOf(' ');
+                                                                                                                        //    var associateLastName = "";
+
+                                                                                                                        //    if (end > 0 && end > start)
+                                                                                                                        //    {
+                                                                                                                        //        associateLastName = associateName.Substring(start, end - start);
+
+                                                                                                                        //    }
+                                                                                                                        //    else
+                                                                                                                        //    {
+                                                                                                                        //        associateLastName = associateName.Substring(start);
+                                                                                                                        //    }
+
+                                                                                                                        //    var associateFirstInitial = associateName.Substring(0, 1);
+                                                                                                                        //    // && x.SalesPerson.ToLower().StartsWith(associateFirstInitial)
+                                                                                                                        //    associateAppraisalData = Model.AssociateAppraisalsOld.FindAll(x => x.SalesPerson.ToLower().Contains(associateLastName.ToLower()));
+                                                                                                                        //    if (associateAppraisalData != null)
+                                                                                                                        //    {
+                                                                                                                        //        foreach (var data in associateAppraisalData)
+                                                                                                                        //        {
+                                                                                                                        //            associateOpportunities += data.TotOpp;
+                                                                                                                        //            associateAppraisals += data.TotAppraisals;
+                                                                                                                        //        }
+                                                                                                                        //    }
+                                                                                                                        //}
+                                                                                                                    }
+
+                                                                                                                    if (associateOpportunities > 0)
+                                                                                                                    {
+                                                                                                                        associateRatio = ((double)associateAppraisals / (double)associateOpportunities);
+                                                                                                                    }
+
+                                                                                                                    <tr>
+
+                                                                                                                        <td class="text-center"><a data-toggle="collapse" id="@groupIndex-@associateId-Total" style="cursor: pointer;" data-target="#collapse-@groupIndex-@associateId-Total">@associateName <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                                                                                                        <td class="text-center"><a href="@applicationPath/Reports/AssociatePerformance/@Model.MonthId/@Model.YearId/@groupDetail.AutoMallId/@associateName" target="_blank">@associateOpportunities</a></td>
+                                                                                                                        <td class="text-center"><a href="@applicationPath/Reports/AssociatePerformance/@Model.MonthId/@Model.YearId/@groupDetail.AutoMallId/@associateName" target="_blank">@associateAppraisals</a></td>
+                                                                                                                        <td class="text-center" style="border-right:3px double #aaa;">@associateRatio.ToString("P", nfi)</td>
+                                                                                                                        <td class="text-center">@associateDealsDealCount</td>
+                                                                                                                        <td class="text-center">@associateDealsTotalTradeCount</td>
+                                                                                                                        <td class="text-center">@tradePercent</td>
+                                                                                                                        <td class="text-center">@associateDealsRetailDealCount</td>
+                                                                                                                        <td class="text-center">@associateDealsRetailTradeCount</td>
+                                                                                                                        <td class="text-center">@retailPercent</td>
+                                                                                                                        <td class="text-center">@associateDealsLeaseDealCount</td>
+                                                                                                                        <td class="text-center">@associateDealsLeaseTradeCount</td>
+                                                                                                                        <td class="text-center">@leasePercent</td>
+                                                                                                                    </tr>
+                                                                                                                    if (true == false)
+                                                                                                                    //if (Model.IncludeDeals)
+                                                                                                                    {
+                                                                                                                        var tradeDeals = groupDetail.TradeDeals.FindAll(o => o.SalesAssociate1Id == associateId);
+                                                                                                                        <tr id="collapse-@groupIndex-@associateId-Total" class="collapse out" style="background-color:#f5f5f5">
+                                                                                                                            <td colspan="13">
+                                                                                                                                <table class="table table-bordered table-striped" style="font-size:12px;">
+                                                                                                                                    <thead>
+                                                                                                                                        <tr>
+                                                                                                                                            <th class="text-center">Deal</th>
+                                                                                                                                            <th class="text-center">R/L</th>
+                                                                                                                                            <th class="text-center">N/U</th>
+                                                                                                                                            <th class="text-center">Deal Date</th>
+                                                                                                                                            <th class="text-center">Year</th>
+                                                                                                                                            <th class="text-center">Make</th>
+                                                                                                                                            <th class="text-center">Model</th>
+                                                                                                                                            <th class="text-center">Trade 1</th>
+                                                                                                                                            <th class="text-center">Trade 1 Val</th>
+                                                                                                                                            <th class="text-center">Trade 1 Cash</th>
+                                                                                                                                            <th class="text-center">Trade 2</th>
+                                                                                                                                            <th class="text-center">Trade 2 Val</th>
+                                                                                                                                            <th class="text-center">Trade 2 Cash</th>
+                                                                                                                                        </tr>
+                                                                                                                                    </thead>
+                                                                                                                                    <tbody>
+                                                                                                                                        @foreach (var deal in tradeDeals)
+                                                                                                                                        {
+                                                                                                                                            <tr>
+                                                                                                                                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                                                                                                                                <td class="text-center">@deal.VehicleCategory</td>
+                                                                                                                                                <td class="text-center">@deal.VehicleNewUsed</td>
+                                                                                                                                                <td class="text-center">@deal.DealDate.ToShortDateString()</td>
+                                                                                                                                                <td class="text-center">@deal.VehicleYear</td>
+                                                                                                                                                <td class="text-center">@deal.VehicleMake</td>
+                                                                                                                                                <td class="text-center">@deal.VehicleModel</td>
+                                                                                                                                                <td class="text-center">@deal.TradeDescription1</td>
+                                                                                                                                                <td class="text-center">@deal.TradeValue1</td>
+                                                                                                                                                <td class="text-center">@deal.TradeCashValue1</td>
+                                                                                                                                                <td class="text-center">@deal.TradeDescription2</td>
+                                                                                                                                                <td class="text-center">@deal.TradeValue2</td>
+                                                                                                                                                <td class="text-center">@deal.TradeCashValue2</td>
+
+                                                                                                                                            </tr>
+                                                                                                                                        }
+
+                                                                                                                                    </tbody>
+                                                                                                                                    <tfoot></tfoot>
+                                                                                                                                </table>
+                                                                                                                            </td>
+                                                                                                                        </tr>
+                                                                                                                    }
+
+
+                                                                                                                }
+
+                                                                                                            </tbody>
+                                                                                                            <tfoot></tfoot>
+                                                                                                        </table>
+
+                                                                                                    }
+
+
+                                                                                                }
+                                                                                            }
+
+                                                                                                }
+                                                                                        @*</td>
+                                                                                    </tr>
+                                                                                                }
+                                                                                                <tr>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                                                                                </tr>
+
+                                                                                                        CompanyNewTotalDealCount += TotalNewDealCount;
+                                                                                                        CompanyNewTotalTrades += TotalNewTrades;
+
+                                                                                                        CompanyNewTotalLeaseCount += TotalNewLeaseCount;
+                                                                                                        CompanyNewTotalRetailCount += TotalNewRetailCount;
+
+                                                                                                        CompanyNewTotalLeaseTradeCount += TotalNewLeaseTradeCount;
+                                                                                                        CompanyNewTotalRetailTradeCount += TotalNewRetailTradeCount;
+
+
+                                                                                                        CompanyUsedTotalDealCount += TotalUsedDealCount;
+                                                                                                        CompanyUsedTotalTrades += TotalUsedTrades;
+
+                                                                                                        CompanyUsedTotalLeaseCount += TotalUsedLeaseCount;
+                                                                                                        CompanyUsedTotalRetailCount += TotalUsedRetailCount;
+
+                                                                                                        CompanyUsedTotalLeaseTradeCount += TotalUsedLeaseTradeCount;
+                                                                                                        CompanyUsedTotalRetailTradeCount += TotalUsedRetailTradeCount;
+
+
+                                                                                                        CompanyTotalDealCount += TotalDealCount;
+                                                                                                        CompanyTotalTrades += TotalTrades;
+
+                                                                                                        CompanyTotalLeaseCount += TotalLeaseCount;
+                                                                                                        CompanyTotalRetailCount += TotalRetailCount;
+
+                                                                                                        CompanyTotalLeaseTradeCount += TotalLeaseTradeCount;
+                                                                                                        CompanyTotalRetailTradeCount += TotalRetailTradeCount;
+                                                                                                    }
+                                                                                                }
+
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    <td class="text-center" style="background-color:#d9edf7">Company Totals</td>
+                    <td class="text-center" style="background-color:#d9edf7">Total Deals</td>
+                    <td class="text-center" style="background-color:#d9edf7">Total Trades</td>
+                    <td class="text-center" style="background-color:#d9edf7">Total Trade %</td>
+                    <td class="text-center" style="background-color:#d9edf7">Retail Deals</td>
+                    <td class="text-center" style="background-color:#d9edf7">Retail Trades</td>
+                    <td class="text-center" style="background-color:#d9edf7">Retail Trade %</td>
+                    <td class="text-center" style="background-color:#d9edf7">Lease Deals</td>
+                    <td class="text-center" style="background-color:#d9edf7">Lease Trades</td>
+                    <td class="text-center" style="background-color:#d9edf7">Lease Trade %</td>
+                </tr>
+
+                @{
+
+                    var companyLeasePercent = (0).ToString("P", nfi);
+                    var companyRetailPercent = (0).ToString("P", nfi);
+                    var companyTradePercent = (0).ToString("P", nfi);
+
+                    var companyNewLeasePercent = (0).ToString("P", nfi);
+                    var companyNewRetailPercent = (0).ToString("P", nfi);
+                    var companyNewTradePercent = (0).ToString("P", nfi);
+
+                    var companyUsedLeasePercent = (0).ToString("P", nfi);
+                    var companyUsedRetailPercent = (0).ToString("P", nfi);
+                    var companyUsedTradePercent = (0).ToString("P", nfi);
+
+                    if (CompanyTotalLeaseCount > 0)
+                    {
+                        companyLeasePercent = (CompanyTotalLeaseTradeCount / CompanyTotalLeaseCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyTotalRetailCount > 0)
+                    {
+                        companyRetailPercent = (CompanyTotalRetailTradeCount / CompanyTotalRetailCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyTotalDealCount > 0)
+                    {
+                        companyTradePercent = (CompanyTotalTrades / CompanyTotalDealCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyNewTotalLeaseCount > 0)
+                    {
+                        companyNewLeasePercent = (CompanyNewTotalLeaseTradeCount / CompanyNewTotalLeaseCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyNewTotalRetailCount > 0)
+                    {
+                        companyNewRetailPercent = (CompanyNewTotalRetailTradeCount / CompanyNewTotalRetailCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyNewTotalDealCount > 0)
+                    {
+                        companyNewTradePercent = (CompanyNewTotalTrades / CompanyNewTotalDealCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyUsedTotalLeaseCount > 0)
+                    {
+                        companyUsedLeasePercent = (CompanyUsedTotalLeaseTradeCount / CompanyUsedTotalLeaseCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyUsedTotalRetailCount > 0)
+                    {
+                        companyUsedRetailPercent = (CompanyUsedTotalRetailTradeCount / CompanyUsedTotalRetailCount).ToString("P", nfi);
+                    }
+
+                    if (CompanyUsedTotalDealCount > 0)
+                    {
+                        companyUsedTradePercent = (CompanyUsedTotalTrades / CompanyUsedTotalDealCount).ToString("P", nfi);
+                    }
+
+
+                }
+
+                <tr style="background-color:#e9f3f7; font-weight:bold; font-size:12px;">
+                    <td class="text-center" style="background-color:#e9f3f7">New Totals</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalDealCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalTrades</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyNewTradePercent</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalRetailCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalRetailTradeCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyNewRetailPercent</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalLeaseCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyNewTotalLeaseTradeCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyNewLeasePercent</td>
+                </tr>
+                <tr style="background-color:#e9f3f7; font-weight:bold; font-size:12px;">
+                    <td class="text-center" style="background-color:#e9f3f7">Used Totals</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalDealCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalTrades</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyUsedTradePercent</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalRetailCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalRetailTradeCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyUsedRetailPercent</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalLeaseCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@CompanyUsedTotalLeaseTradeCount</td>
+                    <td class="text-center" style="background-color:#e9f3f7">@companyUsedLeasePercent</td>
+                </tr>
+
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    <td class="text-center" style="background-color:#d9edf7">Totals</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalDealCount</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalTrades</td>
+                    <td class="text-center" style="background-color:#d9edf7">@companyTradePercent</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalRetailCount</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalRetailTradeCount</td>
+                    <td class="text-center" style="background-color:#d9edf7">@companyRetailPercent</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalLeaseCount</td>
+                    <td class="text-center" style="background-color:#d9edf7">@CompanyTotalLeaseTradeCount</td>
+                    <td class="text-center" style="background-color:#d9edf7">@companyLeasePercent</td>
+                </tr>
+
+            </tbody>
+
+            <tfoot></tfoot>
+
+        </table>*@
+
+    </div>
+                    }
+
+
+
+@section scripts
+{
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+            $(document).ready(function () {
+
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                $('[id^=collapse]').collapse('show');
+
+                window.print();
+                //$('#section1').DataTable({
+                //    searching: false,
+                //    sorting: false,
+                //    ordering: false,
+                //    dom: 'B',
+                //    pageLength: -1,
+                //    buttons: [
+                //        {
+                //            extend: 'copyHtml5', footer: true,
+                //        },
+                //        {
+                //            extend: 'excelHtml5', footer: true,
+                //        },
+                //        {
+                //            extend: 'pdfHtml5', footer: true,
+                //            orientation: 'landscape'
+                //        },
+                //        {
+                //            extend: 'print', footer: true,
+                //            orientation: 'landscape'
+                //        }]
+                //    //],
+                //    //columnDefs: [
+                //    //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                //    //  { type: 'date-us', targets: [3] }
+                //    //],
+                //    //  order: [[ 1, 'desc' ]]
+                //});
+
+            });
+
+    </script>
+
+}

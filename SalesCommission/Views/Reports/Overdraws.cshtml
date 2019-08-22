@@ -1,0 +1,337 @@
+﻿@model SalesCommission.Models.OverdrawReportModel
+
+@{
+    ViewBag.Title = "Overdraw Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+
+    th.rotate {
+        /* Something you can count on */
+        height: 150px;
+        white-space: nowrap;
+    }
+
+        th.rotate > div {
+            transform:
+            /* Magic Numbers */
+            translate(3px, 0px)
+            /* 45 is really 360 - 45 */
+            rotate(270deg);
+            width: 30px;
+        }
+
+            th.rotate > div > span {
+                border-bottom: 0px solid #ccc;
+                padding: 5px 10px;
+            }
+
+    .aft {
+        display: none;
+    }
+
+    .aft-percent {
+        display: none;
+    }
+
+    .table-bordered > thead > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > thead > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Overdraw Report</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.SelectedStores, new MultiSelectList(SalesCommission.Business.Enums.StoresReport, "StoreId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Stores..." })
+                    </div>                    
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Overdraw Report for @Model.YearId</h3>
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+            <thead>
+
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Store</th>                         
+                    <th class="text-center">January</th>
+                    <th class="text-center">February</th>
+                    <th class="text-center">March</th>
+                    <th class="text-center">April</th>
+                    <th class="text-center">May</th>
+                    <th class="text-center">June</th>
+                    <th class="text-center">July</th>
+                    <th class="text-center">August</th>
+                    <th class="text-center">September</th>
+                    <th class="text-center">October</th>
+                    <th class="text-center">November</th>
+                    <th class="text-center">December</th>
+                    <th class="text-center">Total</th>                                   
+                </tr>
+            </thead>
+            <tbody>
+                
+                    <tr>
+                        <td class="text-center"><a data-toggle="collapse" id="1" style="cursor: pointer;" data-target="#collapse-1">Store 1 <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td> 
+                    </tr>
+
+                    <tr id="collapse-1" class="collapse out" style="background-color:lightgray">
+                        <td colspan="14">
+                            <h5>Store 1 Overdraws</h5>
+                            <table class="table table-bordered table-striped" style="font-size:12px;">
+                                <thead>
+                                    <tr style="background-color:#d9edf7;">
+                                        <th class="text-center">Employee</th>
+                                        <th class="text-center">January</th>
+                                        <th class="text-center">February</th>
+                                        <th class="text-center">March</th>
+                                        <th class="text-center">April</th>
+                                        <th class="text-center">May</th>
+                                        <th class="text-center">June</th>
+                                        <th class="text-center">July</th>
+                                        <th class="text-center">August</th>
+                                        <th class="text-center">September</th>
+                                        <th class="text-center">October</th>
+                                        <th class="text-center">November</th>
+                                        <th class="text-center">December</th>
+                                        <th class="text-center">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-center">Employee 1</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td> 
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">Employee 2</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                        <td class="text-center">0</td>
+                                    </tr>
+
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th class="text-center">Totals</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                        <th class="text-center">0</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </td>
+                    </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th class="text-center">Totals</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+@section scripts
+{
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('#section1').DataTable({
+                searching: false,
+                sorting: false,
+                ordering: false,
+                dom: 'B',
+                pageLength: -1,
+                buttons: [
+                    {
+                        extend: 'copyHtml5', footer: true,
+                    },
+                    {
+                        extend: 'excelHtml5', footer: true,
+                    },
+                    {
+                        extend: 'pdfHtml5', footer: true,
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print', footer: true,
+                        orientation: 'landscape'
+                    }]
+
+            });
+
+        });
+
+
+
+
+
+    </script>
+
+}

@@ -1,0 +1,105 @@
+﻿@model SalesCommission.Models.AdditionalCommissionModel
+
+@{
+    ViewBag.Title = "Additional Commissions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<div class="jumbotron">
+    <h1>Additional Commissions</h1>
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.NewStores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@if (Model.AdditionalCommissions != null)
+{
+    using (Html.BeginForm("AdditionalCommission", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+        <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+        <input type="hidden" id="hdn-StoreId" name="hdn-StoreId" value="@Model.StoreId" />
+
+        <div class="row">
+            <div class="col-sm-12">
+                <h4>Vehicle Additional Commission for @Model.MonthId/@Model.YearId</h4>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Make</th>
+                            <th>Model</th>
+                            <th>Additional Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ 
+                            var index = 1;
+                        }
+                        @foreach (var commission in Model.AdditionalCommissions)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" id="hdn-Id-@index" name="hdn-Id-@index" value="@commission.Id"/>
+                                    @commission.MakeName
+                                </td>                            
+                                <td>@commission.ModelName</td>                            
+                                <td>
+                                    <input type="hidden" id="hdn-MakeCode-@index" name="hdn-MakeCode-@index" value="@commission.MakeCode" />
+                                    <input type="hidden" id="hdn-MakeName-@index" name="hdn-MakeName-@index" value="@commission.MakeName" />
+                                    <input type="hidden" id="hdn-ModelName-@index" name="hdn-ModelName-@index" value="@commission.ModelName" />
+                                    <input type="text" id="additional-commission-@index" name="additional-commission-@index" value="@commission.AdditionalCommissionAmount" class="form-control"/>
+                                </td>
+                            </tr>
+                            index += 1;
+                        }
+                        <input type="hidden" id="hdn-InputIndex" name="hdn-InputIndex" value="@index" />
+                        <tr>
+                            <td colspan="3" class="text-center">
+                                <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Save</button>
+                            </td>
+                        </tr>
+                    </tbody>                
+                </table>
+            </div>
+        </div>
+                            }
+                        }

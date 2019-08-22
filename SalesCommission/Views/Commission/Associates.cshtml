@@ -1,0 +1,432 @@
+﻿@model SalesCommission.Models.AssociateModel
+@{
+    ViewBag.Title = "Store Associates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+@section CSS
+{
+    
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+}
+
+<style type="text/css">
+    .form-control-sm {
+        font-size: 12px;
+        height: 28px;
+        padding: 4px 4px;
+    }
+
+    .col-sm-1 {
+        width: 8.8%;
+    }
+
+    table {
+        background-color: #fff;
+    }
+
+    h5.editInfo{
+        color:#428bca;
+    }
+
+    h5.editInfo:hover{
+        text-decoration:underline;
+        color: #428bca;
+        cursor: pointer;
+    }
+</style>
+
+<div class="navbar-fixed-top" style="width:25%;left:65%">
+    <div class="container">
+        <div class="navbar-header">
+            @if (Model.Associates != null)
+            {
+                <span style="color: #999999;">Scroll to an Associate:</span>@Html.DropDownListFor(n => n.Associates, new SelectList(Model.Associates, "AssociateSSN", "AssociateFullName"), new { @class = "form-control form-inline form-control-sm", id = "select-anchor" })
+            }
+        </div>
+    </div>
+</div>
+
+<div class="jumbotron">
+    <h1>Store Associates</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+    @if (Model.Associates != null)
+    {
+        var salesLeaderList = new List<SelectListItem>();
+
+        var emptyItem = new SelectListItem();
+        emptyItem.Text = "Select Sales Leader";
+        emptyItem.Value = "";
+        salesLeaderList.Add(emptyItem);
+
+        foreach (var associate in Model.Associates)
+        {
+            if(associate.AssociateStatus == "Mentor")
+            {
+                var selectItem = new SelectListItem();
+
+                selectItem.Text = associate.AssociateFullName;
+                selectItem.Value = associate.AssociateNumber;
+
+                salesLeaderList.Add(selectItem);
+            }
+        }
+
+
+
+        var departments = Model.Associates.Select(x => x.AssociateDepartment).Distinct().ToList();
+        if (departments.Count > 1)
+        {
+            <div class="row">
+                <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
+                    <strong>Show Sales Teams:</strong>
+                    @foreach (var department in departments)
+                    {
+                        var labelName = department;
+
+                        try
+                        {
+                            labelName = Model.Associates.Find(x => x.AssociateDepartment == department).AssociateDepartmentDescription;
+                        }
+                        catch (Exception ex)
+                        {
+                            //do nothing
+                        }
+
+                        <label style="padding-left:10px;"><input type="checkbox" id="chk-@department" name="chk-@department" checked />@labelName</label>
+                        <script>
+                        $('#chk-@department').change(function () {
+                                if (this.checked) {
+                                    $('#table-@department').show();
+                                    $('#header-@department').show();
+                                }
+                                else {
+                                    $('#table-@department').hide();
+                                    $('#header-@department').hide();
+                                }
+                            });
+                        </script>
+
+
+                    }
+                </div>
+            </div>
+        }
+
+
+        <div class="row">
+
+@foreach (var department in departments)
+{
+    var departmentAssociates = Model.Associates.FindAll(x => x.AssociateDepartment == department);
+    var departmentName = department;
+
+    if (departmentAssociates.Count > 0)
+    {
+        departmentName = departmentAssociates[0].AssociateDepartmentDescription;
+    }
+            <table class="table table-bordered table-striped" id="table-@department">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th colspan="4">@departmentName</th>
+                        <th colspan="2" class="text-center">Draws</th>
+                        <th colspan="2" class="text-center">Advances</th>
+                        <th></th>
+                    </tr>
+                    <tr style="background-color:#d9edf7">
+                        <th>Name</th>
+                        <th>Payscale</th>
+                        @*<th>SSI</th>*@
+                        @*<th>Level</th>*@
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-right">Amount</th>
+                        <th>Description</th>
+                        <th class="text-right">Amount</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var associate in departmentAssociates)
+                    {
+
+                        using (Html.BeginForm("Associates", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                        {
+
+                            @*@Html.DropDownListFor(m => associate.AssociateStoreVolume, new SelectList(Model.StoreVolumes, "Value", "Text", associate.AssociateStoreVolume), new { @class = "form-control form-inline" }) *@
+
+
+                            <tr>
+                                <td>
+                                    <input type="hidden" id="hdn-locationId" name="hdn-locationId" value="@Model.StoreId" />
+                                    <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+                                    <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+                                    <input type="hidden" id="hdn-SSN" name="hdn-SSN" value="@associate.AssociateSSN" />
+                                    <a id="@associate.AssociateSSN"></a>
+                                    @associate.AssociateFullName<br/>
+                                    @if (@associate.UpdateDate.ToShortDateString() == "1/1/0001")
+                                    {
+                                        <span style="font-size:11px; color:red">Needs to be updated</span>
+                                    }
+                                    else
+                                    {
+                                    <span style="font-size:11px">Last updated on @associate.UpdateDate.ToShortDateString()</span>
+                                    }
+
+                                </td>
+                                <td>@Html.DropDownListFor(m => associate.AssociatePayscale, new SelectList(Model.Payscales, "Value", "Text", associate.AssociatePayscale), new { @class = "form-control form-inline form-control-sm" })</td>
+                                @*<td>@Html.DropDownListFor(m => associate.AssociateSSI, new SelectList(Model.SSI, "Value", "Text", associate.AssociateSSI), new { @class = "form-control form-inline form-control-sm" })</td>*@
+                                @*<td>@Html.DropDownListFor(m => associate.AssociateLevel, new SelectList(Model.Levels, "Value", "Text", associate.AssociateLevel), new { @class = "form-control form-inline form-control-sm" })</td>*@
+                                <td>
+                                    @Html.DropDownListFor(m => associate.AssociateStatus, new SelectList(Model.Statuses, "Value", "Text", associate.AssociateStatus), new { @class = "form-control form-inline form-control-sm", id = associate.AssociateSSN + "-select" })
+                                    <script>
+                                        $('#@associate.AssociateSSN-select').on('change', function () {
+                                            if (this.value == "Mentee") {
+                                                $('#@associate.AssociateSSN-mentor-row').show();
+                                                //$('#@associate.AssociateSSN-mentor-entry').show();
+                                            }
+                                            else {
+                                                $('#@associate.AssociateSSN-mentor-row').hide();
+                                                //$('#@associate.AssociateSSN-mentor-entry').hide();
+                                            }
+
+                                        })
+                                    </script>
+                                </td>
+                                
+                                <td colspan="2">
+                                    @foreach (var item in associate.AssociateDraws)
+                                    {
+                                        <table class="table table-condensed" style="font-size:12px;margin-bottom:0px;">
+                                            <tr>
+                                                <td class="text-left">@item.DrawDate.ToShortDateString()</td>
+                                                <td class="text-right">@item.DrawAmount</td>
+                                            </tr>
+                                        </table>
+                                    }
+
+                                    @*<h5 class="@associate.AssociateSSN-drawtoggle"><i class="fa fa-pencil" aria-hidden="true"></i> Manage Draws</h5>
+                                    
+                                    <script>
+                                        $(".@associate.AssociateSSN-drawtoggle").click(function () {
+                                            $header = $(this);
+                                            $content = $(".@associate.AssociateSSN-drawentry")
+                                            $content.slideToggle(500, function () {
+                                            });
+
+                                        });
+                                    </script>*@
+
+                                </td>
+                                <td colspan="2">
+                                    @foreach (var item in associate.AssociateBonus)
+                                    {
+                                        <table class="table table-condensed" style="font-size:12px;margin-bottom:0px;">
+                                            <tr>                                             
+                                                <td class="text-left">@item.BonusComments</td>
+                                                <td class="text-right">@item.BonusAmount</td>
+                                            </tr>
+                                        </table>
+                                    }
+
+                                    
+                                    
+                                    @*<script>
+                                        $(".@associate.AssociateSSN-bonustoggle").click(function () {
+                                            $header = $(this);
+                                            $content = $(".@associate.AssociateSSN-bonusentry")
+                                            $content.slideToggle(500, function () {
+                                            });
+
+                                        });
+                                    </script>*@
+
+
+                                </td>
+
+                        <td class="text-center">
+                            <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="SaveAssociate">Save</button>
+                            <h5 class="editInfo" rel="@associate.AssociateNumber.Trim()"><i class="fa fa-pencil" aria-hidden="true"></i> Bonus and<br/>Advances (Draws)</h5>    
+                        </td>
+                    </tr>
+                    @*<tr class="@associate.AssociateSSN-bonusentry" style="display:none;">
+                        <td colspan="12" class="text-center">
+                            <table>
+                                <tr>
+                                    @using (Html.BeginForm())
+                            {
+                                        <input type="hidden" id="hdn-locationId" name="hdn-locationId" value="@Model.StoreId" />
+                                        <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+                                        <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+                                        <input type="hidden" id="hdn-SSN" name="hdn-SSN" value="@associate.AssociateSSN" />
+
+                                            @:
+                                            <td colspan="1">Amount: <input type="text" name="bonusAmount" id="bonusAmount" class="form-control form-control-sm" /></td>
+                                            @:
+                                            <td colspan="3">Comment: <textarea name="bonusComment" id="bonusComment" class="form-control form-control-sm" style="max-width:100%"></textarea></td>
+                                            @:
+                                            <td colspan="6"><button class="btn btn-primary" type="submit" value="submit" name="SaveBonus">Save</button></td>
+                                    }
+                                </tr>
+                            </table>
+                        </td>
+
+                    </tr>
+                    <tr class="@associate.AssociateSSN-drawentry" style="display:none;">
+
+                        @using (Html.BeginForm())
+                        {
+                            <input type="hidden" id="hdn-locationId" name="hdn-locationId" value="@Model.StoreId" />
+                            <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+                            <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+                            <input type="hidden" id="hdn-SSN" name="hdn-SSN" value="@associate.AssociateSSN" />
+
+                                            @:<td colspan="1">Amount: <input type="text" name="drawAmount" id="drawAmount" class="form-control form-control-sm" /></td>
+                                            @:<td colspan="9"><button class="btn btn-primary" type="submit" value="submit" name="SaveDraw">Save</button></td>
+                            }
+                    </tr>*@
+
+
+                            var visibility = "none";
+                            if (associate.AssociateStatus == "Mentee")
+                            {
+                                visibility = "";
+                            }
+
+
+                            <tr id="@associate.AssociateSSN-mentor-row" style="display:@visibility;">
+                                <td></td>
+                                <td><strong>Sales Leader</strong><br/>
+                                    @Html.DropDownListFor(m => associate.AssociateMentor, new SelectList(salesLeaderList, "Value", "Text", associate.AssociateMentor), new { @class = "form-control form-inline form-control-sm" })
+                                    @*<input type="text" id="mentor" name="mentor" class="form-control form-control-sm" value="@associate.AssociateMentor" />*@
+                                </td>
+                                <td colspan="2"><strong>Comp Date</strong><br />
+                                    <input type="text" id="compDate" name="compDate" class="form-control form-control-sm" value="@associate.AssociateCompetencyDate.ToShortDateString()" />
+                                </td>
+                                <td><strong>Grad Date</strong><br />
+                                    <input type="text" id="gradDate" name="gradDate" class="form-control form-control-sm" value="@associate.AssociateGraduationDate.ToShortDateString()" />
+                                </td>
+                            </tr>
+                        }
+                    }
+
+
+
+
+
+
+                </tbody>
+            </table>
+}
+        </div>
+    
+
+}
+
+@section scripts
+{
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $('#select-anchor').change(function () {
+            var targetPosition = $("#" + $(this).val()).offset().top - 50;
+            $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+        });
+
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+
+        $('body').on('click','.editInfo', function (event) {
+
+            var id = $(this).attr('rel');
+            var url = "@applicationPath/Commission/BonusAndDraws/" + id + "/@Model.MonthId/@Model.YearId";
+            var dialogBox = $("<div>");
+
+            $(dialogBox).dialog({
+                resizable: false,
+                height:"auto",
+                width: dialogWidth,
+                position: { my: "center", at: "top+25%", of: window },
+                title: 'Associate Bonus and Advances (Draws)',
+                modal: true,
+                open: function (event, ui) {
+                    $(this).load(url);
+                    //$('#BonusDraws').validate();
+                },
+                buttons: {
+                    "Save": function () {
+                        var $this = this;
+                        var form = $('#BonusDraws', $this);
+                        //if (!$(form).valid()) {
+                        //    return false;
+                        //}
+
+                        $.ajax({
+                            async: false,
+                            type: 'POST',
+                            url: form.attr("action"),
+                            data: $(form).serialize(),
+                            success: $($this).dialog("close").dialog("destroy").remove()
+                        });
+                        
+                        location.reload();
+                   },
+
+                    "Close": function () {
+                        $(this).dialog("close");
+                        $(this).empty();
+                    }
+                }
+            });
+            $(dialogBox).dialog('open');
+        });
+
+
+    });
+
+
+</script>
+}

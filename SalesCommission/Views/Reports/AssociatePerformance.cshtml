@@ -1,0 +1,230 @@
+﻿@model SalesCommission.Models.AssociatePerformanceModel
+
+@{
+    ViewBag.Title = "Associate Appraisals and Opportunities";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    
+}
+
+<style type="text/css">
+
+
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+</style>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Associate Appraisals and Opportunities</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Appraisals</h4>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" id="appraisals">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Auto Mall</th>
+                    <th class="text-center">Appraiser</th>
+                    <th class="text-center">VIN</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">Last Updated</th>
+                    <th class="text-center">Recon Cost</th>
+                    <th class="text-center">Appraised Value</th>
+                    <th class="text-center">Purchased?</th>
+                    <th class="text-center">Profit Obj</th>
+                    <th class="text-center">Adj % Market</th>
+                    <th class="text-center">Rank</th>
+                    <th class="text-center">Asking Price</th>
+                </tr>
+            </thead>
+            <tbody>
+@if (Model.AssociateAppraisals != null)
+{
+    foreach (var appraisal in Model.AssociateAppraisals)
+    {
+        <tr style="background-color:#d9edf7;">
+            <td class="text-center">@appraisal.Loc</td>
+            <td class="text-center">@appraisal.VA_Appraiser</td>
+            <td class="text-center">@appraisal.VIN</td>
+            <td class="text-center">@appraisal.Year</td>
+            <td class="text-center">@appraisal.Make</td>
+            <td class="text-center">@appraisal.Model</td>
+            <td class="text-center">@appraisal.VA_LastModifiedDate.ToShortDateString()</td>
+            <td class="text-center">@appraisal.ReconditioningCost.ToString("C",nfi)</td>
+            <td class="text-center">@appraisal.AppraisedValue.ToString("C", nfi)</td>
+            <td class="text-center">@appraisal.Purchase</td>
+            <td class="text-center">@appraisal.ProfitObj.ToString("C",nfi)</td>
+            <td class="text-center">@appraisal.adjustedPctMarket.ToString("P", nfi)</td>
+            <td class="text-center">@appraisal.vRank</td>
+            <td class="text-center">@appraisal.AskingPrice.ToString("C", nfi)</td>
+        </tr>
+    }
+}
+            </tbody>
+
+            <tfoot>
+
+            </tfoot>
+
+        </table>
+
+    </div>
+<div class="row">
+    <div class="col-md-12">
+        <hr />
+    </div>
+</div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Opportunities</h4>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" id="opportunities">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Auto Mall</th>
+                    <th class="text-center">Lead ID</th>
+                    <th class="text-center">Visit Start</th>
+                    <th class="text-center">Salesperson</th>
+                    <th class="text-center">Customer First Name</th>
+                    <th class="text-center">Customer Last Name</th>                    
+                </tr>
+            </thead>
+            <tbody>
+@if (Model.AssociateOpportunities != null)
+{
+
+    var opportunities = Model.AssociateOpportunities.GroupBy(x => x.LeadId).Select(grp => grp.First());
+
+    foreach (var opportunity in opportunities)
+    {
+        <tr style="background-color:#d9edf7;">
+            <td class="text-center">@opportunity.DealerId</td>
+            <td class="text-center">@opportunity.LeadId</td>
+            <td class="text-center">@opportunity.StartLocalDate</td>
+            <td class="text-center">@opportunity.Sales_FirstName @opportunity.Sales_LastName</td>
+            <td class="text-center">@opportunity.CustomerFirstName</td>
+            <td class="text-center">@opportunity.CustomerLastName</td>
+        </tr>
+    }
+}
+            </tbody>
+            <tfoot>
+
+            </tfoot>
+
+        </table>
+
+    </div>
+
+@section scripts
+{
+
+
+    <script type="text/javascript">
+            $(document).ready(function () {
+                $('[data-toggle="tooltip"]').tooltip();
+
+                $('#appraisals').DataTable({
+                    searching: true,
+                    dom: 'Bfrtpi',
+                    buttons: [
+                        {
+                            extend: 'copyHtml5', footer: true,
+                        },
+                        {
+                            extend: 'excelHtml5', footer: true,
+                        },
+                        {
+                            extend: 'pdfHtml5', footer: true,
+                            orientation: 'landscape'
+                        },
+                        {
+                            extend: 'print', footer: true,
+                            orientation: 'landscape'
+                        }
+                    ]
+
+                });
+
+                $('#opportunities').DataTable({
+                    searching: true,
+                    dom: 'Bfrtpi',
+                    buttons: [
+                        {
+                            extend: 'copyHtml5', footer: true,
+                        },
+                        {
+                            extend: 'excelHtml5', footer: true,
+                        },
+                        {
+                            extend: 'pdfHtml5', footer: true,
+                            orientation: 'landscape'
+                        },
+                        {
+                            extend: 'print', footer: true,
+                            orientation: 'landscape'
+                        }
+                    ]
+
+                });
+            });
+
+    </script>
+
+}

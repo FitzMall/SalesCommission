@@ -1,0 +1,406 @@
+﻿@model SalesCommission.Models.CommissionRevenueModel
+
+@{
+    ViewBag.Title = "Revenue Generated";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+}
+
+<div class="jumbotron">
+    <h1>Commissions Dashboard</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+            {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    }
+</div>
+
+@if (Model.RevenueInputs != null)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Revenue Generated Report</h3>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table table-bordered">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="">Associate</th>
+                    <th class="text-center">Total Units</th>
+                    <th class="text-center">New Fr Gross</th>
+                    <th class="text-center">Used Fr Gross</th>
+                    <th class="text-center">BPP</th>
+                    <th class="text-center">Finance</th>
+                    <th class="text-center">Service Contract</th>
+                    <th class="text-center">GAP</th>
+                    <th class="text-center">Trade</th>
+                    <th class="text-center">After market</th>
+                    <th class="text-center">Total Rev Generated</th>
+                    <th class="text-center">Total Earned</th>
+                    <th class="text-center">Percent of Rev</th>
+                </tr>
+                @foreach (var revenue in Model.RevenueInputs)
+                {
+                    <tr style="background-color:#e1eef5;font-size:11px">
+                        <th class="text-right">Location: @revenue.LocationDescription (@revenue.BrandCode)</th>
+                        <th class="text-center"></th>
+                        <th class="text-center">@revenue.FrontNewAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.FrontUsedAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.BPPAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.FinanceAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.ServiceContractAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.GAPAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.TradeAmount.ToString("C", nfi)</th>
+                        <th class="text-center">@revenue.AftermarketAmount.ToString("C", nfi)</th>
+                        <th class="text-center"></th>
+                        <th class="text-center">@revenue.HourlyRate</th>
+                        <th class="text-center"></th>
+                    </tr>
+                }
+            </thead>
+            <tbody>
+                @if (Model.AssociateRevenues != null)
+                {
+                    foreach (var associate in Model.AssociateRevenues)
+                    {
+                        decimal TotalNewGross = 0;
+                        decimal TotalUsedGross = 0;
+                        decimal TotalBPPRevenue = 0;
+                        decimal TotalFinanceRevenue = 0;
+                        decimal TotalServiceRevenue = 0;
+                        decimal TotalGAPRevenue = 0;
+                        decimal TotalTradeRevenue = 0;
+                        decimal TotalAftermarketRevenue = 0;
+                        decimal TotalRevenue = 0;
+
+
+                        // OKAY, here is the calculation
+                        decimal baseSalary = 2000;
+                        decimal baseHours = 170;
+                        decimal hourlySalary = 0;
+                        decimal finalSalary = 0;
+                        decimal totalEarned = 0;
+                        decimal hourlyRate = 0;
+                        decimal percentRevenue = 0;
+
+                        /*THIS WILL NEED TO BE CALCULATED LATER*/
+                        decimal sumComm = 0;
+
+                        if (Model.RevenueInputs != null && Model.RevenueInputs.Count > 0)
+                        {
+                            hourlyRate = Model.RevenueInputs[0].HourlyRate;
+                        }
+
+                        if ((DateTime.Now.Date - associate.AssociateHireDate.Date).TotalDays > 90)
+                        {
+                            baseSalary = 2500;
+                            baseHours = 190;
+                        }
+
+                        if (associate.HoursWorked < baseHours)
+                        {
+                            baseSalary = ((associate.HoursWorked / baseHours) * baseSalary);
+                        }
+
+                        hourlySalary = hourlyRate * associate.HoursWorked;
+
+                        if (baseSalary > hourlySalary)
+                        {
+                            finalSalary = baseSalary;
+                        }
+                        else if (baseSalary < hourlySalary)
+                        {
+                            finalSalary = hourlySalary;
+                        }
+                        else
+                        {
+                            finalSalary = baseSalary;
+                        }
+
+
+                        if (finalSalary > sumComm)
+                        {
+                            totalEarned = finalSalary;
+                        }
+                        else if (sumComm > finalSalary)
+                        {
+                            totalEarned = sumComm;
+                        }
+                        else
+                        {
+                            totalEarned = sumComm;
+                        }
+
+
+                        foreach (var deal in associate.RevenueDeals)
+                        {
+                            var dealMake = deal.VehicleMake;
+                            if (dealMake == "UU")
+                            {
+                                dealMake = "USED";
+                            }
+                            var revenueInput = Model.RevenueInputs.Find(o => o.BrandCode.Contains(dealMake));
+                            if (revenueInput != null)
+                            {
+                                if (deal.NewDealCount > 0)
+                                {
+                                    TotalNewGross += (deal.NewDealCount * revenueInput.FrontNewAmount);
+                                }
+
+                                if (deal.UsedDealCount > 0)
+                                {
+                                    TotalUsedGross += (deal.UsedDealCount * revenueInput.FrontUsedAmount);
+                                }
+
+                                if (deal.BPPCount > 0)
+                                {
+                                    TotalBPPRevenue += (deal.BPPCount * revenueInput.BPPAmount);
+                                }
+
+                                if (deal.FinanceCount > 0)
+                                {
+                                    TotalFinanceRevenue += (deal.FinanceCount * revenueInput.FinanceAmount);
+                                }
+
+                                if (deal.ServiceContractCount > 0)
+                                {
+                                    TotalServiceRevenue += (deal.ServiceContractCount * revenueInput.ServiceContractAmount);
+                                }
+
+                                if (deal.GAPCount > 0)
+                                {
+                                    TotalGAPRevenue += (deal.GAPCount * revenueInput.GAPAmount);
+                                }
+
+                                if (deal.TradeCount > 0)
+                                {
+                                    TotalTradeRevenue += (deal.TradeCount * revenueInput.TradeAmount);
+                                }
+
+                                if (deal.AftermarketCount > 0)
+                                {
+                                    TotalAftermarketRevenue += (deal.AftermarketCount * revenueInput.AftermarketAmount);
+                                }
+
+                            }
+
+
+                        }
+
+                        TotalRevenue = TotalNewGross + TotalUsedGross + TotalBPPRevenue + TotalFinanceRevenue + TotalServiceRevenue + TotalGAPRevenue + TotalTradeRevenue + TotalAftermarketRevenue;
+
+                        if (TotalRevenue > 0)
+                        {
+                            percentRevenue = totalEarned / TotalRevenue;
+                        }
+
+                        <tr>
+                            <td class="text-left">@associate.AssociateFullName {@associate.AssociateHireDate.ToShortDateString()}<br /><a data-toggle="collapse" id="Deals" style="cursor: pointer;" data-target="#collapse-@associate.AssociateSSN">Deals <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                            <td class="text-center">@associate.DealCount</td>
+                            <td class="text-right">@associate.NewDealCount<br />@TotalNewGross.ToString("C", rev)</td>
+                            <td class="text-right">@associate.UsedDealCount<br />@TotalUsedGross.ToString("C", rev)</td>
+                            <td class="text-right">@associate.BPPCount<br />@TotalBPPRevenue.ToString("C", rev)</td>
+                            <td class="text-right">@associate.FinanceCount<br />@TotalFinanceRevenue.ToString("C", rev)</td>
+                            <td class="text-right">@associate.ServiceContractCount<br />@TotalServiceRevenue.ToString("C", rev)</td>
+                            <td class="text-right">@associate.GAPCount<br />@TotalGAPRevenue.ToString("C", rev)</td>
+                            <td class="text-right">@associate.TradeCount<br />@TotalTradeRevenue.ToString("C", rev)</td>
+                            <td class="text-right">@associate.AftermarketCount<br />@TotalAftermarketRevenue.ToString("C", rev)</td>
+                            <td class="text-center">&nbsp;<br />@TotalRevenue.ToString("C", rev)</td>
+                            <td class="text-center">@associate.HoursWorked<br />@totalEarned.ToString("C", rev)</td>
+                            <td class="text-center">@percentRevenue.ToString("P", nfi)</td>
+                        </tr>
+                        <tr id="collapse-@associate.AssociateSSN" class="collapse out" style="background-color:#f5f5f5;">
+                            <td colspan="13">
+                                <h4>@associate.AssociateLastName Deals</h4>
+                                <table class="table table-bordered" style="font-size:12px">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">Deal</th>
+                                            <th class="text-center">N/U</th>
+                                            <th class="text-center">Make</th>
+                                            <th class="text-center">Deal Gross</th>
+                                            <th class="text-center">Deal Holdback</th>
+                                            <th class="text-center">BPP</th>
+                                            <th class="text-center">Fin Inc</th>
+                                            <th class="text-center">VSC</th>
+                                            <th class="text-center">GAP</th>
+                                            <th class="text-center">Other</th>
+                                            <th class="text-center">Trade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var deal in associate.RevenueDeals)
+                                        {
+                                            decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+                                            <tr>
+                                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                                <td class="text-center">@deal.VehicleCondition</td>
+                                                <td class="text-center">@deal.VehicleMake</td>
+                                                <td class="text-center">@deal.DealGross.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.DealHoldback.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.BPPAmount.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.FinanceIncomeAmount.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.ServiceContractAmount.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.GAPAmount.ToString("C", nfi)</td>
+                                                <td class="text-center">@deal.OtherAftermarketAmount.ToString("C", nfi)</td>
+                                                <td class="text-center">@totalTrade.ToString("C", nfi)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+}
+
+
+
+    @*
+
+        strSqlHours = " SELECT   hw_EmployeeNumber "
+        strSqlHours = strSqlHours & ",(Select top 1 slsassoc_view.emp_ssn from slsassoc_view where emp_empnumber = hw_EmployeeNumber) as ssn "
+        strSqlHours = strSqlHours & ", SUM(hw_Hours) AS TotalHours "
+        strSqlHours = strSqlHours & " FROM         comm_HoursWorked "
+        strSqlHours = strSqlHours & " WHERE     DATEPART ( month , hw_Date ) = " & month(ps_monthyear) & " and  DATEPART ( year , hw_Date ) = " & year(ps_monthyear)
+        strSqlHours = strSqlHours & " GROUP BY hw_EmployeeNumber"
+
+        set rsHoursWorked =server.CreateObject("ADODB.Recordset")
+
+        'Response.Write(strSqlHours)
+
+        rsHoursWorked.open strSqlHours,conn,1,1
+
+        strSqlDealer = " SELECT   * "
+        strSqlDealer = strSqlDealer & " FROM         comm_revenue "
+        strSqlDealer = strSqlDealer & " WHERE     r_monthyear = '" & month(ps_monthyear)&"/"&year(ps_monthyear) & "'"
+
+        set rsDealerInputs =server.CreateObject("ADODB.Recordset")
+
+        rsDealerInputs.open strSqlDealer,conn,1,1
+
+        do until rs.eof
+
+        sumComm= ("0"&rs("sumComm"))
+
+        if sumComm = 0 then
+        cntAssoc=0   'sale person sell no cars.
+        cntN=0
+        cntU=0
+        else
+        cntAssoc=rs("cntAssoc")
+        end if
+
+        GsumValPrice =  GsumValPrice + cdbl(rs("valPrice"))
+        GsumSvccnt = GsumSvccnt + cdbl(rs("svccnt_5") )
+
+        hoursWorked = 0
+        if rsHoursWorked.RecordCount > 0 then
+        rsHoursWorked.MoveFirst
+        do while not rsHoursWorked.eof
+        if rsHoursWorked("ssn") = rs("slsassoc") then
+        hoursWorked = rsHoursWorked("TotalHours")
+        end if
+        rsHoursWorked.movenext
+        loop
+        end if
+
+        str=str&"
+        <td>
+            "
+            str=str&"   &nbsp;" & hoursWorked
+            str=str&"
+        </td>"
+
+        hourlyRate = 0
+        if rsDealerInputs.RecordCount > 0 then
+        rsDealerInputs.MoveFirst
+        do while not rsDealerInputs.eof
+        if rsDealerInputs("r_Location") = LEFT(rs("slsassoc"),3) then
+        hourlyRate = rsDealerInputs("r_HourlyRate")
+        end if
+        rsDealerInputs.movenext
+        loop
+        end if
+
+        ' OKAY, here is the calculation
+        baseSalary = cdbl(2000)
+        baseHours = cdbl(170)
+
+        if DateDiff("m",rs("hiredate"),Date()) < 3 then
+        baseSalary = cdbl(2500)
+        baseHours = cdbl(190)
+        end if
+
+        if cdbl(hoursWorked) < baseHours then
+        baseSalary = cdbl((cdbl(hoursWorked) / baseHours) * baseSalary)
+        end if
+
+        hourlySalary = cdbl(hourlyRate) * cdbl(hoursWorked)
+
+        if baseSalary > hourlySalary then
+        finalSalary = baseSalary
+        elseif baseSalary < hourlySalary then
+        finalSalary = hourlySalary
+        else
+        finalSalary = baseSalary
+        end if
+
+        totalEarned = cdbl(0)
+        if finalSalary > sumComm then
+        totalEarned = finalSalary
+        elseif sumComm > finalSalary then
+        totalEarned = cdbl(sumComm)
+        else
+        totalEarned = cdbl(sumComm)
+        end if
+
+
+        if(totalRevenue > 0) then
+        percentRevenue = totalEarned/totalRevenue
+        end if
+    *@

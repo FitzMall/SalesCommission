@@ -1,0 +1,189 @@
+﻿@model SalesCommission.Models.SecurityModel
+
+@{
+    ViewBag.Title = "Security";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+}
+
+<style type="text/css">
+
+</style>
+<div class="jumbotron">
+    <h1>Sales And Commission Security</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select an Associate:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+            {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Html.DropDownListFor(n => n.UserId, new SelectList(Model.JJFUsers, "UserId", "DisplayName"), new { @class = "form-control form-inline chosen-select" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-5">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    }
+</div>
+
+@if (Model.UserPermissions != null)
+{
+
+
+    using (Html.BeginForm())
+    {
+        @Html.HiddenFor(n => n.UserId)
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th></th>
+                    <th class="text-center"></th>
+                    <th class="text-center" colspan="5">Sales</th>                    
+                    <th class="text-center" colspan="2">Commissions</th>
+                    <th class="text-center">Reporting</th>                    
+                    @*<th class="text-center">Associate Admin</th>*@
+                </tr>
+                <tr style="background-color:#d9edf7">
+                    <th>Location</th>
+                    <th class="text-center">Admin</th>
+                    <th class="text-center">Showroom Validate</th>
+                    <th class="text-center">Showroom Update</th>
+                    <th class="text-center">Office Validate</th>
+                    <th class="text-center">Delete Deal</th>
+                    <th class="text-center">Objectives and Standards</th>
+                    <th class="text-center">Commission Admin</th>
+                    <th class="text-center">Associate Admin</th>
+                    <th class="text-center">Reporting</th>
+
+                    
+                </tr>
+            </thead>
+            <tbody>
+                @{ 
+                    var index = 1;
+                }
+                @foreach (var location in SalesCommission.Business.Enums.SecurityLocations)
+                {
+
+                var userPermissions = Model.UserPermissions.Find(o => o.Location == location.LocationId);
+
+                <tr>
+                    <td>
+                        @location.Name
+                        <input type="hidden" name="locationId-@index" id="locationId-@index" value="@location.LocationId" />
+                       
+                    </td>
+                            @if (userPermissions != null)
+                            {
+
+                                <td class="text-center">
+                                    <input type="checkbox" id="admin-@index" name="admin-@index" @(userPermissions.IsAdmin == true ? "checked" : "") />
+                                    <input type="hidden" name="keyId-@index" id="keyId-@index" value="@userPermissions.SecurityKey" />
+                                </td>
+                                <td class="text-center">
+                                    <input type="checkbox" id="showroom-@index" name="showroom-@index" @(userPermissions.CanShowroomValidateDeal == true ? "checked" : "") />
+                                </td>
+                                <td class="text-center">
+                                    <input type="checkbox" id="showroom-update-@index" name="showroom-update-@index" @(userPermissions.CanShowroomUpdateDeal == true ? "checked" : "") />
+                                </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="office-@index" name="office-@index" @(userPermissions.CanOfficeValidateDeal == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="delete-@index" name="delete-@index" @(userPermissions.CanDeleteDeal == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="objectives-@index" name="objectives-@index" @(userPermissions.CanSetObjectivesStandards == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="commission-@index" name="commission-@index" @(userPermissions.IsCommissionAdmin == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="associates-@index" name="associates-@index" @(userPermissions.IsAssociateAdmin == true ? "checked" : "") />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="reports-@index" name="reports-@index" @(userPermissions.CanCreateReports == true ? "checked" : "") />
+                                    </td>
+
+                            }
+                            else
+                            {
+                                <td class="text-center">
+                                    <input type="checkbox" id="admin-@index" name="admin-@index" />
+                                    <input type="hidden" name="keyId-@index" id="keyId-@index" value="" />
+                                </td>
+                                <td class="text-center">
+                                    <input type="checkbox" id="showroom-@index" name="showroom-@index" />
+                                </td>
+                                <td class="text-center">
+                                    <input type="checkbox" id="showroom-update-@index" name="showroom-update-@index" />
+                                </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="office-@index" name="office-@index" />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="delete-@index" name="delete-@index" />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="objectives-@index" name="objectives-@index" />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="commission-@index" name="commission-@index" />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="associates-@index" name="associates-@index" />
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="checkbox" id="reports-@index" name="reports-@index" />
+                                    </td>
+
+                            }
+
+                </tr>
+                    index += 1;
+                }
+                
+                <input type="hidden" name="indexValue" id="indexValue" value="@index" />
+
+@if ((bool)Session["IsAdmin"] == true)
+{
+                <tr >
+                    <td colspan="7" class="text-center">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Save">Save</button>
+                    </td>
+                </tr>
+}
+           </tbody>
+        </table>
+
+
+
+
+
+                    }
+                    }
+
+
+                    @section Scripts{
+                        <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+                        <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+                        <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+                    }

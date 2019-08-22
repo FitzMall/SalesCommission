@@ -1,0 +1,161 @@
+﻿@model SalesCommission.Models.FIPayscaleModel
+
+@{
+    ViewBag.Title = "F and I Manager Payscales";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "$";
+
+
+}
+
+
+<style type="text/css">
+        .coloreee {
+        background-color: #eeeeee;
+    }
+    .colorddd {
+        background-color: #dddddd;
+    }
+    .form-control {
+        margin: 3px 0px;
+        font-size:13px;
+        height:30px;
+    }
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align:right;
+    }
+    body{
+        font-size:13px;
+    }
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding:4px;
+    }
+
+    .less-padding{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+    input.smaller, select.smaller {
+        max-width: 150px;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>F and I Manager Payscales</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.PayscaleId, Model.FIPayscaleSelectList, new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+@if (Model.FIPayscales != null)
+{
+    var autoMallName = "";
+    autoMallName = Model.FIPayscaleSelectList.First(o => o.Value == Model.PayscaleId).Text;
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>F and I Manager Payscale for @autoMallName (@Model.MonthId/@Model.YearId)</h3>
+        </div>
+    </div>
+    using (Html.BeginForm("Payscales", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(o => o.PayscaleId);
+        @Html.HiddenFor(o => o.MonthId);
+        @Html.HiddenFor(o => o.YearId);
+
+        <div class="row">
+            @{
+                var payTypes = Model.FIPayscales.Select(x => x.PayTypeCode).Distinct().ToList();
+
+                foreach (var payType in payTypes)
+                {
+                    var settings = Model.FIPayscales.FindAll(x => x.PayTypeCode == payType).OrderBy(x => x.Order).ToList();
+
+                    if (settings != null)
+                    {
+                        <div class="col-sm-6">
+                            <h4>@settings[0].PayTypeName</h4>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr style="background-color:#d9edf7;">
+                                        <th>Type</th>
+                                        <th>Level Amount</th>
+                                        <th></th>
+                                        <th>Pay %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var setting in settings)
+                                    {
+                                    <tr>
+                                        <td>
+                                            <select id="" name="" class="form-control form-inline smaller">
+                                                <option value="DOLLAR" @(setting.PayType == "DOLLAR" ? "selected" : "")>Dollar</option>
+                                                <option value="PERCENT" @(setting.PayType == "PERCENT" ? "selected" : "")>Percent</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="text" class="form-control form-inline smaller" id="" name="" value="@setting.LevelAmount" /></td>
+                                        <td class="text-center" style="vertical-align:middle;">and above</td>
+                                        <td><input type="text" class="form-control form-inline smaller" id="" name="" value="@setting.PayAmount" /></td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>        
+                        </div>
+                    }
+                }
+
+                }
+
+
+
+        </div>
+        <div class="row">
+            <div class="text-center col-sm-12">
+                <button class="btn btn-primary" type="submit" value="copy" name="Copy">Copy</button>
+                <button class="btn btn-primary" type="submit" value="save" name="Save">Save</button>
+            </div>
+        </div>
+        }
+    }

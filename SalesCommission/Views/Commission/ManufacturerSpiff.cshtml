@@ -1,0 +1,120 @@
+﻿@model SalesCommission.Models.ManufacturerSpiffModel
+
+@{
+    ViewBag.Title = "Manufacturer Spiff";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .form-control-sm {
+        max-width: 100px;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manufacturer Spiff Guarantee</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@{
+    if (Model.ManufacturerSpiffs != null)
+    {
+        using (Html.BeginForm("ManufacturerSpiff", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+            <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+
+            <div class="row">
+                <div class="col-sm-2">
+                    <h4>Manufacturer</h4>
+                </div>
+                <div class="col-sm-2">
+                    <h4>Spiff Paid?</h4>
+                </div>
+            </div>
+
+            
+                var bShaded = false;
+                var index = 1;
+                foreach (var inputs in Model.ManufacturerSpiffs)
+                {
+                    var style = "";
+                    if (bShaded)
+                    {
+                        style = "style=background-color:#eeeeee;padding-bottom:5px;padding-left:10px;padding-top:5px;";
+                    }
+                    else
+                    {
+                        style = "style=background-color:#dddddd;padding-bottom:5px;padding-left:10px;padding-top:5px;";
+                    }
+                    bShaded = !bShaded;
+
+                    <input type="hidden" id="hdn-InputKey-@index" name="hdn-InputKey-@index" value="@inputs.SpiffKey" />
+
+                    <div class="row" @style>
+                        <div class="col-sm-2">
+                            <input type="text" id="Manufacturer-@index" name="Manufacturer-@index" class="form-control form-control-sm" value="@inputs.Manufacturer" />
+                        </div>
+                        <div class="col-sm-2">
+
+                            <select id="SpiffPaid-@index" name="SpiffPaid-@index" class="form-control form-inline">
+                                <option value=""></option>
+                                <option value="Paid" @(inputs.SpiffPaid == "Paid" ? "selected" : "")>Paid</option>
+                                <option value="Not Paid" @(inputs.SpiffPaid == "Not Paid" ? "selected" : "")>Not Paid</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    index += 1;
+
+                }
+                <input type="hidden" id="hdn-InputIndex" name="hdn-InputIndex" value="@index" />
+                <div class="row">
+                    <div class="col-sm-4" style="text-align:center; padding-top:10px;">
+                        <button class="btn btn-primary" style="vertical-align: bottom" type="submit" value="submit" name="Submit">Save</button>
+                    </div>                    
+                </div>
+
+
+
+        }
+    }
+}

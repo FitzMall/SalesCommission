@@ -1,0 +1,1038 @@
+﻿@model SalesCommission.Models.PayscaleComparisonModel
+@{
+    ViewBag.Title = "Payscale Comparison";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .coloreee {
+        background-color: #eeeeee;
+    }
+    .colorddd {
+        background-color: #dddddd;
+    }
+    .form-control {
+        margin: 3px 0px;
+        font-size:13px;
+        height:30px;
+    }
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align:right;
+    }
+    body{
+        font-size:13px;
+    }
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding:4px;
+    }
+
+    .less-padding{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+    .svg-thingy{
+        display:none;
+    }
+
+    .svg-thingy svg{
+        background-color:#eeeeee;
+        padding:15px;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>Payscale Comparison</h1>
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <button class="btn btn-primary" id="SubmitButton" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+<div class="row svg-thingy">
+    <div class="col-md-2 col-md-offset-5">
+        <svg version="1.1" id="L2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+             viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+        <circle fill="none" stroke="#fff" stroke-width="4" stroke-miterlimit="10" cx="50" cy="50" r="48" />
+        <line fill="none" stroke-linecap="round" stroke="#fff" stroke-width="4" stroke-miterlimit="10" x1="50" y1="50" x2="85" y2="50.5">
+        <animateTransform attributeName="transform"
+                          dur="2s"
+                          type="rotate"
+                          from="0 50 50"
+                          to="360 50 50"
+                          repeatCount="indefinite" />
+        </line>
+        <line fill="none" stroke-linecap="round" stroke="#fff" stroke-width="4" stroke-miterlimit="10" x1="50" y1="50" x2="49.5" y2="74">
+        <animateTransform attributeName="transform"
+                          dur="15s"
+                          type="rotate"
+                          from="0 50 50"
+                          to="360 50 50"
+                          repeatCount="indefinite" />
+        </line>
+        </svg>
+    </div>
+</div>
+@{
+    if (Model.Associates != null)
+    {
+        <div class="row">
+            <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
+                <strong>Select Payscales to Compare:</strong>
+                @foreach (var payscale in Model.PayscaleSetup)
+                {
+                    var planCode = payscale.ps_PlanCode;
+                    var labelName = payscale.ps_PlanName;
+
+
+
+                    <label style="padding-left:10px;"><input type="checkbox" id="chk-@planCode" name="chk-@planCode" checked />@labelName</label>
+                        <script>
+                            $('#chk-@planCode').change(function () {
+                                if (this.checked) {
+                                    $('.col-@planCode').show();                                    
+                                }
+                                else {
+                                    $('.col-@planCode').hide();                                    
+                                }
+                            });
+                        </script>
+
+                }
+            </div>
+        </div>
+
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th class="">Associate</th>                                                
+                        <th class="text-center">Level</th>
+                        <th class="text-center">SSI</th>
+                        <th class="text-center">New<br />Units</th>
+                        <th class="text-center">Used<br />Units</th>
+                        <th class="text-center">BPP<br />%</th>
+                        <th class="text-center">Finance<br />%</th>
+                        <th class="text-center">Svc Cnt<br />%</th>
+                        <th class="text-center">Trade<br />%</th>
+                        <th class="text-center">GAP<br />%</th>
+                        <th class="text-center">A/M<br />Items</th>
+                        <th class="text-center">A/M<br />Points</th>
+                        <th class="text-center">Hours<br />Pay</th>
+                        <th class="text-center" style="border-right: 4px double #808080">Actual Earned</th>
+
+                        @foreach (var payscale in Model.PayscaleSetup)
+                        {
+                            var planCode = payscale.ps_PlanCode;
+
+
+                               <th class="text-center col-@planCode">@planCode Plan</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @{ 
+
+                        decimal TotalNewUnits = 0;
+                        decimal TotalUsedUnits = 0;
+
+                        decimal TotalaftermarketItemCount = 0;
+                        decimal TotalaftermarketPointCount = 0;
+
+                        decimal TotalbppCount = 0;
+                        decimal TotalfinanceCount = 0;
+                        decimal TotalsvcContractCount = 0;
+                        decimal TotaltradeCount = 0;
+                        decimal TotalGAPCount = 0;
+                        decimal TotalCurrentUnits = 0;
+
+                        decimal TotalHoursWorked = 0;
+                        decimal TotalPayAmount = 0;
+
+                        decimal TotalActualEarned = 0;
+
+                        decimal[] payscaleTotals = new decimal[Model.PayscaleSetup.Count];
+                        decimal[] payscaleDifferences = new decimal[Model.PayscaleSetup.Count];
+                    }
+
+                    @foreach (var associate in Model.Associates)
+                    {
+
+                        var payscaleName = "";
+                        var payLevelName = "";
+
+
+                        foreach (var scale in SalesCommission.Business.Enums.Payscales)
+                        {
+                            if (associate.AssociatePayscale == scale.PayscaleID)
+                            {
+                                payscaleName = scale.Name;
+                                break;
+                            }
+                        }
+
+                        foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                        {
+                            if (associate.AssociateLevel == level.PayLevelID)
+                            {
+                                payLevelName = level.Name;
+                                break;
+                            }
+                        }
+
+                        decimal hoursWorked = 0;
+                        decimal hoursPayAmount = 0;
+                        decimal hourAmountPerUnit = 0;
+
+                        decimal ActualEarned = 0;
+                        decimal ActualEarnedPerUnit = 0;
+
+                        if (associate.AssociateHours != null && associate.AssociateHours.Count > 0)
+                        {
+                            hoursWorked = associate.AssociateHours[0].Hours;
+                            hoursPayAmount = Math.Round((hoursWorked * @associate.AssociateWage));
+                            TotalHoursWorked += hoursWorked;
+                            TotalPayAmount += hoursPayAmount;
+
+                        }
+
+                        if (associate.AssociatePayscale == "LOWVOL")
+                        {
+                            associate.AssociatePayscale = "BASEVOL";
+                        }
+
+                        <tr>
+                            <td class="text-left">
+                                @associate.AssociateFullName
+                            </td>                                                        
+                            <td class="text-center">@payLevelName</td>
+                            <td class="text-center">@associate.AssociateSSI</td>
+                            <td class="text-center">@associate.AssociateDealCounts.NewDealCount</td>
+                            <td class="text-center">@associate.AssociateDealCounts.UsedDealCount</td>
+
+                            @{
+
+                                decimal bppCount = 0;
+                                decimal financeCount = 0;
+                                decimal svcContractCount = 0;
+                                decimal tradeInCount = 0;
+                                decimal GAPCount = 0;
+                                decimal currentUnits = 0;
+
+                                decimal aftermarketItemCount = 0;
+                                decimal aftermarketPointCount = 0;
+
+                                decimal bppPercentage = 0;
+                                decimal financePercentage = 0;
+                                decimal svcContractPercentage = 0;
+                                decimal tradePercentage = 0;
+                                decimal GAPPercentage = 0;
+
+                                if (associate.AssociateDealCounts != null)
+                                {
+                                    bppCount = associate.AssociateDealCounts.BPPCount;
+                                    financeCount = associate.AssociateDealCounts.FinanceCount;
+                                    svcContractCount = associate.AssociateDealCounts.ServiceContractCount;
+                                    tradeInCount = associate.AssociateDealCounts.TradeCount;
+                                    GAPCount = associate.AssociateDealCounts.GAPCount;
+                                    currentUnits = associate.AssociateDealCounts.TotalDealCount;
+
+                                    TotalbppCount += bppCount;
+                                    TotalfinanceCount += financeCount;
+                                    TotalsvcContractCount += svcContractCount;
+                                    TotaltradeCount += tradeInCount;
+                                    TotalGAPCount += GAPCount;
+                                    TotalCurrentUnits += currentUnits;
+
+                                    if (currentUnits > 0)
+                                    {
+                                        bppPercentage = bppCount / currentUnits;
+                                        financePercentage = financeCount / currentUnits;
+                                        svcContractPercentage = svcContractCount / currentUnits;
+                                        tradePercentage = tradeInCount / currentUnits;
+                                        GAPPercentage = GAPCount / currentUnits;
+
+                                        hourAmountPerUnit = hoursPayAmount / currentUnits;
+
+                                    }
+
+                                    TotalNewUnits += associate.AssociateDealCounts.NewDealCount;
+                                    TotalUsedUnits += associate.AssociateDealCounts.UsedDealCount;
+                                }
+
+
+
+                            }
+
+                            <td class="text-center">@bppCount of @currentUnits<br/><strong>@bppPercentage.ToString("P", nfi)</strong></td>
+                            <td class="text-center">@financeCount of @currentUnits<br /><strong>@financePercentage.ToString("P", nfi)</strong></td>
+                            <td class="text-center">@svcContractCount of @currentUnits<br /><strong>@svcContractPercentage.ToString("P", nfi)</strong></td>
+                            <td class="text-center">@tradeInCount of @currentUnits<br /><strong>@tradePercentage.ToString("P", nfi)</strong></td>
+                            <td class="text-center">@GAPCount of @currentUnits<br /><strong>@GAPPercentage.ToString("P", nfi)</strong></td>
+
+@{ 
+    decimal currentdealIndex = 0;
+    decimal currentcommissionSumTotal = 0;
+    decimal currentcommissionSubTotal = 0;
+    decimal currentcommissionOverallTotal = 0;
+    decimal currenttooFewVSC = 0;
+
+}
+
+@foreach (var deal in associate.AssociateDeals)
+{
+
+    decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+    decimal dealValue = deal.NewDealCount + deal.UsedDealCount;
+
+    int tradeCount = 0;
+    if (deal.Trade1Amount > 0)
+    {
+        tradeCount += 1;
+    }
+    if (deal.Trade2Amount > 0)
+    {
+        tradeCount += 1;
+    }
+
+    //totalNewCount += deal.NewDealCount;
+    //totalUsedCount += deal.UsedDealCount;
+
+    currentdealIndex += dealValue;
+
+    var dealNU = "";
+    if (deal.VehicleCondition == "NEW")
+    {
+        dealNU = "N";
+    }
+    else if (deal.VehicleCondition == "USED")
+    {
+        dealNU = "U";
+    }
+    else
+    {
+        dealNU = "U";
+    }
+
+    //IF IT IS A USED, IS IT A HANDYMAN?
+    if (deal.VehicleCondition == "USED" && deal.VehicleCertification == "HDM" && associate.AssociatePayscale != "MOCO")
+    {
+        dealNU = "H";
+        deal.VehicleCondition = "HANDY";
+    }
+
+    //Determine Value, Internet or Half Value
+    var valueInternet = "";
+    if ((deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.BPPAmount > 495 && deal.VehicleCategory == "R"))
+    {
+        valueInternet = "V";
+    }
+    else if (deal.BPPAmount <= 495 && deal.BPPAmount > 250 && deal.VehicleCategory == "R")
+    {
+        valueInternet = "V3";
+    }
+    else
+    {
+        valueInternet = "I";
+    }
+
+    if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
+    {
+        deal.FinanceCount = dealValue;
+    }
+
+    if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+    {
+        valueInternet = "V";
+    }
+    else if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000)
+    {
+        valueInternet = "V";
+    }
+
+    var dealPayscale = associate.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+    decimal baseCommission = 0;
+    decimal bppCommission = 0;
+    decimal tradeInCommission = 0;
+    decimal financeCommission = 0;
+    decimal serviceCommission = 0;
+    decimal maintenanceCommission = 0;
+    decimal GAPCommission = 0;
+    decimal aftermarketCommission = 0;
+    decimal currentcommissionTotal = 0;
+    decimal SSICommission = 0;
+    decimal volumeCommission = 0;
+    decimal spiffCommission = 0;
+    decimal internalSurveyCommission = 0;
+
+
+    //totalBPPCount += deal.BPPCount;
+    //totalTradeCount += deal.TradeCount;
+    //totalFinanceCount += deal.FinanceCount;
+    //totalServiceCount += deal.ServiceContractCount;
+    //totalMaintenanceCount += deal.MaintenanceContractCount;
+    //totalGAPCount += deal.GAPCount;
+    //totalAftermarketCount += deal.AftermarketCount;
+
+
+    if (dealPayscale != null)
+    {
+
+        if (deal.MakeCode != "AA")
+        {
+
+            if (dealPayscale.ps_PlanCode == "FL")
+            {
+                currenttooFewVSC = dealPayscale.ps_LessServiceContracts;
+            }
+
+            baseCommission = dealPayscale.ps_BaseCommission * dealValue;
+
+            if (valueInternet == "V")
+            {
+                bppCommission = dealPayscale.ps_FullBPP * dealValue;
+            }
+            else if (valueInternet == "V3")
+            {
+                bppCommission = dealPayscale.ps_HalfBPP * dealValue;
+            }
+            else
+            {
+                bppCommission = 0;
+            }
+
+            tradeInCommission = dealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+
+            financeCommission = dealPayscale.ps_FinanceLease * deal.FinanceCount;
+
+            serviceCommission = dealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+
+            maintenanceCommission = dealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+
+            if (dealNU == "N")
+            {
+                var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+
+                if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
+                {
+                    spiffCommission = dealPayscale.ps_ManufacturerSpiffGuarantee * dealValue;
+                }
+            }
+
+            if (associate.AssociatePayscale != "MOCO")
+            {
+                GAPCommission = dealPayscale.ps_GAP * deal.GAPCount;
+
+                if (associate.AssociateSSI == null)
+                {
+                    associate.AssociateSSI = "NO";
+                }
+                if (associate.AssociateSSI.ToUpper() == "YES")
+                {
+                    SSICommission = dealPayscale.ps_ManufacturerSalesSatisfaction * dealValue;
+                }
+                else
+                {
+                    SSICommission = 0;
+                }
+
+                if (dealNU == "U" || dealNU == "H")
+                {
+                    internalSurveyCommission = dealPayscale.ps_InternalSurvey * dealValue;
+                }
+            }
+
+            if (associate.AssociatePayscaleSetup.Count > 0)
+            {
+                var payscaleSetup = associate.AssociatePayscaleSetup[0];
+
+                if (currentdealIndex < payscaleSetup.ps_VolumeBonusLevel1High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                }
+                else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel2Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel2High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                }
+                else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel3Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel3High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                }
+                else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel4Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel4High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                }
+                else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel5Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel5High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                }
+                else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel6Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel6High + 1)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                }
+                else
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                }
+            }
+            else
+            {
+
+                if (currentdealIndex < 6)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                }
+                else if (currentdealIndex >= 6 && currentdealIndex < 11)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                }
+                else if (currentdealIndex >= 11 && currentdealIndex < 16)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                }
+                else if (currentdealIndex >= 16 && currentdealIndex < 21)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                }
+                else if (currentdealIndex >= 21 && currentdealIndex < 26)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                }
+                else if (currentdealIndex >= 26 && currentdealIndex < 31)
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                }
+                else
+                {
+                    volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                }
+            }
+        }
+
+        //This should be per aftermarket item
+        if (deal.AftermarketCount > 0)
+        {
+            var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+            decimal aftermarketCount = 0;
+            foreach (var item in aftermarketItems)
+            {
+                var profit = item.AftermarketPrice - item.AftermarketCost;
+                decimal points = 0;
+
+                if (item.AftermarketProfitPerPoint == 0)
+                {
+                    item.AftermarketProfitPerPoint = 1;
+                }
+
+                if (item.AftermarketProfitPerPoint > 0)
+                {
+                    var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                    if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                    {
+                        points = 0;
+                    }
+                    else if (profitPerPoint < item.AftermarketPoints)
+                    {
+                        points = Math.Truncate(profitPerPoint);
+                    }
+                    else
+                    {
+                        points = item.AftermarketPoints;
+                    }
+                }
+
+                aftermarketCount += (points);
+            }
+            aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+        }
+
+        currentcommissionTotal = baseCommission + bppCommission + tradeInCommission + financeCommission + serviceCommission + maintenanceCommission + GAPCommission + aftermarketCommission + spiffCommission + SSICommission + volumeCommission + internalSurveyCommission;
+
+        currentcommissionSumTotal += currentcommissionTotal;
+
+        //currentcommissionSubTotal = currentcommissionSumTotal;// + TotalBonusAmount + totalTooFewVSC;
+
+
+    }
+
+
+} 
+
+@{ 
+    if (hoursPayAmount > currentcommissionSumTotal)
+    {
+        ActualEarned = hoursPayAmount;
+    }
+    else
+    {
+        ActualEarned = currentcommissionSumTotal;
+    }
+
+    if (currentdealIndex > 0)
+    {
+        ActualEarnedPerUnit = ActualEarned / currentdealIndex;
+    }
+}
+                            <td class="text-center">@aftermarketItemCount</td>
+                            <td class="text-center">@aftermarketPointCount.ToString("#.#")</td>
+                            <td class="text-center">@hoursWorked<br/><a href="#" data-toggle="tooltip" title="@hourAmountPerUnit.ToString("C",nfi) per Unit">@hoursPayAmount</a></td>
+                            <td class="text-center" style="border-right: 4px double #808080"><a href="#" data-toggle="tooltip" title="@ActualEarnedPerUnit.ToString("C",nfi) per Unit">@ActualEarned.ToString("C", nfi)</a></td>
+@{ 
+    TotalaftermarketItemCount += aftermarketItemCount;
+    TotalaftermarketPointCount += aftermarketPointCount;
+    TotalActualEarned += ActualEarned;
+}
+
+@if (associate.AssociateDeals != null)// && associate.AssociateDeals.Count > 0)
+{
+    var allPayscales = new List<SalesCommission.Models.NewPayscale>();
+    var payscaleIndex = 0;
+
+    foreach (var payscale in Model.PayscaleSetup)
+    {
+        var planCode = payscale.ps_PlanCode;
+        var associateLevel = associate.AssociateLevel;
+
+        if (planCode == "PROFMA")
+        {
+            associateLevel = "CERTELIT";
+        }
+
+        allPayscales = Model.Payscales.FindAll(o => o.ps_PlanCode == planCode && o.ps_PayLevel == associateLevel);
+        //var dealPayscale = associate.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+        decimal dealIndex = 0;
+        decimal commissionSumTotal = 0;
+        decimal commissionSubTotal = 0;
+        decimal commissionOverallTotal = 0;
+        decimal tooFewVSC = 0;
+
+        decimal totalNewCount = 0;
+        decimal totalUsedCount = 0;
+        decimal totalBPPCount = 0;
+        decimal totalTradeCount = 0;
+        decimal totalFinanceCount = 0;
+        decimal totalServiceCount = 0;
+        decimal totalMaintenanceCount = 0;
+        decimal totalGAPCount = 0;
+        decimal totalAftermarketCount = 0;
+
+        foreach (var deal in associate.AssociateDeals)
+        {
+
+            decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+            decimal dealValue = deal.NewDealCount + deal.UsedDealCount;
+
+            int tradeCount = 0;
+            if (deal.Trade1Amount > 0)
+            {
+                tradeCount += 1;
+            }
+            if (deal.Trade2Amount > 0)
+            {
+                tradeCount += 1;
+            }
+
+
+            totalNewCount += deal.NewDealCount;
+            totalUsedCount += deal.UsedDealCount;
+
+            dealIndex += dealValue;
+
+            var dealNU = "";
+            if (deal.VehicleCondition == "NEW")
+            {
+                dealNU = "N";
+            }
+            else if (deal.VehicleCondition == "USED")
+            {
+                dealNU = "U";
+            }
+            else
+            {
+                dealNU = "U";
+            }
+
+            //IF IT IS A USED, IS IT A HANDYMAN?
+            if (deal.VehicleCondition == "USED" && deal.VehicleCertification == "HDM" && associate.AssociatePayscale != "MOCO")
+            {
+                dealNU = "H";
+                deal.VehicleCondition = "HANDY";
+            }
+
+            //Determine Value, Internet or Half Value
+            var valueInternet = "";
+            if ((deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.BPPAmount > 495 && deal.VehicleCategory == "R"))
+            {
+                valueInternet = "V";
+            }
+            else if (deal.BPPAmount <= 495 && deal.BPPAmount > 250 && deal.VehicleCategory == "R")
+            {
+                valueInternet = "V3";
+            }
+            else
+            {
+                valueInternet = "I";
+            }
+
+            if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
+            {
+                deal.FinanceCount = dealValue;
+            }
+
+            if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+            {
+                valueInternet = "V";
+            }
+            else if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000)
+            {
+                valueInternet = "V";
+            }
+
+            var dealPayscale = allPayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+            decimal baseCommission = 0;
+            decimal bppCommission = 0;
+            decimal tradeInCommission = 0;
+            decimal financeCommission = 0;
+            decimal serviceCommission = 0;
+            decimal maintenanceCommission = 0;
+            decimal GAPCommission = 0;
+            decimal aftermarketCommission = 0;
+            decimal commissionTotal = 0;
+            decimal SSICommission = 0;
+            decimal volumeCommission = 0;
+            decimal spiffCommission = 0;
+            decimal internalSurveyCommission = 0;
+
+
+            totalBPPCount += deal.BPPCount;
+            totalTradeCount += tradeCount * dealValue;// deal.TradeCount;
+            totalFinanceCount += deal.FinanceCount;
+            totalServiceCount += deal.ServiceContractCount;
+            totalMaintenanceCount += deal.MaintenanceContractCount;
+            totalGAPCount += deal.GAPCount;
+            totalAftermarketCount += deal.AftermarketCount;
+
+
+            if (dealPayscale != null)
+            {
+
+                if (dealPayscale.ps_PlanCode == "FL")
+                {
+                    tooFewVSC = dealPayscale.ps_LessServiceContracts;
+                }
+
+                baseCommission = dealPayscale.ps_BaseCommission * dealValue;
+
+                if (valueInternet == "V")
+                {
+                    bppCommission = dealPayscale.ps_FullBPP * dealValue;
+                }
+                else if (valueInternet == "V3")
+                {
+                    bppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                }
+                else
+                {
+                    bppCommission = 0;
+                }
+
+                tradeInCommission = dealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+                financeCommission = dealPayscale.ps_FinanceLease * deal.FinanceCount;
+                serviceCommission = dealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+                maintenanceCommission = dealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+
+
+                //This should be per aftermarket item
+                if (deal.AftermarketCount > 0)
+                {
+                    var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+                    decimal aftermarketCount = 0;
+                    foreach (var item in aftermarketItems)
+                    {
+                        var profit = item.AftermarketPrice - item.AftermarketCost;
+                        decimal points = 0;
+
+                        if (item.AftermarketProfitPerPoint == 0)
+                        {
+                            item.AftermarketProfitPerPoint = 1;
+                        }
+
+                        if (item.AftermarketProfitPerPoint > 0)
+                        {
+                            var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                            if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                            {
+                                points = 0;
+                            }
+                            else if (profitPerPoint < item.AftermarketPoints)
+                            {
+                                points = Math.Truncate(profitPerPoint);
+                            }
+                            else
+                            {
+                                points = item.AftermarketPoints;
+                            }
+                        }
+
+                        aftermarketCount += (points);
+                    }
+                    aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                }
+
+                if (dealNU == "N")
+                {
+                    var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+
+                    if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
+                    {
+                        spiffCommission = dealPayscale.ps_ManufacturerSpiffGuarantee * dealValue;
+                    }
+                }
+
+
+
+
+                if (associate.AssociatePayscale != "MOCO")
+                {
+                    GAPCommission = dealPayscale.ps_GAP * deal.GAPCount;
+
+                    if (associate.AssociateSSI == null)
+                    {
+                        associate.AssociateSSI = "NO";
+                    }
+                    if (associate.AssociateSSI.ToUpper() == "YES")
+                    {
+                        SSICommission = dealPayscale.ps_ManufacturerSalesSatisfaction * dealValue;
+                    }
+                    else
+                    {
+                        SSICommission = 0;
+                    }
+
+                    if (dealNU == "U" || dealNU == "H")
+                    {
+                        internalSurveyCommission = dealPayscale.ps_InternalSurvey * dealValue;
+                    }
+                }
+
+                if (associate.AssociatePayscaleSetup.Count > 0)
+                {
+                    var payscaleSetup = associate.AssociatePayscaleSetup[0];
+
+                    if (dealIndex < payscaleSetup.ps_VolumeBonusLevel1High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                    }
+                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel2Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel2High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                    }
+                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel3Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel3High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                    }
+                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel4Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel4High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                    }
+                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel5Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel5High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                    }
+                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel6Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel6High + 1)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                    }
+                    else
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                    }
+                }
+                else
+                {
+
+                    if (dealIndex < 6)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                    }
+                    else if (dealIndex >= 6 && dealIndex < 11)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                    }
+                    else if (dealIndex >= 11 && dealIndex < 16)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                    }
+                    else if (dealIndex >= 16 && dealIndex < 21)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                    }
+                    else if (dealIndex >= 21 && dealIndex < 26)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                    }
+                    else if (dealIndex >= 26 && dealIndex < 31)
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                    }
+                    else
+                    {
+                        volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                    }
+                }
+
+                commissionTotal = baseCommission + bppCommission + tradeInCommission + financeCommission + serviceCommission + maintenanceCommission + GAPCommission + aftermarketCommission + spiffCommission + SSICommission + volumeCommission + internalSurveyCommission;
+
+                commissionSumTotal += commissionTotal;
+            }
+
+
+        }
+
+        decimal perUnit = 0;
+
+        if(currentUnits > 0)
+        {
+            perUnit = commissionSumTotal / currentUnits;
+        }
+        <td class="text-center col-@planCode"><a href="#" data-toggle="tooltip" title="@perUnit.ToString("C",nfi) per Unit">@commissionSumTotal.ToString("C", nfi)</a></td>
+
+        payscaleTotals[payscaleIndex] += commissionSumTotal;
+
+        if(hoursPayAmount > commissionSumTotal)
+        {
+            payscaleDifferences[payscaleIndex] += (hoursPayAmount - commissionSumTotal);
+        }
+
+
+        payscaleIndex += 1;
+    }
+
+
+
+
+
+
+}
+
+</tr>
+                                        }
+                </tbody>
+
+@{ 
+
+    decimal TotalUnits = TotalNewUnits + TotalUsedUnits;
+
+    decimal TotalbppPercentage = 0;
+    decimal TotalfinancePercentage = 0;
+    decimal TotalsvcContractPercentage = 0;
+    decimal TotaltradeInPercentage = 0;
+    decimal TotalGAPPercentage = 0;
+
+    if (TotalUnits > 0)
+    {
+        TotalbppPercentage = TotalbppCount / TotalUnits;
+        TotalfinancePercentage = TotalfinanceCount / TotalUnits;
+        TotalsvcContractPercentage = TotalsvcContractCount / TotalUnits;
+        TotaltradeInPercentage = TotaltradeCount / TotalUnits;
+        TotalGAPPercentage = TotalGAPCount / TotalUnits;
+    }
+
+    var totalIndex = 0;
+}
+
+
+                <tfoot>
+                    <tr style="background-color:#d9edf7">
+                        <th class="">Totals</th>
+                        <th class="text-center"></th>
+                        <th class="text-center"></th>
+                        <th class="text-center">@TotalNewUnits</th>
+                        <th class="text-center">@TotalUsedUnits</th>
+                        <td class="text-center">@TotalbppCount of @TotalUnits<br /><strong>@TotalbppPercentage.ToString("P", nfi)</strong></td>
+                        <td class="text-center">@TotalfinanceCount of @TotalUnits<br /><strong>@TotalfinancePercentage.ToString("P", nfi)</strong></td>
+                        <td class="text-center">@TotalsvcContractCount of @TotalUnits<br /><strong>@TotalsvcContractPercentage.ToString("P", nfi)</strong></td>
+                        <td class="text-center">@TotaltradeCount of @TotalUnits<br /><strong>@TotaltradeInPercentage.ToString("P", nfi)</strong></td>
+                        <td class="text-center">@TotalGAPCount of @TotalUnits<br /><strong>@TotalGAPPercentage.ToString("P", nfi)</strong></td>
+                        <th class="text-center">@TotalaftermarketItemCount</th>
+                        <th class="text-center">@TotalaftermarketPointCount.ToString("#.#")</th>
+                        <th class="text-center">@TotalHoursWorked<br/>@TotalPayAmount.ToString("C", nfi)</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@TotalActualEarned.ToString("C", nfi)</th>
+
+                        @foreach (var payscale in Model.PayscaleSetup)
+                        {
+                            var planCode = payscale.ps_PlanCode;
+
+                            var payscaleTotalAmount = payscaleTotals[totalIndex] + payscaleDifferences[totalIndex];
+
+                            <th class="text-center col-@planCode">@payscaleTotals[totalIndex].ToString("C",nfi)<br/>@payscaleDifferences[totalIndex].ToString("C", nfi)<br />@payscaleTotalAmount.ToString("C", nfi)</th>
+
+                            totalIndex += 1;
+                        }                        
+                    </tr>
+                </tfoot>
+            </table>
+
+
+                        }
+}
+
+@section Scripts{
+              
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        $('[data-toggle="tooltip"]').tooltip();
+
+        $("#SubmitButton").click(function () {
+            $(".svg-thingy").show();
+
+        });
+    });
+</script>
+    
+    }

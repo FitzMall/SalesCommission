@@ -1,0 +1,1670 @@
+﻿@model SalesCommission.Models.MonthlySalesLogReportModel
+
+@{
+    ViewBag.Title = "Sales Log Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    .ftd-entry {
+        display: none;
+    }
+
+    .comments-entry {
+        display: none;
+    }
+
+    th.text-center.extra-left {
+        border-left: 3px solid #dddddd;
+    }
+
+    td.text-center.extra-left {
+        border-left: 3px solid #dddddd;
+    }
+
+    th .extra-right, td .extra-right {
+        border-right: 2px;
+    }
+
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Sales Log Report</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select a Store, Brand and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.SelectedStores, new MultiSelectList(SalesCommission.Business.Enums.StoresReport, "StoreId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Stores..." })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.SelectedBrands, new MultiSelectList(SalesCommission.Business.Enums.Brands, "BrandId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Brands..." })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Deals</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+@if (Model.MonthlySalesReportDetails != null)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Sales Log Report for @Model.MonthId/@Model.YearId</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5><strong>Jump to: </strong><a href="#Section2">Section 2</a> | <a href="#Section3">Section 3</a></h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5><strong>* Calculations only include Showroom validated deals *</strong></h5>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <a name="Section1"></a>
+        <table class="table table-bordered table-striped" id="section1">
+            <thead>
+
+                <tr style="background-color:#d9edf7; display:none;">
+                    <th class="text-center">Make</th>
+                    <th class="text-center" style="padding:2px; font-size:10px; vertical-align:bottom;">T</th>
+                    <th class="text-center" style="padding:2px; font-size:10px; vertical-align:bottom;">SV</th>
+                    <th class="text-center" style="padding:2px; font-size:10px; vertical-align:bottom;">SUV</th>
+                    <th class="text-center" style="padding:2px; font-size:10px; vertical-align:bottom;">OUV</th>
+                    <th class="text-center">Leases</th>
+                    <th class="text-center">&nbsp;CPO&nbsp;</th>
+                    <th class="text-center">Handyman</th>
+                    <th class="text-center">NextCar</th>
+                    <th class="text-center">Front Gross</th>
+                    <th class="text-center">ME FTD</th>
+                    <th class="text-center">Fin Inc</th>
+                    <th class="text-center">VSC</th>
+                    <th class="text-center">MC</th>
+                    <th class="text-center">GAP</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Memo: FTD</th>
+                    <th class="text-center">DX Inc</th>
+                    <th class="text-center">Front PVR</th>
+                    <th class="text-center">Back PVR</th>
+                    <th class="text-center">Total PVR</th>
+                </tr>
+
+
+
+            </thead>
+            <tbody>
+
+                @{
+                    double CompanyTotalLeaseCount = 0;
+                    double CompanyTotalPotentialLease = 0;
+                    double CompanyTotalHandymanCount = 0;
+                    double CompanyTotalPotentialHandyman = 0;
+                    double CompanyTotalCPOCount = 0;
+                    double CompanyTotalPotentialCPO = 0;
+                    double CompanyTotalDealCount = 0;
+                    double CompanyTotalValidatedDealsCount = 0;
+                    double CompanyTotalUnValidatedCount = 0;
+                    double CompanyTotalOfficeValidatedCount = 0;
+                    double CompanyTotalDealGrossAmount = 0;
+                    double CompanyTotalMEFTDAmount = 0;
+                    double CompanyTotalFinIncAmount = 0;
+                    double CompanyTotalVSCAmount = 0;
+                    double CompanyTotalMCAmount = 0;
+                    double CompanyTotalGapAmount = 0;
+                    double CompanyTotalAmount = 0;
+                    double CompanyTotalFTDAmount = 0;
+                    double CompanyTotalDXAmount = 0;
+
+                    double CompanyNewTotalLeaseCount = 0;
+                    double CompanyNewTotalPotentialLease = 0;
+                    double CompanyNewTotalHandymanCount = 0;
+                    double CompanyNewTotalPotentialHandyman = 0;
+                    double CompanyNewTotalCPOCount = 0;
+                    double CompanyNewTotalPotentialCPO = 0;
+                    double CompanyNewTotalDealCount = 0;
+                    double CompanyNewTotalValidatedDealsCount = 0;
+                    double CompanyNewTotalUnValidatedCount = 0;
+                    double CompanyNewTotalOfficeValidatedCount = 0;
+                    double CompanyNewTotalDealGrossAmount = 0;
+                    double CompanyNewTotalMEFTDAmount = 0;
+                    double CompanyNewTotalFinIncAmount = 0;
+                    double CompanyNewTotalVSCAmount = 0;
+                    double CompanyNewTotalMCAmount = 0;
+                    double CompanyNewTotalGapAmount = 0;
+                    double CompanyNewTotalAmount = 0;
+                    double CompanyNewTotalFTDAmount = 0;
+                    double CompanyNewTotalDXAmount = 0;
+
+                    double CompanyUsedTotalLeaseCount = 0;
+                    double CompanyUsedTotalPotentialLease = 0;
+                    double CompanyUsedTotalHandymanCount = 0;
+                    double CompanyUsedTotalPotentialHandyman = 0;
+                    double CompanyUsedTotalCPOCount = 0;
+                    double CompanyUsedTotalPotentialCPO = 0;
+                    double CompanyUsedTotalDealCount = 0;
+                    double CompanyUsedTotalValidatedDealsCount = 0;
+                    double CompanyUsedTotalUnValidatedCount = 0;
+                    double CompanyUsedTotalOfficeValidatedCount = 0;
+                    double CompanyUsedTotalDealGrossAmount = 0;
+                    double CompanyUsedTotalMEFTDAmount = 0;
+                    double CompanyUsedTotalFinIncAmount = 0;
+                    double CompanyUsedTotalVSCAmount = 0;
+                    double CompanyUsedTotalMCAmount = 0;
+                    double CompanyUsedTotalGapAmount = 0;
+                    double CompanyUsedTotalAmount = 0;
+                    double CompanyUsedTotalFTDAmount = 0;
+                    double CompanyUsedTotalDXAmount = 0;
+
+                    double CompanyUsedTotalNextCarCount = 0;
+
+                    var TotalMakeIds = "";
+
+                }
+
+                @{ 
+
+                    var salesReportDetails = Model.MonthlySalesReportDetails.OrderBy(x => x.AutoMallName).ToList();
+                }
+
+                @foreach (var groupDetail in salesReportDetails)
+                {
+                    var AutoMallName = "";
+                    AutoMallName = groupDetail.AutoMallName;
+                    //if (groupDetail.SalesReportDetails.Count > 0)
+                    //{
+                    //    AutoMallName = groupDetail.SalesReportDetails[0].AutoMall;
+                    //    foreach (var store in SalesCommission.Business.Enums.Stores)
+                    //    {
+                    //        if (store.StoreId.ToLower() == groupDetail.SalesReportDetails[0].AutoMall.ToLower())
+                    //        {
+                    //            AutoMallName = store.Name;
+                    //        }
+                    //    }
+                    //}
+
+
+
+                    <tr style="background-color:#d9edf7; font-weight:bold;">
+                        <td class="text-center" style="background-color:#d9edf7">@AutoMallName</td>
+                        <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">T</td>
+                        <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">SV</td>
+                        <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">SUV</td>
+                        <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">OUV</td>
+                        <td class="text-center" style="background-color:#d9edf7">Leases</td>
+                        <td class="text-center" style="background-color:#d9edf7">&nbsp;CPO&nbsp;</td>
+                        <td class="text-center" style="background-color:#d9edf7">Handyman</td>
+                        <td class="text-center" style="background-color:#d9edf7">NextCar</td>
+                        <td class="text-center" style="background-color:#d9edf7">Front Gross</td>
+                        <td class="text-center" style="background-color:#d9edf7">ME FTD</td>
+                        <td class="text-center" style="background-color:#d9edf7">Fin Inc</td>
+                        <td class="text-center" style="background-color:#d9edf7">VSC</td>
+                        <td class="text-center" style="background-color:#d9edf7">MC</td>
+                        <td class="text-center" style="background-color:#d9edf7">GAP</td>
+                        <td class="text-center" style="background-color:#d9edf7">Total</td>
+                        <td class="text-center" style="background-color:#d9edf7">Memo: FTD</td>
+                        <td class="text-center" style="background-color:#d9edf7">DX Inc</td>
+                        <td class="text-center" style="background-color:#d9edf7">Front PVR</td>
+                        <td class="text-center" style="background-color:#d9edf7">Back PVR</td>
+                        <td class="text-center" style="background-color:#d9edf7">Total PVR</td>
+                    </tr>
+
+                    double TotalValidatedDealsCount = 0;
+                    double TotalDealCount = 0;
+
+                    var TotalUnValidatedCount = 0;
+                    var TotalOfficeValidatedCount = 0;
+
+                    double TotalDealGrossAmount = 0;
+                    double TotalFinIncAmount = 0;
+                    double TotalVSCAmount = 0;
+                    double TotalMCAmount = 0;
+                    double TotalFTDAmount = 0;
+
+                    double TotalMEFTDAmount = 0;
+                    double TotalGapAmount = 0;
+                    double TotalOtherAmount = 0;
+                    double TotalTotalAmount = 0;
+                    double TotalDXAmount = 0;
+                    double TotalPVRAmount = 0;
+                    var TotalHoldbackCount = 0;
+                    double TotalValuePercentage = 0;
+
+                    double TotalFrontPVRAmount = 0;
+                    double TotalBackPVRAmount = 0;
+                    double TotalUsedDeals = 0;
+                    double TotalValidatedUsedDeals = 0;
+
+                    double TotalNextCarCount = 0;
+                    double TotalHandymanCount = 0;
+                    double TotalCPOCount = 0;
+                    double TotalLeaseCount = 0;
+                    double TotalPotentialHandyman = 0;
+                    double TotalPotentialCPO = 0;
+                    double TotalPotentialLease = 0;
+
+                    var UsedMakeId = "";
+                    var AllMakeIds = "";
+                    var index = 0;
+
+                    groupDetail.SalesReportDetails = groupDetail.SalesReportDetails.OrderBy(o => o.MakeName).ToList();
+
+                    //nfi.PercentSymbol = "";
+
+
+
+                    foreach (var detail in groupDetail.SalesReportDetails)
+                    {
+                        if (detail.BrandId != "AA")
+                        {
+                            TotalDealCount = TotalDealCount + detail.DealCount;
+                        }
+                        if (detail.BrandId == "UU")
+                        {
+                            UsedMakeId = detail.MakeId;
+                            TotalUsedDeals = detail.DealCount;
+                            TotalValidatedUsedDeals = detail.DealCount - detail.UnValidatedCount;
+
+                        }
+                    }
+
+
+                    foreach (var detail in groupDetail.SalesReportDetails)
+                    {
+                        double MonthEndFTDAmount = 0;
+                        var brandCode = detail.BrandId;
+                        var locationCode = "";
+
+                        foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
+                        {
+                            if (mapping.StoreId.ToLower() == detail.AutoMall.ToLower())
+                            {
+                                locationCode = mapping.LocationId;
+                                break;
+                            }
+                        }
+
+                        var usedId = 0;
+                        if (detail.AutoMall.ToUpper() == "CLEARWATER")
+                        {
+                            switch (detail.MakeId)
+                            {
+                                case "41":  //Chrysler
+                                    usedId = 94; //96
+                                    break;
+                                case "43": //Hyundai
+                                    usedId = 70;
+                                    break;
+                                case "42": //Jeep
+                                    usedId = 94;
+                                    break;
+                                case "44": //Subaru
+                                    usedId = 95;
+                                    break;
+
+                            }
+
+                            var usedDealListing = groupDetail.SalesReportDetails.Find(o => o.MakeId == usedId.ToString());
+                            if (usedDealListing != null)
+                            {
+                                TotalValidatedUsedDeals = usedDealListing.DealCount - usedDealListing.UnValidatedCount;
+
+                            }
+
+                            UsedMakeId = usedId.ToString();
+
+                        }
+
+                        if (brandCode == "UU" && locationCode == "CJE")
+                        {
+                            brandCode = detail.MakeName;
+                        }
+                        else if (brandCode == "UU")
+                        {
+                            brandCode = "Used";
+                        }
+                        var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == locationCode + brandCode);
+
+                        if (objectivesStandards == null)
+                        {
+                            objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                        }
+
+                        var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+
+                        if (factoryToDealerCash == null)
+                        {
+                            factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
+                            MonthEndFTDAmount = 0;
+                        }
+                        else
+                        {
+                            MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
+                            //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
+                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                        }
+
+                        var validatedDeals = detail.DealCount - detail.UnValidatedCount;
+
+                        <tr>
+
+
+                            <td class="text-center">
+                                <a data-toggle="collapse" id="@detail.MakeName" style="cursor: pointer;" data-target="#collapse-@index">@detail.MakeName</a>
+                            </td>
+
+                            <td class="text-center">@detail.DealCount</td>
+                            <td class="text-center">@validatedDeals</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@detail.MakeId/@Model.MonthId/@Model.YearId/">@detail.UnValidatedCount</a></td>
+                            <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@detail.MakeId/@Model.MonthId/@Model.YearId">@(validatedDeals - detail.OfficeValidatedCount)</a></td>
+
+                            @{
+                                var leasePercent = ((double)detail.LeaseCount / (double)validatedDeals).ToString("P", nfi);
+                                var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
+                                var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                                var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                                
+                            }
+
+                            @if (brandCode.Contains("Used"))
+                            {
+                                if (locationCode == "CJE")
+                                {
+                                    TotalPotentialCPO += validatedDeals;
+
+                                }
+                                TotalPotentialHandyman += validatedDeals;
+                                CompanyUsedTotalPotentialHandyman += validatedDeals;
+                                CompanyUsedTotalPotentialCPO += validatedDeals;
+
+                                TotalHandymanCount += detail.HandymanCount;
+                                TotalNextCarCount += detail.NextCarCount;
+
+                                <td class="text-center">-</td>
+
+
+                                if (detail.MakeId == "87")
+                                {
+                                    TotalPotentialCPO = TotalValidatedUsedDeals;
+                                    //CompanyUsedTotalPotentialCPO += TotalValidatedUsedDeals;
+
+                                    TotalCPOCount = detail.CPOCount;
+                                    <td class="text-center"><a href="@applicationPath/Sales/CPODeals/@UsedMakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @detail.CPOCount / @TotalValidatedUsedDeals Used Deals">@detail.CPOCount <br />@cpoPercent</a></td>
+                                }
+                                else
+                                {
+                                    <td class="text-center">-</td>
+                                }
+                                <td class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handy % = @detail.HandymanCount / @validatedDeals Deals">@detail.HandymanCount <br />@handyPercent</a></td>
+                                <td class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Next Car % = @detail.NextCarCount / @validatedDeals Deals">@detail.NextCarCount <br />@nextCarPercent</a></td>
+                            }
+                            else
+                            {
+
+                                if (locationCode != "CJE")
+                                {
+                                    TotalPotentialCPO = TotalValidatedUsedDeals;
+                                    // CompanyUsedTotalPotentialCPO += TotalValidatedUsedDeals;
+                                }
+                                TotalCPOCount += detail.CPOCount;
+                                TotalPotentialLease += validatedDeals;
+
+                                CompanyNewTotalPotentialLease += validatedDeals;
+
+                                TotalLeaseCount += detail.LeaseCount;
+                                <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @detail.LeaseCount / @validatedDeals Deals">@detail.LeaseCount <br />@leasePercent</a></td>
+                                <td class="text-center"><a href="@applicationPath/Sales/CPODeals/@UsedMakeId/@Model.MonthId/@Model.YearId/@detail.MakeName" data-toggle="tooltip" title="CPO % = @detail.CPOCount / @TotalValidatedUsedDeals Used Deals">@detail.CPOCount <br />@cpoPercent</a></td>
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                            }
+                            
+                            <td class="text-center">@detail.DealGrossAmount.ToString("C", nfi)</td>
+
+                            <td class="text-center">@MonthEndFTDAmount.ToString("C", nfi)</td>
+                            @*<td class="text-center">@detail.OtherAmount.ToString("C", nfi)</td>*@
+                            <td class="text-center">@detail.FinIncAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.VSCAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.MCAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.GapAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.TotalAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.FTDAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.DXAmount.ToString("C", nfi)</td>
+
+                            @{
+                                var brandFrontPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+                                var brandBackPVR = Math.Round((detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals);
+                                var brandPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+                            }
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Front PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount) over @validatedDeals deals">@brandFrontPVR.ToString("C", nfi)</a></td>
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Back PVR = $@(detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandBackPVR.ToString("C", nfi)</a></td>
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Total PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandPVR.ToString("C", nfi)</a></td>
+                            @*<td class="text-center">@detail.ValuePercentage.ToString("P")</td>
+                                <td class="text-center">@detail.VarianceCount</td>
+                                <td class="text-center">@detail.VariancePercentage.ToString("P")</td>*@
+                        </tr>
+
+
+                                    AllMakeIds = AllMakeIds + detail.MakeId + ",";
+                                    TotalMakeIds = TotalMakeIds + detail.MakeId + ",";
+
+                                    if (detail.BrandId != "AA")
+                                    {
+                                        TotalValidatedDealsCount = TotalValidatedDealsCount + validatedDeals;
+                                        TotalUnValidatedCount = TotalUnValidatedCount + detail.UnValidatedCount;
+                                        TotalOfficeValidatedCount = TotalOfficeValidatedCount + detail.OfficeValidatedCount;
+                                    }
+
+
+                                    TotalDealGrossAmount = TotalDealGrossAmount + detail.DealGrossAmount;
+                                    TotalFinIncAmount = TotalFinIncAmount + detail.FinIncAmount;
+                                    TotalVSCAmount = TotalVSCAmount + detail.VSCAmount;
+                                    TotalMCAmount = TotalMCAmount + detail.MCAmount;
+                                    TotalFTDAmount = TotalFTDAmount + detail.FTDAmount;
+                                    TotalMEFTDAmount = TotalMEFTDAmount + MonthEndFTDAmount;
+                                    TotalGapAmount = TotalGapAmount + detail.GapAmount;
+                                    TotalOtherAmount = TotalOtherAmount + detail.OtherAmount;
+                                    TotalTotalAmount = TotalTotalAmount + detail.TotalAmount;
+                                    TotalDXAmount = TotalDXAmount + detail.DXAmount;
+
+                                    TotalHoldbackCount = TotalHoldbackCount + detail.HoldbackCount;
+                                    TotalValuePercentage = (double)TotalHoldbackCount / (double)TotalDealCount;
+
+
+
+                                    if (detail.BrandId == "UU")
+                                    {
+                                        /* THESE ARE NOT DONE YET */
+                                        CompanyUsedTotalLeaseCount += detail.LeaseCount;
+                                        CompanyUsedTotalHandymanCount += detail.HandymanCount;
+                                        CompanyUsedTotalNextCarCount += detail.NextCarCount;
+                                        //CompanyUsedTotalPotentialHandyman += 0;
+
+                                        if (detail.MakeId == "87")
+                                        {
+                                            CompanyNewTotalCPOCount += detail.CPOCount;
+                                        }
+
+                                        //CompanyUsedTotalPotentialCPO += 0;
+
+                                        CompanyUsedTotalDealCount += detail.DealCount;
+
+                                        CompanyUsedTotalValidatedDealsCount += validatedDeals;
+                                        CompanyUsedTotalUnValidatedCount += detail.UnValidatedCount;
+                                        CompanyUsedTotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
+                                        CompanyUsedTotalDealGrossAmount += detail.DealGrossAmount;
+                                        CompanyUsedTotalMEFTDAmount += MonthEndFTDAmount;
+                                        CompanyUsedTotalFinIncAmount += detail.FinIncAmount;
+                                        CompanyUsedTotalVSCAmount += detail.VSCAmount;
+                                        CompanyUsedTotalMCAmount += detail.MCAmount;
+                                        CompanyUsedTotalGapAmount += detail.GapAmount;
+                                        CompanyUsedTotalAmount += detail.TotalAmount;
+                                        CompanyUsedTotalFTDAmount += detail.FTDAmount;
+                                        CompanyUsedTotalDXAmount += detail.DXAmount;
+
+                                    }
+                                    else
+                                    {
+                                        /* THESE ARE NOT DONE YET */
+                                        CompanyNewTotalLeaseCount += detail.LeaseCount;
+                                        CompanyNewTotalHandymanCount += detail.HandymanCount;
+                                        //CompanyNewTotalPotentialHandyman += 0;
+                                        CompanyNewTotalCPOCount += detail.CPOCount;
+                                        //CompanyNewTotalPotentialCPO += 0;
+
+
+
+                                        if (detail.BrandId != "AA")
+                                        {
+                                            CompanyNewTotalDealCount += detail.DealCount;
+                                            CompanyNewTotalValidatedDealsCount += validatedDeals;
+                                            CompanyNewTotalUnValidatedCount += detail.UnValidatedCount;
+                                            CompanyNewTotalOfficeValidatedCount += detail.OfficeValidatedCount;
+                                        }
+
+                                        CompanyNewTotalDealGrossAmount += detail.DealGrossAmount;
+                                        CompanyNewTotalMEFTDAmount += MonthEndFTDAmount;
+                                        CompanyNewTotalFinIncAmount += detail.FinIncAmount;
+                                        CompanyNewTotalVSCAmount += detail.VSCAmount;
+                                        CompanyNewTotalMCAmount += detail.MCAmount;
+                                        CompanyNewTotalGapAmount += detail.GapAmount;
+                                        CompanyNewTotalAmount += detail.TotalAmount;
+                                        CompanyNewTotalFTDAmount += detail.FTDAmount;
+                                        CompanyNewTotalDXAmount += detail.DXAmount;
+                                    }
+
+
+
+                                    index += 1;
+                                }
+
+                                <tr style="background-color:#d9edf7; font-weight:bold;">
+                                    @{
+                                        var totalLeasePercent = (TotalLeaseCount / TotalPotentialLease).ToString("P", nfi);
+                                        var totalHandyPercent = (TotalHandymanCount / TotalPotentialHandyman).ToString("P", nfi);
+                                        var totalCPOPercent = (TotalCPOCount / TotalPotentialCPO).ToString("P", nfi);
+                                        var totalNextCarPercent = (TotalNextCarCount / TotalPotentialHandyman).ToString("P", nfi);
+                                    }
+                                    <th class="text-center"><a data-toggle="collapse" id="Totals" style="cursor: pointer;" data-target="#collapse-total">Totals</a></th>
+                                    <th class="text-center">@TotalDealCount</th>
+                                    <th class="text-center">@TotalValidatedDealsCount</th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@TotalUnValidatedCount</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@(TotalValidatedDealsCount - TotalOfficeValidatedCount)</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @TotalLeaseCount / @TotalPotentialLease Deals">@TotalLeaseCount <br />@totalLeasePercent</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/CPODeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @TotalCPOCount / @TotalPotentialCPO Deals">@TotalCPOCount <br />@totalCPOPercent</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handyman % = @TotalHandymanCount / @TotalPotentialHandyman Deals">@TotalHandymanCount <br />@totalHandyPercent</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="NextCar % = @TotalNextCarCount / @TotalPotentialHandyman Deals">@TotalNextCarCount <br />@totalNextCarPercent</a></th>
+                                    <th class="text-center">@TotalDealGrossAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalMEFTDAmount.ToString("C", nfi)</th>
+                                    @*<th class="text-center">@TotalOtherAmount.ToString("C", nfi)</th>*@
+                                    <th class="text-center">@TotalFinIncAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalVSCAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalMCAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalGapAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalTotalAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalFTDAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalDXAmount.ToString("C", nfi)</th>
+                                    @{
+                                        TotalFrontPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount+ TotalFTDAmount
+                                        TotalBackPVRAmount = Math.Round((TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount);
+                                        TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
+                                    }
+
+                                    <th class="text-center">@TotalFrontPVRAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalBackPVRAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalPVRAmount.ToString("C", nfi)</th>
+
+
+                                </tr>
+                                <tr>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
+                                </tr>
+
+                                            CompanyTotalLeaseCount += TotalLeaseCount;
+                                            CompanyTotalPotentialLease += TotalPotentialLease;
+                                            CompanyTotalHandymanCount += TotalHandymanCount;
+                                            CompanyTotalPotentialHandyman += TotalPotentialHandyman;
+                                            CompanyTotalCPOCount += TotalCPOCount;
+                                            CompanyTotalPotentialCPO += TotalPotentialCPO;
+                                            CompanyTotalDealCount += TotalDealCount;
+                                            CompanyTotalValidatedDealsCount += TotalValidatedDealsCount;
+                                            CompanyTotalUnValidatedCount += TotalUnValidatedCount;
+                                            CompanyTotalOfficeValidatedCount += TotalOfficeValidatedCount;
+                                            CompanyTotalDealGrossAmount += TotalDealGrossAmount;
+                                            CompanyTotalMEFTDAmount += TotalMEFTDAmount;
+                                            CompanyTotalFinIncAmount += TotalFinIncAmount;
+                                            CompanyTotalVSCAmount += TotalVSCAmount;
+                                            CompanyTotalMCAmount += TotalMCAmount;
+                                            CompanyTotalGapAmount += TotalGapAmount;
+                                            CompanyTotalAmount += TotalTotalAmount;
+                                            CompanyTotalFTDAmount += TotalFTDAmount;
+                                            CompanyTotalDXAmount += TotalDXAmount;
+
+
+                                        }
+                
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    <td class="text-center" style="background-color:#d9edf7">Company Totals</td>
+                    <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">T</td>
+                    <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">SV</td>
+                    <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">SUV</td>
+                    <td class="text-center" style="background-color:#d9edf7; font-weight:bold; padding:2px; font-size:10px; vertical-align:bottom;">OUV</td>
+                    <td class="text-center" style="background-color:#d9edf7">Leases</td>
+                    <td class="text-center" style="background-color:#d9edf7">&nbsp;CPO&nbsp;</td>
+                    <td class="text-center" style="background-color:#d9edf7">Handyman</td>
+                    <td class="text-center" style="background-color:#d9edf7">NextCar</td>
+                    <td class="text-center" style="background-color:#d9edf7">Front Gross</td>
+                    <td class="text-center" style="background-color:#d9edf7">ME FTD</td>
+                    <td class="text-center" style="background-color:#d9edf7">Fin Inc</td>
+                    <td class="text-center" style="background-color:#d9edf7">VSC</td>
+                    <td class="text-center" style="background-color:#d9edf7">MC</td>
+                    <td class="text-center" style="background-color:#d9edf7">GAP</td>
+                    <td class="text-center" style="background-color:#d9edf7">Total</td>
+                    <td class="text-center" style="background-color:#d9edf7">Memo: FTD</td>
+                    <td class="text-center" style="background-color:#d9edf7">DX Inc</td>
+                    <td class="text-center" style="background-color:#d9edf7">Front PVR</td>
+                    <td class="text-center" style="background-color:#d9edf7">Back PVR</td>
+                    <td class="text-center" style="background-color:#d9edf7">Total PVR</td>
+                </tr>
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    @{
+                        var CompanyNewTotalLeasePercent = (CompanyNewTotalLeaseCount / CompanyNewTotalPotentialLease).ToString("P", nfi);
+                        var CompanyNewTotalHandyPercent = (CompanyNewTotalHandymanCount / CompanyNewTotalPotentialHandyman).ToString("P", nfi);
+                        var CompanyNewTotalCPOPercent = (CompanyNewTotalCPOCount / CompanyNewTotalPotentialCPO).ToString("P", nfi);
+
+                        var CompanyNewTotalFrontPVRAmount = Math.Round((CompanyNewTotalDealGrossAmount + CompanyNewTotalMEFTDAmount) / CompanyNewTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
+                        var CompanyNewTotalBackPVRAmount = Math.Round((CompanyNewTotalFinIncAmount + CompanyNewTotalVSCAmount + CompanyNewTotalGapAmount + CompanyNewTotalMCAmount) / CompanyNewTotalValidatedDealsCount);
+                        var CompanyNewTotalPVRAmount = Math.Round((CompanyNewTotalDealGrossAmount + CompanyNewTotalMEFTDAmount + CompanyNewTotalFinIncAmount + CompanyNewTotalVSCAmount + CompanyNewTotalGapAmount + CompanyNewTotalMCAmount) / CompanyNewTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+
+                    }
+                    <td class="text-center">New Totals</td>
+                    <td class="text-center">@CompanyNewTotalDealCount</td>
+                    <td class="text-center">@CompanyNewTotalValidatedDealsCount</td>
+
+
+                    <td class="text-center">@CompanyNewTotalUnValidatedCount</td>
+                    <td class="text-center">@(CompanyNewTotalValidatedDealsCount - CompanyNewTotalOfficeValidatedCount)</td>
+                    <td class="text-center">@CompanyNewTotalLeaseCount<br />@CompanyNewTotalLeasePercent</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">@CompanyNewTotalDealGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalMEFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalFinIncAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalVSCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalMCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalDXAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalFrontPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalBackPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalPVRAmount.ToString("C", nfi)</td>
+                </tr>
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    @{
+                        var CompanyUsedTotalLeasePercent = (CompanyUsedTotalLeaseCount / CompanyUsedTotalPotentialLease).ToString("P", nfi);
+                        var CompanyUsedTotalHandyPercent = (CompanyUsedTotalHandymanCount / CompanyUsedTotalPotentialHandyman).ToString("P", nfi);
+                        var CompanyUsedTotalCPOPercent = (CompanyNewTotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
+                        var CompanyUsedTotalNextCarPercent = (CompanyUsedTotalNextCarCount / CompanyUsedTotalPotentialHandyman).ToString("P", nfi);
+
+                        var CompanyUsedTotalFrontPVRAmount = Math.Round((CompanyUsedTotalDealGrossAmount + CompanyUsedTotalMEFTDAmount) / CompanyUsedTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
+                        var CompanyUsedTotalBackPVRAmount = Math.Round((CompanyUsedTotalFinIncAmount + CompanyUsedTotalVSCAmount + CompanyUsedTotalGapAmount + CompanyUsedTotalMCAmount) / CompanyUsedTotalValidatedDealsCount);
+                        var CompanyUsedTotalPVRAmount = Math.Round((CompanyUsedTotalDealGrossAmount + CompanyUsedTotalMEFTDAmount + CompanyUsedTotalFinIncAmount + CompanyUsedTotalVSCAmount + CompanyUsedTotalGapAmount + CompanyUsedTotalMCAmount) / CompanyUsedTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+
+                    }
+                    <td class="text-center">Used Totals</td>
+                    <td class="text-center">@CompanyUsedTotalDealCount</td>
+                    <td class="text-center">@CompanyUsedTotalValidatedDealsCount</td>
+                    <td class="text-center">@CompanyUsedTotalUnValidatedCount</td>
+                    <td class="text-center">@(CompanyUsedTotalValidatedDealsCount - CompanyUsedTotalOfficeValidatedCount)</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">@CompanyNewTotalCPOCount<br />@CompanyUsedTotalCPOPercent</td>
+                    <td class="text-center">@CompanyUsedTotalHandymanCount<br />@CompanyUsedTotalHandyPercent</td>
+                    <td class="text-center">@CompanyUsedTotalNextCarCount<br />@CompanyUsedTotalNextCarPercent</td>
+                    <td class="text-center">@CompanyUsedTotalDealGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalMEFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalFinIncAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalVSCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalMCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalDXAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalFrontPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalBackPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalPVRAmount.ToString("C", nfi)</td>
+                </tr>
+                <tr style="background-color:#d9edf7; font-weight:bold;">
+                    @{
+                        var CompanyTotalLeasePercent = (CompanyTotalLeaseCount / CompanyTotalPotentialLease).ToString("P", nfi);
+                        var CompanyTotalHandyPercent = (CompanyTotalHandymanCount / CompanyTotalPotentialHandyman).ToString("P", nfi);
+                        var CompanyTotalCPOPercent = (CompanyTotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
+
+                        var CompanyTotalFrontPVRAmount = Math.Round((CompanyTotalDealGrossAmount + CompanyTotalMEFTDAmount) / CompanyTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
+                        var CompanyTotalBackPVRAmount = Math.Round((CompanyTotalFinIncAmount + CompanyTotalVSCAmount + CompanyTotalGapAmount + CompanyTotalMCAmount) / CompanyTotalValidatedDealsCount);
+                        var CompanyTotalPVRAmount = Math.Round((CompanyTotalDealGrossAmount + CompanyTotalMEFTDAmount + CompanyTotalFinIncAmount + CompanyTotalVSCAmount + CompanyTotalGapAmount + CompanyTotalMCAmount) / CompanyTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+
+                    }
+                    <td class="text-center">Totals</td>
+                    <td class="text-center">@CompanyTotalDealCount</td>
+                    <td class="text-center">@CompanyTotalValidatedDealsCount</td>
+                    
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@CompanyTotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@(CompanyTotalValidatedDealsCount - CompanyTotalOfficeValidatedCount)</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @CompanyTotalLeaseCount / @CompanyTotalPotentialLease Deals">@CompanyTotalLeaseCount<br />@CompanyTotalLeasePercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/CPODeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @CompanyTotalCPOCount / @CompanyUsedTotalPotentialCPO Deals">@CompanyTotalCPOCount <br />@CompanyTotalCPOPercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handyman % = @CompanyTotalHandymanCount / @CompanyTotalPotentialHandyman Deals">@CompanyTotalHandymanCount <br />@CompanyTotalHandyPercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="NextCar % = @CompanyUsedTotalNextCarCount / @CompanyTotalPotentialHandyman Deals">@CompanyUsedTotalNextCarCount <br />@CompanyUsedTotalNextCarPercent</a></td>
+
+
+
+                    @*<td class="text-center">@CompanyTotalLeaseCount<br />@CompanyTotalLeasePercent</td>
+                    <td class="text-center">@CompanyTotalCPOCount<br />@CompanyTotalCPOPercent</td>
+                    <td class="text-center">@CompanyTotalHandymanCount<br />@CompanyTotalHandyPercent</td>
+                    <td class="text-center">@CompanyUsedTotalNextCarCount<br />@CompanyUsedTotalNextCarPercent</td>*@
+                    <td class="text-center">@CompanyTotalDealGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalMEFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalFinIncAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalVSCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalMCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalDXAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalFrontPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalBackPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalPVRAmount.ToString("C", nfi)</td>
+                </tr>
+
+            </tbody>
+
+            <tfoot></tfoot>
+
+        </table>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5><strong>Jump to: </strong><a href="#Section1">Section 1</a> | <a href="#Section3">Section 3</a></h5>
+            <a name="Section2"></a>
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom:15px;">
+        
+        <table class="table table-bordered table-striped" id="section2">
+            <thead>
+                <tr style="background-color:#d9edf7; display:none;">
+                    <th>Mall</th>
+                    <th>Deals</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                    <th class="text-center extra-left" style="padding:2px; font-size:10px">S</th>
+                    <th class="text-center" style="padding:2px; font-size:10px">A</th>
+                </tr>
+
+
+            </thead>
+            <tbody>
+
+
+                @foreach (var groupDetail in Model.MonthlySalesReportDetails)
+                {
+                    var AutoMallName = "";
+                    if (groupDetail.SalesReportDetails.Count > 0)
+                    {
+                        AutoMallName = groupDetail.SalesReportDetails[0].AutoMall;
+                        foreach (var store in SalesCommission.Business.Enums.Stores)
+                        {
+                            if (store.StoreId.ToLower() == groupDetail.SalesReportDetails[0].AutoMall.ToLower())
+                            {
+                                AutoMallName = store.Name;
+                            }
+                        }
+                    }
+
+                    <tr style="background-color:#d9edf7">
+                        <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">@AutoMallName</td>
+                        <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">Val Deals</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Fin %</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Fin $</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">VSC %</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">VSC $</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">GAP % Fin</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">GAP per Unit</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">A/M %</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">A/M per Unit</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">BPP %</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">BPP Coll %</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                        <td class="text-center extra-left extra-right" style="background-color:#d9edf7;font-weight:bold;">Trade %</td>
+                        <td class="text-center extra-left extra-right" style="background-color:#d9edf7;font-weight:bold;"></td>
+
+
+                    </tr>
+                    <tr style="background-color:#d9edf7">
+                        <td style="background-color:#d9edf7"></td>
+                        <td style="background-color:#d9edf7"></td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+                        <td class="text-center extra-left" style="background-color:#d9edf7;padding:2px; font-size:10px">S</td>
+                        <td class="text-center" style="background-color:#d9edf7;padding:2px; font-size:10px">A</td>
+
+                    </tr>
+
+
+                    double TotalValidatedDealsCount = 0;
+                    double TotalDealCount = 0;
+
+                    foreach (var detail in groupDetail.SalesReportDetails)
+                    {
+                        if (detail.BrandId != "AA")
+                        {
+                            TotalDealCount = TotalDealCount + detail.DealCount;
+                            TotalValidatedDealsCount = TotalValidatedDealsCount + (detail.DealCount - detail.UnValidatedCount);
+                        }
+
+                    }
+
+                    foreach (var detail in groupDetail.SalesReportDetails)
+                    {
+                        var brandCode = detail.BrandId;
+                        var locationCode = "";
+
+                        locationCode = SalesCommission.Business.SqlQueries.GetLocationCodeByMakeId(detail.MakeId);
+                        //foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
+                        //{
+                        //    if (mapping.StoreId == Model.StoreId)
+                        //    {
+                        //        locationCode = mapping.LocationId;
+                        //        break;
+                        //    }
+                        //}
+
+
+
+
+                        if (brandCode == "UU" && locationCode == "CJE")
+                        {
+                            brandCode = detail.MakeName;
+                        }
+                        else if (brandCode == "UU")
+                        {
+                            brandCode = "Used";
+                        }
+                        var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == locationCode + brandCode);
+
+                        if (objectivesStandards == null)
+                        {
+                            objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                        }
+
+                        var validatedDeals = detail.DealCount - detail.UnValidatedCount;
+
+                        var finCntPercent = detail.FinanceIncCount / validatedDeals;
+                        var vscPercent = detail.VSCCount / validatedDeals;
+                        var gapPercent = detail.GAPCount / detail.FinanceIncCount;
+                        var bppPercent = detail.BPPCount / validatedDeals;
+                        var aftermarketPercent = detail.AftermarketCount / validatedDeals;
+                        var tradePercent = detail.TradeCount / validatedDeals;
+
+                        double finIncPerUnit = 0;
+                        if (detail.FinanceIncCount > 0)
+                        {
+                            finIncPerUnit = detail.FinIncAmount / detail.FinanceIncCount;
+                        }
+
+                        double vscPerUnit = 0;
+                        if (detail.VSCCount > 0)
+                        {
+                            vscPerUnit = detail.VSCAmount / detail.VSCCount;
+                        }
+
+                        double gapPerUnit = 0;
+                        if (detail.GAPCount > 0)
+                        {
+                            gapPerUnit = detail.GapAmount / detail.GAPCount;
+                        }
+
+                        double aftermarketPerUnit = 0;
+                        if (detail.AftermarketCount > 0)
+                        {
+                            aftermarketPerUnit = detail.OtherAmount / validatedDeals;
+                        }
+
+
+                        <tr>
+                            <td class="text-center">
+                                @detail.MakeName
+                            </td>
+                            <td class="text-center">@validatedDeals</td>
+                            <td class="text-center extra-left">@objectivesStandards.FinCntPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Finance/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="Finance % = @detail.FinanceIncCount of @validatedDeals deals">@finCntPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.FinCntPerCnt</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Finance/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="Finance Per Unit = $@detail.FinIncAmount over @detail.FinanceIncCount deals">@finIncPerUnit.ToString("C", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.VSCPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/VSC/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="VSC % = @detail.VSCCount of @validatedDeals deals">@vscPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.VSCPerCnt</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/VSC/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="VSC Per Unit = $@detail.VSCAmount over @detail.VSCCount deals">@vscPerUnit.ToString("C", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.GAPPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/GAP/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="GAP % Fin = @detail.GAPCount of @detail.FinanceIncCount deals">@gapPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.GAPPerCnt</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/GAP/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="GAP Per Unit = $@detail.GapAmount over @detail.GAPCount deals">@gapPerUnit.ToString("C", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.AftermarketPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Aftermarket/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="Aftermarket % = @detail.AftermarketCount of @validatedDeals deals">@aftermarketPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.AftermarketPerCnt</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Aftermarket/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="Aftermarket Per Unit = $@detail.OtherAmount over @validatedDeals deals">@aftermarketPerUnit.ToString("C", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.BPPPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/BPP/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="BPP % = @detail.BPPCount of @validatedDeals deals">@bppPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.BPPCollectionPercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/BPP/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="BPP Coll %">@detail.BPPCollectionPercent.ToString("P", nfi)</a></td>
+                            <td class="text-center extra-left">@objectivesStandards.TradePercent</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Trade/@detail.MakeId/@Model.MonthId/@Model.YearId/" data-toggle="tooltip" title="Trade % = @detail.TradeCount of @validatedDeals deals">@tradePercent.ToString("P", nfi)</a></td>
+                            @*<td class="text-center">@detail.ValuePercentage.ToString("P")</td>
+                                <td class="text-center">@detail.VarianceCount</td>
+                                <td class="text-center">@detail.VariancePercentage.ToString("P")</td>*@
+                        </tr>
+                    }
+
+
+
+                    <tr>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                        <td style="border-left:none;border-right:none">&nbsp;</td>
+                    </tr>
+                }
+
+            </tbody>
+            <tfoot>
+
+            </tfoot>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5><strong>Jump to: </strong><a href="#Section1">Section 1</a> | <a href="#Section2">Section 2</a></h5>
+            <a name="Section3"></a>
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom:15px;">
+        
+        <table class="table table-bordered table-striped" id="section3">
+            <thead>
+                <tr style="background-color:#d9edf7; display:none;">
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Val Deals</th>
+                    <th class="text-center">MTD Tracking</th>
+                    <th class="text-center extra-left">Man Obj</th>
+                    <th class="text-center extra-left"></th>
+                    <th class="text-center extra-left">Man OBJ Var</th>
+                    <th class="text-center extra-left">Fitz Obj</th>
+                    <th class="text-center extra-left">Fitz Obj</th>
+                    <th class="text-center extra-left">Fitz Obj Var</th>
+                    <th class="text-center extra-left">GPUR Obj</th>
+                    <th class="text-center extra-left">GPUR Obj</th>
+                    <th class="text-center extra-left">GPUR Var</th>
+                    <th class="text-center">Total GP Obj</th>
+                    <th class="text-center">PV Exc</th>
+                    <th class="text-center">PV Exc %</th>
+                    <th class="text-center">Status 5</th>
+                </tr>
+            </thead>
+            <tbody>
+
+
+
+                @{
+
+                    foreach (var groupDetail in Model.MonthlySalesReportDetails)
+                    {
+                    var AutoMallName = "";
+                    if (groupDetail.SalesReportDetails.Count > 0)
+                    {
+                        AutoMallName = groupDetail.SalesReportDetails[0].AutoMall;
+                        foreach (var store in SalesCommission.Business.Enums.Stores)
+                        {
+                            if (store.StoreId.ToLower() == groupDetail.SalesReportDetails[0].AutoMall.ToLower())
+                            {
+                                AutoMallName = store.Name;
+                            }
+                        }
+                    }
+
+                        <tr style="background-color:#d9edf7">
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">@AutoMallName</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">Val Deals</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">MTD Tracking</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Man Obj</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Man OBJ Var</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Fitz Obj</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">Fitz Obj Var</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">GPUR Obj</td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                            <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;">GPUR Var</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">Total GP Obj</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">PV Exc</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">PV Exc %</td>
+                            <td class="text-center" style="background-color:#d9edf7;font-weight:bold;">Status 5</td>
+                        </tr>
+                                <tr style="background-color:#d9edf7">
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">S</td>
+                                    <td class="text-center" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">A</td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">S</td>
+                                    <td class="text-center" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">A</td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">S</td>
+                                    <td class="text-center" style="background-color:#d9edf7;font-weight:bold;padding:2px; font-size:10px">A</td>
+                                    <td class="text-center extra-left" style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                    <td style="background-color:#d9edf7;font-weight:bold;"></td>
+                                </tr>
+
+
+                        double TotalValidatedDealsCount = 0;
+                        double TotalDealCount = 0;
+
+                        foreach (var detail in groupDetail.SalesReportDetails)
+                        {
+                            if (detail.BrandId != "AA")
+                            {
+                                TotalDealCount = TotalDealCount + detail.DealCount;
+                                TotalValidatedDealsCount = TotalValidatedDealsCount + (detail.DealCount - detail.UnValidatedCount);
+                            }
+
+                        }
+
+                        var TotalVarianceCount = 0;
+                        decimal TotalGrossProfit = 0;
+                        double TotalVariancePercentage = 0;
+                        int TotalStatus5Count = 0;
+
+                        decimal MTDTracking = 0;
+                        decimal currentDayOfMonth = 0;
+                        decimal daysInMonth = 0;
+                        decimal MTDfactor = 0;
+
+                        var bottomLocationCode = "";
+
+                        if (groupDetail.SalesReportDetails.Count > 0)
+                        {
+                            bottomLocationCode = SalesCommission.Business.SqlQueries.GetLocationCodeByMakeId(groupDetail.SalesReportDetails[0].MakeId);
+
+                            if (Model.FiscalMonth != null && Model.FiscalMonth.Count > 0)
+                            {
+                                var fiscalMonth = Model.FiscalMonth.Find(o => o.LocationCode == bottomLocationCode);
+
+                                currentDayOfMonth = fiscalMonth.CurrentDay;
+                                daysInMonth = fiscalMonth.DaysInMonth;
+                                MTDfactor = fiscalMonth.Factor;
+                            }
+                        }
+                        var showChryslerStore = false;
+                        var validatedDealsCH = 0;
+                        var dealCountCH = 0;
+                        decimal manufacturerObjectiveCH = 0;
+                        decimal manObjectiveVarianceCH = 0;
+                        decimal fitzgeraldObjectiveCH = 0;
+                        decimal fitzObjectiveVarianceCH = 0;
+                        var status5CountCH = 0;
+
+                        foreach (var detail in groupDetail.SalesReportDetails)
+                        {
+
+                            if (detail.MakeId == "42" || detail.MakeId == "89" || detail.MakeId == "90" || detail.MakeId == "41" || detail.MakeId == "88")
+                            {
+                                validatedDealsCH += (detail.DealCount - detail.UnValidatedCount);
+                                dealCountCH += detail.DealCount;
+                                showChryslerStore = true;
+                            }
+
+
+                        }
+
+                        //Check to see if there are deals for CH, DO and JE, total all the information
+                        if (showChryslerStore)
+                        {
+
+
+                            var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == bottomLocationCode + "CH");
+
+                            if (objectivesStandards == null)
+                            {
+                                objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                            }
+
+                            manufacturerObjectiveCH = objectivesStandards.ManufacturerObjective;
+                            fitzgeraldObjectiveCH = objectivesStandards.FitzgeraldObjective;
+                            manObjectiveVarianceCH = objectivesStandards.ManufacturerObjective - validatedDealsCH;
+                            fitzObjectiveVarianceCH = objectivesStandards.FitzgeraldObjective - validatedDealsCH;
+
+                            if (currentDayOfMonth > 0)
+                            {
+                                MTDTracking = Math.Round((dealCountCH / currentDayOfMonth) * MTDfactor * daysInMonth);
+                            }
+
+
+                            <tr>
+                                <td class="text-center">
+                                    @if (bottomLocationCode == "CJE")
+                                    {
+                                        <span>CH, JE</span>
+                                    }
+                                    else
+                                    {
+                                        <span>CH, DO, JE</span>
+                                    }
+                                </td>
+
+                                <td class="text-center">@validatedDealsCH</td>
+                                <td class="text-center"><a href="#" data-toggle="tooltip" title="MTD = @dealCountCH / @currentDayOfMonth * @MTDfactor * @daysInMonth">@MTDTracking</a></td>
+                                <td class="text-center extra-left">@manufacturerObjectiveCH</td>
+                                <td class="text-center">@validatedDealsCH</td>
+                                <td class="text-center extra-left">@manObjectiveVarianceCH</td>
+                                <td class="text-center extra-left">@fitzgeraldObjectiveCH</td>
+                                <td class="text-center">@validatedDealsCH</td>
+                                <td class="text-center extra-left">@fitzObjectiveVarianceCH</td>
+
+                                <td class="text-center extra-left">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center extra-left">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center"><a href="http://JJFServer/Status5/Home/Index/@bottomLocationCode/NEW" target="_blank">@status5CountCH</a></td>
+                            </tr>
+
+                        }
+
+                        foreach (var detail in groupDetail.SalesReportDetails)
+                        {
+                            var brandCode = detail.BrandId;
+                            var conditionCode = "";
+                            double MonthEndFTDAmount = 0;
+
+                            if (brandCode == "UU" && bottomLocationCode == "CJE")
+                            {
+                                brandCode = detail.MakeName;
+                                conditionCode = "USED";
+                                MTDfactor = 1;
+                            }
+                            else if (brandCode == "UU")
+                            {
+                                brandCode = "Used";
+                                conditionCode = "USED";
+                            }
+                            else
+                            {
+                                conditionCode = "NEW";
+                            }
+
+                            var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == bottomLocationCode + brandCode);
+
+                            if (objectivesStandards == null)
+                            {
+                                objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                            }
+
+                            var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == bottomLocationCode + brandCode);
+
+                            if (factoryToDealerCash == null)
+                            {
+                                factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
+                                MonthEndFTDAmount = 0;
+                            }
+                            else
+                            {
+                                MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
+                                detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                            }
+
+
+                            var status5Count = 0;
+
+                            if (brandCode == "Used")
+                            {
+                                var status5List = Model.Status5.FindAll(o => o.NewUsedStatus == "USED");
+                                if (status5List != null && status5List.Count > 0)
+                                {
+                                    foreach (var status5 in status5List)
+                                    {
+                                        status5Count += status5.VehicleCount;
+                                    }
+                                }
+                                MTDfactor = 1;
+                            }
+                            else
+                            {
+                                var status5List = Model.Status5.FindAll(o => o.MakeName.Contains(detail.MakeName.ToUpper()) && o.NewUsedStatus == "NEW");
+                                if (status5List != null && status5List.Count > 0)
+                                {
+                                    foreach (var status5 in status5List)
+                                    {
+                                        status5Count += status5.VehicleCount;
+                                    }
+                                }
+                                else
+                                {
+                                    status5Count = 0;
+                                }
+                            }
+
+
+                            var validatedDeals = detail.DealCount - detail.UnValidatedCount;
+                            var GPURActual = Math.Round((detail.DealGrossAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + MonthEndFTDAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+
+                            var manObjectiveVariance = validatedDeals - objectivesStandards.ManufacturerObjective;
+                            var fitzObjectiveVariance = validatedDeals - objectivesStandards.FitzgeraldObjective;
+                            var gpurObjectiveVariance = GPURActual - (double)objectivesStandards.GPURObjective;
+
+                            //var lostMonies = (double)(objectivesStandards.GPURObjective * objectivesStandards.ManufacturerObjective) - (GPURActual * validatedDeals);
+                            var TotalGPObjective = (objectivesStandards.FitzgeraldObjective * objectivesStandards.GPURObjective);
+
+                            if (currentDayOfMonth > 0)
+                            {
+                                MTDTracking = Math.Round((detail.DealCount / currentDayOfMonth) * MTDfactor * daysInMonth);
+                            }
+
+
+                        <tr>
+                            <td class="text-center">
+                                @detail.MakeName
+                            </td>
+
+                            @if (detail.MakeId == "42" || detail.MakeId == "89" || detail.MakeId == "90" || detail.MakeId == "41" || detail.MakeId == "88")
+                            {
+                                <td class="text-center">@validatedDeals</td>
+                                        <td class="text-center">-</td>
+                                                <td class="text-center extra-left">-</td>
+                                                <td class="text-center">-</td>
+                                                <td class="text-center extra-left">-</td>
+                                                        <td class="text-center extra-left">-</td>
+                                                        <td class="text-center">-</td>
+                                                        <td class="text-center extra-left">-</td>
+                            }
+                            else
+                            {
+                                <td class="text-center">@validatedDeals</td>
+                                        <td class="text-center"><a href="#" data-toggle="tooltip" title="MTD = @detail.DealCount / @currentDayOfMonth * @MTDfactor * @daysInMonth">@MTDTracking</a></td>
+                                                <td class="text-center extra-left">@objectivesStandards.ManufacturerObjective</td>
+                                                <td class="text-center">@validatedDeals</td>
+                                                <td class="text-center extra-left">@manObjectiveVariance</td>
+                                                        <td class="text-center extra-left">@objectivesStandards.FitzgeraldObjective</td>
+                                                        <td class="text-center">@validatedDeals</td>
+                                                        <td class="text-center extra-left">@fitzObjectiveVariance</td>
+                            }
+
+                            <td class="text-center extra-left">@objectivesStandards.GPURObjective</td>
+                            <td class="text-center">@GPURActual</td>
+                            <td class="text-center extra-left">@gpurObjectiveVariance</td>
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Total GP Obj = (@objectivesStandards.FitzgeraldObjective * @objectivesStandards.GPURObjective)">@TotalGPObjective.ToString("C", nfi)</a></td>
+                            <td class="text-center">@detail.VarianceCount</td>
+                            <td class="text-center">@detail.VariancePercentage.ToString("P", nfi)</td>
+
+                            @if (bottomLocationCode == "FMM")
+                            {
+                                bottomLocationCode = "FOC";
+                            }
+
+                            <td class="text-center"><a href="http://JJFServer/Status5/Home/Index/@bottomLocationCode/@conditionCode" target="_blank">@status5Count</a></td>
+                            @*<td class="text-center">@detail.ValuePercentage.ToString("P")</td>
+                                <td class="text-center">@detail.VarianceCount</td>
+                                <td class="text-center">@detail.VariancePercentage.ToString("P")</td>*@
+                        </tr>
+
+
+                            TotalVarianceCount = TotalVarianceCount + detail.VarianceCount;
+                            TotalVariancePercentage = (double)TotalVarianceCount / (double)TotalDealCount;
+                            TotalStatus5Count = TotalStatus5Count + status5Count;
+                            TotalGrossProfit = TotalGrossProfit + TotalGPObjective;
+                        }
+                        <tr>
+                            <th class="text-center">Totals</th>
+                            <th class="text-center">@TotalValidatedDealsCount</th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center"></th>
+                            <th class="text-center">@TotalGrossProfit</th>
+                            <th class="text-center">@TotalVarianceCount</th>
+                            <th class="text-center">@TotalVariancePercentage.ToString("P", nfi)</th>
+                            <th class="text-center"><a href="http://JJFServer/Status5/Home/Index/@bottomLocationCode/ALL" target="_blank">@TotalStatus5Count</a></th>
+                        </tr>
+                        <tr>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                            <td style="border-left:none;border-right:none">&nbsp;</td>
+                        </tr>
+
+
+                    }
+
+
+
+                }
+            </tbody>
+            <tfoot>
+
+            </tfoot>
+        </table>
+    </div>
+
+
+
+                    }
+
+@section scripts
+{
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('#section1').DataTable({
+                searching: false,
+                sorting: false,
+                ordering: false,
+                dom: 'B',
+                pageLength: -1,
+                buttons: [
+                    {
+                        extend: 'copyHtml5', footer: true,
+                    },
+                    {
+                        extend: 'excelHtml5', footer: true,
+                    },
+                    {
+                        extend: 'pdfHtml5', footer: true,
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print', footer: true,
+                        orientation: 'landscape'
+                    }]
+                //],
+                //columnDefs: [
+                //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                //  { type: 'date-us', targets: [3] }
+                //],
+                //  order: [[ 1, 'desc' ]]
+            });
+
+            $('#section2').DataTable({
+                searching: false,
+                sorting: false,
+                ordering: false,
+                dom: 'B',
+                pageLength: -1,
+                buttons: [
+                    {
+                        extend: 'copyHtml5', footer: true,
+                    },
+                    {
+                        extend: 'excelHtml5', footer: true,
+                    },
+                    {
+                        extend: 'pdfHtml5', footer: true,
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print', footer: true,
+                        orientation: 'landscape'
+                    }]
+                //],
+                //columnDefs: [
+                //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                //  { type: 'date-us', targets: [3] }
+                //],
+                //  order: [[ 1, 'desc' ]]
+            });
+
+            $('#section3').DataTable({
+                searching: false,
+                sorting: false,
+                ordering: false,
+                dom: 'B',
+                pageLength: -1,
+                buttons: [
+                    {
+                        extend: 'copyHtml5', footer: true,
+                    },
+                    {
+                        extend: 'excelHtml5', footer: true,
+                    },
+                    {
+                        extend: 'pdfHtml5', footer: true,
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print', footer: true,
+                        orientation: 'landscape'
+                    }]
+                //],
+                //columnDefs: [
+                //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                //  { type: 'date-us', targets: [3] }
+                //],
+                //  order: [[ 1, 'desc' ]]
+            });
+
+
+            //$('#section2').DataTable({
+            //    searching: false,
+            //    sorting:false,
+            //    dom: 'Bfrt',
+            //    pageLength: -1,
+            //                  buttons: [
+            //                      {
+            //                          extend: 'copyHtml5', footer: true,
+            //                      },
+            //                      {
+            //                          extend: 'excelHtml5', footer: true,
+            //                      },
+            //                      {
+            //                          extend: 'pdfHtml5', footer: true,
+            //                          orientation: 'landscape'
+            //                      },
+            //                      {
+            //                          extend: 'print', footer: true,
+            //                          orientation: 'landscape'
+            //                      }
+            //                  ]
+
+            //});
+            //$('#section3').DataTable({
+            //    searching: false,
+            //    sorting: false,
+            //    dom: 'Bfrt',
+            //    pageLength: -1,
+            //    buttons: [
+            //        {
+            //            extend: 'copyHtml5', footer: true,
+            //        },
+            //        {
+            //            extend: 'excelHtml5', footer: true,
+            //        },
+            //        {
+            //            extend: 'pdfHtml5', footer: true,
+            //            orientation: 'landscape'
+            //        },
+            //        {
+            //            extend: 'print', footer: true,
+            //            orientation: 'landscape'
+            //        }
+            //    ]
+
+            //});
+        });
+
+    </script>
+
+}

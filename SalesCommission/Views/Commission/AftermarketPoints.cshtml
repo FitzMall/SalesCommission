@@ -1,0 +1,130 @@
+﻿@model SalesCommission.Models.AftermarketInputModel
+@{
+    ViewBag.Title = "Aftermarket Points";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .form-control-sm {
+        max-width: 100px;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Aftermarket Points</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@{
+    if (Model.AftermarketInputs != null)
+    {
+        using (Html.BeginForm("AftermarketPoints", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+            <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table table-bordered">
+                        <thead>
+
+                            <tr style="background-color:#d9edf7">
+                                <th class="text-center">Aftermarket Item</th>
+                                <th class="text-center">Aftermarket Field Id</th>
+                                <th class="text-center">Points</th>                                
+                                <th class="text-center">Profit per Point</th>  
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var bShaded = false;
+                                var index = 1;
+                                foreach (var inputs in Model.AftermarketInputs)
+                                {
+                                    var style = "";
+                                    if (bShaded)
+                                    {
+                                        style = "style=background-color:#eeeeee;padding-bottom:15px;padding-left:10px;";
+                                    }
+                                    else
+                                    {
+                                        style = "style=background-color:#dddddd;padding-bottom:15px;padding-left:10px;";
+                                    }
+                                    bShaded = !bShaded;
+
+                                    <input type="hidden" id="hdn-InputKey-@index" name="hdn-InputKey-@index" value="@inputs.Key" />
+
+                                    <tr @style>
+
+                                        <td class="text-center">
+                                            <input type="text" id="description-@index" name="description-@index" class="form-control" value="@inputs.AftermarketDescription" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="fieldId-@index" name="fieldId-@index" class="form-control form-control-sm" value="@inputs.AftermarketFieldId" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="points-@index" name="points-@index" class="form-control form-control-sm" value="@inputs.AftermarketPoints" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="profitpoints-@index" name="profitpoints-@index" class="form-control form-control-sm" value="@inputs.AftermarketProfitPerPoint" />
+                                        </td>                                        
+                                    </tr>
+                                    index += 1;
+
+                                }
+                                <input type="hidden" id="hdn-InputIndex" name="hdn-InputIndex" value="@index" />
+
+                            }
+                            <tr>
+                                <td colspan="12" class="text-center">
+                                    <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Save</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+
+                                    }
+                                }
+}

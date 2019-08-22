@@ -1,0 +1,976 @@
+﻿@model SalesCommission.Models.AftermarketReportModel
+
+@{
+    ViewBag.Title = "After Sales Report By Brand";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+
+    th.rotate {
+        /* Something you can count on */
+        height: 150px;
+        white-space: nowrap;
+    }
+
+        th.rotate > div {
+            transform:
+            /* Magic Numbers */
+            translate(3px, 0px)
+            /* 45 is really 360 - 45 */
+            rotate(270deg);
+            width: 30px;
+        }
+
+            th.rotate > div > span {
+                border-bottom: 0px solid #ccc;
+                padding: 5px 10px;
+            }
+
+    .aft{
+        display:none;
+    }
+    .aft-percent{
+        display:none;
+    }
+
+            .table-bordered > thead > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+    .table-bordered > thead > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+    .table-bordered > tbody > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+    .table-bordered > tbody > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+        .table-bordered > tfoot > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+    .table-bordered > tfoot > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>After Sales Report By Brand</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select a Store, Condition and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.SelectedStores, new MultiSelectList(SalesCommission.Business.Enums.StoresReport, "StoreId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Stores..." })
+                    </div>
+                    @*<div class="col-sm-3">
+                            @Html.DropDownListFor(n => n.SelectedBrands, new MultiSelectList(SalesCommission.Business.Enums.Brands, "BrandId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Brands..." })
+                        </div>*@
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.ConditionId, new SelectList(SalesCommission.Business.Enums.Conditions, "ConditionId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Deals</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="checkbox" name="chkIncludeDeals" id="chkIncludeDeals" @(Model.IncludeDeals == true ? "checked" : "") /> <span style="font-size:14px;">Include Deal Details</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+@if (Model.AftermarketDealGroups != null)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <h3>After Sales Report By Brand for @Model.MonthId/@Model.YearId for @Model.ConditionId Vehicles</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <input id="btnToggleAftermarketItems" type="button" value="Show Aftermarket Items" class="btn btn-primary"/>
+        </div>
+        <div class="col-md-2">
+            <input id="btnToggleAftermarketPercentage" type="button" value="Show Aftermarket Percentages" class="btn btn-primary" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+            <thead>
+
+                <tr style="background-color:#d9edf7;font-size:11px;">
+                    <th class="text-center">Store</th>
+                    <th class="rotate"><div><span>Total Deal Count</span></div></th>
+
+                    <th class="rotate"><div><span>After Sales Deal Count</span></div></th>
+                    <th class="rotate"><div><span>After Sales Deal %</span></div></th>
+                    <th class="rotate"><div><span>Avg Per After Sales Deal</span></div></th>
+                    <th class="rotate"><div><span>Avg After Sale Per Total Deals</span></div></th>
+                    <th class="rotate extra-right"><div><span>After Sales Gross Profit</span></div></th>
+                    <th class="rotate aft"><div><span>Finance Income Count</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Finance Income %</span></div></th>
+                    <th class="rotate aft"><div><span>Service Contract Count</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Service Contract %</span></div></th>
+                    <th class="rotate aft"><div><span>Maintenance Contract Count</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Maintenance Contract %</span></div></th>
+                    <th class="rotate aft"><div><span>GAP Count</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>GAP %</span></div></th>
+                    <th class="rotate aft"><div><span>BPP/Loaner (MEMO)</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>BPP/Loaner %</span></div></th>
+
+                    <th class="rotate"><div><span>Aftermarket Deal Count</span></div></th>
+                    <th class="rotate"><div><span>Aftermarket Deal %</span></div></th>
+                    @*<th class="rotate"><div><span>Avg Revenue Per AM Deal</span></div></th>
+                        <th class="rotate"><div><span>Avg Cost Per AM Deal</span></div></th>*@
+                    <th class="rotate"><div><span>Avg Gross Profit per AM Deal</span></div></th>
+                    <th class="rotate"><div><span>Avg Gross Profit per Deal</span></div></th>
+                    <th class="rotate"><div><span>Aftermarket Gross Profit</span></div></th>
+                    <th class="rotate"><div><span>Total Gross Profit</span></div></th>
+                    <th class="rotate"><div><span>Avg Gross Profit per Deals</span></div></th>                    
+                    <th class="rotate"><div><span>Avg Vehicle Profit per Deal</span></div></th>
+
+                    <th class="rotate aft"><div><span>Nitrogren</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Nitrogen %</span></div></th>
+                    <th class="rotate aft"><div><span>ZurichShield</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>ZurichShield %</span></div></th>
+                    <th class="rotate aft"><div><span>Select Protect</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Select Protect %</span></div></th>
+                    <th class="rotate aft"><div><span>Tire and Wheel</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Tire and Wheel %</span></div></th>
+                    <th class="rotate aft"><div><span>Key Replacement</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Key Replacement %</span></div></th>
+                    <th class="rotate aft"><div><span>Windshield Protect</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Windshield Protect %</span></div></th>
+                    <th class="rotate aft"><div><span>Wear & Tear</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Wear & Tear %</span></div></th>
+                    <th class="rotate aft"><div><span>Secure Guard</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Secure Guard %</span></div></th>
+                    <th class="rotate aft"><div><span>Fitzgerald Total Package</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Fitzgerald Total Package %</span></div></th>
+                    <th class="rotate aft"><div><span>Rust Inhibitor/Undercoating</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Rust Inhibitor/Undercoating%</span></div></th>
+                    <th class="rotate aft"><div><span>Undercoating</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Undercoating %</span></div></th>
+                    <th class="rotate aft"><div><span>Rust Inhibitor</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Rust Inhibitor %</span></div></th>
+                    <th class="rotate aft"><div><span>Data Dots</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Data Dots %</span></div></th>
+                    <th class="rotate aft"><div><span>Paint and Dent Repair</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Paint and Dent Repair %</span></div></th>
+                    <th class="rotate aft"><div><span>Misc 1</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Misc 1 %</span></div></th>
+                    <th class="rotate aft"><div><span>Misc 2</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Misc 2 %</span></div></th>
+                    <th class="rotate aft"><div><span>Misc 3</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Misc 3 %</span></div></th>
+                    <th class="rotate aft"><div><span>Misc 4</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Misc 4 %</span></div></th>
+                    <th class="rotate aft"><div><span>MD State Insp (MEMO)</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>MD State Insp %</span></div></th>
+                    <th class="rotate aft"><div><span>Lease Fee (MEMO)</span></div></th>
+                    <th class="rotate extra-right aft-percent"><div><span>Lease Fee %</span></div></th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var TotalBPPCount = 0;
+                    var TotalNitrogenCount = 0;
+                    var TotalZurichShieldCount = 0;
+                    var TotalSelectProtectionCount = 0;
+                    var TotalTireWheelCount = 0;
+                    var TotalKeyReplacementCount = 0;
+                    var TotalWindshieldProtectionCount = 0;
+                    var TotalExcessWearTearCount = 0;
+                    var TotalSecureGuardCount = 0;
+                    var TotalFitzgeraldTotalPackageCount = 0;
+                    var TotalRustInhibitorUndercoatingCount = 0;
+                    var TotalUndercoatingCount = 0;
+                    var TotalRustInhibitorCount = 0;
+                    var TotalDataDotsCount = 0;
+                    var TotalPaintlessCount = 0;
+                    var TotalMisc1Count = 0;
+                    var TotalLeaseFeeCount = 0;
+                    var TotalMisc2Count = 0;
+                    var TotalMisc3Count = 0;
+                    var TotalMisc4Count = 0;
+                    var TotalMDStateCount = 0;
+
+                    var TotalFinanceCount = 0;
+                    var TotalMaintenanceCount = 0;
+                    var TotalServiceContractCount = 0;
+                    var TotalGAPCount = 0;
+
+                    double TotalBPPPercent = 0;
+                    double TotalNitrogenPercent = 0;
+                    double TotalZurichShieldPercent = 0;
+                    double TotalSelectProtectionPercent = 0;
+                    double TotalTireWheelPercent = 0;
+                    double TotalKeyReplacementPercent = 0;
+                    double TotalWindshieldProtectionPercent = 0;
+                    double TotalExcessWearTearPercent = 0;
+                    double TotalSecureGuardPercent = 0;
+                    double TotalFitzgeraldTotalPackagePercent = 0;
+                    double TotalRustInhibitorUndercoatingPercent = 0;
+                    double TotalUndercoatingPercent = 0;
+                    double TotalRustInhibitorPercent = 0;
+                    double TotalDataDotsPercent = 0;
+                    double TotalPaintlessPercent = 0;
+                    double TotalMisc1Percent = 0;
+                    double TotalLeaseFeePercent = 0;
+                    double TotalMisc2Percent = 0;
+                    double TotalMisc3Percent = 0;
+                    double TotalMisc4Percent = 0;
+                    double TotalMDStatePercent = 0;
+
+                    double TotalFinancePercent = 0;
+                    double TotalMaintenancePercent = 0;
+                    double TotalServiceContractPercent = 0;
+                    double TotalGAPPercent = 0;
+
+                    var TotalDeals = 0;
+                    var TotalAftermarketDeals = 0;
+                    double TotalAftermarketPercent = 0;
+                    decimal TotalAftermarketPrice = 0;
+                    decimal TotalAftermarketCost = 0;
+                    decimal TotalAftermarketProfit = 0;
+                    decimal TotalVehicleProfit = 0;
+                    decimal TotalOverallGrossProfit = 0;
+
+                    double TotalAftermarketAvgPrice = 0;
+                    double TotalAftermarketAvgCost = 0;
+                    double TotalAftermarketAvgProfit = 0;
+                    double TotalAftermarketTotalAvgProfit = 0;
+                    double TotalVehicleAvgProfit = 0;
+
+                    var TotalAfterSalesDeals = 0;
+                    double TotalAfterSalesPercent = 0;
+                    decimal TotalAfterSalesProfit = 0;
+
+                    double TotalAfterSalesPerDeal = 0;
+                    double TotalAfterSalesPerTotalDeals = 0;
+                    double TotalAvgOverallGrossProfit = 0;
+
+                    var index = 0;
+                }
+
+
+                @foreach (var dealGroup in Model.AftermarketDealGroups)
+                {
+                    index += 1;
+                    var BPPCount = 0;
+                    var NitrogenCount = 0;
+                    var ZurichShieldCount = 0;
+                    var SelectProtectionCount = 0;
+                    var TireWheelCount = 0;
+                    var KeyReplacementCount = 0;
+                    var WindshieldProtectionCount = 0;
+                    var ExcessWearTearCount = 0;
+                    var SecureGuardCount = 0;
+                    var FitzgeraldTotalPackageCount = 0;
+                    var RustInhibitorUndercoatingCount = 0;
+                    var UndercoatingCount = 0;
+                    var RustInhibitorCount = 0;
+                    var DataDotsCount = 0;
+                    var PaintlessCount = 0;
+                    var Misc1Count = 0;
+                    var LeaseFeeCount = 0;
+                    var Misc2Count = 0;
+                    var Misc3Count = 0;
+                    var Misc4Count = 0;
+                    var MDStateCount = 0;
+                    var FinanceCount = 0;
+                    var ServiceContractCount = 0;
+                    var MaintenanceCount = 0;
+                    var GAPCount = 0;
+
+                    double FinancePercent = 0;
+                    double ServiceContractPercent = 0;
+                    double MaintenancePercent = 0;
+                    double GAPPercent = 0;
+
+                    double BPPPercent = 0;
+                    double NitrogenPercent = 0;
+                    double ZurichShieldPercent = 0;
+                    double SelectProtectionPercent = 0;
+                    double TireWheelPercent = 0;
+                    double KeyReplacementPercent = 0;
+                    double WindshieldProtectionPercent = 0;
+                    double ExcessWearTearPercent = 0;
+                    double SecureGuardPercent = 0;
+                    double FitzgeraldTotalPackagePercent = 0;
+                    double RustInhibitorUndercoatingPercent = 0;
+                    double UndercoatingPercent = 0;
+                    double RustInhibitorPercent = 0;
+                    double DataDotsPercent = 0;
+                    double PaintlessPercent = 0;
+                    double Misc1Percent = 0;
+                    double LeaseFeePercent = 0;
+                    double Misc2Percent = 0;
+                    double Misc3Percent = 0;
+                    double Misc4Percent = 0;
+                    double MDStatePercent = 0;
+
+                    var AftermarketDealCount = 0;
+                    double AftermarketPercent = 0;
+
+                    decimal aftermarketPrice = 0;
+                    decimal aftermarketCost = 0;
+                    decimal aftermarketProfit = 0;
+                    decimal vehicleProfit = 0;
+
+                    double aftermarketAvgPrice = 0;
+                    double aftermarketAvgCost = 0;
+                    double aftermarketAvgProfit = 0;
+                    double aftermarketTotalAvgProfit = 0;
+                    double vehicleAvgProfit = 0;
+
+                    decimal TotalGrossProfit = 0;
+
+                    var afterSalesCount = 0;
+                    double afterSalesPercent = 0;
+                    decimal afterSalesAmount = 0;
+                    double afterSalesAvgDeal = 0;
+                    double afterSalesAvgOverallDeals = 0;
+                    double TotalAvgGrossProfit = 0;
+
+                    foreach (var dealDetail in dealGroup.AftermarketDealDetails)
+                    {
+                        BPPCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1);
+                        NitrogenCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 2);
+                        ZurichShieldCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 3);
+                        SelectProtectionCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 4);
+                        TireWheelCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 5);
+                        KeyReplacementCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 6);
+                        WindshieldProtectionCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 7);
+                        ExcessWearTearCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 8);
+                        SecureGuardCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 9);
+                        FitzgeraldTotalPackageCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 10);
+                        RustInhibitorUndercoatingCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 11);
+                        UndercoatingCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 12);
+                        RustInhibitorCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 13);
+                        DataDotsCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 14);
+                        PaintlessCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 15);
+                        Misc1Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 16 && o.AftermarketName != "LEASE FEE");
+                        LeaseFeeCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 16 && o.AftermarketName == "LEASE FEE");
+                        Misc2Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 17);
+                        Misc3Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 18);
+                        Misc4Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 19);
+                        MDStateCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 20);
+
+                        if (dealDetail.FinanceIncomeAmount > 0)
+                        {
+                            FinanceCount += 1;
+                            afterSalesAmount += dealDetail.FinanceIncomeAmount;
+                        }
+                        if (dealDetail.MaintenanceAmount > 0)
+                        {
+                            MaintenanceCount += 1;
+                            afterSalesAmount += dealDetail.MaintenanceAmount;
+                        }
+                        if (dealDetail.VSCAmount > 0)
+                        {
+                            ServiceContractCount += 1;
+                            afterSalesAmount += dealDetail.VSCAmount;
+                        }
+                        if (dealDetail.GAPAmount > 0)
+                        {
+                            GAPCount += 1;
+                            afterSalesAmount += dealDetail.GAPAmount;
+                        }
+
+                        if ((dealDetail.FinanceIncomeAmount > 0) || (dealDetail.MaintenanceAmount > 0) || (dealDetail.VSCAmount > 0) || (dealDetail.GAPAmount > 0) || dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1) > 0)
+                        {
+                            afterSalesCount += 1;
+                        }
+
+                        vehicleProfit += (dealDetail.DealGrossAmount - dealDetail.BPPAmount - dealDetail.NitrogenAmount - dealDetail.ZurichAmount - dealDetail.TireWheelAmount - dealDetail.SecurityAmount - dealDetail.AdjustmentAmount - dealDetail.CertFeeAmount - dealDetail.OtherAmount);
+
+                        if (dealDetail.AftermarketItems.Count > 0)
+                        {
+                            var BPPDeal = false;
+                            var nonBPPDeal = false;
+                            var MSIDeal = false;
+
+
+                            foreach (var deal in dealDetail.AftermarketItems)
+                            {
+                                if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                                {
+                                    aftermarketPrice += deal.AftermarketPrice;
+                                    aftermarketCost += deal.AftermarketCost;
+                                    aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+
+                                    nonBPPDeal = true;
+                                }
+                                else if (deal.AftermarketId == 1)
+                                {
+                                    afterSalesAmount += deal.AftermarketPrice;
+                                    BPPDeal = true;
+                                }
+                                else if (deal.AftermarketId == 20)
+                                {
+                                    MSIDeal = true;
+                                }
+                            }
+
+                            if (nonBPPDeal)
+                            {
+                                //This is a nonBPP and nonMSI Deal, increment count
+                                AftermarketDealCount += 1;
+                            }
+
+                        }
+                    }
+
+                    FinancePercent = (double)FinanceCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    ServiceContractPercent = (double)ServiceContractCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    MaintenancePercent = (double)MaintenanceCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    GAPPercent = (double)GAPCount / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    BPPPercent = (double)BPPCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    NitrogenPercent = (double)NitrogenCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    ZurichShieldPercent = (double)ZurichShieldCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    SelectProtectionPercent = (double)SelectProtectionCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    TireWheelPercent = (double)TireWheelCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    KeyReplacementPercent = (double)KeyReplacementCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    WindshieldProtectionPercent = (double)WindshieldProtectionCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    ExcessWearTearPercent = (double)ExcessWearTearCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    SecureGuardPercent = (double)SecureGuardCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    FitzgeraldTotalPackagePercent = (double)FitzgeraldTotalPackageCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    RustInhibitorUndercoatingPercent = (double)RustInhibitorUndercoatingCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    UndercoatingPercent = (double)UndercoatingCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    RustInhibitorPercent = (double)RustInhibitorCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    DataDotsPercent = (double)DataDotsCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    PaintlessPercent = (double)PaintlessCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    Misc1Percent = (double)Misc1Count / (double)dealGroup.AftermarketDealDetails.Count;
+                    LeaseFeePercent = (double)LeaseFeeCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    Misc2Percent = (double)Misc2Count / (double)dealGroup.AftermarketDealDetails.Count;
+                    Misc3Percent = (double)Misc3Count / (double)dealGroup.AftermarketDealDetails.Count;
+                    Misc4Percent = (double)Misc4Count / (double)dealGroup.AftermarketDealDetails.Count;
+                    MDStatePercent = (double)MDStateCount / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    aftermarketAvgPrice = (double)aftermarketPrice / (double)AftermarketDealCount;
+                    aftermarketAvgCost = (double)aftermarketCost / (double)AftermarketDealCount;
+                    aftermarketAvgProfit = (double)aftermarketProfit / (double)AftermarketDealCount;
+                    aftermarketTotalAvgProfit = (double)aftermarketProfit / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    vehicleAvgProfit = (double)vehicleProfit / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    AftermarketPercent = (double)AftermarketDealCount / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    afterSalesPercent = (double)afterSalesCount / (double)dealGroup.AftermarketDealDetails.Count;
+                    afterSalesAvgDeal = (double)afterSalesAmount / (double)afterSalesCount;
+                    afterSalesAvgOverallDeals = (double)afterSalesAmount / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+                    TotalAvgGrossProfit = (double)TotalGrossProfit / (double)dealGroup.AftermarketDealDetails.Count;
+
+                    var AutoMallName = dealGroup.AutoMall;
+                    foreach (var store in SalesCommission.Business.Enums.Stores)
+                    {
+                        if (store.StoreId.ToLower() == dealGroup.AutoMall.ToLower())
+                        {
+                            AutoMallName = store.Name;
+                        }
+                    }
+
+
+                    <tr>
+                        @if (Model.IncludeDeals)
+                        {
+                            <td class="text-center"><a data-toggle="collapse" id="@index" style="cursor: pointer;" data-target="#collapse-@index">@AutoMallName <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                        }
+                        else
+                        {
+                            <td class="text-center">@AutoMallName</td>
+                        }
+
+                        <td class="text-center">@dealGroup.AftermarketDealDetails.Count</td>
+
+                        <td class="text-center">@afterSalesCount</td>
+                        <td class="text-center">@afterSalesPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@afterSalesAvgDeal.ToString("C", nfi)</td>
+                        <td class="text-center">@afterSalesAvgOverallDeals.ToString("C", nfi)</td>
+                        <td class="text-center extra-right">@afterSalesAmount.ToString("C", nfi)</td>
+                        <td class="text-center aft">@FinanceCount</td>
+                        <td class="text-center extra-right aft-percent">@FinancePercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@ServiceContractCount</td>
+                        <td class="text-center extra-right aft-percent">@ServiceContractPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@MaintenanceCount</td>
+                        <td class="text-center extra-right aft-percent">@MaintenancePercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@GAPCount</td>
+                        <td class="text-center extra-right aft-percent">@GAPPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@BPPCount</td>
+                        <td class="text-center extra-right aft-percent">@BPPPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@AftermarketDealCount</td>
+                        <td class="text-center">@AftermarketPercent.ToString("P", nfi)</td>
+                        @*<td class="text-center">@aftermarketAvgPrice.ToString("C", nfi)</td>
+                            <td class="text-center">@aftermarketAvgCost.ToString("C", nfi)</td>*@
+                        <td class="text-center">@aftermarketAvgProfit.ToString("C", nfi)</td>
+                        <td class="text-center">@aftermarketTotalAvgProfit.ToString("C", nfi)</td>
+                        <td class="text-center">@aftermarketProfit.ToString("C", nfi)</td>
+                        <td class="text-center">@TotalGrossProfit.ToString("C", nfi)</td>
+                        <td class="text-center">@TotalAvgGrossProfit.ToString("C", nfi)</td>
+                        <td class="text-center">@vehicleAvgProfit.ToString("C", nfi)</td>
+                        @*<td class="text-center extra-right">@aftermarketAvgProfit.ToString("C", nfi)</td>*@
+
+
+                        <td class="text-center aft">@NitrogenCount</td>
+                        <td class="text-center extra-right aft-percent">@NitrogenPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@ZurichShieldCount</td>
+                        <td class="text-center extra-right aft-percent">@ZurichShieldPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@SelectProtectionCount</td>
+                        <td class="text-center extra-right aft-percent">@SelectProtectionPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@TireWheelCount</td>
+                        <td class="text-center extra-right aft-percent">@TireWheelPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@KeyReplacementCount</td>
+                        <td class="text-center extra-right aft-percent">@KeyReplacementPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@WindshieldProtectionCount</td>
+                        <td class="text-center extra-right aft-percent">@WindshieldProtectionPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@ExcessWearTearCount</td>
+                        <td class="text-center extra-right aft-percent">@ExcessWearTearPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@SecureGuardCount</td>
+                        <td class="text-center extra-right aft-percent">@SecureGuardPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@FitzgeraldTotalPackageCount</td>
+                        <td class="text-center extra-right aft-percent">@FitzgeraldTotalPackagePercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@RustInhibitorUndercoatingCount</td>
+                        <td class="text-center extra-right aft-percent">@RustInhibitorUndercoatingPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@UndercoatingCount</td>
+                        <td class="text-center extra-right aft-percent">@UndercoatingPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@RustInhibitorCount</td>
+                        <td class="text-center extra-right aft-percent">@RustInhibitorPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@DataDotsCount</td>
+                        <td class="text-center extra-right aft-percent">@DataDotsPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@PaintlessCount</td>
+                        <td class="text-center extra-right aft-percent">@PaintlessPercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@Misc1Count</td>
+                        <td class="text-center extra-right aft-percent">@Misc1Percent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@Misc2Count</td>
+                        <td class="text-center extra-right aft-percent">@Misc2Percent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@Misc3Count</td>
+                        <td class="text-center extra-right aft-percent">@Misc3Percent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@Misc4Count</td>
+                        <td class="text-center extra-right aft-percent">@Misc4Percent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@MDStateCount</td>
+                        <td class="text-center extra-right aft-percent">@MDStatePercent.ToString("P", nfi)</td>
+                        <td class="text-center aft">@LeaseFeeCount</td>
+                        <td class="text-center extra-right aft-percent">@LeaseFeePercent.ToString("P", nfi)</td>
+                    </tr>
+
+                    if (Model.IncludeDeals)
+                    {
+                        <tr id="collapse-@index" class="collapse out" style="background-color:lightgray">
+                            <td colspan="22">
+                                <table class="table table-bordered table-striped" style="font-size:12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Brand</th>
+                                            <th>Deal Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            var brandList = new List<string>();
+
+
+                                            foreach (var deal in dealGroup.AftermarketDealDetails)
+                                            {
+                                                if (!brandList.Contains(deal.MakeName))
+                                                {
+                                                    brandList.Add(deal.MakeName);
+                                                }
+                                            }
+
+                                            foreach (var brand in brandList)
+                                            {
+                                                var brandDeals = dealGroup.AftermarketDealDetails.FindAll(o => o.MakeName == brand);
+
+                                                var modelList = new List<string>();
+                                                foreach (var deal in brandDeals)
+                                                {
+                                                    if (!modelList.Contains(deal.ModelName))
+                                                    {
+                                                        modelList.Add(deal.ModelName);
+                                                    }
+                                                }
+
+                                                <tr>
+                                                    <td class="text-center"><a data-toggle="collapse" id="@index-@brand" style="cursor: pointer;" data-target="#collapse-@index-@brand">@brand <i class="fa fa-caret-down" aria-hidden="true"></i></a></td>
+                                                    <td>@brandDeals.Count</td>
+                                                </tr>
+
+                                                <tr id="collapse-@index-@brand" class="collapse out" style="background-color:lightgray">
+                                                    <td colspan="22">
+                                                        <table class="table table-bordered table-striped" style="font-size:12px;">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Make</th>
+                                                                    <th>Deal Count</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+
+
+                                                                @foreach (var modelName in modelList)
+                                                                {
+                                                                    var modelDeals = brandDeals.FindAll(o => o.ModelName == modelName);
+                                                                    <tr>
+                                                                        <td>@modelName</td>
+                                                                        <td>@modelDeals.Count</td>
+                                                                    </tr>
+
+                                                                }
+
+
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <th>Totals</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+
+
+
+
+                                            }
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Totals</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>  
+
+                            </td>
+                        </tr>
+                                                                        }
+
+
+                                                                        TotalDeals += dealGroup.AftermarketDealDetails.Count;
+                                                                        TotalBPPCount += BPPCount;
+                                                                        TotalNitrogenCount += NitrogenCount;
+                                                                        TotalZurichShieldCount += ZurichShieldCount;
+                                                                        TotalSelectProtectionCount += SelectProtectionCount;
+                                                                        TotalTireWheelCount += TireWheelCount;
+                                                                        TotalKeyReplacementCount += KeyReplacementCount;
+                                                                        TotalWindshieldProtectionCount += WindshieldProtectionCount;
+                                                                        TotalExcessWearTearCount += ExcessWearTearCount;
+                                                                        TotalSecureGuardCount += SecureGuardCount;
+                                                                        TotalFitzgeraldTotalPackageCount += FitzgeraldTotalPackageCount;
+                                                                        TotalRustInhibitorUndercoatingCount += RustInhibitorUndercoatingCount;
+                                                                        TotalUndercoatingCount += UndercoatingCount;
+                                                                        TotalRustInhibitorCount += RustInhibitorCount;
+                                                                        TotalDataDotsCount += DataDotsCount;
+                                                                        TotalPaintlessCount += PaintlessCount;
+                                                                        TotalMisc1Count += Misc1Count;
+                                                                        TotalLeaseFeeCount += LeaseFeeCount;
+                                                                        TotalMisc2Count += Misc2Count;
+                                                                        TotalMisc3Count += Misc3Count;
+                                                                        TotalMisc4Count += Misc4Count;
+                                                                        TotalMDStateCount += MDStateCount;
+                                                                        TotalAftermarketDeals += AftermarketDealCount;
+
+                                                                        TotalFinanceCount += FinanceCount;
+                                                                        TotalServiceContractCount += ServiceContractCount;
+                                                                        TotalMaintenanceCount += MaintenanceCount;
+                                                                        TotalGAPCount += GAPCount;
+
+                                                                        TotalAftermarketPercent = (double)TotalAftermarketDeals / (double)TotalDeals;
+
+                                                                        TotalAftermarketPrice += aftermarketPrice;
+                                                                        TotalAftermarketCost += aftermarketCost;
+                                                                        TotalAftermarketProfit += aftermarketProfit;
+                                                                        TotalVehicleProfit += vehicleProfit;
+
+                                                                        TotalAfterSalesDeals += afterSalesCount;
+                                                                        TotalAfterSalesProfit += afterSalesAmount;
+                                                                        TotalOverallGrossProfit += TotalGrossProfit;
+                                                                    }
+
+                @{
+                    TotalAftermarketAvgPrice = (double)TotalAftermarketPrice / (double)TotalAftermarketDeals;
+                    TotalAftermarketAvgCost = (double)TotalAftermarketCost / (double)TotalAftermarketDeals;
+                    TotalAftermarketAvgProfit = (double)TotalAftermarketProfit / (double)TotalAftermarketDeals;
+
+                    TotalAftermarketTotalAvgProfit = (double)TotalAftermarketProfit / (double)TotalDeals;
+                    TotalVehicleAvgProfit = (double)TotalVehicleProfit / (double)TotalDeals;
+
+                    TotalFinancePercent = (double)TotalFinanceCount / (double)TotalDeals;
+                    TotalServiceContractPercent = (double)TotalServiceContractCount / (double)TotalDeals;
+                    TotalMaintenancePercent = (double)TotalMaintenanceCount / (double)TotalDeals;
+                    TotalGAPPercent = (double)TotalGAPCount / (double)TotalDeals;
+
+                    TotalBPPPercent = (double)TotalBPPCount / (double)TotalDeals;
+                    TotalNitrogenPercent = (double)TotalNitrogenCount / (double)TotalDeals;
+                    TotalZurichShieldPercent = (double)TotalZurichShieldCount / (double)TotalDeals;
+                    TotalSelectProtectionPercent = (double)TotalSelectProtectionCount / (double)TotalDeals;
+                    TotalTireWheelPercent = (double)TotalTireWheelCount / (double)TotalDeals;
+                    TotalKeyReplacementPercent = (double)TotalKeyReplacementCount / (double)TotalDeals;
+                    TotalWindshieldProtectionPercent = (double)TotalWindshieldProtectionCount / (double)TotalDeals;
+                    TotalExcessWearTearPercent = (double)TotalSecureGuardCount / (double)TotalDeals;
+                    TotalSecureGuardPercent = (double)TotalSecureGuardCount / (double)TotalDeals;
+                    TotalFitzgeraldTotalPackagePercent = (double)TotalFitzgeraldTotalPackageCount / (double)TotalDeals;
+                    TotalRustInhibitorUndercoatingPercent = (double)TotalRustInhibitorUndercoatingCount / (double)TotalDeals;
+                    TotalUndercoatingPercent = (double)TotalUndercoatingCount / (double)TotalDeals;
+                    TotalRustInhibitorPercent = (double)TotalRustInhibitorCount / (double)TotalDeals;
+                    TotalDataDotsPercent = (double)TotalDataDotsCount / (double)TotalDeals;
+                    TotalPaintlessPercent = (double)TotalPaintlessCount / (double)TotalDeals;
+                    TotalMisc1Percent = (double)TotalMisc1Count / (double)TotalDeals;
+                    TotalLeaseFeePercent = (double)TotalLeaseFeeCount / (double)TotalDeals;
+                    TotalMisc2Percent = (double)TotalMisc2Count / (double)TotalDeals;
+                    TotalMisc3Percent = (double)TotalMisc3Count / (double)TotalDeals;
+                    TotalMisc4Percent = (double)TotalMisc4Count / (double)TotalDeals;
+                    TotalMDStatePercent = (double)TotalMDStateCount / (double)TotalDeals;
+
+                    TotalAfterSalesPercent = (double)TotalAfterSalesDeals / (double)TotalDeals;
+
+                    TotalAfterSalesPerDeal = (double)TotalAfterSalesProfit / (double)TotalAfterSalesDeals;
+                    TotalAfterSalesPerTotalDeals = (double)TotalAfterSalesProfit / (double)TotalDeals;
+
+                    TotalAvgOverallGrossProfit = (double)TotalOverallGrossProfit / (double)TotalDeals;
+
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+
+
+                    <th class="text-center">Totals</th>
+                    <th class="text-center">@TotalDeals</th>
+                    <th class="text-center">@TotalAfterSalesDeals</th>
+                    <th class="text-center">@TotalAfterSalesPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@TotalAfterSalesPerDeal.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalAfterSalesPerTotalDeals.ToString("C", nfi)</th>
+                    <th class="text-center extra-right">@TotalAfterSalesProfit.ToString("C", nfi)</th>
+                    <td class="text-center aft">@TotalFinanceCount</td>
+                    <td class="text-center extra-right aft-percent">@TotalFinancePercent.ToString("P", nfi)</td>
+                    <td class="text-center aft">@TotalServiceContractCount</td>
+                    <td class="text-center extra-right aft-percent">@TotalServiceContractPercent.ToString("P", nfi)</td>
+                    <td class="text-center aft">@TotalMaintenanceCount</td>
+                    <td class="text-center extra-right aft-percent">@TotalMaintenancePercent.ToString("P", nfi)</td>
+                    <td class="text-center aft">@TotalGAPCount</td>
+                    <td class="text-center extra-right aft-percent">@TotalGAPPercent.ToString("P", nfi)</td>
+                    <th class="text-center aft">@TotalBPPCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalBPPPercent.ToString("P", nfi)</th>
+
+                    <th class="text-center">@TotalAftermarketDeals</th>
+                    <th class="text-center">@TotalAftermarketPercent.ToString("P", nfi)</th>
+
+                    @*<th class="text-center">@TotalAftermarketAvgPrice.ToString("C", nfi)</th>
+                        <th class="text-center">@TotalAftermarketAvgCost.ToString("C", nfi)</th>*@
+                    <th class="text-center">@TotalAftermarketAvgProfit.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalAftermarketTotalAvgProfit.ToString("C", nfi)</th>
+                    <th class="text-center extra-right">@TotalAftermarketProfit.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalOverallGrossProfit.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalAvgOverallGrossProfit.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalVehicleAvgProfit.ToString("C", nfi)</th>
+
+
+                    <th class="text-center aft">@TotalNitrogenCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalNitrogenPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalZurichShieldCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalZurichShieldPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalSelectProtectionCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalSelectProtectionPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalTireWheelCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalTireWheelPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalKeyReplacementCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalKeyReplacementPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalWindshieldProtectionCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalWindshieldProtectionPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalExcessWearTearCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalExcessWearTearPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalSecureGuardCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalSecureGuardPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalFitzgeraldTotalPackageCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalFitzgeraldTotalPackagePercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalRustInhibitorUndercoatingCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalRustInhibitorUndercoatingPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalUndercoatingCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalUndercoatingPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalRustInhibitorCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalRustInhibitorPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalDataDotsCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalDataDotsPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalPaintlessCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalPaintlessPercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalMisc1Count</th>
+                    <th class="text-center extra-right aft-percent">@TotalMisc1Percent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalMisc2Count</th>
+                    <th class="text-center extra-right aft-percent">@TotalMisc2Percent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalMisc3Count</th>
+                    <th class="text-center extra-right aft-percent">@TotalMisc3Percent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalMisc4Count</th>
+                    <th class="text-center extra-right aft-percent">@TotalMisc4Percent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalMDStateCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalMDStatePercent.ToString("P", nfi)</th>
+                    <th class="text-center aft">@TotalLeaseFeeCount</th>
+                    <th class="text-center extra-right aft-percent">@TotalLeaseFeePercent.ToString("P", nfi)</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+
+
+                    }
+
+@section scripts
+{
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            $('#btnToggleAftermarketItems').click(function () {
+                
+
+                if ($('#btnToggleAftermarketItems').val() == 'Show Aftermarket Items') {
+                    $('.aft').show();
+                    $('#btnToggleAftermarketItems').val("Hide Aftermarket Items");
+                }
+                else {
+                    $('.aft').hide();
+                    $('#btnToggleAftermarketItems').val("Show Aftermarket Items");
+                }
+
+            });
+            $('#btnToggleAftermarketPercentage').click(function () {
+                if ($('#btnToggleAftermarketPercentage').val() == 'Show Aftermarket Percentages')
+                {
+                    $('.aft-percent').show();
+                    $('#btnToggleAftermarketPercentage').val("Hide Aftermarket Percentages");
+                }
+                else
+                {
+                    $('.aft-percent').hide();
+                    $('#btnToggleAftermarketPercentage').val("Show Aftermarket Percentages");
+                }
+
+            });
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('#section1').DataTable({
+                searching: false,
+                sorting: false,
+                ordering: false,
+                dom: 'B',
+                pageLength: -1,
+                buttons: [
+                    {
+                        extend: 'copyHtml5', footer: true,
+                    },
+                    {
+                        extend: 'excelHtml5', footer: true,
+                    },
+                    {
+                        extend: 'pdfHtml5', footer: true,
+                        orientation: 'landscape'
+                    },
+                    {
+                        extend: 'print', footer: true,
+                        orientation: 'landscape'
+                    }]
+
+            });
+
+        });
+
+
+
+
+
+    </script>
+
+}

@@ -1,0 +1,167 @@
+﻿@model SalesCommission.Models.DealershipModel
+@{
+    ViewBag.Title = "Store Associates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .form-control-sm{
+        max-width:100px;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Dealership Inputs</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@{
+    if (Model.DealershipInputs != null)
+    {
+        using (Html.BeginForm("Stores", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+            <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr style="background-color:#d9edf7">
+                                <th colspan="4"></th>
+                                @*<th colspan="8" class="text-center">Revenue Information</th>*@
+                            </tr>
+                            <tr style="background-color:#d9edf7">
+                                <th class="text-center">Dealership</th>
+                                <th class="text-center">Store Volume</th>
+                                <th class="text-center">Hourly Rate</th>
+                                <th></th>
+                                @*<th class="text-center">Front New</th>
+                                <th class="text-center">Front Used</th>
+                                <th class="text-center">BPP</th>
+                                <th class="text-center">Finance</th>
+                                <th class="text-center">Service Contract</th>
+                                <th class="text-center">GAP</th>
+                                <th class="text-center">Trade</th>
+                                <th class="text-center">Aftermarket</th>*@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var bShaded = false;
+                                var index = 1;
+                                foreach (var inputs in Model.DealershipInputs)
+                                {
+                                    var style = "";
+                                    if (bShaded)
+                                    {
+                                        style = "style=background-color:#eeeeee;padding-bottom:15px;padding-left:10px;";
+                                    }
+                                    else
+                                    {
+                                        style = "style=background-color:#dddddd;padding-bottom:15px;padding-left:10px;";
+                                    }
+                                    bShaded = !bShaded;
+
+                                    <input type="hidden" id="hdn-InputKey-@index" name="hdn-InputKey-@index" value="@inputs.Key" />
+                                    <input type="hidden" id="hdn-InputLocation-@index" name="hdn-InputLocation-@index" value="@inputs.Location" />
+                                    <input type="hidden" id="hdn-InputBrandCode-@index" name="hdn-InputBrandCode-@index" value="@inputs.BrandCode" />
+                                    <input type="hidden" id="hdn-InputDescription-@index" name="hdn-InputDescription-@index" value="@inputs.LocationDescription" />
+
+                                    <tr @style>
+
+                                        <td class="text-center">@inputs.LocationDescription</td>
+                                        <td class="text-center">
+                                            <select id="storeVolume-@index" name="storeVolume-@index" class="form-control form-inline">
+                                                <option value=""></option>
+                                                <option value="LOW" @(inputs.StoreVolume == "LOW" ? "selected" : "")>LOW</option>
+                                                <option value="STD" @(inputs.StoreVolume == "STD" ? "selected" : "")>STD</option>
+                                            </select>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="hourlyRate-@index" name="hourlyRate-@index" class="form-control form-control-sm" value="@inputs.HourlyRate" />
+                                        </td>
+                                        <td></td>
+                                        @*<td class="text-center">
+                                            <input type="text" id="frontNew-@index" name="frontNew-@index" class="form-control form-control-sm" value="@inputs.FrontNewAmount.ToString("C",nfi)" />                                       
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="frontUsed-@index" name="frontUsed-@index" class="form-control form-control-sm" value="@inputs.FrontUsedAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="bpp-@index" name="bpp-@index" class="form-control form-control-sm" value="@inputs.BPPAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="finance-@index" name="finance-@index" class="form-control form-control-sm" value="@inputs.FinanceAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="serviceContract-@index" name="serviceContract-@index" class="form-control form-control-sm" value="@inputs.ServiceContractAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="gap-@index" name="gap-@index" class="form-control form-control-sm" value="@inputs.GAPAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="trade-@index" name="trade-@index" class="form-control form-control-sm" value="@inputs.TradeAmount.ToString("C",nfi)" />
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="text" id="aftermarket-@index" name="aftermarket-@index" class="form-control form-control-sm" value="@inputs.AftermarketAmount.ToString("C",nfi)" />
+                                        </td>*@
+                                    </tr>
+                                    index += 1;
+
+                                }
+                                <input type="hidden" id="hdn-InputIndex" name="hdn-InputIndex" value="@index" />
+                            }
+                            <tr>
+                                <td colspan="12" class="text-center">
+                                    <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Save</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+
+            }
+        }
+    }

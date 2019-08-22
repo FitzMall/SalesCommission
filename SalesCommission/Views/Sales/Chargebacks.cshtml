@@ -1,0 +1,342 @@
+﻿@model SalesCommission.Models.ChargebackModel
+@{
+    ViewBag.Title = "Chargebacks";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+}
+
+<style type="text/css">
+    .form-control-sm {
+        font-size: 12px;
+        height: 28px;
+        padding: 4px 4px;
+    }
+
+    .col-sm-1 {
+        width: 8.8%;
+    }
+
+    table {
+        background-color: #fff;
+    }
+
+    h5.editInfo {
+        color: #428bca;
+    }
+
+        h5.editInfo:hover {
+            text-decoration: underline;
+            color: #428bca;
+            cursor: pointer;
+        }
+
+    .btnPMGross:after {
+        content: '\25BC'; 
+    }
+
+    .changed:after {
+        content: '\25B2';
+    }
+
+</style>
+@*
+
+    002B
+    2212
+*@
+<div class="jumbotron">
+    <h1>Store Chargebacks</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.ChargebackStores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@if (Model.Chargebacks != null)
+{
+
+    var StoreName = Model.StoreId;
+
+    foreach(var store in SalesCommission.Business.Enums.Stores)
+    {
+        if(store.StoreId == Model.StoreId)
+        {
+            StoreName = store.Name;
+        }
+    }
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Chargebacks for @Model.MonthId/@Model.YearId for @StoreName</h3>
+        </div>
+    </div>
+    using (Html.BeginForm("Chargebacks", "Sales", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        var chargebackIds = "";
+        var updateDate = new DateTime();
+        var updateUser = "";
+
+        foreach(var chargeback in Model.Chargebacks)
+        {
+            chargebackIds += chargeback.Id + ",";
+
+            updateDate = chargeback.UpdateDate;
+            updateUser = chargeback.UpdateUser;
+        }
+
+        chargebackIds = chargebackIds.TrimEnd(',');
+
+            <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+            <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+            <input type="hidden" id="hdn-StoreId" name="hdn-StoreId" value="@Model.StoreId" />
+            <input type="hidden" id="hdn-ChargebackIds" name="hdn-ChargebackIds" value="@chargebackIds" />
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr style="background-color:#d9edf7">
+                                <th>Chargeback</th>
+                                <th class="text-center">New Front Gross</th>
+                                <th class="text-center">Used Front Gross</th>
+                                <th class="text-center">Finance</th>
+                                <th class="text-center">Service Contract</th>
+                                <th class="text-center">GAP</th>
+                                <th class="text-center">Other</th>                                
+                            </tr>
+                        </thead>
+                        <tbody>
+    @{
+        var standardChargebacks = Model.Chargebacks.FindAll(x => x.Type != "other");
+    }
+
+    @foreach (var chargeback in standardChargebacks)
+    {
+        var inputTypeNew = "hidden";
+        var inputTypeUsed = "hidden";
+        var inputTypeFinance = "hidden";
+        var inputTypeService = "hidden";
+        var inputTypeGAP = "hidden";
+        var inputTypeOther = "hidden";
+
+        var displayArray = chargeback.DisplayValues.Split(',');
+
+        foreach (var setting in displayArray)
+        {
+
+            switch (setting)
+            {
+                case "1":
+                    inputTypeNew = "text";
+                    break;
+                case "2":
+                    inputTypeUsed = "text";
+                    break;
+                case "3":
+                    inputTypeFinance = "text";
+                    break;
+                case "4":
+                    inputTypeService = "text";
+                    break;
+                case "5":
+                    inputTypeGAP = "text";
+                    break;
+                case "6":
+                    inputTypeOther = "text";
+                    break;
+            }
+
+
+        }
+
+         <tr>
+             @if (chargeback.Name == "P/M Gross")
+             {
+                 decimal usedTotal = 0;
+                 decimal newTotal = 0;
+
+                 newTotal = chargeback.ROAmount + chargeback.CertFeeAmount + chargeback.RebateAdjustmentAmount + chargeback.CustomerWorkOrderAmount + chargeback.OtherAdjustmentAmount;
+                 usedTotal = chargeback.UsedROAmount + chargeback.UsedCertFeeAmount + chargeback.UsedRebateAdjustmentAmount + chargeback.UsedCustomerWorkOrderAmount + chargeback.UsedOtherAdjustmentAmount;
+
+                <td><a class="btnPMGross">@chargeback.Name</a><input type="hidden" id="@chargeback.Id-hdn-name" name="@chargeback.Id-hdn-name" value="@chargeback.Name" /><input type="hidden" id="@chargeback.Id-hdn-type" name="@chargeback.Id-hdn-type" value="@chargeback.Type" /></td>
+                <td class="text-center">
+                    <input type="@inputTypeNew" id="@chargeback.Id-FrontGrossAmount" name="@chargeback.Id-FrontGrossAmount" class="form-control form-control-sm" disabled value="@newTotal" />
+                </td>
+                <td class="text-center">
+                    <input type="@inputTypeUsed" id="@chargeback.Id-UsedFrontGrossAmount" name="@chargeback.Id-UsedFrontGrossAmount" class="form-control form-control-sm" disabled value="@usedTotal" />
+                </td>
+             }
+             else
+             {
+                <td>@chargeback.Name<input type="hidden" id="@chargeback.Id-hdn-name" name="@chargeback.Id-hdn-name" value="@chargeback.Name" /><input type="hidden" id="@chargeback.Id-hdn-type" name="@chargeback.Id-hdn-type" value="@chargeback.Type" /></td>
+                <td class="text-center">
+                    <input type="@inputTypeNew" id="@chargeback.Id-FrontGrossAmount" name="@chargeback.Id-FrontGrossAmount" class="form-control form-control-sm" value="@chargeback.FrontGrossAmount" />
+                </td>
+                <td class="text-center">
+                    <input type="@inputTypeUsed" id="@chargeback.Id-UsedFrontGrossAmount" name="@chargeback.Id-UsedFrontGrossAmount" class="form-control form-control-sm" value="@chargeback.UsedFrontGrossAmount" />
+                </td>
+             }
+
+            <td class="text-center">
+                <input type="@inputTypeFinance" id="@chargeback.Id-FinanceAmount" name="@chargeback.Id-FinanceAmount" class="form-control form-control-sm" value="@chargeback.FinanceAmount" />
+            </td>
+            <td class="text-center">
+                <input type="@inputTypeService" id="@chargeback.Id-ServiceContractAmount" name="@chargeback.Id-ServiceContractAmount" class="form-control form-control-sm" value="@chargeback.ServiceContractAmount" />
+            </td>
+            <td class="text-center">
+                <input type="@inputTypeGAP" id="@chargeback.Id-GAPAmount" name="@chargeback.Id-GAPAmount" class="form-control form-control-sm" value="@chargeback.GAPAmount" />
+            </td>
+            <td class="text-center">
+                <input type="@inputTypeOther" id="@chargeback.Id-OtherAmount" name="@chargeback.Id-OtherAmount" class="form-control form-control-sm" value="@chargeback.OtherAmount" />
+            </td>
+        </tr>
+
+        if (chargeback.Name == "P/M Gross")
+        {
+            <tr class="PM-detail-row" style="display:none;">
+                <td colspan="3">
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <td class="text-right" style="width:120px;">RO's</td>
+                            <td><input type="@inputTypeNew" id="@chargeback.Id-ROAmount" name="@chargeback.Id-ROAmount" class="form-control form-control-sm" value="@chargeback.ROAmount" /></td>
+                            <td><input type="@inputTypeUsed" id="@chargeback.Id-UsedROAmount" name="@chargeback.Id-UsedROAmount" class="form-control form-control-sm" value="@chargeback.UsedROAmount" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right">Cert Fees</td>
+                            <td><input type="@inputTypeNew" id="@chargeback.Id-CertFeeAmount" name="@chargeback.Id-CertFeeAmount" class="form-control form-control-sm" value="@chargeback.CertFeeAmount" /></td>
+                            <td><input type="@inputTypeUsed" id="@chargeback.Id-UsedCertFeeAmount" name="@chargeback.Id-UsedCertFeeAmount" class="form-control form-control-sm" value="@chargeback.UsedCertFeeAmount" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right">Rebate Adj</td>
+                            <td><input type="@inputTypeNew" id="@chargeback.Id-RebateAdjustmentAmount" name="@chargeback.Id-RebateAdjustmentAmount" class="form-control form-control-sm" value="@chargeback.RebateAdjustmentAmount" /></td>
+                            <td><input type="@inputTypeUsed" id="@chargeback.Id-UsedRebateAdjustmentAmount" name="@chargeback.Id-UsedRebateAdjustmentAmount" class="form-control form-control-sm" value="@chargeback.UsedRebateAdjustmentAmount" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right">Cust Due W/O</td>
+                            <td><input type="@inputTypeNew" id="@chargeback.Id-CustomerWorkOrderAmount" name="@chargeback.Id-CustomerWorkOrderAmount" class="form-control form-control-sm" value="@chargeback.CustomerWorkOrderAmount" /></td>
+                            <td><input type="@inputTypeUsed" id="@chargeback.Id-UsedCustomerWorkOrderAmount" name="@chargeback.Id-UsedCustomerWorkOrderAmount" class="form-control form-control-sm" value="@chargeback.UsedCustomerWorkOrderAmount" /></td>
+                        </tr>
+                        <tr>
+                            <td class="text-right">Other Adj</td>
+                            <td><input type="@inputTypeNew" id="@chargeback.Id-OtherAdjustmentAmount" name="@chargeback.Id-OtherAdjustmentAmount" class="form-control form-control-sm" value="@chargeback.OtherAdjustmentAmount" /></td>
+                            <td><input type="@inputTypeUsed" id="@chargeback.Id-UsedOtherAdjustmentAmount" name="@chargeback.Id-UsedOtherAdjustmentAmount" class="form-control form-control-sm" value="@chargeback.UsedOtherAdjustmentAmount" /></td>
+                        </tr>
+                    </table>
+                </td>
+                <td colspan="4"></td>
+            </tr>
+
+                }
+
+                }
+                            <tr>
+                                <th style="background-color:#d9edf7">Other Charges</th>
+                                <th class="text-center" style="background-color:#d9edf7">New</th>
+                                <th class="text-center" style="background-color:#d9edf7">Used</th>
+                                <th style="background-color:#d9edf7"></th>
+                                <th style="background-color:#d9edf7"></th>
+                                <th style="background-color:#d9edf7"></th>
+                                <th class="text-center" style="background-color:#d9edf7">Total</th>
+                            </tr>
+                            @{ 
+                                var otherChargebacks = Model.Chargebacks.FindAll(x => x.Type == "other");
+                            }
+
+                            @foreach (var chargeback in otherChargebacks)
+                            {
+                                decimal chargebackTotal = 0;
+
+                                chargebackTotal = chargeback.FrontGrossAmount + chargeback.UsedFrontGrossAmount;
+
+                            <tr>
+                                <td>@chargeback.Name<input type="hidden" id="@chargeback.Id-hdn-name" name="@chargeback.Id-hdn-name" value="@chargeback.Name" /><input type="hidden" id="@chargeback.Id-hdn-type" name="@chargeback.Id-hdn-type" value="@chargeback.Type" /></td>
+                                <td class="text-center"><input type="text" id="@chargeback.Id-FrontGrossAmount" name="@chargeback.Id-FrontGrossAmount" class="form-control form-control-sm" value="@chargeback.FrontGrossAmount" /></td>
+                                <td class="text-center"><input type="text" id="@chargeback.Id-UsedFrontGrossAmount" name="@chargeback.Id-UsedFrontGrossAmount" class="form-control form-control-sm" value="@chargeback.UsedFrontGrossAmount" /></td>
+                                <td class="text-center"><input type="hidden" id="@chargeback.Id-FinanceAmount" name="@chargeback.Id-FinanceAmount" class="form-control form-control-sm" value="@chargeback.FinanceAmount" /></td>
+                                <td class="text-center"><input type="hidden" id="@chargeback.Id-ServiceContractAmount" name="@chargeback.Id-ServiceContractAmount" class="form-control form-control-sm" value="@chargeback.ServiceContractAmount" /></td>
+                                <td class="text-center"><input type="hidden" id="@chargeback.Id-GAPAmount" name="@chargeback.Id-GAPAmount" class="form-control form-control-sm" value="@chargeback.GAPAmount" /></td>
+                                <td class="text-center">
+                                    <input type="text" id="@chargeback.Id-Total" name="@chargeback.Id-Total" class="form-control form-control-sm" value="@chargebackTotal" disabled />
+                                    @if (chargeback.Name == "Other")
+                            {
+                                        <h5>Comments:</h5>
+                                        <textarea id="@chargeback.Id-OtherAmount-Comments" name="@chargeback.Id-OtherAmount-Comments" class="form-control form-control-sm">@chargeback.OtherComments</textarea>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    @if(updateUser != "")
+                                    {
+                                        <strong>Last updated by @updateUser on @updateDate.ToShortDateString()</strong><br/>
+                                    }
+                                    <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Save</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+    }
+}
+@section scripts
+{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+                    $('.btnPMGross').click(function () {
+
+                        if ($(".PM-detail-row").is(':visible')) {
+                            $('.PM-detail-row').hide();
+                            $('.btnPMGross').toggleClass('changed');
+                        }
+                        else {
+                            $('.PM-detail-row').show();
+                            $('.btnPMGross').toggleClass('changed');
+                        }
+
+                    });
+        });
+    </script>
+}

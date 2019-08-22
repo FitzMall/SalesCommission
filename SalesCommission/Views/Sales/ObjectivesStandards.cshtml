@@ -1,0 +1,287 @@
+﻿@model SalesCommission.Models.ObjectivesStandardsModel
+
+@{
+    ViewBag.Title = "Objectives and Standards";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style type="text/css">
+    label {
+        font-size: 13px;
+    }
+
+    .form-control {
+        font-size: 13px;
+        height: 28px;
+    }
+
+    .col-sm-1{
+        width:10%;
+    }
+</style>
+
+
+<div class="navbar-fixed-top" style="width:25%;left:65%">
+    <div class="container">
+        <div class="navbar-header">
+            <span style="color: #999999;">Scroll to a store:</span>@Html.DropDownListFor(n => n.LocationId, new SelectList(SalesCommission.Business.Enums.Locations, "LocationId", "Name"), new { @class = "form-control form-inline", id = "select-anchor" })
+        </div>
+    </div>
+</div>
+
+        <div class="jumbotron">
+            <h1>Objectives and Standards</h1>
+            <div class="row">
+                <div class="col-sm-4">
+                    <h3>Select a Date:</h3>
+                </div>
+            </div>
+            @using (Html.BeginForm())
+            {
+                <div class="row">
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+
+            }
+
+
+        </div>
+
+
+        @{
+            if(Model.ObjectivesAndStandards != null)
+            {
+                var bShaded = false;
+                foreach (var location in SalesCommission.Business.Enums.Locations)
+                {
+                    var style = "";
+                    if (bShaded)
+                    {
+                        style = "style=background-color:#eeeeee;padding-bottom:15px;padding-left:10px;";
+                    }
+                    else
+                    {
+                        style = "style=background-color:#dddddd;padding-bottom:15px;padding-left:10px;";
+                    }
+                    bShaded = !bShaded;
+
+
+                    var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == location.LocationId);
+
+                    if(objectivesStandards == null)
+                    {
+                        objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                    }
+
+                    var canSet = false;
+
+                    var userPermissions = Model.UserPermissions.Find(o => o.Location == location.LocationId.Substring(0, 3));
+                    if(userPermissions != null)
+                    {
+                        canSet = userPermissions.CanSetObjectivesStandards;
+                    }
+
+                    using (Html.BeginForm("ObjectivesStandards", "Sales", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                    <input type="hidden" id="hdn-locationId" name="hdn-locationId" value="@location.LocationId"/>
+                    <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+                    <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+
+                    <div class="row" @style>
+                        <a id="@location.LocationId"></a>
+                        <h3>@location.Name</h3>
+                        <div class="col-sm-12">
+                            <h4>Standards</h4>
+                            <div class="row">
+                                <div class="col-sm-1">
+                                    <label>Finance %</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>Finance $</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>VSC %</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>VSC $</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>GAP % Fin</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>GAP Per Unit</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>A/M %</label>
+                                </div>
+                                <div class="col-sm-1">
+                                    <label>A/M Per Unit</label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-1">
+                                    <input type="text" id="finCNT" name="finCNT" class="form-control" value="@objectivesStandards.FinCntPercent" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="finCNTPerCNT" name="finCNTPerCNT" class="form-control" value="@objectivesStandards.FinCntPerCnt" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="vsc" name="vsc" class="form-control" value="@objectivesStandards.VSCPercent" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="vscPerCNT" name="vscPerCNT" class="form-control" value="@objectivesStandards.VSCPerCnt" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="gap" name="gap" class="form-control" value="@objectivesStandards.GAPPercent" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="gapPerCnt" name="gapPerCnt" class="form-control" value="@objectivesStandards.GAPPerCnt" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="am" name="am" class="form-control" value="@objectivesStandards.AftermarketPercent" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="text" id="amPerCnt" name="amPerCnt" class="form-control" value="@objectivesStandards.AftermarketPerCnt" />
+                                </div>
+                            </div>
+                            <div class="row" style="height:25px;">
+                            </div>
+                                <div class="row">
+                                    <div class="col-sm-1">
+                                        <label>BPP %</label>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>BPP Coll %</label>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>Trade %</label>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>Front PVR</label>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>Back PVR</label>
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <label>GPUR Obj</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-1">
+                                        <input type="text" id="bpp" name="bpp" class="form-control" value="@objectivesStandards.BPPPercent" />
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <input type="text" id="bppColl" name="bppColl" class="form-control" value="@objectivesStandards.BPPCollectionPercent" />
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <input type="text" id="tradePercent" name="tradePercent" class="form-control" value="@objectivesStandards.TradePercent" />
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <input type="text" id="frontPVR" name="frontPVR" class="form-control" value="@objectivesStandards.FrontPVR" />
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <input type="text" id="backPVR" name="backPVR" class="form-control" value="@objectivesStandards.BackPVR" />
+                                    </div>
+                                    <div class="col-sm-1">
+                                        <input type="text" id="gpurObj" name="gpurObj" class="form-control" readonly value="@objectivesStandards.GPURObjective" />
+                                    </div>
+
+                                </div>
+                            </div>
+                        <div class="col-sm-12">
+                            @{
+                                var display = "block";
+                                var displayFitz = "block";
+                                if (location.LocationId.ToUpper().Contains("USED"))
+                                {
+                                    display = "none";
+                                }
+
+                                if(location.LocationId.ToUpper().Contains("CJEJE") || location.LocationId.ToUpper().Contains("FLPJE") || location.LocationId.ToUpper().Contains("FLPDO"))
+                                {
+                                    display = "none";
+                                    displayFitz = "none";
+                                }
+
+                             }
+                            <h4>Objectives</h4>
+                            <div class="row">
+                                <div class="col-sm-2" style="display:@display">
+                                    <label>Manfac. Obj</label>
+                                </div>
+                                <div class="col-sm-2" style="display:@displayFitz">
+                                    <label>Fitz Obj</label>
+                                </div>
+                            </div>
+                            <div class="row">
+
+
+                                <div class="col-sm-2" style="display:@display">
+                                    <input type="text" id="manObj" name="manObj" class="form-control" value="@objectivesStandards.ManufacturerObjective" />
+                                </div>
+                                
+                                <div class="col-sm-2" style="display:@displayFitz">
+                                    <input type="text" id="fitzObj" name="fitzObj" class="form-control" value="@objectivesStandards.FitzgeraldObjective" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="file" id="files" name="files" multiple />
+                                </div>
+                                <div class="col-sm-2">
+                                    @if (canSet)
+                                    {
+                                        <button class="btn btn-primary" style="vertical-align: top" type="submit" value="submit" name="Submit">Save</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @{ 
+                            var savedDocuments = Model.SavedDocuments.FindAll(o => o.LocationId == location.LocationId && o.MonthId == Model.MonthId && o.YearId == Model.YearId);
+                        }
+                        @if (savedDocuments != null)
+            {
+                            <div class="col-sm-12">
+                                <h4>Documents</h4>
+                                <ul class="list-group">
+                                    @foreach (var doc in savedDocuments)
+            {
+                                        <li class="list-group-item"><a href="@doc.DocumentPath" target="_blank"><i class="fa fa-file-text-o" aria-hidden="true"></i> @doc.DocumentTitle</a> - @doc.DocumentMimeType (@doc.DocumentSize bytes)</li>
+                                    }
+                                </ul>
+                            </div>
+                                }
+                    </div>
+                }
+                <div class="row">
+                    <hr />
+                </div>
+
+                }
+            }
+        }
+
+        <script type="text/javascript">
+
+            $(document).ready(function () {
+                $('#select-anchor').change(function () {
+                    var targetPosition = $("#" + $(this).val()).offset().top - 50;
+                    $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+                });
+            });
+
+            $(window).load(function () {
+
+                var targetPosition = $("#@Model.LocationId").offset().top - 50;
+                $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+            });
+
+        </script>
+

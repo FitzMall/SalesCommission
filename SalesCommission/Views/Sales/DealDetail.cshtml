@@ -1,0 +1,1577 @@
+﻿@model SalesCommission.Models.IndividualDeal
+
+@{
+    ViewBag.Title = "Deal Detail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+
+    System.Globalization.NumberFormatInfo nfiNoDollar = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfiNoDollar.CurrencyDecimalDigits = 0;
+    nfiNoDollar.CurrencySymbol = "";
+}
+
+@section CSS
+{
+<script src="~/Scripts/jquery.validate.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+        $("#dealdetailform").validate();
+
+</script>
+
+
+
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    label {font-size:13px;}
+    .form-control {font-size:13px;height:28px; }
+    hr {margin:10px 0px;}
+    h3 {margin-top:0px;}
+
+    @@media (min-width: 992px) {
+        .col-md-offset-1 {
+            margin-left: 4%;
+        }
+    }
+    .form-shaded {background-color:lightgray;padding:0px 5px;border:1px solid darkgray;}
+</style>
+
+@if (Model.DealFound)
+{
+
+
+<div class="row" style="margin-top:15px">
+    <div class="col-md-12">
+        <h2>Details for Deal @Model.sl_dealkey <a href="@applicationPath/Sales/?locationId=@Model.LocationCode&monthId=@Model.sl_dealmonth.Month&yearId=@Model.sl_dealmonth.Year" class="btn btn-primary" style="float:right">Return to Dashboard</a></h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-bordered">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center">N/U</th>
+                    <th class="text-center">R/L</th>
+                    <th class="text-center">Loc</th>
+                    <th class="text-center">Deal #</th>
+                    <th class="text-center">Stock #</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Carline</th>
+                    <th class="text-center">Model #</th>
+                    <th class="text-center">Days in Stock</th>
+                    <th class="text-center">Customer</th>
+                    <th class="text-center">Co-Buyer</th>
+                    <th class="text-center">Delivery Date</th>
+                    <th class="text-center">Term</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">@Model.NewUsed</td>
+                    <td class="text-center">@Model.Category</td>
+                    <td class="text-center">@Model.Location</td>
+                    <td class="text-center">@Model.DealNumber</td>
+                    <td class="text-center">@Model.StockNumer</td>
+                    <td class="text-center">@Model.Year</td>
+                    <td class="text-center">@Model.Make</td>
+                    <td class="text-center">@Model.Carline</td>
+                    <td class="text-center">@Model.ModelNumber</td>
+                    <td class="text-center">@Model.DaysInStock</td>
+                    <td class="text-center">@Model.BuyerName</td>
+                    <td class="text-center">@Model.CustomerName</td>
+                    <td class="text-center">@Model.DeliveryDate.ToShortDateString()</td>
+                    <td class="text-center">@Model.Term</td>
+                </tr>
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" class="text-right">Sell Price:</th>
+                    <th colspan="11">@Model.sl_SellPrice.ToString("C", nfi)</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }))
+{
+
+    @Html.HiddenFor(n => n.sl_dealkey)
+    @Html.HiddenFor(n => n.sl_dealmonth)
+    @Html.HiddenFor(n => n.sl_datecreated)
+    @Html.HiddenFor(n => n.sl_dateupdated)
+    @Html.HiddenFor(n => n.sl_enteredby)
+    @Html.HiddenFor(n => n.sl_pkey)
+    @Html.HiddenFor(n => n.sl_make_id)
+    @Html.HiddenFor(n => n.sl_mall_id)
+    @Html.HiddenFor(n => n.sl_roadHaz)
+    @Html.HiddenFor(n => n.sl_ftdpc3)
+    @Html.HiddenFor(n => n.sl_ftdpc_3)
+    @Html.HiddenFor(n => n.sl_rebpc3)
+    @Html.HiddenFor(n => n.sl_rebpc4)
+    @Html.HiddenFor(n => n.sl_rebpc_3)
+    @Html.HiddenFor(n => n.sl_rebpc_4)
+    @Html.HiddenFor(n => n.sl_RepeatBuyer)
+    @Html.HiddenFor(n => n.sl_ReferralYN)
+    @Html.HiddenFor(n => n.sl_Referral)
+    @Html.HiddenFor(n => n.sl_appOfVehc)
+    @Html.HiddenFor(n => n.sl_valInternet)
+    @Html.HiddenFor(n => n.sl_handymanYN)    
+    @Html.HiddenFor(n => n.sl_paintRepair)
+    @Html.HiddenFor(n => n.sl_leadSrc)    
+    @Html.HiddenFor(n => n.sl_AddGross)
+        @Html.HiddenFor(n => n.sl_holdback)
+        @Html.HiddenFor(n => n.sl_SellPrice)
+    @Html.HiddenFor(n => n.sl_price_Exception_Dealer)
+    @Html.HiddenFor(n => n.sl_officeValidatedBy)
+    @Html.HiddenFor(n => n.sl_officeValidatedDate)
+    @Html.HiddenFor(n => n.sl_showroomValidatedBy)
+    @Html.HiddenFor(n => n.sl_showroomValidatedDate)
+    @Html.HiddenFor(n => n.sl_DealTotal)
+    @Html.HiddenFor(n => n.sl_RRDealGross)
+    @Html.HiddenFor(n => n.sl_VehicleNU)
+			@Html.HiddenFor(n => n.sl_VehicleLoc)
+			@Html.HiddenFor(n => n.sl_VehicleDealNo)
+			@Html.HiddenFor(n => n.sl_VehicleMake)
+			@Html.HiddenFor(n => n.sl_VehicleYear) 
+			@Html.HiddenFor(n => n.sl_VehicleCarline)
+            @Html.HiddenFor(n => n.sl_VehicleModelNumber)
+            @Html.HiddenFor(n => n.sl_VehicleStockNumber)
+            @Html.HiddenFor(n => n.sl_VehicleVIN)
+            @Html.HiddenFor(n => n.sl_VehicleCustomer)
+            @Html.HiddenFor(n => n.sl_VehicleBuyerLast)
+            @Html.HiddenFor(n => n.sl_VehicleBuyerName)
+            @Html.HiddenFor(n => n.sl_VehicleDeliveryDate)
+            @Html.HiddenFor(n => n.sl_VehicleTerm)
+            @Html.HiddenFor(n => n.sl_VehicleDaysInStock)
+            @Html.HiddenFor(n => n.sl_VehicleMfgRebate)
+            @Html.HiddenFor(n => n.sl_VehicleCategory)
+            @Html.HiddenFor(n => n.sl_VehicleDealDate)
+            @Html.HiddenFor(n => n.sl_VehicleSalesManager)
+        @Html.HiddenFor(n => n.sl_dxHoldback)
+        @Html.HiddenFor(n => n.sl_certificationLevel)
+
+        var includedTotalPre = Convert.ToDecimal(Model.sl_BPP) + Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + Model.sl_Adjustments + Model.sl_CertFee + Model.sl_otheram;
+
+        <input type="hidden" name="includedTotalPre" id="includedTotalPre" value="@includedTotalPre" />
+
+
+
+
+           <div class="row text-center">
+        <div class="col-md-6">
+            @{
+                var dealTotal = Model.sl_dealGross +
+                        Model.sl_serviceContract +
+                        Model.sl_maintenanceContract +
+                        Model.sl_gap +
+                        Model.sl_financeInc +
+                        Model.sl_bankFee +
+                        Model.sl_ftdpcadj;
+                //+ Model.sl_Adjustments;
+                // + Model.sl_CertFee;
+                //+
+                //Model.sl_ftdpc1 +
+                //Model.sl_ftdpc2 +
+                //Model.sl_ftdpc3;
+
+                Decimal previousDealTotal = 0;
+                if (Model.PreviousSavedValues != null)
+                {
+                    previousDealTotal = Model.PreviousSavedValues.sl_dealGross +
+                            Model.PreviousSavedValues.sl_serviceContract +
+                            Model.PreviousSavedValues.sl_maintenanceContract +
+                            Model.PreviousSavedValues.sl_gap +
+                            Model.PreviousSavedValues.sl_financeInc +
+                            Model.PreviousSavedValues.sl_bankFee +
+                        Model.PreviousSavedValues.sl_ftdpcadj;
+                    //+ Model.PreviousSavedValues.sl_Adjustments;
+                    //       + Model.PreviousSavedValues.sl_CertFee;
+                    //+
+                    //Model.PreviousSavedValues.sl_ftdpc1 + Model.PreviousSavedValues.sl_ftdpc2 +
+                    //Model.PreviousSavedValues.sl_ftdpc3;
+                }
+                else
+                {
+                    previousDealTotal = dealTotal;
+                }
+
+
+
+
+
+            }
+            <h3>R&R Deal Total: @Model.sl_DealTotal.ToString("C", nfi)</h3>
+        </div>
+        <div class="col-md-6">
+            <h3>Calculated Deal Total: @dealTotal.ToString("C", nfi)</h3>
+            @if (dealTotal != previousDealTotal)
+            {
+                var valVariance = (dealTotal - previousDealTotal);
+
+                <h4> Previous Deal Total: @previousDealTotal.ToString("C", nfi) </h4>
+                if ((Model.sl_officeValidatedBy != null && Model.sl_officeValidatedBy != ""))
+                {
+                    <h4> Office Deal Total: @dealTotal.ToString("C", nfi) </h4>
+                }
+                @*<h4>Validation Variance: @valVariance.ToString("C",nfi)</h4>*@
+            }
+
+        </div>
+        </div>
+
+       <div class="row">
+        <div class="col-md-4">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label for="dealLocation" class="col-sm-5 control-label">Deal Location</label>
+                    <div class="col-sm-7">                        
+                        @Html.DropDownListFor(n => n.sl_mall_id, Model.Malls, new { @class = "form-control form-inline", id = "ddlMalls" })
+                        @if (Model.PreviousSavedValues != null && Model.sl_mall_id != Model.PreviousSavedValues.sl_mall_id)
+                        {
+                            var selected = Model.Malls.First(o => o.Value == Model.PreviousSavedValues.sl_mall_id.ToString());
+
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @selected.Text </label>
+                        }
+
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="dealMake" class="col-sm-5 control-label" style="">Deal Make</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_make_id, Model.Makes, new { @class = "form-control form-inline", id = "ddlMakes" })
+                        @if (Model.PreviousSavedValues != null && Model.sl_make_id != Model.PreviousSavedValues.sl_make_id)
+                        {
+                            try
+                            {
+                                var selected = Model.Makes.First(o => o.Value == Model.PreviousSavedValues.sl_make_id.ToString());
+                                <label style="background-color:#fcf8e3;margin-left:13px"> @selected.Text </label>
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+
+
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="dealMonth" class="col-sm-5 control-label" style="">Deal Month</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_dealmonth.Month, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="dealYear" class="col-sm-5 control-label">Deal Year</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_dealmonth.Year, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="financeSource" class="col-sm-5 control-label" style="padding-top:0px">Finance Source</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_financeSrc, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_financeSrc != Model.sl_financeSrc)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_financeSrc</label>
+                                break;
+                            }
+                        }
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_financeSrc != Model.PreviousSavedValues.sl_financeSrc)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_financeSrc</label>
+                        }*@
+
+                        @*@Html.DropDownListFor(n=> n.sl_financeSrc, Model.FinanceSources, new { @class = "form-control form-inline" })
+                        @if(Model.PreviousSavedValues != null && Model.sl_financeSrc != Model.PreviousSavedValues.sl_financeSrc)
+            {
+                var selected = Model.FinanceSources.First(o => o.Value == Model.PreviousSavedValues.sl_financeSrc);
+
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @selected.Text </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="financeManager" class="col-sm-5 control-label" style="padding-top:0px">Finance Manager</label>
+                    <div class="col-sm-7">
+
+                        @Html.TextBoxFor(n => n.sl_FinMgr, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_FinMgr != Model.sl_FinMgr)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_FinMgr</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_FinMgr != Model.PreviousSavedValues.sl_FinMgr)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_FinMgr</label>
+                        }*@
+
+                        @*@Html.DropDownListFor(n => n.sl_FinMgr, Model.FinanceManagers, new { @class = "form-control form-inline" })
+                        @if(Model.PreviousSavedValues != null && Model.sl_FinMgr != Model.PreviousSavedValues.sl_FinMgr)
+            {
+                var selected = Model.FinanceManagers.First(o => o.Value == Model.PreviousSavedValues.sl_FinMgr);
+
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @selected.Text </label>
+                        }*@
+                    </div>
+                </div>
+                           
+                <div class="form-group">
+                    <label class="col-sm-5 control-label" style="padding-top:0px">Certification Level</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_certificationLevel, new SelectList(SalesCommission.Business.Enums.CertificationLevels, "CertificationId", "Name"), new { @class = "form-control form-inline" })
+                        @if (Model.PreviousSavedValues != null && Model.PreviousSavedValues.sl_certificationLevel != null && Model.sl_certificationLevel != Model.PreviousSavedValues.sl_certificationLevel)
+                        {
+                            try
+                            {
+                                var selected = SalesCommission.Business.Enums.CertificationLevels.First(o => o.CertificationID == Model.PreviousSavedValues.sl_certificationLevel);
+                                <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+
+                        }
+                    </div>
+                </div>
+                    <div class="form-group">
+                        <label class="col-sm-5 control-label">MSI</label>
+                        <div class="col-sm-4">
+                            @{
+                                if (Model.sl_msiYN != null)
+                                {
+                                    Model.sl_msiYN = Model.sl_msiYN.Trim();
+                                }
+                                var msiHtmlAttributes = new Object();
+                                if (Model.sl_certificationLevel != null && Model.sl_certificationLevel.Trim() == "HDM")
+                                {
+                                    msiHtmlAttributes = new { @class = "form-control form-inline", @id = "msi", name = "msi", required = "" };
+                                }
+                                else
+                                {
+                                    msiHtmlAttributes = new { @class = "form-control form-inline", @id = "msi", name = "msi" };
+                                }
+                            }
+                            @Html.DropDownListFor(n => n.sl_msiYN, new SelectList(SalesCommission.Business.Enums.YesNos, "Id", "Name"), msiHtmlAttributes)
+                            @if (Model.PreviousSavedValues != null && Model.sl_msiYN != Model.PreviousSavedValues.sl_msiYN)
+                            {
+                                if (Model.PreviousSavedValues.sl_msiYN != null)
+                                {
+                                    var selected = SalesCommission.Business.Enums.YesNos.First(o => o.Id == Model.PreviousSavedValues.sl_msiYN.Trim());
+                                    <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+                                }
+                            }
+                        </div>
+                        <div class="col-sm-2">
+                            &nbsp;
+                        </div>
+                    </div>
+                <div class="form-group">
+                    <label for="customerName" class="col-sm-5 control-label" style="padding-top:0px">Customer</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_CustomerName, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_CustomerName != Model.sl_CustomerName)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_CustomerName</label>
+                                break;
+                            }
+                        } 
+
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_CustomerName != Model.PreviousSavedValues.sl_CustomerName)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_CustomerName </label>
+                        }*@
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="salesAssociate1" class="col-sm-5 control-label" style="padding-top:0px">Associate 1</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_SalesAssociate1, Model.SalesAssociates, new { @class = "form-control form-inline chosen-select-deselect" })
+                        @if (Model.PreviousSavedValues != null && Model.sl_SalesAssociate1 != Model.PreviousSavedValues.sl_SalesAssociate1)
+                        {
+
+                            try
+                            {
+                                var selected = Model.SalesAssociates.First(o => o.Value == Model.PreviousSavedValues.sl_SalesAssociate1);
+                                <label style="background-color:#fcf8e3;margin-left:13px"> @selected.Text </label>
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                        
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="salesAssociate2" class="col-sm-5 control-label" style="padding-top:0px">Associate 2</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_SalesAssociate2, Model.SalesAssociates2, new { @class = "form-control form-inline chosen-select-deselect" })
+                        @if (Model.PreviousSavedValues != null && Model.PreviousSavedValues.sl_SalesAssociate2 != null && Model.sl_SalesAssociate2 != Model.PreviousSavedValues.sl_SalesAssociate2)
+                        {
+                            try
+                            {
+                                var selected = Model.SalesAssociates2.First(o => o.Value == Model.PreviousSavedValues.sl_SalesAssociate2);
+                                <label style="background-color:#fcf8e3;margin-left:13px"> @selected.Text </label>
+                            }
+                            catch(Exception ex)
+                            {
+
+                            }
+                        }
+                    </div>
+                </div> 
+                <hr />
+                <h4>Trade Information</h4>
+                <label class="col-sm-6">Desc Of Trade</label>
+                <label class="col-sm-3">ACV</label>
+                <label class="col-sm-3">Allowance</label>
+                <div class="form-group">
+                    <div class="col-sm-6">
+                        @Html.TextBoxFor(n => n.sl_descOftrade, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_descOftrade != Model.sl_descOftrade)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_descOftrade</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_descOftrade != Model.PreviousSavedValues.sl_descOftrade)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_descOftrade </label>
+                        }*@
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.TextBoxFor(n => n.sl_cashVal, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_cashVal != Model.sl_cashVal)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_cashVal</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_cashVal != Model.PreviousSavedValues.sl_cashVal)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_cashVal </label>
+                        }*@
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.TextBoxFor(n => n.sl_tradeVal, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_tradeVal != Model.sl_tradeVal)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_tradeVal</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_tradeVal != Model.PreviousSavedValues.sl_tradeVal)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_tradeVal </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-6">
+                        @Html.TextBoxFor(n => n.sl_descOftrade2, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_descOftrade2 != Model.sl_descOftrade2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_descOftrade2</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_descOftrade2 != Model.PreviousSavedValues.sl_descOftrade2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_descOftrade2 </label>
+                        }*@
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.TextBoxFor(n => n.sl_cashVal2, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_cashVal2 != Model.sl_cashVal2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_cashVal2</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_cashVal2 != Model.PreviousSavedValues.sl_cashVal2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_cashVal2 </label>
+                        }*@
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.TextBoxFor(n => n.sl_tradeVal2, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_tradeVal2 != Model.sl_tradeVal2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_tradeVal2</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_tradeVal2 != Model.PreviousSavedValues.sl_tradeVal2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_tradeVal2 </label>
+                        }*@
+                    </div>
+                </div>
+                <hr />
+                <h4>Comments</h4>
+                <div class="form-group">
+                    <div class="col-sm-12">
+                        <textarea id="dealComments" name="dealComments" style="width:100%; height:300px; ">@Model.DealComments.Comment</textarea>
+                        @if (Model.DealComments.Comment != null)
+                        {
+                            <label>Last updated @Model.DealComments.CommentDate.ToShortDateString() by @Model.DealComments.CommentUser</label>
+                        }                      
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-md-offset-1">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label for="dealGross" class="col-sm-5 control-label">Front Gross</label>
+                    <div class="col-sm-7">
+                        @*String.Format("{0:C0}", Model.sl_dealGross)*@
+
+                        @Html.TextBoxFor(n => n.sl_dealGross, new { @class = "form-control", placeholder = "0.00", @readonly = "readonly" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_dealGross != Model.sl_dealGross)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_dealGross</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_dealGross != Model.PreviousSavedValues.sl_dealGross)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_dealGross </label>
+                        }*@
+
+                    </div>
+                </div>
+                @*<div class="form-group">
+                    <label for="holdback" class="col-sm-5 control-label">Holdback</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_holdback, new { @class = "form-control", placeholder = "0.00" })
+                        @if(Model.PreviousSavedValues != null && Model.sl_holdback != Model.PreviousSavedValues.sl_holdback)
+            {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_holdback </label>
+                        }
+                    </div>
+                </div>*@
+                <div class="form-group">
+                    <label for="financeIncome" class="col-sm-5 control-label" style="padding-top:0px">Finance Income</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_financeInc, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_financeInc != Model.sl_financeInc)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_financeInc</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_financeInc != Model.PreviousSavedValues.sl_financeInc)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_financeInc </label>
+                        }*@
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="financeIncome" class="col-sm-5 control-label">Bank Fee</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_bankFee, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_bankFee != Model.sl_bankFee)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_bankFee</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_bankFee != Model.PreviousSavedValues.sl_bankFee)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_bankFee </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="serviceContract" class="col-sm-5 control-label" style="padding-top:0px">Service Contract</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_serviceContract, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_serviceContract != Model.sl_serviceContract)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_serviceContract</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_serviceContract != Model.PreviousSavedValues.sl_serviceContract)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_serviceContract </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="maintenance" class="col-sm-5 control-label" style="padding-top:0px">Maintenance</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_maintenanceContract, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_maintenanceContract != Model.sl_maintenanceContract)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_maintenanceContract</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_maintenanceContract != Model.PreviousSavedValues.sl_maintenanceContract)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_maintenanceContract </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="serviceCompany" class="col-sm-5 control-label" style="padding-top:0px">Service Contract Company</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_serviceCompany, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_serviceCompany != Model.sl_serviceCompany)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_serviceCompany</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_serviceCompany != Model.PreviousSavedValues.sl_serviceCompany)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_serviceCompany</label>
+                        }*@
+
+
+                        @*@Html.DropDownListFor(n => n.sl_serviceCompany, Model.ServiceCompanies, new { @class = "form-control form-inline" })
+                        @if(Model.PreviousSavedValues != null && Model.sl_serviceCompany != Model.PreviousSavedValues.sl_serviceCompany)
+            {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_serviceCompany </label>
+                        }*@
+                    </div >
+                </div >
+                <div class="form-group">
+                    <label for="gap" class="col-sm-5 control-label">GAP</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_gap, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_gap != Model.sl_gap)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_gap</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_gap != Model.PreviousSavedValues.sl_gap)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_gap </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="gapCompany" class="col-sm-5 control-label">GAP Company</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_gapCompany, new { @class = "form-control" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_gapCompany != Model.sl_gapCompany)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_gapCompany</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_gapCompany != Model.PreviousSavedValues.sl_gapCompany)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px" > @Model.PreviousSavedValues.sl_gapCompany </label>
+                        }*@
+                    </div>
+                </div>
+            </div>
+            <div class="form-horizontal form-shaded">
+                <div class="form-group text-center">
+                    <h4>Items included in Front Gross</h4>
+                </div>
+                <div class="form-group">
+                    <label for="bpp" class="col-sm-5 control-label">BPP</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_BPP, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_BPP != Model.sl_BPP)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_BPP</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_BPP != Model.PreviousSavedValues.sl_BPP)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_BPP </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="nitrogen" class="col-sm-5 control-label">Nitrogen</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_maint, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_maint != Model.sl_maint)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_maint</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_maint != Model.PreviousSavedValues.sl_maint)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_maint </label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="zurichShield" class="col-sm-5 control-label">ZurichShield</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_insurance, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_insurance != Model.sl_insurance)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_insurance</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_insurance != Model.PreviousSavedValues.sl_insurance)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_insurance </label>
+                        }*@
+                    </div>
+                </div>
+                @*<div class="form-group">
+                <label for="pdr" class="col-sm-5 control-label">PDR</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control" id="pdr" placeholder="0.00">
+                </div>
+            </div>*@
+                <div class="form-group">
+                    <label for="tirewheel" class="col-sm-5 control-label">Tire/Wheel</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_leaseWnT, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_leaseWnT != Model.sl_leaseWnT)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_leaseWnT</label>
+                                break;
+                            }
+                        } 
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_leaseWnT != Model.PreviousSavedValues.sl_leaseWnT)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_leaseWnT</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="security" class="col-sm-5 control-label">Security</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_etch, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_etch != Model.sl_etch)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_etch</label>
+                                break;
+                            }
+                        } 
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_etch != Model.PreviousSavedValues.sl_etch)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_etch</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="adjustments" class="col-sm-5 control-label">Adjustments</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_Adjustments, new { @class = "form-control", placeholder = "0" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_Adjustments != Model.sl_Adjustments)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_Adjustments</label>
+                                break;
+                            }
+                        }                        
+                        
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_Adjustments != Model.PreviousSavedValues.sl_Adjustments)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_Adjustments</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="certfee" class="col-sm-5 control-label">Cert Fee</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_CertFee, new { @class = "form-control", placeholder = "0" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_CertFee != Model.sl_CertFee)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_CertFee</label>
+                                break;
+                            }
+                        }
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_CertFee != Model.PreviousSavedValues.sl_CertFee)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_CertFee</label>
+                        }*@
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="aftermarket" class="col-sm-5 control-label" style="padding-top:0px">Other Aftermarket</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_otheram, new { @class = "form-control", placeholder = "0.00" })
+
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_otheram != Model.sl_otheram)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_otheram</label>
+                                break;
+                            }
+                        }
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_otheram != Model.PreviousSavedValues.sl_otheram)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_otheram</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group text-center">
+
+                    <label class="aftermarket-toggle">Aftermarket Details <i class="fa fa-chevron-down" aria-hidden="true"></i></label>
+
+                    <div class="col-sm-12 aftermarket-entry" style="display:none;">
+                        <table class="table table-bordered" style="background-color:white;">
+                            <thead>
+                                <tr style="background-color:#d9edf7">
+                                    <th class="text-center">Item</th>
+                                    <th class="text-center">Sell Price</th>
+                                    <th class="text-center">Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.AftermarketItems)
+                                {
+                                    <tr>
+                                        <th class="text-center">@item.AftermarketName</th>
+                                        <th class="text-center">@item.AftermarketPrice</th>
+                                        <th class="text-center">@item.AftermarketPoints</th>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-4 col-md-offset-1">
+            <div class="form-horizontal">
+                <h4>Dealer Cash (FTD) Memo:</h4>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 1</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc_1, new { @class = "form-control", placeholder = "", @readonly = "readonly" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc_1 != Model.sl_ftdpc_1)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc_1</label>
+                                break;
+                            }
+                        }
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc_1 != Model.PreviousSavedValues.sl_ftdpc_1)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc_1</label>
+                        }*@   
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(n => n.sl_ftdpc1, new { @class = "form-control", placeholder = "0.00", @readonly = "readonly" })
+
+                            @foreach (var deal in Model.DealHistory)
+                            {
+                                if (deal.sl_ftdpc1 != Model.sl_ftdpc1)
+                                {
+                                    <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc1</label>
+                                    break;
+                                }
+                            }
+                            @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc1 != Model.PreviousSavedValues.sl_ftdpc1)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc1</label>
+                            }*@
+                        </div>
+                    </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 2</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc_2, new { @class = "form-control", placeholder = "", @readonly = "readonly" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc_2 != Model.sl_ftdpc_2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc_2</label>
+                                break;
+                            }
+                        }                        
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc_2 != Model.PreviousSavedValues.sl_ftdpc_2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc_2</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc2, new { @class = "form-control", placeholder = "0.00", @readonly = "readonly" })   
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc2 != Model.sl_ftdpc2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc2</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc2 != Model.PreviousSavedValues.sl_ftdpc2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc2</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 3</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc_3, new { @class = "form-control", placeholder = "", @readonly = "readonly" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc_3 != Model.sl_ftdpc_3)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc_3</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc_3 != Model.PreviousSavedValues.sl_ftdpc_3)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc_3</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc3, new { @class = "form-control", placeholder = "0.00", @readonly = "readonly" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc3 != Model.sl_ftdpc3)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc3</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc3 != Model.PreviousSavedValues.sl_ftdpc3)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc3</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Dealer Cash Adj</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpc_adj, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpc_adj != Model.sl_ftdpc_adj)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpc_adj</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpc_adj != Model.PreviousSavedValues.sl_ftdpc_adj)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpc_adj</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_ftdpcadj, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_ftdpcadj != Model.sl_ftdpcadj)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_ftdpcadj</label>
+                                break;
+                            }
+                        }
+
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_ftdpcadj != Model.PreviousSavedValues.sl_ftdpcadj)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_ftdpcadj</label>
+                        }*@
+                    </div>
+                </div>
+                <hr />
+                <h4>Memo: Rebates</h4>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 1</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc_1, new { @class = "form-control", placeholder = "" })   
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc_1 != Model.sl_rebpc_1)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc_1</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc_1 != Model.PreviousSavedValues.sl_rebpc_1)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc_1</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc1, new { @class = "form-control", placeholder = "" })   
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc1 != Model.sl_rebpc1)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc1</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc1 != Model.PreviousSavedValues.sl_rebpc1)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc1</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 2</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc_2, new { @class = "form-control", placeholder = "" })  
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc_2 != Model.sl_rebpc_2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc_2</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc_2 != Model.PreviousSavedValues.sl_rebpc_2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc_2</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc2, new { @class = "form-control", placeholder = "" }) 
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc2 != Model.sl_rebpc2)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc2</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc2 != Model.PreviousSavedValues.sl_rebpc2)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc2</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 3</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc_3, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc_3 != Model.sl_rebpc_3)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc_3</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc_3 != Model.PreviousSavedValues.sl_rebpc_3)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc_3</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc3, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc3 != Model.sl_rebpc3)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc3</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc3 != Model.PreviousSavedValues.sl_rebpc3)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc3</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 4</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc_4, new { @class = "form-control", placeholder = "" })
+                        
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc_4 != Model.sl_rebpc_4)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc_4</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc_4 != Model.PreviousSavedValues.sl_rebpc_4)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc_4</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc4, new { @class = "form-control", placeholder = "" })
+                        
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc4 != Model.sl_rebpc4)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc4</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc4 != Model.PreviousSavedValues.sl_rebpc4)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc4</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-3">
+                        <label>Program Code 5</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc_5, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc_5 != Model.sl_rebpc_5)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc_5</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc_5 != Model.PreviousSavedValues.sl_rebpc_5)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc_5</label>
+                        }*@
+                    </div>
+                    <div class="col-sm-1">
+                        <label>$</label>
+                    </div>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(n => n.sl_rebpc5, new { @class = "form-control", placeholder = "" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_rebpc5 != Model.sl_rebpc5)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_rebpc5</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_rebpc5 != Model.PreviousSavedValues.sl_rebpc5)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rebpc5</label>
+                        }*@
+                    </div>
+                </div>
+                <hr/>
+                @*<div class="form-group">
+                    <label for="dxIncome" class="col-sm-5 control-label">DX Income</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_dxHoldback, new { @class = "form-control", placeholder = "0.00" })
+                        @if (Model.PreviousSavedValues != null && Model.sl_dxHoldback != Model.PreviousSavedValues.sl_dxHoldback)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_dxHoldback </label>
+                        }
+                    </div>
+                </div>*@  
+                <div class="form-group">
+                    <label for="buyRate" class="col-sm-5 control-label">Buy Rate</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_buyRate, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_buyRate != Model.sl_buyRate)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_buyRate</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_buyRate != Model.PreviousSavedValues.sl_buyRate)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_buyRate </label>
+                        }*@
+                    </div>
+                </div>  
+                <div class="form-group">
+                    <label for="apre" class="col-sm-5 control-label">APR</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_apr, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_apr != Model.sl_apr)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_apr</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_apr != Model.PreviousSavedValues.sl_apr)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_apr </label>
+                        }*@
+                    </div>
+                </div>                                                
+                <div class="form-group">
+                    <label for="rateExceptionReason" class="col-sm-5 control-label" style="padding-top:0px;">Rate Exception Reason</label>
+                    <div class="col-sm-7">
+                        @{ 
+                            var htmlAttributes = new Object();
+                            if (Model.Term > 1)
+                            {
+                                htmlAttributes = new { @class = "form-control form-inline", @id = "rateExceptionReason", name = "rateExceptionReason", required = "" };
+                            }
+                            else
+                            {
+                                htmlAttributes =  new { @class = "form-control form-inline", @id = "rateExceptionReason", name = "rateExceptionReason" };
+                            }
+
+                        }
+                        @Html.DropDownListFor(n => n.sl_rate_exception, new SelectList(SalesCommission.Business.Enums.RateExceptions, "ExceptionID", "Name"), htmlAttributes)
+                        @if (Model.PreviousSavedValues != null && Model.sl_rate_exception != Model.PreviousSavedValues.sl_rate_exception)
+                        {
+                            if (Model.PreviousSavedValues.sl_rate_exception != null)
+                            {
+                                var selected = SalesCommission.Business.Enums.RateExceptions.First(o => o.ExceptionID == Model.PreviousSavedValues.sl_rate_exception.Trim());
+
+                                <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="priceVariance" class="col-sm-5 control-label">Price Variance</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_price_variance, new { @class = "form-control", placeholder = "" }) 
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_price_variance != Model.sl_price_variance)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_price_variance</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_price_variance != Model.PreviousSavedValues.sl_price_variance)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_price_variance</label>
+                        }*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="priceExceptionReason" class="col-sm-5 control-label" style="padding-top:0px;">Price Exception Reason</label>
+                    <div class="col-sm-7">
+                        @Html.DropDownListFor(n => n.sl_price_variance_exception, new SelectList(SalesCommission.Business.Enums.PriceExceptions, "ExceptionID", "Name"), new { @class = "form-control form-inline"})
+                        @if (Model.PreviousSavedValues != null && Model.sl_price_variance_exception != Model.PreviousSavedValues.sl_price_variance_exception)
+                        {
+                                        if (Model.PreviousSavedValues.sl_price_variance_exception != null)
+                                        {
+                                            var selected = SalesCommission.Business.Enums.PriceExceptions.First(o => o.ExceptionID == Model.PreviousSavedValues.sl_price_variance_exception);
+
+                            <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+                                        }
+                                    }
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="priceComments" class="col-sm-5 control-label">Price Exception Comments</label>
+                    <div class="col-sm-7">
+                        @Html.TextAreaFor(n => n.sl_price_Exception_Comments, new { @class = "form-control", placeholder = "" })       
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_price_Exception_Comments != Model.sl_price_Exception_Comments)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_price_Exception_Comments</label>
+                                break;
+                            }
+                        }                                         
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_price_Exception_Comments != Model.PreviousSavedValues.sl_price_Exception_Comments)
+                            {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_price_Exception_Comments</label>
+                        }*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+                var bLockDown = false;
+
+                            var dealmonth = Model.sl_dealmonth.Month;
+
+                            DateTime now = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 5);
+                            DateTime then = Model.sl_dealmonth;
+                            TimeSpan difference = now - then;
+                            int differenceInDays = difference.Days;
+
+                if (differenceInDays > 59)
+                {
+                    bLockDown = true;
+                }
+                else if (differenceInDays > 29 && DateTime.Now.Day >= 15)
+                {
+                    bLockDown = true;
+                }
+
+
+                if ((Model.sl_showroomValidatedBy == null || Model.sl_showroomValidatedBy == "") && (ViewBag.CanShowroomValidate == true || ViewBag.CanShowroomUpdate == true))
+                {
+                    if (!bLockDown)
+                    {
+                        <div class="row text-center">
+                            <input type="submit" id="btnSave" name="btnSave" value="Save Comments" class="btn btn-lg btn-primary" style="margin-right:30px;">
+                            <input type="submit" id="btnSubmit" name="btnSubmit" value="Showroom Validate" class="btn btn-lg btn-primary">
+                        </div>
+                    }
+                }
+                else if ((Model.sl_showroomValidatedBy != null && Model.sl_showroomValidatedBy != "") && (ViewBag.CanOfficeValidate == true))
+                {
+                    <div class="row text-center">
+                        <p>Showroom Validated by <strong>@Model.sl_showroomValidatedBy</strong> on <strong>@Model.sl_showroomValidatedDate.ToShortDateString()</strong></p>
+                    </div>
+                    if (Model.sl_officeValidatedBy != null && Model.sl_officeValidatedBy != "")
+                    {
+                        <div class="row text-center">
+                            <p>Office Validated by <strong>@Model.sl_officeValidatedBy</strong> on <strong>@Model.sl_officeValidatedDate.ToShortDateString()</strong></p>
+                        </div>
+                    }
+                    <div class="row text-center">
+                        <input type="submit" id="btnSave" name="btnSave" value="Save All Data" class="btn btn-lg btn-primary" style="margin-right:30px;">
+                        <input type="submit" id="btnSubmit" name="btnSubmit" value="Office Validate" class="btn btn-lg btn-primary">
+                    </div>
+                }
+
+                if (ViewBag.CanDelete == true && !bLockDown)
+                {
+                    <div class="row text-center" style="margin-top:20px;">
+                        <label class="delete-toggle"><h4>Additional Office Functions <i class="fa fa-chevron-down" aria-hidden="true"></i></h4></label>
+
+                        <div class="col-sm-12 delete-entry form-shaded" style="display:none;padding:10px 0px;">
+                            <div class="row text-center">
+                                <div class="col-sm-3">
+                                </div>
+                                <div class="col-sm-6">
+                                    <h5>Reason for Deletion:</h5>
+                                    <textarea id="deleteReason" name="deleteReason" class="form-control form-inline" style="max-width:100%"></textarea>
+                                </div>
+                                <div class="col-sm-3">
+                                </div>
+                            </div>
+                            <div class="row text-center" style="margin-top:15px;">
+                                <input type="submit" id="btnDelete" name="btnDelete" value="Delete Deal" class="btn btn-lg btn-primary">
+                                <br/>
+                                <strong>WARNING: This will delete the deal and remove it from all calculations!</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                    $(".delete-toggle").click(function () {
+                        $header = $(this);
+                        $content = $(".delete-entry")
+                        $content.slideToggle(500, function () {});
+                        });
+                    </script>
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col-md-12" style="margin-top:15px">
+                            <h2>The Deal Number you entered could not be found. <a href="@applicationPath/Sales/" class="btn btn-primary" style="float:right">Return to Dashboard</a></h2>
+                        </div>
+                    </div>
+                }
+
+            <script>
+                    $(".aftermarket-toggle").click(function () {
+                        $header = $(this);
+                        $content = $(".aftermarket-entry")
+                        $content.slideToggle(500, function () {});
+
+                        });
+
+                    function GetMakes(mallID) {
+                            if (mallID > 0) {
+                            $("#ddlMakes").get(0).options.length = 0;
+                            $("#ddlMakes").get(0).options[0] = new Option("Loading Makes", "-1");
+
+                            $.ajax({
+                                    type: "POST",
+                                url: "@applicationPath/Sales/GetMakes",
+                                data: "{mallID:" + mallID + "}",
+                                contentType: "application/json; charset=utf-8",
+                                dataType: "json",
+                                success: function (data) {
+                                    $("#ddlMakes").get(0).options.length = 0;
+                                        //$("#ddlMakes").get(0).options[0] = new Option("Select Make", "-1");
+
+                                        for (var i = 0; i < data.length; i++) {
+                                            var obj = data[i];
+
+                                        $("#ddlMakes").get(0).options[$("#ddlMakes").get(0).options.length] = new Option(obj.Text, obj.Value);
+                                        }
+
+                                    },
+                                error: function () {
+                                    $("#ddlMakes").get(0).options.length = 0;
+                                        alert("Failed to load makes");
+                                    }
+                                });
+                            }
+                            else {
+                            $("#ddlMakes").get(0).options.length = 0;
+                            }
+                        }
+
+                    $("#ddlMalls").bind("change", function() {
+                            GetMakes($(this).val());
+                        });
+
+
+                </script>
+
+<script>
+    $('body').on('keydown', 'input, select, textarea', function (e) {
+                            var self = $(this)
+          , form = self.parents('form:eq(0)')
+          , focusable
+          , next
+        ;
+                            if (e.keyCode == 13) {
+                                focusable = form.find('input,a,select,button,textarea').filter(':visible');
+                                next = focusable.eq(focusable.index(this) + 1);
+                                if (next.length) {
+                                    next.focus();
+                                } else {
+                                    form.submit();
+                                }
+                                return false;
+                            }
+                        });
+
+    $("#btnSubmit").keypress(function (e) {
+                            if (e.keyCode === 13) {
+                                e.preventDefault();
+                            }
+                        });
+
+</script>
+
+@section Scripts{
+    
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+
+}

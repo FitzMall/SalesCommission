@@ -1,0 +1,1374 @@
+﻿@model SalesCommission.Models.AssociatePayscaleComparisonModel
+@{
+    ViewBag.Title = "Store Pay Plan Comparison";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+}
+
+<style type="text/css">
+    .coloreee {
+        background-color: #eeeeee;
+    }
+    .colorddd {
+        background-color: #dddddd;
+    }
+    .form-control {
+        margin: 3px 0px;
+        font-size:13px;
+        height:30px;
+    }
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align:right;
+    }
+    body{
+        font-size:13px;
+    }
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding:4px;
+    }
+
+    .less-padding{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+    .svg-thingy{
+        display:none;
+    }
+
+    .svg-thingy svg{
+        background-color:#eeeeee;
+        padding:15px;
+    }
+    @@media print {
+        .navbar {
+            display: none;
+        }
+
+        body {
+            padding-top: 0px;
+        }
+
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        .commission-table {
+            font-size: 10px;
+        }
+
+        .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+            padding: 4px;
+            line-height: 1.0em;
+        }
+
+        hr {
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+
+        @@page {
+            size: portrait;
+            margin: 2cm;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Store Pay Plan Comparison</h1>
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>Select a Store:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-5">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
+                    </div>
+                    @*<div class="col-sm-5">                    
+                        @Html.DropDownListFor(n => n.AssociateId, Model.SalesAssociates, new { @class = "form-control form-inline chosen-select" })                        
+                    </div>*@
+                    <div class="col-sm-2" style="display:none;">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2" style="display:none;">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <button class="btn btn-primary" id="SubmitButton" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@if (Model.AllAssociateInformation != null)
+{
+    foreach (var associate in Model.AllAssociateInformation)
+    {
+
+        if (associate != null)
+        {
+
+            var associatePayscaleID = "";
+            var associateNewPayscales = new List<SalesCommission.Models.NewPayscale>();
+            var associateNewPayscaleSetup = new SalesCommission.Models.NewPayscaleSetup();
+
+            if (associate.AssociateLocation == "CJE")
+            {
+                associatePayscaleID = "COMFL";
+            }
+            else if (associate.AssociateLocation == "LFO" || associate.AssociateLocation == "CDO" || associate.AssociateDepartment == "WFSA02")
+            {
+                associatePayscaleID = "COMNOSPIFF";
+            }
+            else
+            {
+                associatePayscaleID = "COMSPIFF";
+            }
+
+            associateNewPayscales = Model.NewPayscales.Payscales.FindAll(x => x.ps_PlanCode == associatePayscaleID);
+            associateNewPayscaleSetup = Model.NewPayscales.PayscaleSetup.Find(x => x.ps_PlanCode == associatePayscaleID);
+
+            var oldPayscaleName = "";
+            foreach (var scale in SalesCommission.Business.Enums.Payscales)
+            {
+                if (associate.AssociatePayscale == scale.PayscaleID)
+                {
+                    oldPayscaleName = scale.Name;
+                    break;
+                }
+            }
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Pay Plan Comparison for @associate.AssociateFullName</h3>
+            <p><strong>Hire Date: </strong>@associate.AssociateHireDate.ToShortDateString()</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">            
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr style="background-color:#d9edf7; font-size:16px;">
+                        <th></th>
+                        @*<th colspan="2" class="text-center">
+                            December
+                        </th>*@
+                        <th colspan="2" class="text-center"  style="border-left: 3px gray double;border-right: 3px gray double">
+                            November
+                        </th>
+                        <th colspan="2" class="text-center">
+                            October
+                        </th>
+                        <th class="text-center" style="border-left: 3px gray double">Totals</th>
+                    </tr>
+                    <tr style="background-color:#d9edf7">
+                        <th></th>
+                        @*<th class="text-center"><strong>Units:</strong></th>
+                        <th class="text-center">%</th>*@
+                        <th class="text-center" style="border-left: 3px gray double">Units</th>
+                        <th class="text-center" style="border-right: 3px gray double">%</th>
+                        <th class="text-center">Units</th>
+                        <th class="text-center">%</th>
+                        <th style="border-left: 3px gray double"></th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @{
+
+                        decimal hoursWorked = 0;
+                        decimal hoursPayAmount = 0;
+
+                        decimal previoushoursWorked = 0;
+                        decimal previoushoursPayAmount = 0;
+
+                        decimal previous2hoursWorked = 0;
+                        decimal previous2hoursPayAmount = 0;
+
+                        decimal hourAmountPerUnit = 0;
+                        decimal previoushourAmountPerUnit = 0;
+                        decimal previous2hourAmountPerUnit = 0;
+
+                        decimal TotalHoursWorked = 0;
+                        decimal TotalPayAmount = 0;
+                        decimal TotalUnits = 0;
+
+                        decimal ActualEarned = 0;
+                        decimal ActualEarnedPerUnit = 0;
+                        decimal aftermarketPointCount = 0;
+
+                        decimal TotalcurrentcommissionSumTotal = 0;
+                        decimal TotalnewcurrentcommissionSumTotal = 0;
+                        decimal TotalActualEarned = 0;
+
+
+                        //if (associate.AssociateHours != null && associate.AssociateHours.Count > 0)
+                        //{
+                        //    hoursWorked = associate.AssociateHours[0].Hours;
+                        //    hoursPayAmount = Math.Round((hoursWorked * @associate.AssociateWage));
+                        //    TotalHoursWorked += hoursWorked;
+                        //    TotalPayAmount += hoursPayAmount;
+                        //}
+
+                        if (associate.PreviousAssociateHours != null && associate.PreviousAssociateHours.Count > 0)
+                        {
+                            if (associate.PreviousAssociateHours[0] != null)
+                            {
+                                var previousHours = associate.PreviousAssociateHours[0];
+
+                                previoushoursWorked = previousHours.Hours;
+                                previoushoursPayAmount = Math.Round((hoursWorked * associate.AssociateWage));
+                                TotalHoursWorked += previoushoursWorked;
+                                TotalPayAmount += previoushoursPayAmount;
+
+                            }
+                            if (associate.PreviousAssociateHours[1] != null)
+                            {
+                                var previousHours = associate.PreviousAssociateHours[1];
+
+                                previous2hoursWorked = previousHours.Hours;
+                                previous2hoursPayAmount = Math.Round((hoursWorked * associate.AssociateWage));
+                                TotalHoursWorked += previous2hoursWorked;
+                                TotalPayAmount += previous2hoursPayAmount;
+                            }
+                        }
+
+
+                        decimal bppCount = 0;
+                        decimal financeCount = 0;
+                        decimal svcContractCount = 0;
+                        decimal tradeInCount = 0;
+                        decimal GAPCount = 0;
+                        decimal currentUnits = 0;
+                        decimal currentNewUnits = 0;
+                        decimal currentUsedUnits = 0;
+
+                        decimal bppPercentage = 0;
+                        decimal financePercentage = 0;
+                        decimal svcContractPercentage = 0;
+                        decimal tradePercentage = 0;
+                        decimal GAPPercentage = 0;
+                        decimal NewPercentage = 0;
+                        decimal UsedPercentage = 0;
+
+                        decimal previousbppCount = 0;
+                        decimal previousfinanceCount = 0;
+                        decimal previoussvcContractCount = 0;
+                        decimal previoustradeInCount = 0;
+                        decimal previousGAPCount = 0;
+                        decimal previouscurrentUnits = 0;
+                        decimal previouscurrentNewUnits = 0;
+                        decimal previouscurrentUsedUnits = 0;
+
+                        decimal previousbppPercentage = 0;
+                        decimal previousfinancePercentage = 0;
+                        decimal previoussvcContractPercentage = 0;
+                        decimal previoustradePercentage = 0;
+                        decimal previousGAPPercentage = 0;
+                        decimal previousNewPercentage = 0;
+                        decimal previousUsedPercentage = 0;
+
+                        decimal previous2bppCount = 0;
+                        decimal previous2financeCount = 0;
+                        decimal previous2svcContractCount = 0;
+                        decimal previous2tradeInCount = 0;
+                        decimal previous2GAPCount = 0;
+                        decimal previous2currentUnits = 0;
+                        decimal previous2currentNewUnits = 0;
+                        decimal previous2currentUsedUnits = 0;
+
+                        decimal previous2bppPercentage = 0;
+                        decimal previous2financePercentage = 0;
+                        decimal previous2svcContractPercentage = 0;
+                        decimal previous2tradePercentage = 0;
+                        decimal previous2GAPPercentage = 0;
+                        decimal previous2NewPercentage = 0;
+                        decimal previous2UsedPercentage = 0;
+
+                        if (associate.AssociateDealCounts != null)
+                        {
+                            bppCount = associate.AssociateDealCounts.BPPCount;
+                            financeCount = associate.AssociateDealCounts.FinanceCount;
+                            svcContractCount = associate.AssociateDealCounts.ServiceContractCount;
+                            tradeInCount = associate.AssociateDealCounts.TradeCount;
+                            GAPCount = associate.AssociateDealCounts.GAPCount;
+                            currentUnits = associate.AssociateDealCounts.TotalDealCount;
+                            currentNewUnits = associate.AssociateDealCounts.NewDealCount;
+                            currentUsedUnits = associate.AssociateDealCounts.UsedDealCount;
+
+                            if (currentUnits > 0)
+                            {
+                                NewPercentage = currentNewUnits / currentUnits;
+                                UsedPercentage = currentUsedUnits / currentUnits;
+
+                                bppPercentage = bppCount / currentUnits;
+                                financePercentage = financeCount / currentUnits;
+                                svcContractPercentage = svcContractCount / currentUnits;
+                                tradePercentage = tradeInCount / currentUnits;
+                                if (financeCount > 0)
+                                {
+                                    GAPPercentage = GAPCount / financeCount;//currentUnits;
+                                }
+
+                                hourAmountPerUnit = hoursPayAmount / currentUnits;
+
+                            }
+
+                            //TotalUnits += currentUnits;
+
+                        }
+
+                        if (associate.PreviousAssociateDealCounts != null)
+                        {
+                            if (associate.PreviousAssociateDealCounts[0] != null)
+                            {
+                                var previousDealCounts = associate.PreviousAssociateDealCounts[0];
+
+                                previousbppCount = previousDealCounts.BPPCount;
+                                previousfinanceCount = previousDealCounts.FinanceCount;
+                                previoussvcContractCount = previousDealCounts.ServiceContractCount;
+                                previoustradeInCount = previousDealCounts.TradeCount;
+                                previousGAPCount = previousDealCounts.GAPCount;
+                                previouscurrentUnits = previousDealCounts.TotalDealCount;
+                                previouscurrentNewUnits = previousDealCounts.NewDealCount;
+                                previouscurrentUsedUnits = previousDealCounts.UsedDealCount;
+
+                                if (previouscurrentUnits > 0)
+                                {
+                                    previousNewPercentage = previouscurrentNewUnits / previouscurrentUnits;
+                                    previousUsedPercentage = previouscurrentUsedUnits / previouscurrentUnits;
+
+                                    previousbppPercentage = previousbppCount / previouscurrentUnits;
+                                    previousfinancePercentage = previousfinanceCount / previouscurrentUnits;
+                                    previoussvcContractPercentage = previoussvcContractCount / previouscurrentUnits;
+                                    previoustradePercentage = previoustradeInCount / previouscurrentUnits;
+
+                                    if (previousfinanceCount > 0)
+                                    {
+                                        previousGAPPercentage = previousGAPCount / previousfinanceCount;
+                                    }
+
+                                    previoushourAmountPerUnit = previoushoursPayAmount / previouscurrentUnits;
+
+                                }
+
+                                TotalUnits += previouscurrentUnits;
+
+                            }
+                        }
+
+                        if (associate.PreviousAssociateDealCounts != null)
+                        {
+                            if (associate.PreviousAssociateDealCounts[1] != null)
+                            {
+                                var previousDealCounts = associate.PreviousAssociateDealCounts[1];
+
+                                previous2bppCount = previousDealCounts.BPPCount;
+                                previous2financeCount = previousDealCounts.FinanceCount;
+                                previous2svcContractCount = previousDealCounts.ServiceContractCount;
+                                previous2tradeInCount = previousDealCounts.TradeCount;
+                                previous2GAPCount = previousDealCounts.GAPCount;
+                                previous2currentUnits = previousDealCounts.TotalDealCount;
+                                previous2currentNewUnits = previousDealCounts.NewDealCount;
+                                previous2currentUsedUnits = previousDealCounts.UsedDealCount;
+
+                                if (previous2currentUnits > 0)
+                                {
+                                    previous2NewPercentage = previous2currentNewUnits / previous2currentUnits;
+                                    previous2UsedPercentage = previous2currentUsedUnits / previous2currentUnits;
+
+                                    previous2bppPercentage = previous2bppCount / previous2currentUnits;
+                                    previous2financePercentage = previous2financeCount / previous2currentUnits;
+                                    previous2svcContractPercentage = previous2svcContractCount / previous2currentUnits;
+                                    previous2tradePercentage = previous2tradeInCount / previous2currentUnits;
+
+                                    if (previous2financeCount > 0)
+                                    {
+                                        previous2GAPPercentage = previous2GAPCount / previous2financeCount;
+                                    }
+                                    previous2hourAmountPerUnit = previous2hoursPayAmount / previous2currentUnits;
+
+                                }
+
+                                TotalUnits += previous2currentUnits;
+
+                            }
+                        }
+
+                        decimal currentdealIndex = 0;
+                        decimal currentcommissionSumTotal = 0;
+                        decimal newcurrentcommissionSumTotal = 0;
+                        decimal currenttooFewVSC = 0;
+                        decimal newcurrenttooFewVSC = 0;
+
+                        foreach (var deal in associate.AssociateDeals)
+                        {
+
+                            decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+                            decimal dealValue = deal.NewDealCount + deal.UsedDealCount;
+
+                            int tradeCount = 0;
+                            if (deal.Trade1Amount > 0)
+                            {
+                                tradeCount += 1;
+                            }
+                            if (deal.Trade2Amount > 0)
+                            {
+                                tradeCount += 1;
+                            }
+
+                            currentdealIndex += dealValue;
+
+                            var dealNU = "";
+                            if (deal.VehicleCondition == "NEW")
+                            {
+                                dealNU = "N";
+                            }
+                            else if (deal.VehicleCondition == "USED")
+                            {
+                                dealNU = "U";
+                            }
+                            else
+                            {
+                                dealNU = "U";
+                            }
+
+                            //IF IT IS A USED, IS IT A HANDYMAN?
+                            if (deal.VehicleCondition == "USED" && deal.VehicleCertification == "HDM" && associate.AssociatePayscale != "MOCO")
+                            {
+                                dealNU = "H";
+                                deal.VehicleCondition = "HANDY";
+                            }
+
+                            //Determine Value, Internet or Half Value
+                            var valueInternet = "";
+                            if ((deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.BPPAmount > 495 && deal.VehicleCategory == "R"))
+                            {
+                                valueInternet = "V";
+                            }
+                            else if (deal.BPPAmount <= 495 && deal.BPPAmount > 250 && deal.VehicleCategory == "R")
+                            {
+                                valueInternet = "V3";
+                            }
+                            else
+                            {
+                                valueInternet = "I";
+                            }
+
+                            if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
+                            {
+                                deal.FinanceCount = dealValue;
+                            }
+
+                            if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+                            {
+                                valueInternet = "V";
+                            }
+                            else if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000)
+                            {
+                                valueInternet = "V";
+                            }
+
+                            var dealPayscale = associate.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+                            var newDealPayscale = associateNewPayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+                            decimal baseCommission = 0;
+                            decimal bppCommission = 0;
+                            decimal tradeInCommission = 0;
+                            decimal financeCommission = 0;
+                            decimal serviceCommission = 0;
+                            decimal maintenanceCommission = 0;
+                            decimal GAPCommission = 0;
+                            decimal aftermarketCommission = 0;
+                            decimal currentcommissionTotal = 0;
+                            decimal SSICommission = 0;
+                            decimal volumeCommission = 0;
+                            decimal spiffCommission = 0;
+                            decimal internalSurveyCommission = 0;
+
+                            decimal newbaseCommission = 0;
+                            decimal newbppCommission = 0;
+                            decimal newtradeInCommission = 0;
+                            decimal newfinanceCommission = 0;
+                            decimal newserviceCommission = 0;
+                            decimal newmaintenanceCommission = 0;
+                            decimal newGAPCommission = 0;
+                            decimal newaftermarketCommission = 0;
+                            decimal newcurrentcommissionTotal = 0;
+                            decimal newvolumeCommission = 0;
+
+
+
+                            if (dealPayscale != null)
+                            {
+
+                                if (deal.MakeCode != "AA")
+                                {
+
+                                    if (dealPayscale.ps_PlanCode == "FL")
+                                    {
+                                        currenttooFewVSC = dealPayscale.ps_LessServiceContracts;
+
+                                    }
+
+                                    if (newDealPayscale.ps_PlanCode == "COMFL")
+                                    {
+                                        newcurrenttooFewVSC = newDealPayscale.ps_LessServiceContracts;
+                                    }
+
+                                    baseCommission = dealPayscale.ps_BaseCommission * dealValue;
+                                    newbaseCommission = newDealPayscale.ps_BaseCommission * dealValue;
+
+                                    if (valueInternet == "V")
+                                    {
+                                        bppCommission = dealPayscale.ps_FullBPP * dealValue;
+                                        newbppCommission = dealPayscale.ps_FullBPP * dealValue;
+                                    }
+                                    else if (valueInternet == "V3")
+                                    {
+                                        bppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                                        newbppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                                    }
+                                    else
+                                    {
+                                        bppCommission = 0;
+                                        newbppCommission = 0;
+                                    }
+
+                                    tradeInCommission = dealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+
+                                    financeCommission = dealPayscale.ps_FinanceLease * deal.FinanceCount;
+
+                                    serviceCommission = dealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+
+                                    maintenanceCommission = dealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+
+                                    newtradeInCommission = newDealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+                                    newfinanceCommission = newDealPayscale.ps_FinanceLease * deal.FinanceCount;
+                                    newserviceCommission = newDealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+                                    newmaintenanceCommission = newDealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+                                    newGAPCommission = newDealPayscale.ps_GAP * deal.GAPCount;
+
+                                    if (dealNU == "N")
+                                    {
+                                        var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+
+                                        if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
+                                        {
+                                            spiffCommission = dealPayscale.ps_ManufacturerSpiffGuarantee * dealValue;
+                                        }
+                                    }
+
+                                    if (associate.AssociatePayscale != "MOCO")
+                                    {
+                                        GAPCommission = dealPayscale.ps_GAP * deal.GAPCount;
+
+                                        if (associate.AssociateSSI == null)
+                                        {
+                                            associate.AssociateSSI = "NO";
+                                        }
+                                        if (associate.AssociateSSI.ToUpper() == "YES")
+                                        {
+                                            SSICommission = dealPayscale.ps_ManufacturerSalesSatisfaction * dealValue;
+                                        }
+                                        else
+                                        {
+                                            SSICommission = 0;
+                                        }
+
+                                        if (dealNU == "U" || dealNU == "H")
+                                        {
+                                            internalSurveyCommission = dealPayscale.ps_InternalSurvey * dealValue;
+                                        }
+                                    }
+
+                                    if (associate.AssociatePayscaleSetup.Count > 0)
+                                    {
+                                        var payscaleSetup = associate.AssociatePayscaleSetup[0];
+
+                                        if (currentdealIndex < payscaleSetup.ps_VolumeBonusLevel1High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel2Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel2High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel3Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel3High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel4Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel4High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel5Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel5High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= payscaleSetup.ps_VolumeBonusLevel6Low && currentdealIndex < payscaleSetup.ps_VolumeBonusLevel6High + 1)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                        }
+                                        else
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        if (currentdealIndex < 6)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= 6 && currentdealIndex < 11)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= 11 && currentdealIndex < 16)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= 16 && currentdealIndex < 21)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= 21 && currentdealIndex < 26)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                        }
+                                        else if (currentdealIndex >= 26 && currentdealIndex < 31)
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                        }
+                                        else
+                                        {
+                                            volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                            newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                        }
+                                    }
+                                }
+
+                                //This should be per aftermarket item
+                                if (deal.AftermarketCount > 0)
+                                {
+                                    var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+                                    decimal aftermarketCount = 0;
+                                    foreach (var item in aftermarketItems)
+                                    {
+                                        var profit = item.AftermarketPrice - item.AftermarketCost;
+                                        decimal points = 0;
+
+                                        if (item.AftermarketProfitPerPoint == 0)
+                                        {
+                                            item.AftermarketProfitPerPoint = 1;
+                                        }
+
+                                        if (item.AftermarketProfitPerPoint > 0)
+                                        {
+                                            var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                            if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                            {
+                                                points = 0;
+                                            }
+                                            else if (profitPerPoint < item.AftermarketPoints)
+                                            {
+                                                points = Math.Truncate(profitPerPoint);
+                                            }
+                                            else
+                                            {
+                                                points = item.AftermarketPoints;
+                                            }
+                                        }
+
+                                        aftermarketCount += (points);
+                                    }
+                                    aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                                    newaftermarketCommission = newDealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                                    aftermarketPointCount += aftermarketCount;
+                                }
+
+                                currentcommissionTotal = baseCommission + bppCommission + tradeInCommission + financeCommission + serviceCommission + maintenanceCommission + GAPCommission + aftermarketCommission + spiffCommission + SSICommission + volumeCommission + internalSurveyCommission;
+                                currentcommissionSumTotal += currentcommissionTotal;
+
+                                newcurrentcommissionTotal = newbaseCommission + newbppCommission + newtradeInCommission + newfinanceCommission + newserviceCommission + newmaintenanceCommission + newGAPCommission + newaftermarketCommission + newvolumeCommission;
+                                newcurrentcommissionSumTotal += newcurrentcommissionTotal;
+
+                            }
+
+
+                        }
+
+
+                        if (hoursPayAmount > currentcommissionSumTotal)
+                        {
+                            ActualEarned = hoursPayAmount;
+                        }
+                        else
+                        {
+                            ActualEarned = currentcommissionSumTotal;
+                        }
+
+                        if (currentdealIndex > 0)
+                        {
+                            ActualEarnedPerUnit = ActualEarned / currentdealIndex;
+                        }
+
+                        //TotalcurrentcommissionSumTotal += currentcommissionSumTotal;
+                        //TotalnewcurrentcommissionSumTotal += newcurrentcommissionSumTotal;
+                        //TotalActualEarned += ActualEarned;
+
+
+                        decimal[] currentCommissionTotals = new decimal[2];
+                        decimal[] previousCommissionTotals = new decimal[2];
+                        decimal[] ActualEarnedTotals = new decimal[2];
+                        decimal[] previousAftermarketPoints = new decimal[2];
+
+
+                        if (associate.PreviousAssociateDeals != null)
+                        {
+                            var startDate = new DateTime(2018, 12, 1);
+                            for (var i = 0; i < 2; i++)
+                            {
+                                var previousDeals = associate.PreviousAssociateDeals[i];
+                                var dealMonth = startDate.AddMonths(-(i+1));
+
+                                decimal previousdealIndex = 0;
+                                decimal previouscommissionSumTotal = 0;
+                                decimal newpreviouscommissionSumTotal = 0;
+                                decimal previoustooFewVSC = 0;
+                                decimal newprevioustooFewVSC = 0;
+                                decimal previousActualEarned = 0;
+                                decimal previousActualEarnedPerUnit = 0;
+
+                                foreach (var deal in previousDeals.AssociateDeals)
+                                {
+
+                                    decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+                                    decimal dealValue = deal.NewDealCount + deal.UsedDealCount;
+
+                                    int tradeCount = 0;
+                                    if (deal.Trade1Amount > 0)
+                                    {
+                                        tradeCount += 1;
+                                    }
+                                    if (deal.Trade2Amount > 0)
+                                    {
+                                        tradeCount += 1;
+                                    }
+
+                                    if (deal.MakeCode != "AA")
+                                    {
+                                        previousdealIndex += dealValue;
+                                    }
+                                    
+
+                                    var dealNU = "";
+                                    if (deal.VehicleCondition == "NEW")
+                                    {
+                                        dealNU = "N";
+                                    }
+                                    else if (deal.VehicleCondition == "USED")
+                                    {
+                                        dealNU = "U";
+                                    }
+                                    else
+                                    {
+                                        dealNU = "U";
+                                    }
+
+                                    //IF IT IS A USED, IS IT A HANDYMAN?
+                                    if (deal.VehicleCondition == "USED" && deal.VehicleCertification == "HDM" && associate.AssociatePayscale != "MOCO")
+                                    {
+                                        dealNU = "H";
+                                        deal.VehicleCondition = "HANDY";
+                                    }
+
+                                    //Determine Value, Internet or Half Value
+                                    var valueInternet = "";
+                                    if ((deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.BPPAmount > 495 && deal.VehicleCategory == "R"))
+                                    {
+                                        valueInternet = "V";
+                                    }
+                                    else if (deal.BPPAmount <= 495 && deal.BPPAmount > 250 && deal.VehicleCategory == "R")
+                                    {
+                                        valueInternet = "V3";
+                                    }
+                                    else
+                                    {
+                                        valueInternet = "I";
+                                    }
+
+                                    if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
+                                    {
+                                        deal.FinanceCount = dealValue;
+                                    }
+
+                                    if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+                                    {
+                                        valueInternet = "V";
+                                    }
+                                    else if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000)
+                                    {
+                                        valueInternet = "V";
+                                    }
+
+                                    //GET THE ASSOCIATES PAYLEVEL IN THE PREVIOUS MONTH, NOT THE CURRENT MONTH
+                                    var monthYear = dealMonth.Month.ToString() + "/" + dealMonth.Year.ToString();
+                                    var associateLevel = "STD";
+
+                                    if(Model.AssociateLevelHistory != null)
+                                    {
+                                        var associateMonth = Model.AssociateLevelHistory.Find(x => x.AssociateSSN == associate.AssociateSSN && x.AssociatePayscale == associate.AssociatePayscale && x.MonthYear == monthYear);
+
+                                        if(associateMonth.AssociateCertificationLevel != null)
+                                        {
+                                            associateLevel = associateMonth.AssociateCertificationLevel;
+                                        }
+                                    }
+
+                                    var dealPayscale = associate.AllPayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition && o.ps_PlanCode == associate.AssociatePayscale && o.ps_PayLevel == associateLevel);
+
+                                    var newDealPayscale = associateNewPayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+                                    decimal baseCommission = 0;
+                                    decimal bppCommission = 0;
+                                    decimal tradeInCommission = 0;
+                                    decimal financeCommission = 0;
+                                    decimal serviceCommission = 0;
+                                    decimal maintenanceCommission = 0;
+                                    decimal GAPCommission = 0;
+                                    decimal aftermarketCommission = 0;
+                                    decimal currentcommissionTotal = 0;
+                                    decimal SSICommission = 0;
+                                    decimal volumeCommission = 0;
+                                    decimal spiffCommission = 0;
+                                    decimal internalSurveyCommission = 0;
+
+                                    decimal newbaseCommission = 0;
+                                    decimal newbppCommission = 0;
+                                    decimal newtradeInCommission = 0;
+                                    decimal newfinanceCommission = 0;
+                                    decimal newserviceCommission = 0;
+                                    decimal newmaintenanceCommission = 0;
+                                    decimal newGAPCommission = 0;
+                                    decimal newaftermarketCommission = 0;
+                                    decimal newcurrentcommissionTotal = 0;
+                                    decimal newvolumeCommission = 0;
+
+
+
+                                    if (dealPayscale != null)
+                                    {
+
+                                        if (deal.MakeCode != "AA")
+                                        {
+
+                                            if (dealPayscale.ps_PlanCode == "FL")
+                                            {
+                                                previoustooFewVSC = dealPayscale.ps_LessServiceContracts;
+
+                                            }
+
+                                            if (newDealPayscale.ps_PlanCode == "COMFL")
+                                            {
+                                                newprevioustooFewVSC = newDealPayscale.ps_LessServiceContracts;
+                                            }
+
+                                            baseCommission = dealPayscale.ps_BaseCommission * dealValue;
+                                            newbaseCommission = newDealPayscale.ps_BaseCommission * dealValue;
+
+                                            if (valueInternet == "V")
+                                            {
+                                                bppCommission = dealPayscale.ps_FullBPP * dealValue;
+                                                newbppCommission = dealPayscale.ps_FullBPP * dealValue;
+                                            }
+                                            else if (valueInternet == "V3")
+                                            {
+                                                bppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                                                newbppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                                            }
+                                            else
+                                            {
+                                                bppCommission = 0;
+                                                newbppCommission = 0;
+                                            }
+
+                                            tradeInCommission = dealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;                                            
+
+                                            newtradeInCommission = newDealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+
+
+                                            if (dealNU == "N")
+                                            {
+                                                var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+
+                                                if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
+                                                {
+                                                    spiffCommission = dealPayscale.ps_ManufacturerSpiffGuarantee * dealValue;
+                                                }
+                                            }
+
+                                            if (associate.AssociatePayscale != "MOCO")
+                                            {
+                                                GAPCommission = dealPayscale.ps_GAP * deal.GAPCount;
+
+                                                if (associate.AssociateSSI == null)
+                                                {
+                                                    associate.AssociateSSI = "NO";
+                                                }
+                                                if (associate.AssociateSSI.ToUpper() == "YES")
+                                                {
+                                                    SSICommission = dealPayscale.ps_ManufacturerSalesSatisfaction * dealValue;
+                                                }
+                                                else
+                                                {
+                                                    SSICommission = 0;
+                                                }
+
+                                                if (dealNU == "U" || dealNU == "H")
+                                                {
+                                                    internalSurveyCommission = dealPayscale.ps_InternalSurvey * dealValue;
+                                                }
+                                            }
+
+                                            if (associate.AssociatePayscaleSetup.Count > 0)
+                                            {
+                                                var payscaleSetup = associate.AssociatePayscaleSetup[0];
+
+                                                if (previousdealIndex < payscaleSetup.ps_VolumeBonusLevel1High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= payscaleSetup.ps_VolumeBonusLevel2Low && previousdealIndex < payscaleSetup.ps_VolumeBonusLevel2High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= payscaleSetup.ps_VolumeBonusLevel3Low && previousdealIndex < payscaleSetup.ps_VolumeBonusLevel3High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= payscaleSetup.ps_VolumeBonusLevel4Low && previousdealIndex < payscaleSetup.ps_VolumeBonusLevel4High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= payscaleSetup.ps_VolumeBonusLevel5Low && previousdealIndex < payscaleSetup.ps_VolumeBonusLevel5High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= payscaleSetup.ps_VolumeBonusLevel6Low && previousdealIndex < payscaleSetup.ps_VolumeBonusLevel6High + 1)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                                }
+                                                else
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                                }
+                                            }
+                                            else
+                                            {
+
+                                                if (previousdealIndex < 6)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= 6 && previousdealIndex < 11)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= 11 && previousdealIndex < 16)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= 16 && previousdealIndex < 21)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= 21 && previousdealIndex < 26)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                                }
+                                                else if (previousdealIndex >= 26 && previousdealIndex < 31)
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                                }
+                                                else
+                                                {
+                                                    volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                                    newvolumeCommission = newDealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                                }
+                                            }
+                                        }
+
+                                        financeCommission = dealPayscale.ps_FinanceLease * deal.FinanceCount;
+                                        serviceCommission = dealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+                                        maintenanceCommission = dealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+
+                                        newfinanceCommission = newDealPayscale.ps_FinanceLease * deal.FinanceCount;
+                                        newserviceCommission = newDealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+                                        newmaintenanceCommission = newDealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+                                        newGAPCommission = newDealPayscale.ps_GAP * deal.GAPCount;
+
+                                        //This should be per aftermarket item
+                                        if (deal.AftermarketCount > 0)
+                                        {
+                                            var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+                                            decimal aftermarketCount = 0;
+                                            foreach (var item in aftermarketItems)
+                                            {
+                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                decimal points = 0;
+
+                                                if (item.AftermarketProfitPerPoint == 0)
+                                                {
+                                                    item.AftermarketProfitPerPoint = 1;
+                                                }
+
+                                                if (item.AftermarketProfitPerPoint > 0)
+                                                {
+                                                    var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                    if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                    {
+                                                        points = 0;
+                                                    }
+                                                    else if (profitPerPoint < item.AftermarketPoints)
+                                                    {
+                                                        points = Math.Truncate(profitPerPoint);
+                                                    }
+                                                    else
+                                                    {
+                                                        points = item.AftermarketPoints;
+                                                    }
+                                                }
+
+                                                aftermarketCount += (points);
+
+                                            }
+                                            aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                                            newaftermarketCommission = newDealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+
+                                            previousAftermarketPoints[i] += aftermarketCount;
+                                            aftermarketPointCount += aftermarketCount;
+                                        }
+
+                                        currentcommissionTotal = baseCommission + bppCommission + tradeInCommission + financeCommission + serviceCommission + maintenanceCommission + GAPCommission + aftermarketCommission + spiffCommission + SSICommission + volumeCommission + internalSurveyCommission;
+                                        previouscommissionSumTotal += currentcommissionTotal;
+
+                                        newcurrentcommissionTotal = newbaseCommission + newbppCommission + newtradeInCommission + newfinanceCommission + newserviceCommission + newmaintenanceCommission + newGAPCommission + newaftermarketCommission + newvolumeCommission;
+                                        newpreviouscommissionSumTotal += newcurrentcommissionTotal;
+
+                                    }
+
+
+                                }
+
+                                if (i == 0)
+                                {
+                                    if (previoushoursPayAmount > previouscommissionSumTotal)
+                                    {
+                                        previousActualEarned = previoushoursPayAmount;
+                                    }
+                                    else
+                                    {
+                                        previousActualEarned = previouscommissionSumTotal;
+                                    }
+                                }
+                                else
+                                {
+                                    if (previous2hoursPayAmount > previouscommissionSumTotal)
+                                    {
+                                        previousActualEarned = previous2hoursPayAmount;
+                                    }
+                                    else
+                                    {
+                                        previousActualEarned = previouscommissionSumTotal;
+                                    }
+                                }
+
+                                if (previousdealIndex > 0)
+                                {
+                                    previousActualEarnedPerUnit = previousActualEarned / previousdealIndex;
+                                }
+
+                                currentCommissionTotals[i] = previouscommissionSumTotal;
+                                previousCommissionTotals[i] = newpreviouscommissionSumTotal;
+                                ActualEarnedTotals[i] = previousActualEarned;
+
+                                TotalcurrentcommissionSumTotal += previouscommissionSumTotal;
+                                TotalnewcurrentcommissionSumTotal += newpreviouscommissionSumTotal;
+                                TotalActualEarned += previousActualEarned;
+
+                            }
+                        }
+
+                    }
+
+                    <tr>
+                        <td class="text-right"><strong>Total Units:</strong></td>
+                        @*<td class="text-center">@currentUnits</td>
+                        <td class="text-center"></td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previouscurrentUnits</td>
+                        <td class="text-center" style="border-right: 3px gray double"></td>
+                        <td class="text-center">@previous2currentUnits</td>
+                        <td class="text-center"></td>
+                        <td class="text-center" style="border-left: 3px gray double">@TotalUnits</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>New Units:</strong></td>
+                        @*<td class="text-center">@currentNewUnits</td>
+                        <td class="text-center">@NewPercentage.ToString("P", nfi)</td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previouscurrentNewUnits</td>
+                        <td class="text-center" style="border-right: 3px gray double">@previousNewPercentage.ToString("P", nfi)</td>
+                        <td class="text-center">@previous2currentNewUnits</td>
+                        <td class="text-center">@previous2NewPercentage.ToString("P", nfi)</td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>Used Units:</strong></td>
+                        @*<td class="text-center">@currentUsedUnits</td>
+                        <td class="text-center">@UsedPercentage.ToString("P", nfi)</td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previouscurrentUsedUnits</td>
+                        <td class="text-center" style="border-right: 3px gray double">@previousUsedPercentage.ToString("P", nfi)</td>
+                        <td class="text-center">@previous2currentUsedUnits</td>
+                        <td class="text-center">@previous2UsedPercentage.ToString("P", nfi)</td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>BPP:</strong></td>
+                        @*<td class="text-center">@bppCount</td>
+                        <td class="text-center">@bppPercentage.ToString("P", nfi)</td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previousbppCount</td>
+                        <td class="text-center" style="border-right: 3px gray double">@previousbppPercentage.ToString("P", nfi)</td>
+                        <td class="text-center">@previous2bppCount</td>
+                        <td class="text-center">@previous2bppPercentage.ToString("P", nfi)</td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>Finance/Lease Contracts:</strong></td>
+                        @*<td class="text-center">@financeCount</td>
+                        <td class="text-center">@financePercentage.ToString("P", nfi)</td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previousfinanceCount</td>
+                        <td class="text-center" style="border-right: 3px gray double">@previousfinancePercentage.ToString("P", nfi)</td>
+                        <td class="text-center">@previous2financeCount</td>
+                        <td class="text-center">@previous2financePercentage.ToString("P", nfi)</td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>Service Contracts:</strong></td>
+                        @*<td class="text-center">@svcContractCount</td>
+                        <td class="text-center">@svcContractPercentage.ToString("P", nfi)</td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previoussvcContractCount</td>
+                        <td class="text-center" style="border-right: 3px gray double">@previoussvcContractPercentage.ToString("P", nfi)</td>
+                        <td class="text-center">@previous2svcContractCount</td>
+                        <td class="text-center">@previous2svcContractPercentage.ToString("P", nfi)</td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                <tr>
+                    <td class="text-right"><strong>Trade Ins:</strong></td>
+                    @*<td class="text-center">@tradeInCount</td>
+                    <td class="text-center">@tradePercentage.ToString("P", nfi)</td>*@
+                    <td class="text-center" style="border-left: 3px gray double">@previoustradeInCount</td>
+                    <td class="text-center" style="border-right: 3px gray double">@previoustradePercentage.ToString("P", nfi)</td>
+                    <td class="text-center">@previous2tradeInCount</td>
+                    <td class="text-center">@previous2tradePercentage.ToString("P", nfi)</td>
+                    <td class="text-center" style="border-left: 3px gray double"></td>
+                </tr>
+                <tr>
+                    <td class="text-right"><strong>GAP:</strong></td>
+                    @*<td class="text-center">@GAPCount</td>
+                    <td class="text-center">@GAPPercentage.ToString("P", nfi)</td>*@
+                    <td class="text-center" style="border-left: 3px gray double">@previousGAPCount</td>
+                    <td class="text-center" style="border-right: 3px gray double">@previousGAPPercentage.ToString("P", nfi)</td>
+                    <td class="text-center">@previous2GAPCount</td>
+                    <td class="text-center">@previous2GAPPercentage.ToString("P", nfi)</td>
+                    <td class="text-center" style="border-left: 3px gray double"></td>
+                </tr>
+                    <tr>
+                        <td class="text-right"><strong>Aftermarket Points:</strong></td>
+                        @*<td class="text-center">@aftermarketPointCount</td>
+                        <td class="text-center"></td>*@
+                        <td class="text-center" style="border-left: 3px gray double">@previousAftermarketPoints[0]</td>
+                        <td class="text-center" style="border-right: 3px gray double"></td>
+                        <td class="text-center">@previousAftermarketPoints[1]</td>
+                        <td class="text-center"></td>
+                        <td class="text-center" style="border-left: 3px gray double"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-right"><strong>Total Hours:</strong></td>
+                        @*<td class="text-center" colspan="2">@hoursWorked</td>*@
+                        <td class="text-center"  colspan="2" style="border-left: 3px gray double;border-right: 3px gray double">@previoushoursWorked</td>
+                        <td class="text-center" colspan="2">@previous2hoursWorked</td>
+                        <td class="text-center" style="border-left: 3px gray double">@TotalHoursWorked</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+@{
+
+    decimal currentPerCar = 0;
+    decimal currentPerCarOld = 0;
+    decimal currentPerCarNew = 0;
+
+    if(currentUnits > 0)
+    {
+        currentPerCar = ActualEarned / currentUnits;
+        currentPerCarOld = currentcommissionSumTotal / currentUnits;
+        currentPerCarNew = newcurrentcommissionSumTotal / currentUnits;
+    }
+
+    decimal previousPerCar =0;
+    decimal previousPerCarOld = 0;
+    decimal previousPerCarNew = 0;
+
+    if(previouscurrentUnits > 0)
+    {
+        previousPerCar = ActualEarnedTotals[0] / previouscurrentUnits;
+        previousPerCarOld = currentCommissionTotals[0] / previouscurrentUnits;
+        previousPerCarNew = previousCommissionTotals[0] / previouscurrentUnits;
+    }
+
+    decimal previous2PerCar = 0;
+    decimal previous2PerCarOld = 0;
+    decimal previous2PerCarNew = 0;
+
+    if(previous2currentUnits > 0)
+    {
+        previous2PerCar = ActualEarnedTotals[1] / previous2currentUnits;
+        previous2PerCarOld = currentCommissionTotals[1] / previous2currentUnits;
+        previous2PerCarNew = previousCommissionTotals[1] / previous2currentUnits;
+    }
+
+    decimal totalcurrentPerCar = 0;
+    decimal totalpreviousPerCar = 0;
+    decimal totalprevious2PerCar = 0;
+
+    if(TotalUnits > 0)
+    {
+        totalcurrentPerCar = TotalActualEarned / TotalUnits;
+        totalpreviousPerCar = TotalcurrentcommissionSumTotal / TotalUnits;
+        totalprevious2PerCar = TotalnewcurrentcommissionSumTotal / TotalUnits;
+    }
+}
+
+<tr style="background-color:#d9edf7; font-size:16px;">
+    <th class="text-right">Actual Earned:</th>
+    @*<th class="text-center" colspan="2">$@ActualEarned.ToString("C", nfi)<br /><span style="font-size:12px;">$@currentPerCar.ToString("C", nfi) per Car</span></th>*@
+    <th class="text-center" colspan="2" style="border-left: 3px gray double;border-right: 3px gray double">$@ActualEarnedTotals[0].ToString("C", nfi)<br /><span style="font-size:12px;">$@previousPerCar.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" colspan="2">$@ActualEarnedTotals[1].ToString("C", nfi)<br /><span style="font-size:12px;">$@previous2PerCar.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" style="border-left: 3px gray double">$@TotalActualEarned.ToString("C", nfi)<br /><span style="font-size:12px;">$@totalcurrentPerCar.ToString("C", nfi) per Car</span></th>
+</tr>
+<tr style="background-color:#d9edf7; font-size:16px;">
+    <th class="text-right">Previous Plan:</th>
+    @*<th class="text-center" colspan="2">$@currentcommissionSumTotal.ToString("C", nfi)<br /><span style="font-size:12px;">$@currentPerCarOld.ToString("C", nfi) per Car</span></th>*@
+    <th class="text-center" colspan="2" style="border-left: 3px gray double;border-right: 3px gray double">$@currentCommissionTotals[0].ToString("C", nfi)<br /><span style="font-size:12px;">$@previousPerCarOld.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" colspan="2">$@currentCommissionTotals[1].ToString("C", nfi)<br /><span style="font-size:12px;">$@previous2PerCarOld.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" style="border-left: 3px gray double">$@TotalcurrentcommissionSumTotal.ToString("C", nfi)<br /><span style="font-size:12px;">$@totalpreviousPerCar.ToString("C", nfi) per Car</span></th>
+</tr>
+<tr style="background-color:#d9edf7; font-size:16px;">
+    <th class="text-right">New Plan:</th>
+    @*<th class="text-center" colspan="2">$@newcurrentcommissionSumTotal.ToString("C", nfi)<br /><span style="font-size:12px;">$@currentPerCarNew.ToString("C", nfi) per Car</span></th>*@
+    <th class="text-center" colspan="2" style="border-left: 3px gray double;border-right: 3px gray double">$@previousCommissionTotals[0].ToString("C", nfi)<br /><span style="font-size:12px;">$@previousPerCarNew.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" colspan="2">$@previousCommissionTotals[1].ToString("C", nfi)<br /><span style="font-size:12px;">$@previous2PerCarNew.ToString("C", nfi) per Car</span></th>
+    <th class="text-center" style="border-left: 3px gray double">$@TotalnewcurrentcommissionSumTotal.ToString("C", nfi)<br /><span style="font-size:12px;">$@totalprevious2PerCar.ToString("C", nfi) per Car</span></th>
+</tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row" style="page-break-after: always;">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+
+                                }
+                            }
+                        }
+        @section Scripts{
+
+            <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+            <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+            <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+
+            <script type="text/javascript">
+                $(document).ready(function () {
+
+                    $('[data-toggle="tooltip"]').tooltip();
+
+                    $("#SubmitButton").click(function () {
+                        $(".svg-thingy").show();
+
+                    });
+                });
+            </script>
+
+
+
+        }

@@ -1,0 +1,342 @@
+﻿<!DOCTYPE html>
+
+@{ 
+    var currentDate = DateTime.Now;
+    var currentMonth = currentDate.Month;
+    var currentYear = currentDate.Year;
+
+    if (currentDate < new DateTime(DateTime.Now.Year, DateTime.Now.Month, 6))
+    {
+        var previousMonth = DateTime.Now.AddMonths(-1);
+        currentMonth = previousMonth.Month;
+        currentYear = previousMonth.Year;
+    }
+
+
+
+
+    var currentUserId = "";
+    if(Session["AssociateId"] != null)
+    {
+        currentUserId = Session["AssociateId"].ToString();
+    }
+
+    var currentLocationId = "";
+    if (Session["LocationId"] != null)
+    {
+        currentLocationId = Session["LocationId"].ToString();
+    }
+
+}
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Fitzgerald Auto Malls</title>
+    @Styles.Render("~/Content/css")
+        @Scripts.Render("~/bundles/modernizr")
+        <link href="~/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/css/salescommission.css" rel="stylesheet" />    
+    @Scripts.Render("~/bundles/jquery")
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/jszip-2.5.0/dt-1.10.16/b-1.5.1/b-flash-1.5.1/b-html5-1.5.1/b-print-1.5.1/datatables.min.css" />
+
+
+    @RenderSection("CSS", required: false)
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+
+
+
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs/jszip-2.5.0/dt-1.10.16/b-1.5.1/b-flash-1.5.1/b-html5-1.5.1/b-print-1.5.1/datatables.min.js"></script>
+
+    <style>
+.dropdown-submenu {
+    position:relative;
+}
+.dropdown-submenu>.dropdown-menu {
+    top:0;
+    left:100%;
+    margin-top:-6px;
+    margin-left:-1px;
+    -webkit-border-radius:0 4px 4px 4px;
+    -moz-border-radius:0 4px 4px 4px;
+    border-radius:0 4px 4px 4px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+    display:block;
+}
+.dropdown-submenu>a:after {
+    display:block;
+    content:" ";
+    float:right;
+    width:0;
+    height:0;
+    border-color:transparent;
+    border-style:solid;
+    border-width:5px 0 5px 5px;
+    border-left-color:#cccccc;
+    margin-top:5px;
+    margin-right:-10px;
+}
+.dropdown-submenu:hover>a:after {
+    border-left-color:#ffffff;
+}
+.dropdown-submenu.pull-left {
+    float:none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+    left:-100%;
+    margin-left:10px;
+    -webkit-border-radius:4px 0 4px 4px;
+    -moz-border-radius:4px 0 4px 4px;
+    border-radius:4px 0 4px 4px;
+}
+    </style>
+
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="http://JJFServer/" class="navbar-brand"><i class="fa fa-home" aria-hidden="true"></i> JJFServer</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Sales and Commission", "Index", "Home", new { area = "" }, new { @class = "" })    </li>
+
+@if ((bool)Session["CanSeeReporting"] == true || (bool)Session["CanOfficeValidate"] == true)
+{
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Sales
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Dashboard", "Index", "Sales")</li>
+                            <li>@Html.ActionLink("Objectives & Standards", "ObjectivesStandards", "Sales")</li>
+                            <li>@Html.ActionLink("Chargebacks", "Chargebacks", "Sales")</li>
+                        </ul>
+ 
+                    </li>
+}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Commissions
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+
+
+@if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
+{
+    <li>@Html.ActionLink("Dashboard", "Index", "Commission")</li>
+    <li>@Html.ActionLink("Score Card Dashboard", "ScorecardDashboard", "Commission")</li>
+
+            if ((bool)Session["IsCommissionAdmin"] == true)
+            {
+               <li> @Html.ActionLink("Associates", "Associates", "Commission") </li>
+            }
+        }
+        else
+        {
+            if (currentLocationId != "FTN")
+            {
+    <li>@Html.ActionLink("My Commission", "Associate", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+    <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+            }
+            else
+            {
+        <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+            }
+        }
+
+        @if ((bool)Session["IsAdmin"] == true)
+{
+                            <li class="divider"></li>
+                            <li>@Html.ActionLink("Stores", "Stores", "Commission")</li>                            
+                            <li>@Html.ActionLink("Manufacturer Spiff", "ManufacturerSpiff", "Commission")</li>
+                            <li class="divider"></li>
+                            <li>@Html.ActionLink("Payscales", "NewPayscales", "Commission")</li>
+                            <li>@Html.ActionLink("Payscale Comparison", "PayscaleComparison", "Commission")</li>
+                            <li>@Html.ActionLink("Payscale Comparison All Stores", "PayscaleComparisonAll", "Commission")</li>
+                            <li>@Html.ActionLink("Aftermarket Points", "AftermarketPoints", "Commission")</li>
+                            <li>@Html.ActionLink("Additional Commission", "AdditionalCommission", "Commission")</li>
+        }
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            F and I Commission
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Dashboard", "Index", "FICommission")</li>
+                            <li>@Html.ActionLink("Scorecard Dashboard", "ScorecardDashboard", "FICommission")</li>
+                            <li class="divider"></li>
+                            <li>@Html.ActionLink("Payscales", "Payscales", "FICommission")</li>
+                        </ul>
+                    </li>
+@if ((bool)Session["CanSeeReporting"] == true)
+{
+                        <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Reports
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown dropdown-submenu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Monthly Reports</a>
+                                <ul class="dropdown-menu">
+                                    <li>@Html.ActionLink("Monthly Sales", "Sales", "Reports")</li>
+                                    <li>@Html.ActionLink("Monthly Trades", "Trades", "Reports")</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown dropdown-submenu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">After Sales</a>
+                                <ul class="dropdown-menu">
+                                    <li>@Html.ActionLink("After Sales", "AfterSales", "Reports")</li>
+                                    <li>@Html.ActionLink("After Sales by Brand", "AfterSalesBrands", "Reports")</li>
+                                    <li>@Html.ActionLink("After Sales by Associates", "AfterSalesAssociates", "Reports")</li>
+                                    <li>@Html.ActionLink("After Sales by Stores", "AfterSalesStores", "Reports")</li>
+                                    <li>@Html.ActionLink("After Sales by F and I", "AfterSalesFandI", "Reports")</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown dropdown-submenu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Leads</a>
+                                <ul class="dropdown-menu">
+                                    <li>@Html.ActionLink("Leads", "Leads", "Reports")</li>
+                                    <li>@Html.ActionLink("Lead Source", "LeadSource", "Reports")</li>
+                                    <li>@Html.ActionLink("Lead Report", "LeadReport", "Reports")</li>
+                                    <li>@Html.ActionLink("Lead Mapping", "LeadMapping", "Reports")</li>
+                                </ul>
+                            </li>                            
+                            <li class="divider"></li>
+                            <li><a href="//jjfserver/InventoryWriteDown">Used Vehicles</a></li>            
+                            <li>@Html.ActionLink("Bonus Paid", "BonusPaid", "Reports")</li>
+                            <li>@Html.ActionLink("Overdraws", "Overdraws", "Reports")</li>
+                            <li>@Html.ActionLink("Objectives and Standards", "ObjectivesAndStandards", "Reports")</li>                            
+                            @*<li><a href="#">Report 2</a></li>
+                            <li><a href="#">Report 3</a></li>*@
+                       </ul>
+                    </li>
+}
+
+                    @if((bool)Session["IsAdmin"] == true)
+                    {
+                     <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Admin
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Security", "Index", "Security")</li>
+                            @*<li><a href="#">Report 2</a></li>
+                <li><a href="#">Report 3</a></li>*@
+                        </ul>
+                    </li>
+                    }
+                    @if ((bool)Session["IsAdmin"] == true && 1 == 2)
+                    {
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                New Payscale Updates
+                                <b class="caret"></b>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>@Html.ActionLink("New Payscales", "NewPayscales", "Commission")</li>
+                                <li>@Html.ActionLink("New Dashboard", "NewIndex", "Commission")</li>
+                                <li>@Html.ActionLink("New Score Card Dashboard", "NewScorecardDashboard", "Commission")</li>
+                                <li class="divider"></li>
+                                <li>@Html.ActionLink("Associate Payscale Comparison", "AssociatePayscaleComparison", "Commission")</li>
+                                <li>@Html.ActionLink("Store Payscale Comparison", "StorePayscaleComparison", "Commission")</li>
+                            </ul>
+                        </li>
+                    }
+
+                </ul>
+            </div>
+        </div>
+        <div class="container"><span style="color:#999999;">Logged in as: @Session["UserName"]</span></div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Fitzgerald Auto Malls</p>
+        </footer>
+    </div>
+
+
+    @Scripts.Render("~/bundles/bootstrap")
+    <script type="text/javascript">
+        _anyNumberSort = function (a, b, high) {
+            var reg = /[+-]?((\d+(\.\d*)?)|\.\d+)([eE][+-]?[0-9]+)?/;
+
+            if (a.match(/[\()]/g)) {
+                if (a.match(/[\-]/g) !== true) {
+                    //It matched - strip out parentheses & any characters we dont want and append - at front
+                    a = '-' + a.replace(/[\$£€c\(\),]/g, '');
+                }
+            }
+            if (b.match(/[\()]/g)) {
+                if (b.match(/[\-]/g) !== true) {
+                    //It matched - strip out parentheses & any characters we dont want and append - at front
+                    b = '-' + b.replace(/[\$£€c\(\),]/g, '');
+                }
+            }
+
+            a = a.replace(/[\$£€\,]/g, '');
+            b = b.replace(/[\$£€\,]/g, '');
+
+            a = a.replace(',', '.').match(reg);
+            a = a !== null ? parseFloat(a[0]) : high;
+            b = b.replace(',', '.').match(reg);
+            b = b !== null ? parseFloat(b[0]) : high;
+            return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+        }
+
+        jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "any-number-asc": function (a, b) {
+                return _anyNumberSort(a, b, Number.POSITIVE_INFINITY);
+            },
+            "any-number-desc": function (a, b) {
+                return _anyNumberSort(a, b, Number.NEGATIVE_INFINITY) * -1;
+            }
+        });
+
+        jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+            "date-us-pre": function (a) {
+                if (a == null || a == "") {
+                    return 0;
+                }
+                var usDatea = a.split('/');
+                return (usDatea[2] + usDatea[1] + usDatea[0]) * 1;
+            },
+
+            "date-us-asc": function (a, b) {
+                return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+            },
+
+            "date-us-desc": function (a, b) {
+                return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
+    @RenderSection("scripts", required: false)
+
+    
+</body>
+</html>

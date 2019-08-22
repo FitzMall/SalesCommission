@@ -1,0 +1,164 @@
+﻿
+@model SalesCommission.Models.LeadMappingModel
+
+@{
+    ViewBag.Title = "Lead Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+}
+
+<div class="row" style="margin-top:25px;">
+    <div class="col-sm-12">
+        <div class="row">
+            <div class="col-sm-12">
+                
+            </div>
+        </div>
+@using (Html.BeginForm())
+{
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>Lead Groups:</h3>
+                <div class="row">
+                    <div class="col-sm-8">
+                        @if (Model.LeadGroups != null)
+                        {
+                            <select id="leadGroups" name="leadGroups" class="form-control form-inline">
+                                @foreach (var groups in Model.LeadGroups)
+                                {
+                                    var leadsources = Model.LeadSourceMappings.FindAll(x => x.LeadGroupId == groups.Id);
+
+                                    <option value="@groups.Id">@groups.LeadGroupName (@leadsources.Count)</option>
+                                }
+                            </select>
+                        }
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-primary" type="submit" value="LoadGroup" name="LoadGroup">Load Group</button>
+                        </div>
+                    </div>
+            </div>
+            <div class="col-sm-1">
+                &nbsp;
+            </div>
+                <div class="col-sm-7" style="background-color:#eeeeee;padding-bottom:15px;">
+                    <h3>Add Group:</h3>
+                    <div class="row">
+                        <div class="col-sm-3 text-right">
+                            <label>Group Name:</label>
+                        </div>
+                        <div class="col-sm-4">
+                            <input type="text" name="newGroupName" id="newGroupName" class="form-control form-horizontal" />
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-primary" type="submit" value="AddGroup" name="AddGroup">Add Group</button>
+                        </div>
+
+                    </div>
+
+
+
+                </div>
+            </div>
+}
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <h3>Lead Mappings:</h3>
+
+        @if (Model.SelectedLeadGroupId != 0)
+        {
+            var index = 0;
+            var filteredLeadGroups = Model.LeadSourceMappings.FindAll(x => x.LeadGroupId == Model.SelectedLeadGroupId);
+
+            using (Html.BeginForm())
+            {
+            <table class="table table-striped table-bordered" id="lead-mapping">
+                <thead>
+                    <tr>                        
+                        <th>VIN Lead Source</th>
+                        <th>VIN Lead Group</th>
+                        <th>Lead Group</th>
+                    </tr>
+                </thead>
+                <tbody>
+        @foreach (var mapping in filteredLeadGroups)
+        {
+                        <tr>                            
+                            <td>@mapping.LeadSourceName</td>
+                            <td>@mapping.LeadSourceGroupName</td>
+                            <td>                                
+                                <select id="leadGroupMapping-@index" name="leadGroupMapping-@index" class="form-control form-inline">
+                                    @foreach (var groups in Model.LeadGroups)
+                                    {
+                                        var selected = "";
+
+                                        if (groups.Id == mapping.LeadGroupId)
+                                        {
+                                            selected = " selected";
+                                        }
+
+                                        <option value="@groups.Id" @selected>@groups.LeadGroupName</option>
+                                    }
+                                </select>
+
+                                <input type="hidden" name="hdnMappingId-@index" id="hdnMappingId-@index" value="@mapping.Id"/>
+                                <input type="hidden" name="hdnGroupId-@index" id="hdnGroupId-@index" value="@mapping.LeadGroupId" />
+                            </td>
+                        </tr>
+
+            index += 1;
+        }
+
+    
+
+                               </tbody>
+                <tfoot></tfoot>
+            </table>
+            <div class="text-center">
+                <input type="hidden" name="hdnIndex" id="hdnIndex" value="@index" />
+                <button class="btn btn-primary" type="submit" value="SaveGroup" name="SaveGroup">Save Group</button>
+            </div>
+                }
+            }
+    </div>
+</div>
+
+<script>
+    $('#lead-mapping').DataTable({
+        searching: true,
+        dom: 'Bfrtip',
+        pageLength: 25,
+        buttons: [
+            {
+                extend: 'copyHtml5', footer: true,
+            },
+            {
+                extend: 'excelHtml5', footer: true,
+            },
+            {
+                extend: 'pdfHtml5', footer: true,
+                orientation: 'landscape'
+            },
+            {
+                extend: 'print', footer: true,
+                orientation: 'landscape'
+            }
+        ]
+        //],
+        //columnDefs: [
+        //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+        //  { type: 'date-us', targets: [3] }
+        //],
+        //  order: [[ 1, 'desc' ]]
+    });
+</script>

@@ -1,0 +1,1079 @@
+﻿@model SalesCommission.Models.LeadReportModel
+
+@{
+    ViewBag.Title = "Lead Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+    <link rel="stylesheet" href="~/Scripts/jquery-ui.css">
+
+    <script type="text/javascript">
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+    </script>
+}
+
+<style type="text/css">
+    th.text-center.sorting_asc {
+        background-color: #FFFF7C;
+    }
+
+    th.text-center.sorting_desc {
+        background-color: #FFFF7C;
+    }
+
+    td.text-center.sorting_1 {
+        background-color: #FFFF7C !important;
+    }
+
+    .ui-widget-content a{
+         color: #428bca;
+    }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Lead Report</h1>
+    <div class="row">
+        <div class="col-sm-3">
+            <h3>Select Store(s):</h3>
+        </div>
+        <div class="col-sm-2">
+            <h3>Start Date:</h3>
+        </div>
+        <div class="col-sm-2">
+            <h3>End Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.ListBoxFor(n => n.SelectedStores, new MultiSelectList(SalesCommission.Business.Enums.StoresReport, "StoreId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Stores..." })
+                    </div>
+                    <div class="col-sm-2" style="margin-top:10px;">
+                        <input type="text" id="datepickerStart" name="datepickerStart" class="form-control form-inline" style="padding:4px;height:30px;" value="@Model.ReportStartDate.ToShortDateString()">
+                    </div>
+                    <div class="col-sm-2" style="margin-top:10px;">
+                        <input type="text" id="datepickerEnd" name="datepickerEnd" class="form-control form-inline" style="padding:4px;height:30px;" value="@Model.ReportEndDate.ToShortDateString()">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Leads</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+
+@if (Model.StoreLeadInformation != null)
+{
+    var departments = new List<string>();
+
+    foreach (var storeLeads in Model.StoreLeadInformation)
+    {
+        var storeDepartments = storeLeads.Associates.Select(x => x.AssociateDepartmentDescription).Distinct().ToList();
+        departments.AddRange(storeDepartments);
+    }
+
+    if (departments.Count > 1)
+    {
+        var departmentIndex = 0;
+        <div class="row">
+            <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
+                <strong>Show Sales Teams:</strong>
+                @foreach (var department in departments)
+                {
+                    var labelName = department;
+
+                    //try
+                    //{
+                    //    labelName = Model.Associates.Find(x => x.AssociateDepartment == department).AssociateDepartmentDescription;
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    //do nothing
+                    //}
+
+                    <label style="padding-left:10px;"><input type="checkbox" id="chk-@departmentIndex" name="chk-@departmentIndex" checked />@labelName</label>
+                    <script>
+                                $('#chk-@departmentIndex').change(function () {
+                                    if (this.checked) {
+                                        $('#section-@departmentIndex').show();
+                                        $('#table-@departmentIndex').show();
+                                        $('#header-@departmentIndex').show();
+                                    }
+                                    else {
+                                        $('#section-@departmentIndex').hide();
+                                        $('#table-@departmentIndex').hide();
+                                        $('#header-@departmentIndex').hide();
+                                    }
+                                });
+                    </script>
+
+                    departmentIndex += 1;
+                }
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-10">
+            <h3>Lead Report for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()</h3>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:10px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+
+        @{
+            var deptIndex = 0;
+
+            decimal OverallTotalUnitCount = 0;
+
+            decimal OverallTotalPhoneLeadCount = 0;
+            decimal OverallTotalWalkInLeadCount = 0;
+            decimal OverallTotalInternetLeadCount = 0;
+
+            decimal OverallTotalPhoneLeadSoldCount = 0;
+            decimal OverallTotalWalkInLeadSoldCount = 0;
+            decimal OverallTotalInternetLeadSoldCount = 0;
+
+            decimal OverallTotalPhoneLeadSoldPercent = 0;
+            decimal OverallTotalWalkInLeadSoldPercent = 0;
+            decimal OverallTotalInternetLeadSoldPercent = 0;
+
+
+            decimal OverallTotalcurrentAppointmentCount = 0;
+            decimal OverallTotalcurrentAppointmentCompleteCount = 0;
+            decimal OverallTotalcurrentAppointmentCompletePercent = 0;
+
+        }
+        @foreach (var department in departments)
+        {
+            var associates = new List<SalesCommission.Models.Associate>();
+            foreach (var storeLeads in Model.StoreLeadInformation)
+            {
+                var departmentAssociates = storeLeads.Associates.FindAll(x => x.AssociateDepartmentDescription == department);
+                associates.AddRange(departmentAssociates);
+            }
+
+            <div id="section-@deptIndex">
+                <h3 id="header-@deptIndex">@department</h3>
+                <table class="table table-bordered table-striped" style="font-size:12px" id="table-@deptIndex">
+                    <thead>
+                        <tr style="background-color:#d9edf7;">
+                            <th class="text-center">Store Name</th>
+                            <th class="text-center">Associate</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Units</th>
+                            <th class="text-center">Phone Leads</th>
+                            <th class="text-center">Phone Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Phone Leads %</th>
+                            <th class="text-center">Walkin Leads</th>
+                            <th class="text-center">Walkin Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Walkin Leads %</th>
+                            <th class="text-center">Internet Leads</th>
+                            <th class="text-center">Internet Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Internet Leads %</th>
+                            <th class="text-center">Appts</th>
+                            <th class="text-center">Appts Show</th>
+                            <th class="text-center">Appts %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th class="text-center" style="background-color: #FFFF7C">Store</th>
+                            <th class="text-center" style="background-color: #FFFF7C">Standards</th>
+                            <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">12</th>
+                            <th class="text-center" style="background-color: #FFFF7C">24</th>
+                            <th class="text-center" style="background-color: #FFFF7C">12</th>
+                            <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                            <th class="text-center" style="background-color: #FFFF7C">24</th>
+                            <th class="text-center" style="background-color: #FFFF7C">12</th>
+                            <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                            <th class="text-center" style="background-color: #FFFF7C">24</th>
+                            <th class="text-center" style="background-color: #FFFF7C">12</th>
+                            <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                            <th class="text-center" style="background-color: #FFFF7C">24</th>
+                            <th class="text-center" style="background-color: #FFFF7C">18</th>
+                            <th class="text-center" style="background-color: #FFFF7C">75%</th>
+                        </tr>
+                        @{
+                        decimal TeamTotalUnitCount = 0;
+
+                        decimal TeamTotalPhoneLeadCount = 0;
+                        decimal TeamTotalWalkInLeadCount = 0;
+                        decimal TeamTotalInternetLeadCount = 0;
+
+                        decimal TeamTotalPhoneLeadSoldCount = 0;
+                        decimal TeamTotalWalkInLeadSoldCount = 0;
+                        decimal TeamTotalInternetLeadSoldCount = 0;
+
+                        decimal TeamTotalPhoneLeadSoldPercent = 0;
+                        decimal TeamTotalWalkInLeadSoldPercent = 0;
+                        decimal TeamTotalInternetLeadSoldPercent = 0;
+
+
+                        decimal TeamTotalcurrentAppointmentCount = 0;
+                        decimal TeamTotalcurrentAppointmentCompleteCount = 0;
+                        decimal TeamTotalcurrentAppointmentCompletePercent = 0;
+
+
+                        }
+                        @foreach (var associate in associates)
+                    {
+                        decimal PhoneLeadCount = 0;
+                        decimal WalkInLeadCount = 0;
+                        decimal InternetLeadCount = 0;
+
+                        decimal PhoneLeadSoldCount = 0;
+                        decimal WalkInLeadSoldCount = 0;
+                        decimal InternetLeadSoldCount = 0;
+
+                        decimal PhoneLeadSoldPercent = 0;
+                        decimal WalkInLeadSoldPercent = 0;
+                        decimal InternetLeadSoldPercent = 0;
+
+                        var VinName = "";
+                        var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+                        var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+                        if (associateUserInfo != null)
+                        {
+                            VinName = associateUserInfo.VinName;
+                        }
+
+                        if (Model.AssociateLeads != null)
+                        {
+                            var associateName = associate.AssociateFullName;
+
+                            var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                            var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                            var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                            if (VinName != null && VinName != "")
+                            {
+                                filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()));
+                            }
+                            else
+                            {
+                                filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+                            }
+
+                            var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                            //var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            PhoneLeadCount = phoneLeads.Count;
+                            //currentTotalLeadCount += PhoneLeadCount;
+                            PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (PhoneLeadCount > 0)
+                            {
+                                PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                            }
+
+                            var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                            //var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            WalkInLeadCount = walkinLeads.Count;
+                            //currentTotalLeadCount += WalkInLeadCount;
+                            WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (WalkInLeadCount > 0)
+                            {
+                                WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                            }
+
+
+                            var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                            //var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            InternetLeadCount = internetLeads.Count;
+                            //currentTotalLeadCount += InternetLeadCount;
+                            InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (InternetLeadCount > 0)
+                            {
+                                InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                            }
+
+                        }
+
+                        decimal currentAppointmentCount = 0;
+                        decimal currentAppointmentCompleteCount = 0;
+                        decimal currentAppointmentCompletePercent = 0;
+
+                        if (Model.AssociateAppointments != null)
+                        {
+                            var associateName = associate.AssociateFullName;
+
+                            var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                            var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                            var filteredAppointments = new List<SalesCommission.Models.AssociateAppointment>();
+
+                            if (VinName != null && VinName != "")
+                            {
+                                filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()));
+                            }
+                            else
+                            {
+                                filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(lastName) && x.AssociateName.ToLower().Contains(partialFirstName));
+                            }
+
+                            var currentAppointments = filteredAppointments.FindAll(x => x.AppointmentStartUTCDate >= Model.ReportStartDate && x.AppointmentStartUTCDate <= Model.ReportEndDate.AddDays(1));
+                            currentAppointmentCount = currentAppointments.Count;
+                            currentAppointmentCompleteCount = currentAppointments.FindAll(x => x.AppointmentStatus.ToLower() == "completed").Count;
+
+                            if (currentAppointmentCount > 0)
+                            {
+                                currentAppointmentCompletePercent = currentAppointmentCompleteCount / currentAppointmentCount;
+                            }
+
+                        }
+
+                        var autoMall = associate.AssociateLocation;
+
+                        foreach (var location in SalesCommission.Business.Enums.SecurityLocations)
+                        {
+                            if (location.LocationId == associate.AssociateLocation)
+                            {
+                                autoMall = location.Name;
+                            }
+                        }
+
+                    <tr>
+                        <td class="text-center">@autoMall</td>
+                        <td class="text-center"><a id="@associate.AssociateNumber.Trim()-showdetails">@associate.AssociateFullName</a></td>
+                        <td class="text-center" style="border-right: 4px double #808080">@associate.AssociateDealCounts.TotalDealCount</td>
+                        <td class="text-center">@PhoneLeadCount</td>
+                        <td class="text-center">@PhoneLeadSoldCount</td>
+                        <td class="text-center" style="border-right: 4px double #808080">@PhoneLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@WalkInLeadCount</td>
+                        <td class="text-center">@WalkInLeadSoldCount</td>
+                        <td class="text-center" style="border-right: 4px double #808080">@WalkInLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@InternetLeadCount</td>
+                        <td class="text-center">@InternetLeadSoldCount</td>
+                        <td class="text-center" style="border-right: 4px double #808080">@InternetLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@currentAppointmentCount</td>
+                        <td class="text-center">@currentAppointmentCompleteCount</td>
+                        <td class="text-center">@currentAppointmentCompletePercent.ToString("P", nfi)</td>
+                    </tr>
+
+                        TeamTotalUnitCount += associate.AssociateDealCounts.TotalDealCount;
+
+                        TeamTotalPhoneLeadCount += PhoneLeadCount;
+                        TeamTotalWalkInLeadCount += WalkInLeadCount;
+                        TeamTotalInternetLeadCount += InternetLeadCount;
+
+                        TeamTotalPhoneLeadSoldCount += PhoneLeadSoldCount;
+                        TeamTotalWalkInLeadSoldCount += WalkInLeadSoldCount;
+                        TeamTotalInternetLeadSoldCount += InternetLeadSoldCount;
+
+                        TeamTotalcurrentAppointmentCount += currentAppointmentCount;
+                        TeamTotalcurrentAppointmentCompleteCount += currentAppointmentCompleteCount;
+
+                    }
+
+
+                    </tbody>
+                    <tfoot>
+                        @{
+
+                        if (TeamTotalPhoneLeadCount > 0)
+                        {
+                            TeamTotalPhoneLeadSoldPercent = TeamTotalPhoneLeadSoldCount / TeamTotalPhoneLeadCount;
+                        }
+
+                        if (TeamTotalWalkInLeadCount > 0)
+                        {
+                            TeamTotalWalkInLeadSoldPercent = TeamTotalWalkInLeadSoldCount / TeamTotalWalkInLeadCount;
+                        }
+
+                        if (TeamTotalInternetLeadCount > 0)
+                        {
+                            TeamTotalInternetLeadSoldPercent = TeamTotalInternetLeadSoldCount / TeamTotalInternetLeadCount;
+                        }
+
+                        if (TeamTotalcurrentAppointmentCount > 0)
+                        {
+                            TeamTotalcurrentAppointmentCompletePercent = TeamTotalcurrentAppointmentCompleteCount / TeamTotalcurrentAppointmentCount;
+                        }
+                        }
+
+                        <tr style="background-color:#d9edf7;">
+                            <th class="text-center">Totals</th>
+                            <th class="text-center"></th>
+                            <th class="text-center" style="border-right: 4px double #808080">@TeamTotalUnitCount</th>
+                            <th class="text-center">@TeamTotalPhoneLeadCount</th>
+                            <th class="text-center">@TeamTotalPhoneLeadSoldCount</th>
+                            <th class="text-center" style="border-right: 4px double #808080">@TeamTotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@TeamTotalWalkInLeadCount</th>
+                            <th class="text-center">@TeamTotalWalkInLeadSoldCount</th>
+                            <th class="text-center" style="border-right: 4px double #808080">@TeamTotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@TeamTotalInternetLeadCount</th>
+                            <th class="text-center">@TeamTotalInternetLeadSoldCount</th>
+                            <th class="text-center" style="border-right: 4px double #808080">@TeamTotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@TeamTotalcurrentAppointmentCount</th>
+                            <th class="text-center">@TeamTotalcurrentAppointmentCompleteCount</th>
+                            <th class="text-center">@TeamTotalcurrentAppointmentCompletePercent.ToString("P", nfi)</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <script>
+                    $('#table-@deptIndex').DataTable({
+                    searching: true,
+                        dom: 'Bfrti',
+                        pageLength: -1,
+                        buttons: [
+                            {
+                        extend: 'copyHtml5', footer: true,
+                            },
+                            {
+                        extend: 'excelHtml5', footer: true,
+                            },
+                            {
+                        extend: 'pdfHtml5', footer: true,
+                                orientation: 'landscape'
+                            },
+                            {
+                        extend: 'print', footer: true,
+                                orientation: 'landscape'
+                            }
+                        ]
+                    //],
+                    //columnDefs: [
+                    //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                    //  { type: 'date-us', targets: [3] }
+                    //],
+                    //  order: [[ 1, 'desc' ]]
+                });
+            </script>
+
+
+                            deptIndex += 1;
+
+                            OverallTotalUnitCount += TeamTotalUnitCount;
+
+                            OverallTotalPhoneLeadCount += TeamTotalPhoneLeadCount;
+                            OverallTotalWalkInLeadCount += TeamTotalWalkInLeadCount;
+                            OverallTotalInternetLeadCount += TeamTotalInternetLeadCount;
+
+                            OverallTotalPhoneLeadSoldCount += TeamTotalPhoneLeadSoldCount;
+                            OverallTotalWalkInLeadSoldCount += TeamTotalWalkInLeadSoldCount;
+                            OverallTotalInternetLeadSoldCount += TeamTotalInternetLeadSoldCount;
+
+                            OverallTotalcurrentAppointmentCount += TeamTotalcurrentAppointmentCount;
+                            OverallTotalcurrentAppointmentCompleteCount += TeamTotalcurrentAppointmentCompleteCount;
+
+                        }
+
+
+        @{
+
+            if (OverallTotalPhoneLeadCount > 0)
+            {
+                OverallTotalPhoneLeadSoldPercent = OverallTotalPhoneLeadSoldCount / OverallTotalPhoneLeadCount;
+            }
+
+            if (OverallTotalWalkInLeadCount > 0)
+            {
+                OverallTotalWalkInLeadSoldPercent = OverallTotalWalkInLeadSoldCount / OverallTotalWalkInLeadCount;
+            }
+
+            if (OverallTotalInternetLeadCount > 0)
+            {
+                OverallTotalInternetLeadSoldPercent = OverallTotalInternetLeadSoldCount / OverallTotalInternetLeadCount;
+            }
+
+            if (OverallTotalcurrentAppointmentCount > 0)
+            {
+                OverallTotalcurrentAppointmentCompletePercent = OverallTotalcurrentAppointmentCompleteCount / OverallTotalcurrentAppointmentCount;
+            }
+        }
+
+                <table class="table table-bordered table-striped" style="font-size:12px; margin-top:20px;" id="totalsSection">
+                    <thead>
+                        <tr style="background-color:#d9edf7;">
+                            <th class="text-center">Overall</th>
+                            <th class="text-center">Totals</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Units</th>
+                            <th class="text-center">Phone Leads</th>
+                            <th class="text-center">Phone Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Phone Leads %</th>
+                            <th class="text-center">Walkin Leads</th>
+                            <th class="text-center">Walkin Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Walkin Leads %</th>
+                            <th class="text-center">Internet Leads</th>
+                            <th class="text-center">Internet Leads Sold</th>
+                            <th class="text-center" style="border-right: 4px double #808080">Internet Leads %</th>
+                            <th class="text-center">Appts</th>
+                            <th class="text-center">Appts Show</th>
+                            <th class="text-center">Appts %</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                    <tr style="background-color:#d9edf7;">
+                        <th class="text-center">Totals</th>
+                        <th class="text-center"></th>
+                        <th class="text-center" style="border-right: 4px double #808080">@OverallTotalUnitCount</th>
+                        <th class="text-center">@OverallTotalPhoneLeadCount</th>
+                        <th class="text-center">@OverallTotalPhoneLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@OverallTotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@OverallTotalWalkInLeadCount</th>
+                        <th class="text-center">@OverallTotalWalkInLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@OverallTotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@OverallTotalInternetLeadCount</th>
+                        <th class="text-center">@OverallTotalInternetLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@OverallTotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@OverallTotalcurrentAppointmentCount</th>
+                        <th class="text-center">@OverallTotalcurrentAppointmentCompleteCount</th>
+                        <th class="text-center">@OverallTotalcurrentAppointmentCompletePercent.ToString("P", nfi)</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+
+            @*<table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+                <thead>
+                    <tr style="background-color:#d9edf7;">
+                        <th class="text-center">Store Name</th>
+                        <th class="text-center">Associate</th>
+                        <th class="text-center" style="border-right: 4px double #808080">Units</th>
+                        <th class="text-center">Phone Leads</th>
+                        <th class="text-center">Phone Leads Sold</th>
+                        <th class="text-center" style="border-right: 4px double #808080">Phone Leads %</th>
+                        <th class="text-center">Walkin Leads</th>
+                        <th class="text-center">Walkin Leads Sold</th>
+                        <th class="text-center" style="border-right: 4px double #808080">Walkin Leads %</th>
+                        <th class="text-center">Internet Leads</th>
+                        <th class="text-center">Internet Leads Sold</th>
+                        <th class="text-center" style="border-right: 4px double #808080">Internet Leads %</th>
+                        <th class="text-center">Appts</th>
+                        <th class="text-center">Appts Show</th>
+                        <th class="text-center">Appts %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class="text-center" style="background-color: #FFFF7C">Store</th>
+                        <th class="text-center" style="background-color: #FFFF7C">Standards</th>
+                        <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">12</th>
+                        <th class="text-center" style="background-color: #FFFF7C">24</th>
+                        <th class="text-center" style="background-color: #FFFF7C">12</th>
+                        <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                        <th class="text-center" style="background-color: #FFFF7C">24</th>
+                        <th class="text-center" style="background-color: #FFFF7C">12</th>
+                        <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                        <th class="text-center" style="background-color: #FFFF7C">24</th>
+                        <th class="text-center" style="background-color: #FFFF7C">12</th>
+                        <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                        <th class="text-center" style="background-color: #FFFF7C">24</th>
+                        <th class="text-center" style="background-color: #FFFF7C">18</th>
+                        <th class="text-center" style="background-color: #FFFF7C">75%</th>
+                    </tr>
+                    @{
+                        decimal TotalUnitCount = 0;
+
+                        decimal TotalPhoneLeadCount = 0;
+                        decimal TotalWalkInLeadCount = 0;
+                        decimal TotalInternetLeadCount = 0;
+
+                        decimal TotalPhoneLeadSoldCount = 0;
+                        decimal TotalWalkInLeadSoldCount = 0;
+                        decimal TotalInternetLeadSoldCount = 0;
+
+                        decimal TotalPhoneLeadSoldPercent = 0;
+                        decimal TotalWalkInLeadSoldPercent = 0;
+                        decimal TotalInternetLeadSoldPercent = 0;
+
+
+                        decimal TotalcurrentAppointmentCount = 0;
+                        decimal TotalcurrentAppointmentCompleteCount = 0;
+                        decimal TotalcurrentAppointmentCompletePercent = 0;
+
+
+                    }
+
+
+                    @foreach (var storeLead in Model.StoreLeadInformation)
+                    {
+                        foreach (var associate in storeLead.Associates)
+                        {
+
+                            decimal PhoneLeadCount = 0;
+                            decimal WalkInLeadCount = 0;
+                            decimal InternetLeadCount = 0;
+
+                            decimal PhoneLeadSoldCount = 0;
+                            decimal WalkInLeadSoldCount = 0;
+                            decimal InternetLeadSoldCount = 0;
+
+                            decimal PhoneLeadSoldPercent = 0;
+                            decimal WalkInLeadSoldPercent = 0;
+                            decimal InternetLeadSoldPercent = 0;
+
+                            var VinName = "";
+                            var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+                            var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+                            if (associateUserInfo != null)
+                            {
+                                VinName = associateUserInfo.VinName;
+                            }
+
+                            if (Model.AssociateLeads != null)
+                            {
+                                var associateName = associate.AssociateFullName;
+
+                                var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                                var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                                var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                                if (VinName != null && VinName != "")
+                                {
+                                    filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()));
+                                }
+                                else
+                                {
+                                    filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+                                }
+
+                                var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                                //var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                PhoneLeadCount = phoneLeads.Count;
+                                //currentTotalLeadCount += PhoneLeadCount;
+                                PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (PhoneLeadCount > 0)
+                                {
+                                    PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                                }
+
+                                var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                                //var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                WalkInLeadCount = walkinLeads.Count;
+                                //currentTotalLeadCount += WalkInLeadCount;
+                                WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (WalkInLeadCount > 0)
+                                {
+                                    WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                                }
+
+
+                                var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                                //var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                InternetLeadCount = internetLeads.Count;
+                                //currentTotalLeadCount += InternetLeadCount;
+                                InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (InternetLeadCount > 0)
+                                {
+                                    InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                                }
+
+                            }
+
+                            decimal currentAppointmentCount = 0;
+                            decimal currentAppointmentCompleteCount = 0;
+                            decimal currentAppointmentCompletePercent = 0;
+
+                            if (Model.AssociateAppointments != null)
+                            {
+                                var associateName = associate.AssociateFullName;
+
+                                var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                                var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                                var filteredAppointments = new List<SalesCommission.Models.AssociateAppointment>();
+
+                                if (VinName != null && VinName != "")
+                                {
+                                    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()));
+                                }
+                                else
+                                {
+                                    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(lastName) && x.AssociateName.ToLower().Contains(partialFirstName));
+                                }
+
+                                var currentAppointments = filteredAppointments.FindAll(x => x.AppointmentStartUTCDate >= Model.ReportStartDate && x.AppointmentStartUTCDate <= Model.ReportEndDate.AddDays(1));
+                                currentAppointmentCount = currentAppointments.Count;
+                                currentAppointmentCompleteCount = currentAppointments.FindAll(x => x.AppointmentStatus.ToLower() == "completed").Count;
+
+                                if (currentAppointmentCount > 0)
+                                {
+                                    currentAppointmentCompletePercent = currentAppointmentCompleteCount / currentAppointmentCount;
+                                }
+
+                            }
+
+                            var autoMall = associate.AssociateLocation;
+
+                            foreach (var location in SalesCommission.Business.Enums.SecurityLocations)
+                            {
+                                if (location.LocationId == associate.AssociateLocation)
+                                {
+                                    autoMall = location.Name;
+                                }
+                            }
+
+                            <tr>
+                                <td class="text-center">@autoMall</td>
+                                <td class="text-center"><a id="@associate.AssociateNumber.Trim()-showdetails">@associate.AssociateFullName</a></td>
+                                <td class="text-center" style="border-right: 4px double #808080">@associate.AssociateDealCounts.TotalDealCount</td>
+                                <td class="text-center">@PhoneLeadCount</td>
+                                <td class="text-center">@PhoneLeadSoldCount</td>
+                                <td class="text-center" style="border-right: 4px double #808080">@PhoneLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center">@WalkInLeadCount</td>
+                                <td class="text-center">@WalkInLeadSoldCount</td>
+                                <td class="text-center" style="border-right: 4px double #808080">@WalkInLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center">@InternetLeadCount</td>
+                                <td class="text-center">@InternetLeadSoldCount</td>
+                                <td class="text-center" style="border-right: 4px double #808080">@InternetLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center">@currentAppointmentCount</td>
+                                <td class="text-center">@currentAppointmentCompleteCount</td>
+                                <td class="text-center">@currentAppointmentCompletePercent.ToString("P", nfi)</td>
+                            </tr>
+
+                            TotalUnitCount += associate.AssociateDealCounts.TotalDealCount;
+
+                            TotalPhoneLeadCount += PhoneLeadCount;
+                            TotalWalkInLeadCount += WalkInLeadCount;
+                            TotalInternetLeadCount += InternetLeadCount;
+
+                            TotalPhoneLeadSoldCount += PhoneLeadSoldCount;
+                            TotalWalkInLeadSoldCount += WalkInLeadSoldCount;
+                            TotalInternetLeadSoldCount += InternetLeadSoldCount;
+
+                            TotalcurrentAppointmentCount += currentAppointmentCount;
+                            TotalcurrentAppointmentCompleteCount += currentAppointmentCompleteCount;
+
+
+                        }
+                    }
+                </tbody>
+                <tfoot>
+
+                    @{
+
+                        if (TotalPhoneLeadCount > 0)
+                        {
+                            TotalPhoneLeadSoldPercent = TotalPhoneLeadSoldCount / TotalPhoneLeadCount;
+                        }
+
+                        if (TotalWalkInLeadCount > 0)
+                        {
+                            TotalWalkInLeadSoldPercent = TotalWalkInLeadSoldCount / TotalWalkInLeadCount;
+                        }
+
+                        if (TotalInternetLeadCount > 0)
+                        {
+                            TotalInternetLeadSoldPercent = TotalInternetLeadSoldCount / TotalInternetLeadCount;
+                        }
+
+                        if (TotalcurrentAppointmentCount > 0)
+                        {
+                            TotalcurrentAppointmentCompletePercent = TotalcurrentAppointmentCompleteCount / TotalcurrentAppointmentCount;
+                        }
+                    }
+
+                    <tr style="background-color:#d9edf7;">
+                        <th class="text-center">Totals</th>
+                        <th class="text-center"></th>
+                        <th class="text-center" style="border-right: 4px double #808080">@TotalUnitCount</th>
+                        <th class="text-center">@TotalPhoneLeadCount</th>
+                        <th class="text-center">@TotalPhoneLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@TotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@TotalWalkInLeadCount</th>
+                        <th class="text-center">@TotalWalkInLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@TotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@TotalInternetLeadCount</th>
+                        <th class="text-center">@TotalInternetLeadSoldCount</th>
+                        <th class="text-center" style="border-right: 4px double #808080">@TotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+                        <th class="text-center">@TotalcurrentAppointmentCount</th>
+                        <th class="text-center">@TotalcurrentAppointmentCompleteCount</th>
+                        <th class="text-center">@TotalcurrentAppointmentCompletePercent.ToString("P", nfi)</th>
+                    </tr>
+                </tfoot>
+            </table>*@
+</div>
+
+
+    foreach (var storeLead in Model.StoreLeadInformation)
+    {
+        foreach (var associate in storeLead.Associates)
+        {
+            var VinName = "";
+            var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+            var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+            if (associateUserInfo != null)
+            {
+                VinName = associateUserInfo.VinName;
+            }
+
+            if (Model.AssociateLeads != null)
+            {
+                var associateName = associate.AssociateFullName;
+
+                var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                if (VinName != null && VinName != "")
+                {
+                    filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()));
+                }
+                else
+                {
+                    filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+                }
+
+                <div class="row" style="margin:15px;display:none" id="@associate.AssociateNumber.Trim()-details">
+                    <table class="table table-bordered table-striped" style="font-size:12px;" id="@associate.AssociateNumber.Trim()-table">
+                        <thead>
+                            <tr style="background-color:#d9edf7;">
+                                <th class="text-center">Lead ID</th>
+                                <th class="text-center">Lead Date</th>
+                                <th class="text-center">Customer</th>
+                                <th class="text-center">Lead Status</th>
+                                <th class="text-center">Lead Status Type</th>
+                                <th class="text-center">Lead Source</th>
+                                <th class="text-center">Lead Source Type</th>
+                                <th class="text-center">Lead Source Group</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lead in filteredLeads)
+                            {
+                                <tr style="background-color:#d9edf7;">
+                                    <td class="text-center">@lead.LeadId</td>
+                                    <td class="text-center">@lead.LeadCreatedEastTime.ToShortDateString()</td>
+                                    <td class="text-center"><a href="https://apps.vinmanager.com/CarDashboard/Pages/CRM/CustomerDashboard.aspx?GlobalCustomerID=@lead.CustomerId&r=@lead.CustomerId" target="_blank">@lead.CustomerName</a></td>
+                                    <td class="text-center">@lead.LeadStatusName</td>
+                                    <td class="text-center">@lead.LeadStatusTypeName</td>
+                                    <td class="text-center">@lead.LeadSourceName</td>
+                                    <td class="text-center">@lead.LeadSourceTypeName</td>
+                                    <td class="text-center">@lead.LeadSourceGroupName</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        $("#@associate.AssociateNumber.Trim()-showdetails").click(function () {
+                            $('#@associate.AssociateNumber.Trim()-details').dialog({
+                                resizable: false,
+                                height: "auto",
+                                width: dialogWidth,
+                                position: { my: "center", at: "100px", of: window },
+                                title: '@associate.AssociateFullName Leads',
+                                modal: true,
+                                buttons: {
+                                    "Close": function () {
+                                        $(this).dialog("close");
+                                    }
+                                }
+                            });
+                        });
+                    });
+
+                    $('#@associate.AssociateNumber.Trim()-table').DataTable({
+                        searching: true,
+                        dom: 'Bfrtip',
+                        pageLength: 10,                        
+                        buttons: [
+                            {
+                                extend: 'copyHtml5', footer: true,
+                            },
+                            {
+                                extend: 'excelHtml5', footer: true,
+                            },
+                            {
+                                extend: 'pdfHtml5', footer: true,
+                                orientation: 'landscape'
+                            },
+                            {
+                                extend: 'print', footer: true,
+                                orientation: 'landscape'
+                            }
+                        ]
+                        //],
+                        //columnDefs: [
+                        //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                        //  { type: 'date-us', targets: [3] }
+                        //],
+                        //  order: [[ 1, 'desc' ]]
+                    });
+
+                </script>
+            }
+
+
+
+
+
+        }
+    }
+
+
+                    }
+
+
+
+                    @section scripts
+{
+
+                        <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+                        <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+                        <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+                        <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+                        <script>
+                            $(function () {
+                                $("#datepickerStart").datepicker({
+                                    showOtherMonths: true,
+                                    selectOtherMonths: true,
+                                    showOtherMonths: true,
+                                    selectOtherMonths: true
+                                });
+                            });
+                            $(function () {
+                                $("#datepickerEnd").datepicker({
+                                    showOtherMonths: true,
+                                    selectOtherMonths: true,
+                                    showOtherMonths: true,
+                                    selectOtherMonths: true
+                                });
+                            });
+                        </script>
+
+                        <script type="text/javascript">
+                            $(document).ready(function () {
+
+
+
+                                $('[data-toggle="tooltip"]').tooltip();
+
+                                $('#section1').DataTable({
+                                    searching: true,
+                                    dom: 'Bfrti',
+                                    pageLength: -1,
+                                    buttons: [
+                                        {
+                                            extend: 'copyHtml5', footer: true,
+                                        },
+                                        {
+                                            extend: 'excelHtml5', footer: true,
+                                        },
+                                        {
+                                            extend: 'pdfHtml5', footer: true,
+                                            orientation: 'landscape'
+                                        },
+                                        {
+                                            extend: 'print', footer: true,
+                                            orientation: 'landscape'
+                                        }
+                                    ]
+                                    //],
+                                    //columnDefs: [
+                                    //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                                    //  { type: 'date-us', targets: [3] }
+                                    //],
+                                    //  order: [[ 1, 'desc' ]]
+                                });
+
+                            });
+
+                        </script>
+
+                        <script type="text/javascript">
+
+                            $(document).ready(function () {
+
+                                $('#select-anchor').change(function () {
+                                    var targetPosition = $("#" + $(this).val()).offset().top - 50;
+                                    $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+                                });
+
+                                var dialogWidth = 0;
+
+                                dialogWidth = ($(window).width() * .75);
+
+                                if ($(window).width() > 1199) {
+                                    dialogWidth = 800;
+                                }
+
+
+
+
+
+                            });
+
+
+                        </script>
+                    }

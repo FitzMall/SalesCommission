@@ -1,0 +1,384 @@
+﻿@model SalesCommission.Models.PayscaleModel
+@{
+    ViewBag.Title = "Payscales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.CurrencyGroupSeparator = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+}
+
+<style type="text/css">
+    .coloreee {
+        background-color: #eeeeee;
+    }
+    .colorddd {
+        background-color: #dddddd;
+    }
+    .form-control {
+        margin: 3px 0px;
+        font-size:13px;
+        height:30px;
+    }
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align:right;
+    }
+    body{
+        font-size:13px;
+    }
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding:4px;
+    }
+
+    .less-padding{
+        padding-left:8px;
+        padding-right:8px;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>Payscales</h1>
+    <div class="row">
+        <div class="col-sm-9">
+            <h3>Select a Payscale and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.PayscaleId, new SelectList(SalesCommission.Business.Enums.NewPayscales, "PayscaleId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@{
+    if (Model.Payscales != null)
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <h3>@Model.PayscaleSetup[0].ps_PlanName</h3>
+            </div>
+        </div>
+        using (Html.BeginForm("NewPayscales", "Commission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.HiddenFor(o => o.PayscaleId);
+            @Html.HiddenFor(o => o.MonthId);
+            @Html.HiddenFor(o => o.YearId);
+
+            <div class="row">
+                <div class="col-sm-3 text-center">
+
+                </div>
+                <div class="col-sm-2 text-center coloreee">
+                    <h4>New</h4>
+                </div>
+                <div class="col-sm-2 text-center colorddd">
+                    <h4>Used/Handyman</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3 text-center">
+
+                </div>
+                <div class="col-sm-2 text-center coloreee">
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <h5>Pay Level</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2 text-center colorddd">
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <h5>Pay Level</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-3 payscale-label">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table">
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Base Commission</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Buyer Protection Plan (BPP) Sold</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>BPP - Half Sold</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Trade-In</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Finance or Retail Lease</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Service Contract</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Maintenance Contract</strong></td>
+                                </tr>
+                                @*@if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Sell Less than 3 Service Contracts</strong></td>
+                                    </tr>
+                                }*@
+
+
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>GAP Insurance</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right" style="padding:13px 0px;"><strong>Aftermarket Items (each) per point</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><h4>Volume Bonus</h4></td>
+                                </tr>
+
+                                @if (Model.PayscaleSetup.Count > 0)
+                                {
+                                    var payscaleSetup = Model.PayscaleSetup[0];
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel1Low thru @payscaleSetup.ps_VolumeBonusLevel1High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel2Low thru @payscaleSetup.ps_VolumeBonusLevel2High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel3Low thru @payscaleSetup.ps_VolumeBonusLevel3High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel4Low thru @payscaleSetup.ps_VolumeBonusLevel4High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel5Low thru @payscaleSetup.ps_VolumeBonusLevel5High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel6Low thru @payscaleSetup.ps_VolumeBonusLevel6High (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries @payscaleSetup.ps_VolumeBonusLevel7Low + (each)</strong></td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 1 thru 5 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 6 thru 10 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 11 thru 15 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 16 thru 20 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 21 thru 25 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 26 thru 30 (each)</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right" style="padding:13px 0px;"><strong>Deliveries 31 + (each)</strong></td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2 text-center coloreee">
+                    <div class="row">
+
+                        <div class="col-sm-6 col-sm-offset-3 less-padding">
+
+                            @{
+                                var psNewStandard = Model.Payscales.Find(o => o.ps_NewUsedHandy == "NEW" && o.ps_PayLevel == "STD");
+                            }
+                            <input type="hidden" id="NewStandard_Key" name="NewStandard_Key" value="@psNewStandard.ps_Key" />
+
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="NewStandard_Base" name="NewStandard_Base" class="form-control" value="@psNewStandard.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_FullBPP" name="NewStandard_FullBPP" class="form-control" value="@psNewStandard.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_HalfBPP" name="NewStandard_HalfBPP" class="form-control" value="@psNewStandard.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_TradeIn" name="NewStandard_TradeIn" class="form-control" value="@psNewStandard.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_FinanceLease" name="NewStandard_FinanceLease" class="form-control" value="@psNewStandard.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_ServiceContract" name="NewStandard_ServiceContract" class="form-control" value="@psNewStandard.ps_ServiceContract" /></td>
+                                </tr>
+                                @*@if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="NewStandard_LessServiceContracts" name="NewStandard_LessServiceContracts" class="form-control" value="@psNewStandard.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }*@
+                                <tr>
+                                    <td><input type="text" id="NewStandard_Maintenance" name="NewStandard_Maintenance" class="form-control" value="@psNewStandard.ps_Maintenance" /></td>
+                                </tr>
+
+                                    <tr>
+                                        <td><input type="text" id="NewStandard_GAP" name="NewStandard_GAP" class="form-control" value="@psNewStandard.ps_GAP" /></td>
+                                    </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_AftermarketPerItem" name="NewStandard_AftermarketPerItem" class="form-control" value="@psNewStandard.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel1" name="NewStandard_VolumeBonusLevel1" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel2" name="NewStandard_VolumeBonusLevel2" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel3" name="NewStandard_VolumeBonusLevel3" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel4" name="NewStandard_VolumeBonusLevel4" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel5" name="NewStandard_VolumeBonusLevel5" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel6" name="NewStandard_VolumeBonusLevel6" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="NewStandard_VolumeBonusLevel7" name="NewStandard_VolumeBonusLevel7" class="form-control" value="@psNewStandard.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="col-sm-2 text-center colorddd">
+                    <div class="row">
+
+                        <div class="col-sm-6 col-sm-offset-3 less-padding">
+                            @{
+                                var psUsedStandard = Model.Payscales.Find(o => o.ps_NewUsedHandy == "USED" && o.ps_PayLevel == "STD");
+                            }
+                            <input type="hidden" id="UsedStandard_Key" name="UsedStandard_Key" value="@psUsedStandard.ps_Key" />
+                            <table class="table">
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_Base" name="UsedStandard_Base" class="form-control" value="@psUsedStandard.ps_BaseCommission" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_FullBPP" name="UsedStandard_FullBPP" class="form-control" value="@psUsedStandard.ps_FullBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_HalfBPP" name="UsedStandard_HalfBPP" class="form-control" value="@psUsedStandard.ps_HalfBPP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_TradeIn" name="UsedStandard_TradeIn" class="form-control" value="@psUsedStandard.ps_TradeIn" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_FinanceLease" name="UsedStandard_FinanceLease" class="form-control" value="@psUsedStandard.ps_FinanceLease" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_ServiceContract" name="UsedStandard_ServiceContract" class="form-control" value="@psUsedStandard.ps_ServiceContract" /></td>
+                                </tr>
+                                @*@if (Model.PayscaleId == "FL")
+                                {
+                                    <tr>
+                                        <td><input type="text" id="UsedStandard_LessServiceContracts" name="UsedStandard_LessServiceContracts" class="form-control" value="@psUsedStandard.ps_LessServiceContracts" /></td>
+                                    </tr>
+                                }*@
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_Maintenance" name="UsedStandard_Maintenance" class="form-control" value="@psUsedStandard.ps_Maintenance" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_GAP" name="UsedStandard_GAP" class="form-control" value="@psUsedStandard.ps_GAP" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_AftermarketPerItem" name="UsedStandard_AftermarketPerItem" class="form-control" value="@psUsedStandard.ps_AftermarketPerItem" /></td>
+                                </tr>
+                                <tr>
+                                    <td><h4>&nbsp;</h4></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel1" name="UsedStandard_VolumeBonusLevel1" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel1" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel2" name="UsedStandard_VolumeBonusLevel2" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel2" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel3" name="UsedStandard_VolumeBonusLevel3" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel3" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel4" name="UsedStandard_VolumeBonusLevel4" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel4" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel5" name="UsedStandard_VolumeBonusLevel5" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel5" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel6" name="UsedStandard_VolumeBonusLevel6" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel6" /></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="UsedStandard_VolumeBonusLevel7" name="UsedStandard_VolumeBonusLevel7" class="form-control" value="@psUsedStandard.ps_VolumeBonusLevel7" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                       
+                    </div>
+                </div>
+
+            </div>
+            <div class="row" style="margin-top:15px;">
+                <div class="col-sm-3 text-center">
+                
+                </div>
+                <div class="col-sm-4 text-center">
+                    <button class="btn btn-primary" type="submit" value="save" name="Save">Save</button>
+                </div>
+            </div>
+            
+
+            }
+            }
+            }

@@ -1,0 +1,1221 @@
+﻿@model SalesCommission.Models.LeadReportModel
+
+@{ 
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+    var breakdownLabel = "Location / Lead Source";
+
+}
+
+<div class="col-sm-10" id="location-lead-source" style="display:none">
+    <h4>Lead Report Results By Location and Lead Source for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()</h4>
+    <table class="table table-bordered" style="font-size:12px">
+        <thead>
+            <tr style="background-color:#d9edf7;">
+                <th class="text-center"></th>
+                <th class="text-center divider-column" colspan="3">Phone Leads</th>
+                <th class="text-center divider-column" colspan="11">Internet Leads</th>
+                <th class="text-center divider-column" colspan="12">Walkin Leads and Appointments</th>
+            </tr>
+            <tr style="background-color:#f5f5f5;">
+                <th class="text-center divider-column">@breakdownLabel</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">Sold</th>
+                <th class="text-center divider-column">Sold %</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">New</th>
+                <th class="text-center">New Closing %</th>
+                <th class="text-center">Used w/o HDM</th>
+                <th class="text-center">Used Closing % w/o HDM</th>
+                <th class="text-center">Handyman</th>
+                <th class="text-center">Handyman Closing %</th>
+                <th class="text-center">Unknown</th>
+                <th class="text-center">Engaged %</th>
+                <th class="text-center">Sold %</th>
+                <th class="text-center divider-column">Internet Avg Res Time</th>
+                <th class="text-center">Visits</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">Close 1st Time</th>
+                <th class="text-center">Appts Set</th>
+                <th class="text-center">Appts Showed</th>
+                <th class="text-center">Appts Sold</th>
+                <th class="text-center">Appt Success %</th>
+                <th class="text-center">Be Back %</th>
+                <th class="text-center">Be Back w/o Appt</th>
+                <th class="text-center">Be Back Sold %</th>
+                <th class="text-center">Total Sold</th>
+                <th class="text-center divider-column">Sold %</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @{
+                decimal TotalPhoneLeadCount = 0;
+                decimal TotalWalkInLeadCount = 0;
+                decimal TotalInternetLeadCount = 0;
+
+                decimal TotalPhoneLeadSoldCount = 0;
+                decimal TotalWalkInLeadSoldCount = 0;
+                decimal TotalInternetLeadSoldCount = 0;
+
+                decimal TotalPhoneLeadSoldPercent = 0;
+                decimal TotalWalkInLeadSoldPercent = 0;
+                decimal TotalInternetLeadSoldPercent = 0;
+
+                decimal TotalInternetNewLeadCount = 0;
+                decimal TotalInternetNewLeadSoldCount = 0;
+                decimal TotalInternetNewLeadSoldPercent = 0;
+
+                decimal TotalInternetUsedLeadCount = 0;
+                decimal TotalInternetUsedLeadSoldCount = 0;
+                decimal TotalInternetUsedLeadSoldPercent = 0;
+
+                decimal TotalInternetHandyLeadCount = 0;
+                decimal TotalInternetHandyLeadSoldCount = 0;
+                decimal TotalInternetHandyLeadSoldPercent = 0;
+
+                decimal TotalInternetOtherLeadCount = 0;
+                decimal TotalInternetOtherLeadSoldCount = 0;
+                decimal TotalInternetOtherLeadSoldPercent = 0;
+
+                decimal TotalInternetAdjustedResponseTime = 0;
+                decimal TotalInternetAvgAdjustedResponseTime = 0;
+
+                var index = 0;
+            }
+
+            @foreach (var storeInformation in Model.StoreLeadInformation)
+            {
+                index += 1;
+
+                var storeName = storeInformation.StoreId;
+
+                foreach (var store in SalesCommission.Business.Enums.VinStores)
+                {
+                    if (store.StoreId == storeInformation.DealerId)
+                    {
+                        storeName = store.Name;
+                    }
+                }
+
+
+                decimal StorePhoneLeadCount = 0;
+                decimal StoreWalkInLeadCount = 0;
+                decimal StoreInternetLeadCount = 0;
+
+                decimal StorePhoneLeadSoldCount = 0;
+                decimal StoreWalkInLeadSoldCount = 0;
+                decimal StoreInternetLeadSoldCount = 0;
+
+                decimal StorePhoneLeadSoldPercent = 0;
+                decimal StoreWalkInLeadSoldPercent = 0;
+                decimal StoreInternetLeadSoldPercent = 0;
+
+                decimal StoreInternetNewLeadCount = 0;
+                decimal StoreInternetNewLeadSoldCount = 0;
+                decimal StoreInternetNewLeadSoldPercent = 0;
+
+                decimal StoreInternetUsedLeadCount = 0;
+                decimal StoreInternetUsedLeadSoldCount = 0;
+                decimal StoreInternetUsedLeadSoldPercent = 0;
+
+                decimal StoreInternetHandyLeadCount = 0;
+                decimal StoreInternetHandyLeadSoldCount = 0;
+                decimal StoreInternetHandyLeadSoldPercent = 0;
+
+                decimal StoreInternetOtherLeadCount = 0;
+                decimal StoreInternetOtherLeadSoldCount = 0;
+                decimal StoreInternetOtherLeadSoldPercent = 0;
+
+                decimal StoreInternetAdjustedResponseTime = 0;
+                decimal StoreInternetAvgAdjustedResponseTime = 0;
+
+
+                if (Model.AssociateLeads != null)
+                {
+
+                    var storefilteredLeads = Model.AssociateLeads.FindAll(x => x.DealerId.ToString() == storeInformation.DealerId);
+
+                    var storephoneLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                    StorePhoneLeadCount = storephoneLeads.Count;
+                    //currentTotalLeadCount += PhoneLeadCount;
+                    StorePhoneLeadSoldCount = storephoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                    if (StorePhoneLeadCount > 0)
+                    {
+                        StorePhoneLeadSoldPercent = StorePhoneLeadSoldCount / StorePhoneLeadCount;
+                    }
+
+                    var storewalkinLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                    StoreWalkInLeadCount = storewalkinLeads.Count;
+                    //currentTotalLeadCount += WalkInLeadCount;
+                    StoreWalkInLeadSoldCount = storewalkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                    if (StoreWalkInLeadCount > 0)
+                    {
+                        StoreWalkInLeadSoldPercent = (StoreWalkInLeadSoldCount / StoreWalkInLeadCount);
+                    }
+
+
+                    var storeinternetLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                    StoreInternetLeadCount = storeinternetLeads.Count;
+                    //currentTotalLeadCount += InternetLeadCount;
+                    StoreInternetLeadSoldCount = storeinternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                    if (StoreInternetLeadCount > 0)
+                    {
+                        StoreInternetLeadSoldPercent = (StoreInternetLeadSoldCount / StoreInternetLeadCount);
+                    }
+
+                    //Here comes the fun, find the new, used and handymans
+                    var StorenewInternetLeads = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
+                    if (StorenewInternetLeads.Count > 0)
+                    {
+                        StoreInternetNewLeadCount = StorenewInternetLeads.Count;
+                        StoreInternetNewLeadSoldCount = StorenewInternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                    }
+
+                    //var usedInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType.ToUpper() == "U");
+                    var StoreusedInternetLeadsNoHandy = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType == "U" && !x.LeadSourceName.Contains("~"));
+                    if (StoreusedInternetLeadsNoHandy.Count > 0)
+                    {
+                        StoreInternetUsedLeadCount = StoreusedInternetLeadsNoHandy.Count;
+                        StoreInternetUsedLeadSoldCount = StoreusedInternetLeadsNoHandy.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                    }
+
+                    var StorehandymanLeads = storeinternetLeads.FindAll(x => x.LeadSourceName.Contains("~"));
+                    if (StorehandymanLeads.Count > 0)
+                    {
+                        StoreInternetHandyLeadCount = StorehandymanLeads.Count;
+                        StoreInternetHandyLeadSoldCount = StorehandymanLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                    }
+
+                    //Unknown leads, will be leads without a Inventory Type of N or U
+                    var StoreunknownLeads = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType != "N" && x.VOfInterest_InventoryType != "U");
+                    if (StoreunknownLeads.Count > 0)
+                    {
+                        StoreInternetOtherLeadCount = StoreunknownLeads.Count;
+                        StoreInternetOtherLeadSoldCount = StoreunknownLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                    }
+
+                    StoreInternetAdjustedResponseTime = storeinternetLeads.Sum(x => x.AdjustedResponseTimeInMinutes);
+
+                    if (StorePhoneLeadCount > 0)
+                    {
+                        StorePhoneLeadSoldPercent = StorePhoneLeadSoldCount / StorePhoneLeadCount;
+                    }
+
+                    if (StoreWalkInLeadCount > 0)
+                    {
+                        StoreWalkInLeadSoldPercent = StoreWalkInLeadSoldCount / StoreWalkInLeadCount;
+                    }
+
+                    if (StoreInternetLeadCount > 0)
+                    {
+                        StoreInternetLeadSoldPercent = StoreInternetLeadSoldCount / StoreInternetLeadCount;
+                        StoreInternetAvgAdjustedResponseTime = StoreInternetAdjustedResponseTime / StoreInternetLeadCount;
+                    }
+
+                    if (StoreInternetNewLeadCount > 0)
+                    {
+                        StoreInternetNewLeadSoldPercent = StoreInternetNewLeadSoldCount / StoreInternetNewLeadCount;
+                    }
+
+                    if (StoreInternetUsedLeadCount > 0)
+                    {
+                        StoreInternetUsedLeadSoldPercent = StoreInternetUsedLeadSoldCount / StoreInternetUsedLeadCount; ;
+                    }
+
+                    if (StoreInternetHandyLeadCount > 0)
+                    {
+                        StoreInternetHandyLeadSoldPercent = StoreInternetHandyLeadSoldCount / StoreInternetHandyLeadCount; ;
+                    }
+
+                    if (StoreInternetOtherLeadCount > 0)
+                    {
+                        StoreInternetOtherLeadSoldPercent = StoreInternetOtherLeadSoldCount / StoreInternetOtherLeadCount; ;
+                    }
+
+                    <tr class="lead-source-data-row-@index @storeName.Replace(" ","-")" data-collapse="lead-source-collapse-@index">
+
+                        <td class="text-center divider-column"><a data-toggle="collapse" id="lead-source-collapse-@index" style="cursor: pointer;" class="lead-source-collapse-@index-href collapsed" data-target=".lead-source-collapse-@index">@storeName </a></td>
+                        <td class="text-center">@StorePhoneLeadCount</td>
+                        <td class="text-center">@StorePhoneLeadSoldCount</td>
+                        <td class="text-center divider-column">@StorePhoneLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@StoreInternetLeadCount</td>
+                        <td class="text-center">@StoreInternetNewLeadCount</td>
+                        <td class="text-center">@StoreInternetNewLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@StoreInternetUsedLeadCount</td>
+                        <td class="text-center">@StoreInternetUsedLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@StoreInternetHandyLeadCount</td>
+                        <td class="text-center">@StoreInternetHandyLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center">@StoreInternetOtherLeadCount</td>
+                        <td class="text-center"></td>
+                        <td class="text-center">@StoreInternetLeadSoldPercent.ToString("P", nfi)</td>
+                        <td class="text-center divider-column">@StoreInternetAvgAdjustedResponseTime.ToString("C", nfi)</td>
+                        <td class="text-center"></td>
+                        <td class="text-center">@StoreWalkInLeadCount</td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center">@StoreWalkInLeadSoldCount</td>
+                        <td class="text-center divider-column">@StoreWalkInLeadSoldPercent.ToString("P", nfi)</td>
+                    </tr>
+
+                    TotalPhoneLeadCount += StorePhoneLeadCount;
+                    TotalWalkInLeadCount += StoreWalkInLeadCount;
+                    TotalInternetLeadCount += StoreInternetLeadCount;
+
+                    TotalPhoneLeadSoldCount += StorePhoneLeadSoldCount;
+                    TotalWalkInLeadSoldCount += StoreWalkInLeadSoldCount;
+                    TotalInternetLeadSoldCount += StoreInternetLeadSoldCount;
+
+                    TotalInternetNewLeadCount += StoreInternetNewLeadCount;
+                    TotalInternetNewLeadSoldCount += StoreInternetNewLeadSoldCount;
+
+                    TotalInternetUsedLeadCount += StoreInternetUsedLeadCount;
+                    TotalInternetUsedLeadSoldCount += StoreInternetUsedLeadSoldCount;
+
+                    TotalInternetHandyLeadCount += StoreInternetHandyLeadCount;
+                    TotalInternetHandyLeadSoldCount += StoreInternetHandyLeadSoldCount;
+
+                    TotalInternetOtherLeadCount += StoreInternetOtherLeadCount;
+                    TotalInternetOtherLeadSoldCount += StoreInternetOtherLeadSoldCount;
+
+                    TotalInternetAdjustedResponseTime += StoreInternetAdjustedResponseTime;
+
+                    var storeAssociates = storefilteredLeads.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+
+                    //var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+                    foreach (var associate in storeAssociates) //storeInformation.Associates)
+                    {
+
+                        decimal PhoneLeadCount = 0;
+                        decimal WalkInLeadCount = 0;
+                        decimal InternetLeadCount = 0;
+
+                        decimal PhoneLeadSoldCount = 0;
+                        decimal WalkInLeadSoldCount = 0;
+                        decimal InternetLeadSoldCount = 0;
+
+                        decimal PhoneLeadSoldPercent = 0;
+                        decimal WalkInLeadSoldPercent = 0;
+                        decimal InternetLeadSoldPercent = 0;
+
+                        decimal InternetNewLeadCount = 0;
+                        decimal InternetNewLeadSoldCount = 0;
+                        decimal InternetNewLeadSoldPercent = 0;
+
+                        decimal InternetUsedLeadCount = 0;
+                        decimal InternetUsedLeadSoldCount = 0;
+                        decimal InternetUsedLeadSoldPercent = 0;
+
+                        decimal InternetHandyLeadCount = 0;
+                        decimal InternetHandyLeadSoldCount = 0;
+                        decimal InternetHandyLeadSoldPercent = 0;
+
+                        decimal InternetOtherLeadCount = 0;
+                        decimal InternetOtherLeadSoldCount = 0;
+                        decimal InternetOtherLeadSoldPercent = 0;
+
+                        decimal InternetAdjustedResponseTime = 0;
+                        decimal InternetAvgAdjustedResponseTime = 0;
+
+                        var VinName = "";
+
+                        //var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+                        //if (associateUserInfo != null)
+                        //{
+                        //    VinName = associateUserInfo.VinName;
+                        //}
+
+                        if (storefilteredLeads != null)
+                        {
+                            //var associateName = associate.AssociateFullName;
+
+                            //var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                            //var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                            var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                            //if (VinName != null && VinName != "")
+                            //{
+                            //    filteredLeads = storefilteredLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()));
+                            //}
+                            //else
+                            //{
+                            //    filteredLeads = storefilteredLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+                            //}
+
+                            filteredLeads = storefilteredLeads.FindAll(x => x.LeadSourceName.ToLower() == associate.ToLower());
+
+                            var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                            //var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            PhoneLeadCount = phoneLeads.Count;
+                            //currentTotalLeadCount += PhoneLeadCount;
+                            PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (PhoneLeadCount > 0)
+                            {
+                                PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                            }
+
+                            var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                            //var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            WalkInLeadCount = walkinLeads.Count;
+                            //currentTotalLeadCount += WalkInLeadCount;
+                            WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (WalkInLeadCount > 0)
+                            {
+                                WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                            }
+
+
+                            var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                            //var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                            InternetLeadCount = internetLeads.Count;
+                            //currentTotalLeadCount += InternetLeadCount;
+                            InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                            if (InternetLeadCount > 0)
+                            {
+                                InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                            }
+
+                            //Here comes the fun, find the new, used and handymans
+                            var newInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
+                            if (newInternetLeads.Count > 0)
+                            {
+                                InternetNewLeadCount = newInternetLeads.Count;
+                                InternetNewLeadSoldCount = newInternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                            }
+
+                            //var usedInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType.ToUpper() == "U");
+                            var usedInternetLeadsNoHandy = internetLeads.FindAll(x => x.VOfInterest_InventoryType == "U" && !x.LeadSourceName.Contains("~"));
+                            if (usedInternetLeadsNoHandy.Count > 0)
+                            {
+                                InternetUsedLeadCount = usedInternetLeadsNoHandy.Count;
+                                InternetUsedLeadSoldCount = usedInternetLeadsNoHandy.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                            }
+
+                            var handymanLeads = internetLeads.FindAll(x => x.LeadSourceName.Contains("~"));
+                            if (handymanLeads.Count > 0)
+                            {
+                                InternetHandyLeadCount = handymanLeads.Count;
+                                InternetHandyLeadSoldCount = handymanLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                            }
+
+                            //Unknown leads, will be leads without a Inventory Type of N or U
+                            var unknownLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType != "N" && x.VOfInterest_InventoryType != "U");
+                            if (unknownLeads.Count > 0)
+                            {
+                                InternetOtherLeadCount = unknownLeads.Count;
+                                InternetOtherLeadSoldCount = unknownLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                            }
+
+                            InternetAdjustedResponseTime = internetLeads.Sum(x => x.AdjustedResponseTimeInMinutes);
+                            if (InternetLeadCount > 0)
+                            {
+                                InternetAvgAdjustedResponseTime = InternetAdjustedResponseTime / InternetLeadCount;
+                            }
+
+                            if (PhoneLeadCount > 0)
+                            {
+                                PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                            }
+
+                            if (WalkInLeadCount > 0)
+                            {
+                                WalkInLeadSoldPercent = WalkInLeadSoldCount / WalkInLeadCount;
+                            }
+
+                            if (InternetLeadCount > 0)
+                            {
+                                InternetLeadSoldPercent = InternetLeadSoldCount / InternetLeadCount;
+                                InternetAvgAdjustedResponseTime = InternetAdjustedResponseTime / InternetLeadCount;
+                            }
+
+                            if (InternetNewLeadCount > 0)
+                            {
+                                InternetNewLeadSoldPercent = InternetNewLeadSoldCount / InternetNewLeadCount;
+                            }
+
+                            if (InternetUsedLeadCount > 0)
+                            {
+                                InternetUsedLeadSoldPercent = InternetUsedLeadSoldCount / InternetUsedLeadCount; ;
+                            }
+
+                            if (InternetHandyLeadCount > 0)
+                            {
+                                InternetHandyLeadSoldPercent = InternetHandyLeadSoldCount / InternetHandyLeadCount; ;
+                            }
+
+                            if (InternetOtherLeadCount > 0)
+                            {
+                                InternetOtherLeadSoldPercent = InternetOtherLeadSoldCount / InternetOtherLeadCount; ;
+                            }
+
+                        }
+
+                        if (Model.AssociateAppointments != null)
+                        {
+                            var associateName = associate;
+
+                            //var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                            //var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                            //var filteredAppointments = new List<SalesCommission.Models.AssociateAppointment>();
+
+                            //if (VinName != null && VinName != "")
+                            //{
+                            //    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()));
+                            //}
+                            //else
+                            //{
+                            //    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(lastName) && x.AssociateName.ToLower().Contains(partialFirstName));
+                            //}
+                        }
+
+                        <tr class="lead-source-collapse-@index collapse out">
+                            <td class="text-center divider-column lead-source-data-row-@index">@associate</td>
+                            <td class="text-center lead-source-data-row-@index">@PhoneLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index">@PhoneLeadSoldCount</td>
+                            <td class="text-center divider-column lead-source-data-row-@index">@PhoneLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetNewLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetNewLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetUsedLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetUsedLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetHandyLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetHandyLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center lead-source-data-row-@index">@InternetOtherLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index">@InternetLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center divider-column lead-source-data-row-@index">@InternetAvgAdjustedResponseTime.ToString("C", nfi)</td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index">@WalkInLeadCount</td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index"></td>
+                            <td class="text-center lead-source-data-row-@index">@WalkInLeadSoldCount</td>
+                            <td class="text-center divider-column lead-source-data-row-@index">@WalkInLeadSoldPercent.ToString("P", nfi)</td>
+                        </tr>
+
+
+                    }
+
+
+                }
+
+                <script type="text/javascript">
+
+            $(document).ready(function () {
+                $(".lead-source-collapse-@index-href").click(function () {
+                    $('.lead-source-data-row-@index').toggleClass('selected-row');
+                    $(".lead-source-collapse-@index-href").toggleClass('changed');
+                });
+            });
+                </script>
+
+            }
+
+            @{
+                if (TotalPhoneLeadCount > 0)
+                {
+                    TotalPhoneLeadSoldPercent = TotalPhoneLeadSoldCount / TotalPhoneLeadCount;
+                }
+
+                if (TotalWalkInLeadCount > 0)
+                {
+                    TotalWalkInLeadSoldPercent = TotalWalkInLeadSoldCount / TotalWalkInLeadCount;
+                }
+
+                if (TotalInternetLeadCount > 0)
+                {
+                    TotalInternetLeadSoldPercent = TotalInternetLeadSoldCount / TotalInternetLeadCount;
+                    TotalInternetAvgAdjustedResponseTime = TotalInternetAdjustedResponseTime / TotalInternetLeadCount;
+                }
+
+                if (TotalInternetNewLeadCount > 0)
+                {
+                    TotalInternetNewLeadSoldPercent = TotalInternetNewLeadSoldCount / TotalInternetNewLeadCount;
+                }
+
+                if (TotalInternetUsedLeadCount > 0)
+                {
+                    TotalInternetUsedLeadSoldPercent = TotalInternetUsedLeadSoldCount / TotalInternetUsedLeadCount; ;
+                }
+
+                if (TotalInternetHandyLeadCount > 0)
+                {
+                    TotalInternetHandyLeadSoldPercent = TotalInternetHandyLeadSoldCount / TotalInternetHandyLeadCount; ;
+                }
+
+                if (TotalInternetOtherLeadCount > 0)
+                {
+                    TotalInternetOtherLeadSoldPercent = TotalInternetOtherLeadSoldCount / TotalInternetOtherLeadCount; ;
+                }
+            }
+
+        </tbody>
+        <tfoot>
+            <tr style="background-color:#d9edf7;">
+                <th class="text-center divider-column">Totals</th>
+                <th class="text-center">@TotalPhoneLeadCount</th>
+                <th class="text-center">@TotalPhoneLeadSoldCount</th>
+                <th class="text-center divider-column">@TotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                <th class="text-center">@TotalInternetLeadCount</th>
+                <th class="text-center">@TotalInternetNewLeadCount</th>
+                <th class="text-center">@TotalInternetNewLeadSoldPercent.ToString("P", nfi)</th>
+                <th class="text-center">@TotalInternetUsedLeadCount</th>
+                <th class="text-center">@TotalInternetUsedLeadSoldPercent.ToString("P", nfi)</th>
+                <th class="text-center">@TotalInternetHandyLeadCount</th>
+                <th class="text-center">@TotalInternetHandyLeadSoldPercent.ToString("P", nfi)</th>
+                <th class="text-center">@TotalInternetOtherLeadCount</th>
+                <th class="text-center"></th>
+                <th class="text-center">@TotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+                <th class="text-center divider-column">@TotalInternetAvgAdjustedResponseTime.ToString("C", nfi)</th>
+                <th class="text-center"></th>
+                <th class="text-center">@TotalWalkInLeadCount</th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center"></th>
+                <th class="text-center">@TotalWalkInLeadSoldCount</th>
+                <th class="text-center divider-column">@TotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+            </tr>
+        </tfoot>
+    </table>
+    @if (Model.CompareDates)
+    {
+        <hr />
+        <h4>Lead Report Results By Location and Lead Source for @Model.ComparisonReportStartDate.ToShortDateString() to @Model.ComparisonReportEndDate.ToShortDateString()</h4>
+        <table class="table table-bordered" style="font-size:12px">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center"></th>
+                    <th class="text-center divider-column" colspan="3">Phone Leads</th>
+                    <th class="text-center divider-column" colspan="11">Internet Leads</th>
+                    <th class="text-center divider-column" colspan="12">Walkin Leads and Appointments</th>
+                </tr>
+                <tr style="background-color:#f5f5f5;">
+                    <th class="text-center divider-column">@breakdownLabel</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Sold</th>
+                    <th class="text-center divider-column">Sold %</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">New</th>
+                    <th class="text-center">New Closing %</th>
+                    <th class="text-center">Used w/o HDM</th>
+                    <th class="text-center">Used Closing % w/o HDM</th>
+                    <th class="text-center">Handyman</th>
+                    <th class="text-center">Handyman Closing %</th>
+                    <th class="text-center">Unknown</th>
+                    <th class="text-center">Engaged %</th>
+                    <th class="text-center">Sold %</th>
+                    <th class="text-center divider-column">Internet Avg Res Time</th>
+                    <th class="text-center">Visits</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Close 1st Time</th>
+                    <th class="text-center">Appts Set</th>
+                    <th class="text-center">Appts Showed</th>
+                    <th class="text-center">Appts Sold</th>
+                    <th class="text-center">Appt Success %</th>
+                    <th class="text-center">Be Back %</th>
+                    <th class="text-center">Be Back w/o Appt</th>
+                    <th class="text-center">Be Back Sold %</th>
+                    <th class="text-center">Total Sold</th>
+                    <th class="text-center divider-column">Sold %</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @{
+                    decimal CompareTotalPhoneLeadCount = 0;
+                    decimal CompareTotalWalkInLeadCount = 0;
+                    decimal CompareTotalInternetLeadCount = 0;
+
+                    decimal CompareTotalPhoneLeadSoldCount = 0;
+                    decimal CompareTotalWalkInLeadSoldCount = 0;
+                    decimal CompareTotalInternetLeadSoldCount = 0;
+
+                    decimal CompareTotalPhoneLeadSoldPercent = 0;
+                    decimal CompareTotalWalkInLeadSoldPercent = 0;
+                    decimal CompareTotalInternetLeadSoldPercent = 0;
+
+                    decimal CompareTotalInternetNewLeadCount = 0;
+                    decimal CompareTotalInternetNewLeadSoldCount = 0;
+                    decimal CompareTotalInternetNewLeadSoldPercent = 0;
+
+                    decimal CompareTotalInternetUsedLeadCount = 0;
+                    decimal CompareTotalInternetUsedLeadSoldCount = 0;
+                    decimal CompareTotalInternetUsedLeadSoldPercent = 0;
+
+                    decimal CompareTotalInternetHandyLeadCount = 0;
+                    decimal CompareTotalInternetHandyLeadSoldCount = 0;
+                    decimal CompareTotalInternetHandyLeadSoldPercent = 0;
+
+                    decimal CompareTotalInternetOtherLeadCount = 0;
+                    decimal CompareTotalInternetOtherLeadSoldCount = 0;
+                    decimal CompareTotalInternetOtherLeadSoldPercent = 0;
+
+                    decimal CompareTotalInternetAdjustedResponseTime = 0;
+                    decimal CompareTotalInternetAvgAdjustedResponseTime = 0;
+
+                    var compareIndex = 0;
+                }
+
+                @foreach (var storeInformation in Model.StoreLeadInformation)
+                {
+                    compareIndex += 1;
+
+                    var storeName = storeInformation.StoreId;
+
+                    foreach (var store in SalesCommission.Business.Enums.VinStores)
+                    {
+                        if (store.StoreId == storeInformation.DealerId)
+                        {
+                            storeName = store.Name;
+                        }
+                    }
+
+
+                    decimal StorePhoneLeadCount = 0;
+                    decimal StoreWalkInLeadCount = 0;
+                    decimal StoreInternetLeadCount = 0;
+
+                    decimal StorePhoneLeadSoldCount = 0;
+                    decimal StoreWalkInLeadSoldCount = 0;
+                    decimal StoreInternetLeadSoldCount = 0;
+
+                    decimal StorePhoneLeadSoldPercent = 0;
+                    decimal StoreWalkInLeadSoldPercent = 0;
+                    decimal StoreInternetLeadSoldPercent = 0;
+
+                    decimal StoreInternetNewLeadCount = 0;
+                    decimal StoreInternetNewLeadSoldCount = 0;
+                    decimal StoreInternetNewLeadSoldPercent = 0;
+
+                    decimal StoreInternetUsedLeadCount = 0;
+                    decimal StoreInternetUsedLeadSoldCount = 0;
+                    decimal StoreInternetUsedLeadSoldPercent = 0;
+
+                    decimal StoreInternetHandyLeadCount = 0;
+                    decimal StoreInternetHandyLeadSoldCount = 0;
+                    decimal StoreInternetHandyLeadSoldPercent = 0;
+
+                    decimal StoreInternetOtherLeadCount = 0;
+                    decimal StoreInternetOtherLeadSoldCount = 0;
+                    decimal StoreInternetOtherLeadSoldPercent = 0;
+
+                    decimal StoreInternetAdjustedResponseTime = 0;
+                    decimal StoreInternetAvgAdjustedResponseTime = 0;
+
+
+                    if (Model.ComparisonLeads != null)
+                    {
+
+                        var storefilteredLeads = Model.ComparisonLeads.FindAll(x => x.DealerId.ToString() == storeInformation.DealerId);
+
+                        var storephoneLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                        StorePhoneLeadCount = storephoneLeads.Count;
+                        //currentCompareTotalLeadCount += PhoneLeadCount;
+                        StorePhoneLeadSoldCount = storephoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (StorePhoneLeadCount > 0)
+                        {
+                            StorePhoneLeadSoldPercent = StorePhoneLeadSoldCount / StorePhoneLeadCount;
+                        }
+
+                        var storewalkinLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                        StoreWalkInLeadCount = storewalkinLeads.Count;
+                        //currentCompareTotalLeadCount += WalkInLeadCount;
+                        StoreWalkInLeadSoldCount = storewalkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (StoreWalkInLeadCount > 0)
+                        {
+                            StoreWalkInLeadSoldPercent = (StoreWalkInLeadSoldCount / StoreWalkInLeadCount);
+                        }
+
+
+                        var storeinternetLeads = storefilteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                        StoreInternetLeadCount = storeinternetLeads.Count;
+                        //currentCompareTotalLeadCount += InternetLeadCount;
+                        StoreInternetLeadSoldCount = storeinternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (StoreInternetLeadCount > 0)
+                        {
+                            StoreInternetLeadSoldPercent = (StoreInternetLeadSoldCount / StoreInternetLeadCount);
+                        }
+
+                        //Here comes the fun, find the new, used and handymans
+                        var StorenewInternetLeads = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
+                        if (StorenewInternetLeads.Count > 0)
+                        {
+                            StoreInternetNewLeadCount = StorenewInternetLeads.Count;
+                            StoreInternetNewLeadSoldCount = StorenewInternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                        }
+
+                        //var usedInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType.ToUpper() == "U");
+                        var StoreusedInternetLeadsNoHandy = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType == "U" && !x.LeadSourceName.Contains("~"));
+                        if (StoreusedInternetLeadsNoHandy.Count > 0)
+                        {
+                            StoreInternetUsedLeadCount = StoreusedInternetLeadsNoHandy.Count;
+                            StoreInternetUsedLeadSoldCount = StoreusedInternetLeadsNoHandy.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                        }
+
+                        var StorehandymanLeads = storeinternetLeads.FindAll(x => x.LeadSourceName.Contains("~"));
+                        if (StorehandymanLeads.Count > 0)
+                        {
+                            StoreInternetHandyLeadCount = StorehandymanLeads.Count;
+                            StoreInternetHandyLeadSoldCount = StorehandymanLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                        }
+
+                        //Unknown leads, will be leads without a Inventory Type of N or U
+                        var StoreunknownLeads = storeinternetLeads.FindAll(x => x.VOfInterest_InventoryType != "N" && x.VOfInterest_InventoryType != "U");
+                        if (StoreunknownLeads.Count > 0)
+                        {
+                            StoreInternetOtherLeadCount = StoreunknownLeads.Count;
+                            StoreInternetOtherLeadSoldCount = StoreunknownLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                        }
+
+                        StoreInternetAdjustedResponseTime = storeinternetLeads.Sum(x => x.AdjustedResponseTimeInMinutes);
+
+                        if (StorePhoneLeadCount > 0)
+                        {
+                            StorePhoneLeadSoldPercent = StorePhoneLeadSoldCount / StorePhoneLeadCount;
+                        }
+
+                        if (StoreWalkInLeadCount > 0)
+                        {
+                            StoreWalkInLeadSoldPercent = StoreWalkInLeadSoldCount / StoreWalkInLeadCount;
+                        }
+
+                        if (StoreInternetLeadCount > 0)
+                        {
+                            StoreInternetLeadSoldPercent = StoreInternetLeadSoldCount / StoreInternetLeadCount;
+                            StoreInternetAvgAdjustedResponseTime = StoreInternetAdjustedResponseTime / StoreInternetLeadCount;
+                        }
+
+                        if (StoreInternetNewLeadCount > 0)
+                        {
+                            StoreInternetNewLeadSoldPercent = StoreInternetNewLeadSoldCount / StoreInternetNewLeadCount;
+                        }
+
+                        if (StoreInternetUsedLeadCount > 0)
+                        {
+                            StoreInternetUsedLeadSoldPercent = StoreInternetUsedLeadSoldCount / StoreInternetUsedLeadCount; ;
+                        }
+
+                        if (StoreInternetHandyLeadCount > 0)
+                        {
+                            StoreInternetHandyLeadSoldPercent = StoreInternetHandyLeadSoldCount / StoreInternetHandyLeadCount; ;
+                        }
+
+                        if (StoreInternetOtherLeadCount > 0)
+                        {
+                            StoreInternetOtherLeadSoldPercent = StoreInternetOtherLeadSoldCount / StoreInternetOtherLeadCount; ;
+                        }
+
+                        <tr class="lead-sourcecomp-data-row-@compareIndex @storeName.Replace(" ","-")" data-collapse="lead-sourcecomp-collapse-@index">
+
+                            <td class="text-center divider-column"><a data-toggle="collapse" id="lead-sourcecomp-collapse-@compareIndex" style="cursor: pointer;" class="lead-sourcecomp-collapse-@compareIndex-href collapsed" data-target=".lead-sourcecomp-collapse-@compareIndex">@storeName </a></td>
+                            <td class="text-center">@StorePhoneLeadCount</td>
+                            <td class="text-center">@StorePhoneLeadSoldCount</td>
+                            <td class="text-center divider-column">@StorePhoneLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@StoreInternetLeadCount</td>
+                            <td class="text-center">@StoreInternetNewLeadCount</td>
+                            <td class="text-center">@StoreInternetNewLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@StoreInternetUsedLeadCount</td>
+                            <td class="text-center">@StoreInternetUsedLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@StoreInternetHandyLeadCount</td>
+                            <td class="text-center">@StoreInternetHandyLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@StoreInternetOtherLeadCount</td>
+                            <td class="text-center"></td>
+                            <td class="text-center">@StoreInternetLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center divider-column">@StoreInternetAvgAdjustedResponseTime.ToString("C", nfi)</td>
+                            <td class="text-center"></td>
+                            <td class="text-center">@StoreWalkInLeadCount</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center">@StoreWalkInLeadSoldCount</td>
+                            <td class="text-center divider-column">@StoreWalkInLeadSoldPercent.ToString("P", nfi)</td>
+                        </tr>
+
+                        CompareTotalPhoneLeadCount += StorePhoneLeadCount;
+                        CompareTotalWalkInLeadCount += StoreWalkInLeadCount;
+                        CompareTotalInternetLeadCount += StoreInternetLeadCount;
+
+                        CompareTotalPhoneLeadSoldCount += StorePhoneLeadSoldCount;
+                        CompareTotalWalkInLeadSoldCount += StoreWalkInLeadSoldCount;
+                        CompareTotalInternetLeadSoldCount += StoreInternetLeadSoldCount;
+
+                        CompareTotalInternetNewLeadCount += StoreInternetNewLeadCount;
+                        CompareTotalInternetNewLeadSoldCount += StoreInternetNewLeadSoldCount;
+
+                        CompareTotalInternetUsedLeadCount += StoreInternetUsedLeadCount;
+                        CompareTotalInternetUsedLeadSoldCount += StoreInternetUsedLeadSoldCount;
+
+                        CompareTotalInternetHandyLeadCount += StoreInternetHandyLeadCount;
+                        CompareTotalInternetHandyLeadSoldCount += StoreInternetHandyLeadSoldCount;
+
+                        CompareTotalInternetOtherLeadCount += StoreInternetOtherLeadCount;
+                        CompareTotalInternetOtherLeadSoldCount += StoreInternetOtherLeadSoldCount;
+
+                        CompareTotalInternetAdjustedResponseTime += StoreInternetAdjustedResponseTime;
+
+                        var storeAssociates = storefilteredLeads.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+
+                        //var associateList = SalesCommission.Business.SqlQueries.GetJJFUsers();
+
+                        foreach (var associate in storeAssociates) //storeInformation.Associates)
+                        {
+
+                            decimal PhoneLeadCount = 0;
+                            decimal WalkInLeadCount = 0;
+                            decimal InternetLeadCount = 0;
+
+                            decimal PhoneLeadSoldCount = 0;
+                            decimal WalkInLeadSoldCount = 0;
+                            decimal InternetLeadSoldCount = 0;
+
+                            decimal PhoneLeadSoldPercent = 0;
+                            decimal WalkInLeadSoldPercent = 0;
+                            decimal InternetLeadSoldPercent = 0;
+
+                            decimal InternetNewLeadCount = 0;
+                            decimal InternetNewLeadSoldCount = 0;
+                            decimal InternetNewLeadSoldPercent = 0;
+
+                            decimal InternetUsedLeadCount = 0;
+                            decimal InternetUsedLeadSoldCount = 0;
+                            decimal InternetUsedLeadSoldPercent = 0;
+
+                            decimal InternetHandyLeadCount = 0;
+                            decimal InternetHandyLeadSoldCount = 0;
+                            decimal InternetHandyLeadSoldPercent = 0;
+
+                            decimal InternetOtherLeadCount = 0;
+                            decimal InternetOtherLeadSoldCount = 0;
+                            decimal InternetOtherLeadSoldPercent = 0;
+
+                            decimal InternetAdjustedResponseTime = 0;
+                            decimal InternetAvgAdjustedResponseTime = 0;
+
+                            var VinName = "";
+
+                            //var associateUserInfo = associateList.Find(x => x.DMS_Id == associate.AssociateNumber.Trim());
+
+                            //if (associateUserInfo != null)
+                            //{
+                            //    VinName = associateUserInfo.VinName;
+                            //}
+
+                            if (storefilteredLeads != null)
+                            {
+                                //var associateName = associate.AssociateFullName;
+
+                                //var lastName = associateName.Substring(associateName.LastcompareIndexOf(' ') + 1).ToLower();
+                                //var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                                var filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+                                //if (VinName != null && VinName != "")
+                                //{
+                                //    filteredLeads = storefilteredLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(VinName.ToLower()));
+                                //}
+                                //else
+                                //{
+                                //    filteredLeads = storefilteredLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+                                //}
+
+                                filteredLeads = storefilteredLeads.FindAll(x => x.LeadSourceName.ToLower() == associate.ToLower());
+
+                                var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                                //var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                PhoneLeadCount = phoneLeads.Count;
+                                //currentCompareTotalLeadCount += PhoneLeadCount;
+                                PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (PhoneLeadCount > 0)
+                                {
+                                    PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                                }
+
+                                var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                                //var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                WalkInLeadCount = walkinLeads.Count;
+                                //currentCompareTotalLeadCount += WalkInLeadCount;
+                                WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (WalkInLeadCount > 0)
+                                {
+                                    WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                                }
+
+
+                                var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                                //var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                                InternetLeadCount = internetLeads.Count;
+                                //currentCompareTotalLeadCount += InternetLeadCount;
+                                InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                                if (InternetLeadCount > 0)
+                                {
+                                    InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                                }
+
+                                //Here comes the fun, find the new, used and handymans
+                                var newInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
+                                if (newInternetLeads.Count > 0)
+                                {
+                                    InternetNewLeadCount = newInternetLeads.Count;
+                                    InternetNewLeadSoldCount = newInternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                                }
+
+                                //var usedInternetLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType.ToUpper() == "U");
+                                var usedInternetLeadsNoHandy = internetLeads.FindAll(x => x.VOfInterest_InventoryType == "U" && !x.LeadSourceName.Contains("~"));
+                                if (usedInternetLeadsNoHandy.Count > 0)
+                                {
+                                    InternetUsedLeadCount = usedInternetLeadsNoHandy.Count;
+                                    InternetUsedLeadSoldCount = usedInternetLeadsNoHandy.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                                }
+
+                                var handymanLeads = internetLeads.FindAll(x => x.LeadSourceName.Contains("~"));
+                                if (handymanLeads.Count > 0)
+                                {
+                                    InternetHandyLeadCount = handymanLeads.Count;
+                                    InternetHandyLeadSoldCount = handymanLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                                }
+
+                                //Unknown leads, will be leads without a Inventory Type of N or U
+                                var unknownLeads = internetLeads.FindAll(x => x.VOfInterest_InventoryType != "N" && x.VOfInterest_InventoryType != "U");
+                                if (unknownLeads.Count > 0)
+                                {
+                                    InternetOtherLeadCount = unknownLeads.Count;
+                                    InternetOtherLeadSoldCount = unknownLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+                                }
+
+                                InternetAdjustedResponseTime = internetLeads.Sum(x => x.AdjustedResponseTimeInMinutes);
+                                if (InternetLeadCount > 0)
+                                {
+                                    InternetAvgAdjustedResponseTime = InternetAdjustedResponseTime / InternetLeadCount;
+                                }
+
+                                if (PhoneLeadCount > 0)
+                                {
+                                    PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                                }
+
+                                if (WalkInLeadCount > 0)
+                                {
+                                    WalkInLeadSoldPercent = WalkInLeadSoldCount / WalkInLeadCount;
+                                }
+
+                                if (InternetLeadCount > 0)
+                                {
+                                    InternetLeadSoldPercent = InternetLeadSoldCount / InternetLeadCount;
+                                    InternetAvgAdjustedResponseTime = InternetAdjustedResponseTime / InternetLeadCount;
+                                }
+
+                                if (InternetNewLeadCount > 0)
+                                {
+                                    InternetNewLeadSoldPercent = InternetNewLeadSoldCount / InternetNewLeadCount;
+                                }
+
+                                if (InternetUsedLeadCount > 0)
+                                {
+                                    InternetUsedLeadSoldPercent = InternetUsedLeadSoldCount / InternetUsedLeadCount; ;
+                                }
+
+                                if (InternetHandyLeadCount > 0)
+                                {
+                                    InternetHandyLeadSoldPercent = InternetHandyLeadSoldCount / InternetHandyLeadCount; ;
+                                }
+
+                                if (InternetOtherLeadCount > 0)
+                                {
+                                    InternetOtherLeadSoldPercent = InternetOtherLeadSoldCount / InternetOtherLeadCount; ;
+                                }
+
+                            }
+
+                            if (Model.AssociateAppointments != null)
+                            {
+                                var associateName = associate;
+
+                                var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+                                var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+                                var filteredAppointments = new List<SalesCommission.Models.AssociateAppointment>();
+
+                                if (VinName != null && VinName != "")
+                                {
+                                    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()));
+                                }
+                                else
+                                {
+                                    filteredAppointments = Model.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(lastName) && x.AssociateName.ToLower().Contains(partialFirstName));
+                                }
+                            }
+
+                            <tr class="lead-sourcecomp-collapse-@compareIndex collapse out">
+                                <td class="text-center divider-column lead-sourcecomp-data-row-@compareIndex">@associate</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@PhoneLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@PhoneLeadSoldCount</td>
+                                <td class="text-center divider-column lead-sourcecomp-data-row-@compareIndex">@PhoneLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetNewLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetNewLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetUsedLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetUsedLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetHandyLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetHandyLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetOtherLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@InternetLeadSoldPercent.ToString("P", nfi)</td>
+                                <td class="text-center divider-column lead-sourcecomp-data-row-@compareIndex">@InternetAvgAdjustedResponseTime.ToString("C", nfi)</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@WalkInLeadCount</td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex"></td>
+                                <td class="text-center lead-sourcecomp-data-row-@compareIndex">@WalkInLeadSoldCount</td>
+                                <td class="text-center divider-column lead-sourcecomp-data-row-@compareIndex">@WalkInLeadSoldPercent.ToString("P", nfi)</td>
+                            </tr>
+
+
+                        }
+
+
+                    }
+
+                    <script type="text/javascript">
+
+            $(document).ready(function () {
+                $(".lead-sourcecomp-collapse-@compareIndex-href").click(function () {
+                    $('.lead-sourcecomp-data-row-@compareIndex').toggleClass('selected-row');
+                    $(".lead-sourcecomp-collapse-@compareIndex-href").toggleClass('changed');
+                });
+            });
+                    </script>
+
+                }
+
+                @{
+                    if (CompareTotalPhoneLeadCount > 0)
+                    {
+                        CompareTotalPhoneLeadSoldPercent = CompareTotalPhoneLeadSoldCount / CompareTotalPhoneLeadCount;
+                    }
+
+                    if (CompareTotalWalkInLeadCount > 0)
+                    {
+                        CompareTotalWalkInLeadSoldPercent = CompareTotalWalkInLeadSoldCount / CompareTotalWalkInLeadCount;
+                    }
+
+                    if (CompareTotalInternetLeadCount > 0)
+                    {
+                        CompareTotalInternetLeadSoldPercent = CompareTotalInternetLeadSoldCount / CompareTotalInternetLeadCount;
+                        CompareTotalInternetAvgAdjustedResponseTime = CompareTotalInternetAdjustedResponseTime / CompareTotalInternetLeadCount;
+                    }
+
+                    if (CompareTotalInternetNewLeadCount > 0)
+                    {
+                        CompareTotalInternetNewLeadSoldPercent = CompareTotalInternetNewLeadSoldCount / CompareTotalInternetNewLeadCount;
+                    }
+
+                    if (CompareTotalInternetUsedLeadCount > 0)
+                    {
+                        CompareTotalInternetUsedLeadSoldPercent = CompareTotalInternetUsedLeadSoldCount / CompareTotalInternetUsedLeadCount; ;
+                    }
+
+                    if (CompareTotalInternetHandyLeadCount > 0)
+                    {
+                        CompareTotalInternetHandyLeadSoldPercent = CompareTotalInternetHandyLeadSoldCount / CompareTotalInternetHandyLeadCount; ;
+                    }
+
+                    if (CompareTotalInternetOtherLeadCount > 0)
+                    {
+                        CompareTotalInternetOtherLeadSoldPercent = CompareTotalInternetOtherLeadSoldCount / CompareTotalInternetOtherLeadCount; ;
+                    }
+                }
+
+            </tbody>
+            <tfoot>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center divider-column">Totals</th>
+                    <th class="text-center">@CompareTotalPhoneLeadCount</th>
+                    <th class="text-center">@CompareTotalPhoneLeadSoldCount</th>
+                    <th class="text-center divider-column">@CompareTotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@CompareTotalInternetLeadCount</th>
+                    <th class="text-center">@CompareTotalInternetNewLeadCount</th>
+                    <th class="text-center">@CompareTotalInternetNewLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@CompareTotalInternetUsedLeadCount</th>
+                    <th class="text-center">@CompareTotalInternetUsedLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@CompareTotalInternetHandyLeadCount</th>
+                    <th class="text-center">@CompareTotalInternetHandyLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@CompareTotalInternetOtherLeadCount</th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@CompareTotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center divider-column">@CompareTotalInternetAvgAdjustedResponseTime.ToString("C", nfi)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@CompareTotalWalkInLeadCount</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@CompareTotalWalkInLeadSoldCount</th>
+                    <th class="text-center divider-column">@CompareTotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+                </tr>
+            </tfoot>
+        </table>
+                    }
+</div>

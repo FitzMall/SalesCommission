@@ -1,0 +1,772 @@
+﻿@model SalesCommission.Models.FIAssociateCommissionModel
+
+@{
+    ViewBag.Title = "F and I Associate Commission";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    //nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+
+
+    decimal TotalDrawAmount = 0;
+
+    var bIsAssociate = false;
+
+    var bShowValues = false;
+    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 28))
+    {
+        bShowValues = true;
+    }
+
+    var bShowLevel = false;
+    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 24))
+    {
+        bShowLevel = true;
+    }
+
+    if ((bool)Session["IsCommissionAdmin"] == true)
+    {
+        bShowValues = true;
+    }
+    else
+    {
+
+    }
+
+    if (Model.AssociateInformation.AssociateNumber != null && Session["AssociateId"] != null)
+    {
+        if (Model.AssociateInformation.AssociateNumber.Trim().ToLower() == Session["AssociateId"].ToString().Trim().ToLower())
+        {
+            bIsAssociate = true;
+        }
+    }
+}
+
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+}
+<style type="text/css">
+    .commission-table {
+        font-size: 11px;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    @@media print {
+        .navbar {
+            display: none;
+        }
+
+        body {
+            padding-top: 0px;
+        }
+
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        .commission-table {
+            font-size: 10px;
+        }
+
+        .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+            padding: 4px;
+            line-height: 1.0em;
+        }
+
+        .associate-approval {
+            background-color: #efefef;
+        }
+
+        hr {
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+
+        @@page {
+            size: portrait;
+            margin: 2cm;
+        }
+    }
+
+    h5.editInfo {
+        color: #428bca;
+    }
+
+        h5.editInfo:hover {
+            text-decoration: underline;
+            color: #428bca;
+            cursor: pointer;
+        }
+</style>
+
+@if (Model.AssociateInformation == null)
+{
+    <h2>The associate you requested could not be found.</h2>
+}
+@*else if (Model.AssociateInformation.AssociateDeals == null)
+{
+    <h2>The associate you requested has no deals for this month and year.</h2>
+}*@
+else if ((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
+{
+    <h2>You are not authorized to view this Associate's Commission</h2>
+}
+else
+{
+    var nextMonthId = 0;
+    var previousMonthId = 0;
+    var nextMonthYearId = 0;
+    var previousMonthYearId = 0;
+
+    var currentMonth = new DateTime(Model.YearId, Model.MonthId, 1);
+    var previousMonth = currentMonth.AddMonths(-1);
+    var nextMonth = currentMonth.AddMonths(1);
+
+    previousMonthId = previousMonth.Month;
+    nextMonthId = nextMonth.Month;
+
+    previousMonthYearId = previousMonth.Year;
+    nextMonthYearId = nextMonth.Year;
+
+    decimal TotalAdjustments = 0;
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-8">
+            <h2>Commission for @Model.AssociateInformation.AssociateFirstName @Model.AssociateInformation.AssociateLastName for @Model.MonthId/@Model.YearId</h2>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:15px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+        <div class="col-md-2">
+            <a href="@applicationPath/FICommission/ScoreCard/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary" style="margin-top:15px;float:right">View Score Card</a>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-3">
+            <p><strong>Hire Date:</strong> @Model.AssociateInformation.AssociateHireDate.ToShortDateString()</p>
+            <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartment</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left">
+            <a href="@applicationPath/FICommission/Associate/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
+        </div>
+        <div class="col-md-6 text-right">
+            @if (nextMonth <= DateTime.Now)
+            {
+                <a href="@applicationPath/FICommission/Associate/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+    <h4>Monthly Summary</h4>
+    <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+        <thead>
+
+            <tr style="background-color:#d9edf7;font-size:11px;">                
+                <th class="text-center extra-right">Total<br />Deals</th>
+                <th class="text-center extra-right">Eligible<br />Deals</th>
+                <th class="text-center">VSC %</th>
+                <th class="text-center extra-right">VSC $ per<br />Item</th>
+                <th class="text-center">GAP % of<br/>Finance</th>
+                <th class="text-center extra-right">GAP $ per<br />Item</th>
+                <th class="text-center">Finance %</th>
+                <th class="text-center extra-right">Avg Finance<br />Reserve</th>
+                <th class="text-center">Maint %</th>
+                <th class="text-center extra-right">Maint $<br />Per Item</th>
+                <th class="text-center">Zurich %</th>
+                <th class="text-center extra-right">Zurich $<br />Per Item</th>
+                <th class="text-center">Total<br />Gross</th>
+                <th class="text-center">Total $<br />Per Deal</th>
+                <th class="text-center">Product $<br />Per Deal</th>
+                <th class="text-center"></th>
+                <th class="text-center">Other Item Total Dollars</th>
+                <th class="text-center">% of E<br/>Contract</th>
+                <th class="text-center">% Deals<br/>Funded<br/>7 Days</th>
+            </tr>
+
+        </thead>
+        <tbody>
+            @{ 
+                decimal TotalGross = 0;
+                decimal TotalFinance = 0;
+                decimal TotalService = 0;
+                decimal TotalMaintenance = 0;
+                decimal TotalGAP = 0;
+                decimal TotalZurich = 0;
+
+                decimal TotalDeals = 0;
+                decimal TotalEligibleDeals = 0;
+
+                int FinanceCount = 0;
+                int ServiceCount = 0;
+                int MaintenanceCount = 0;
+                int GAPCount = 0;
+                int ZurichCount = 0;
+
+                double FinancePercent = 0;
+                double ServicePercent = 0;
+                double MaintenancePercent = 0;
+                double GAPPercent = 0;
+                double ZurichPercent = 0;
+
+                decimal DollarPerCar = 0;
+                decimal ProductDollarPerCar = 0;
+
+
+                if (Model.AftermarketDealDetails != null)
+                {
+                    foreach (var deal in Model.AftermarketDealDetails)
+                    {
+                        TotalGross += deal.DealGrossAmount;
+
+                        if (deal.FinanceIncomeAmount > 0)
+                        {
+                            TotalFinance += deal.FinanceIncomeAmount;
+                            FinanceCount += 1;
+                        }
+
+                        if (deal.VSCAmount > 0)
+                        {
+                            TotalService += deal.VSCAmount;
+                            ServiceCount += 1;
+                        }
+
+                        if (deal.MaintenanceAmount > 0)
+                        {
+                            TotalMaintenance += deal.MaintenanceAmount;
+                            MaintenanceCount += 1;
+                        }
+
+                        if (deal.GAPAmount > 0)
+                        {
+                            TotalGAP += deal.GAPAmount;
+                            GAPCount += 1;
+                        }
+
+                        if(deal.ZurichAmount > 0)
+                        {
+                            TotalZurich += deal.ZurichAmount;
+                            ZurichCount += 1;
+                        }
+
+                        var currentYear = Model.YearId;
+                        var vehicleYear = Int32.Parse(deal.VehicleYear);
+
+                        if((currentYear - vehicleYear) < 10)
+                        {
+                            TotalEligibleDeals += 1;
+                        }
+
+                    }
+
+                    TotalDeals = Model.AftermarketDealDetails.Count;
+
+                    if (TotalEligibleDeals > 0)
+                    {
+                        FinancePercent = (double)FinanceCount / (double)TotalEligibleDeals;
+                        ServicePercent = (double)ServiceCount / (double)TotalEligibleDeals;
+                        MaintenancePercent = (double)MaintenanceCount / (double)TotalEligibleDeals;
+                        GAPPercent = (double)GAPCount / (double)FinanceCount;
+
+                        DollarPerCar = TotalGross / TotalEligibleDeals;
+                        ProductDollarPerCar = (TotalFinance + TotalService + TotalMaintenance + TotalGAP) / TotalEligibleDeals;
+                    }
+                }
+            }
+                <tr>
+
+                    <td class="text-center extra-right">@TotalDeals</td>
+                    <td class="text-center extra-right">@TotalEligibleDeals</td>
+                    <td class="text-center">@ServicePercent.ToString("P", nfi)<br />(@ServiceCount)</td>
+                    <td class="text-center extra-right">@TotalService.ToString("C", nfi)</td>
+
+                    <td class="text-center">@GAPPercent.ToString("P", nfi)<br />(@GAPCount)</td>
+                    <td class="text-center extra-right">@TotalGAP.ToString("C", nfi)</td>
+
+                    <td class="text-center">@FinancePercent.ToString("P", nfi)<br />(@FinanceCount)</td>
+                    <td class="text-center extra-right">@TotalFinance.ToString("C", nfi)</td>
+
+                    <td class="text-center">@MaintenancePercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
+                    <td class="text-center extra-right">@TotalMaintenance.ToString("C", nfi)</td>
+
+                    <td class="text-center">@ZurichPercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
+                    <td class="text-center extra-right">@TotalZurich.ToString("C", nfi)</td>
+
+
+                    <td class="text-center">@TotalGross.ToString("C", nfi)</td>
+                    <td class="text-center">@DollarPerCar.ToString("C", nfi)</td>
+                    <td class="text-center">@ProductDollarPerCar.ToString("C", nfi)</td>
+
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                </tr>
+            
+        </tbody>
+        </table>
+
+        </div>
+    </div>
+    <div class="row">
+@{
+
+    decimal DollarPerCarPay = 0;
+    decimal ProductDollarPerCarPay = 0;
+    decimal VSCPercentPay = 0;
+    decimal GAPPercentPay = 0;
+
+    var payTypes = Model.FIPayscales.Select(x => x.PayTypeCode).Distinct().ToList();
+
+    foreach (var payType in payTypes)
+    {
+        var settings = Model.FIPayscales.FindAll(x => x.PayTypeCode == payType).OrderBy(x => x.Order).ToList();
+
+        if (settings != null)
+        {
+            <div class="col-sm-2">
+                <p style="font-size:12px;"><strong>@settings[0].PayTypeName</strong></p>
+
+                @{
+                    var payTypeCode = settings[0].PayTypeCode;
+
+
+
+                    double calculatedValue = 0;
+                    var levelId = 0;
+
+                    switch (payTypeCode)
+                    {
+                        case "DOLLARPERCAR":
+                            calculatedValue = (double)DollarPerCar;
+                            foreach (var setting in settings)
+                            {
+                                if (calculatedValue >= (double)setting.LevelAmount)
+                                {
+                                    levelId = setting.Order;
+                                    DollarPerCarPay = setting.PayAmount;
+                                    break;
+                                }
+                            }
+                            break;
+                        case "PRODUCTDOLLARPERCAR":
+                            calculatedValue = (double)ProductDollarPerCar;
+                            foreach (var setting in settings)
+                            {
+                                if (calculatedValue >= (double)setting.LevelAmount)
+                                {
+                                    levelId = setting.Order;
+                                    ProductDollarPerCarPay = setting.PayAmount;
+                                    break;
+                                }
+                            }
+                            break;
+                        case "VSCPERCENT":
+                            calculatedValue = ServicePercent;
+                            foreach (var setting in settings)
+                            {
+                                if ((calculatedValue * 100) >= (double) setting.LevelAmount)
+                                {
+                                    levelId = setting.Order;
+                                    VSCPercentPay = setting.PayAmount;
+                                    break;
+                                }
+                            }
+                            break;
+                        case "GAPPERCENT":
+                            calculatedValue = GAPPercent;
+                            foreach (var setting in settings)
+                            {
+                                if ((calculatedValue * 100) >= (double) setting.LevelAmount)
+                                {
+                                    levelId = setting.Order;
+                                    GAPPercentPay = setting.PayAmount;
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+
+                }
+
+                <table class="table table-bordered" style="font-size:11px">
+                    <thead>
+                        <tr style="background-color:#d9edf7;">
+                            <th>Level Amount</th>
+                            <th>Pay %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var setting in settings)
+                        {
+                            var backgroundColor = "";
+                            if(setting.Order == levelId)
+                            {
+                                backgroundColor = "background-color:yellow";
+                            }
+                            <tr style="@backgroundColor">
+                                <td>
+                                    @if (setting.PayType == "DOLLAR")
+                                    {
+                                        @:$@setting.LevelAmount and above
+                                    }
+                                    else
+                                    {
+                                        @:@setting.LevelAmount% and above
+                                    }
+                                </td>                                
+                                <td>@setting.PayAmount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+
+}
+        <div class="col-sm-4">
+           <h4>Adjustments</h4>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        @if ((bool)Session["IsCommissionAdmin"] == true || DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 1).AddMonths(1))
+        {
+            <div class="col-xs-3">
+                <h4>Advances (Draws)</h4>
+
+                <table class="table table-bordered table-striped" style="font-size:12px">
+                    <thead>
+                        <tr style="background-color:#d9edf7">
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.AssociateInformation.AssociateDraws != null)
+                    {
+                        foreach (var draw in Model.AssociateInformation.AssociateDraws)
+                        {
+                                <tr>
+                                    <td>@draw.DrawDate.ToShortDateString()</td>
+                                    <td>@draw.DrawAmount.ToString("C")</td>
+                                </tr>
+                                TotalDrawAmount += draw.DrawAmount;
+                            }
+                        }
+                        @{
+                            TotalDrawAmount = (TotalDrawAmount * -1);
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th>@TotalDrawAmount.ToString("C")</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+                            }
+        <div class="col-xs-3">
+            <h4>Bonus</h4>
+            @{
+                decimal TotalBonusAmount = 0;
+            }
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Date</th>
+                        <th>Comment</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AssociateInformation.AssociateBonus != null)
+                    {
+                        foreach (var bonus in Model.AssociateInformation.AssociateBonus)
+                        {
+                            <tr>
+                                <td>@bonus.BonusDate</td>
+                                <td>@bonus.BonusComments</td>
+                                <td>@bonus.BonusAmount.ToString("C")</td>
+                            </tr>
+                            TotalBonusAmount += bonus.BonusAmount;
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th>@TotalBonusAmount.ToString("C")</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            @if ((bool)Session["IsCommissionAdmin"] == true)
+            {
+                <h5 class="editInfo" rel="@Model.AssociateInformation.AssociateNumber.Trim()"><i class="fa fa-pencil" aria-hidden="true"></i> Bonus and Advances (Draws)</h5>
+            }
+        </div>
+
+        <div class="col-xs-6">        
+            <h4>Monthly Commission</h4>
+
+            @{ 
+                decimal TotalGrossAndAdjustments = 0;
+                decimal TotalCommissionGross = 0;
+                decimal GrossPercent = .8M;
+                decimal TotalPercentPay = 0;
+
+                TotalPercentPay = DollarPerCarPay + ProductDollarPerCarPay + VSCPercentPay + GAPPercentPay;
+
+                TotalGrossAndAdjustments = TotalGross + TotalAdjustments;
+                TotalCommissionGross = (TotalGrossAndAdjustments * GrossPercent);
+
+                decimal TotalDollarPerCarPay = TotalCommissionGross * (DollarPerCarPay / 100);
+                decimal TotalProductDollarPerCarPay = TotalCommissionGross * (ProductDollarPerCarPay / 100);
+                decimal TotalVSCPay = TotalCommissionGross * (VSCPercentPay / 100);
+                decimal TotalGAPPay = TotalCommissionGross * (GAPPercentPay / 100);
+
+                decimal TotalPay = 0;
+                TotalPay = TotalDollarPerCarPay + TotalProductDollarPerCarPay + TotalVSCPay + TotalGAPPay;
+
+            }
+            <table class="table table-bordered" style="font-size:12px;">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th></th>
+                        <th class="text-right">Percent</th>
+                        <th class="text-right">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Total Gross</strong></td>
+                        <td></td>
+                        <td class="text-right">@TotalGross.ToString("C",rev)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Adjustments</strong></td>
+                        <td></td>
+                        <td class="text-right">@TotalAdjustments.ToString("C", rev)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sub Total</strong></td>
+                        <td></td>
+                        <td class="text-right">@TotalGrossAndAdjustments.ToString("C", rev)</td>
+                    </tr>
+                    <tr style="border-bottom: 3px double">
+                        <td><strong>Commission Gross</strong></td>
+                        <td class="text-right">80%</td>
+                        <td class="text-right">@TotalCommissionGross.ToString("C", rev)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Average $ Per Retail Unit</strong></td>
+                        <td class="text-right">@DollarPerCarPay%</td>
+                        <td class="text-right">@TotalDollarPerCarPay.ToString("C",rev)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Average Product $ Per Unit</strong></td>
+                        <td class="text-right">@ProductDollarPerCarPay%</td>
+                        <td class="text-right">@TotalProductDollarPerCarPay.ToString("C", rev)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VSC Against Retail Sales</strong></td>
+                        <td class="text-right">@VSCPercentPay%</td>
+                        <td class="text-right">@TotalVSCPay.ToString("C", rev)</td>
+                    </tr>
+                    <tr style="border-bottom: 3px double">
+                        <td><strong>GAP Against Finance Deals</strong></td>
+                        <td class="text-right">@GAPPercentPay%</td>
+                        <td class="text-right">@TotalGAPPay.ToString("C", rev)</td>
+                    </tr>
+
+                </tbody>
+                <tfoot>
+                    <tr style="background-color:#d9edf7">
+                        <th>Total</th>
+                        <th class="text-right">@TotalPercentPay%</th>
+                        <th class="text-right">@TotalPay.ToString("C", rev)</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row" @*style="page-break-after: always;"*@>
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>@Model.AssociateInformation.AssociateLastName Deals</h4>
+            @if (Model.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
+            {
+                <table class="table table-bordered table-striped" style="font-size:11px">
+                    <thead>
+                        <tr style="background-color:#d9edf7">
+                            <th class="text-center">Deal #</th>
+                            <th class="text-center">Stk #</th>
+                            <th class="text-center">Cond</th>
+                            <th class="text-center">Year</th>
+                            <th class="text-center">Make</th>
+                            <th class="text-center">Model</th>
+                            <th class="text-center">Days</th>
+                            <th class="text-center">Miles</th>
+                            <th class="text-center">Deal Gross</th>
+                            <th class="text-center">Finance<br />Income</th>
+                            <th class="text-center">Service<br />Contract</th>
+                            <th class="text-center">Maint<br />Contract</th>
+                            <th class="text-center">GAP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var deal in Model.AftermarketDealDetails)
+                        {
+                            var isHandy = "";
+                            if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                            {
+                                isHandy = "(H)";
+                            }
+
+                            <tr>
+
+                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                <td class="text-center">@deal.VehicleStockNumber</td>
+                                <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                <td class="text-center">@deal.VehicleYear</td>
+                                <td class="text-center">@deal.VehicleMake</td>
+                                <td class="text-center">@deal.VehicleCarline</td>
+                                <td class="text-center">@deal.VehicleDaysInStock</td>
+                                <td class="text-center">@deal.VehicleMiles</td>
+                                <td class="text-center">@deal.DealGrossAmount</td>
+                                <td class="text-center">@deal.FinanceIncomeAmount</td>
+                                <td class="text-center">@deal.VSCAmount</td>
+                                <td class="text-center">@deal.MaintenanceAmount</td>
+                                <td class="text-center">@deal.GAPAmount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+                                            }
+
+@section Scripts
+{
+
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $('#select-anchor').change(function () {
+            var targetPosition = $("#" + $(this).val()).offset().top - 50;
+            $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+        });
+
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+
+        $('body').on('click','.editInfo', function (event) {
+
+            var id = $(this).attr('rel');
+            var url = "@applicationPath/Commission/BonusAndDraws/" + id + "/@Model.MonthId/@Model.YearId";
+            var dialogBox = $("<div>");
+
+            $(dialogBox).dialog({
+                resizable: false,
+                height:"auto",
+                width: dialogWidth,
+                position: { my: "center", at: "top+25%", of: window },
+                title: 'Associate Bonus and Advances (Draws)',
+                modal: true,
+                open: function (event, ui) {
+                    $(this).load(url);
+                    //$('#BonusDraws').validate();
+                },
+                buttons: {
+                    "Save": function () {
+                        var $this = this;
+                        var form = $('#BonusDraws', $this);
+                        //if (!$(form).valid()) {
+                        //    return false;
+                        //}
+
+                        $.ajax({
+                            async: false,
+                            type: 'POST',
+                            url: form.attr("action"),
+                            data: $(form).serialize(),
+                            success: $($this).dialog("close").dialog("destroy").remove()
+                        });
+
+                        location.reload();
+                   },
+
+                    "Close": function () {
+                        $(this).dialog("close");
+                        $(this).empty();
+                    }
+                }
+            });
+            $(dialogBox).dialog('open');
+        });
+
+
+    });
+
+
+    </script>
+}
+
+
+

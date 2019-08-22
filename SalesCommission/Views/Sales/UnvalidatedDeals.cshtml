@@ -1,0 +1,230 @@
+﻿@model SalesCommission.Models.DealListing
+
+@{
+    ViewBag.Title = "List of Unvalidated Deals";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+
+    var makeName = "";
+    var reportMonth = "";
+    var reportYear = "";
+    var locationCode = "";
+    var monthId = "";
+
+    if (Model.Deals.Count > 0)
+    {
+        var deal = Model.Deals[0];
+
+        makeName = deal.MakeName;
+        reportMonth = deal.ReportDate.ToString("MMMM");
+        //reportYear = deal.ReportDate.Year.ToString();
+        //locationCode = deal.DealKey.Substring(0,3);
+        //monthId = deal.ReportDate.Month.ToString();
+    }
+
+    reportYear = Model.YearId;
+    locationCode = Model.LocationCode;
+    monthId = Model.MonthId;
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+    var dealIndex = 0;
+
+    double TotalDealGross = 0;
+    double TotalFinInc = 0;
+    double TotalVSC = 0;
+    double TotalFTD = 0;
+    double TotalGAP = 0;
+    double TotalOther = 0;
+    double TotalTotal = 0;
+    double TotalMaintenance = 0;
+    double TotalBankFee = 0;
+
+}
+
+
+
+<h2>Unvalidated @makeName Deals for @reportMonth @reportYear <a href="@applicationPath/Sales/?locationId=@locationCode&monthId=@monthId&yearId=@reportYear" class="btn btn-primary" style="float:right">Return to Dashboard</a></h2>
+
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-bordered table-striped" id="dealListing" style="font-size:12px;">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th></th>
+                    <th class="text-center">Deal</th>
+                    <th class="text-center">Customer</th>
+                    <th class="text-center">Deal Date</th>
+                    <th class="text-center">Stk #</th>
+                    <th class="text-center">Deal Gross</th>
+                    <th class="text-center">Fin Inc</th>
+                    <th class="text-center">Bank Fee</th>
+                    <th class="text-center">VSC</th>
+                    <th class="text-center">MC</th>
+                    <th class="text-center">GAP</th>
+                    <th class="text-center">Other</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Memo: FTD</th>
+                    <th class="text-center">Associates</th>
+                    <th class="text-center">Fin Src</th>
+                    <th class="text-center">Fin Mgr</th>
+                    <th class="text-center">Variance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deal in Model.Deals)
+                {
+                    dealIndex += 1;
+                    var bgStyle = "";
+
+                    TotalDealGross += deal.DealGrossAmount;
+                    TotalFinInc += deal.FinIncAmount;
+                    TotalVSC += deal.VSCAmount;
+                    TotalFTD += deal.FTDAmount;
+                    TotalGAP += deal.GapAmount;
+                    TotalOther += deal.OtherAmount;
+                    TotalMaintenance += deal.MaintenanceContractAmount;
+                    TotalBankFee += deal.BankFee;
+
+                    if (deal.VarianceAmount < -99 && deal.VarianceReason != "")
+                    {
+                        bgStyle = "style=background-color:#fcf8e3;";
+                    }
+
+                    else if (deal.VarianceAmount < -99 && deal.VarianceReason == "")
+                    {
+                        bgStyle = "style=background-color:#f2dede;";
+                    }
+                    <tr>
+                        <td>@dealIndex.</td>
+                        <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey">@deal.DealKey</a></td>
+                        <td class="text-center">@deal.CustomerName</td>
+                        <td class="text-center">@deal.DealDate.ToShortDateString()</td>
+                        <td class="text-center">@deal.StockNumber</td>
+                        <td class="text-center">@deal.DealGrossAmount.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.FinIncAmount.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.BankFee.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.VSCAmount.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.MaintenanceContractAmount.ToString("C", nfi)</td>     
+                        <td class="text-center">@deal.GapAmount.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.OtherAmount.ToString("C", nfi)</td>
+                        <td class="text-center">
+
+                            @{ 
+                                var totalAmount = deal.DealGrossAmount + deal.FinIncAmount + deal.VSCAmount + deal.MaintenanceContractAmount + deal.GapAmount + deal.BankFee;// + deal.OtherAmount;
+                                TotalTotal += totalAmount;
+                            }
+
+                            @totalAmount.ToString("C", nfi)
+                            
+                        </td>
+                        
+                        <td class="text-center">@deal.FTDAmount.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.SalesAssociate1<br />@deal.SalesAssociate2</td>
+                        <td class="text-center">@deal.FinInstCode</td>
+                        <td class="text-center">@deal.FinanceManager</td>
+                        <td class="text-center" @bgStyle>@deal.VarianceAmount.ToString("C", nfi)</td>
+
+                    </tr>
+                }
+
+            </tbody>
+            <tfoot>
+                <tr style="background-color:#d9edf7">
+                    <th></th>
+                    <th class="text-center">Totals</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@TotalDealGross.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalFinInc.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalBankFee.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalVSC.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalMaintenance.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalGAP.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalOther.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalTotal.ToString("C", nfi)</th>
+                    <th class="text-center">@TotalFTD.ToString("C", nfi)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                </tr>
+                @{
+                    var AvgGross = (TotalDealGross / dealIndex);
+                    var AvgFinInc = (TotalFinInc / dealIndex);
+                    var AvgVSC = (TotalVSC / dealIndex);
+                    var AvgFTD = (TotalFTD / dealIndex);
+                    var AvgGAP = (TotalGAP / dealIndex);
+                    var AvgOther = (TotalOther / dealIndex);
+                    var AvgTotal = (TotalTotal / dealIndex);
+                    var AvgMaintenance = (TotalMaintenance / dealIndex);
+                    var AvgBankFee = (TotalBankFee / dealIndex);
+                }
+                <tr style="background-color:#d9edf7">
+                    <th></th>
+                    <th class="text-center">Averages</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@AvgGross.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgFinInc.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgBankFee.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgVSC.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgMaintenance.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgGAP.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgOther.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgTotal.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgFTD.ToString("C", nfi)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#dealListing').DataTable({
+              searching: true,
+              dom: 'Bfrti',
+              pageLength: -1,
+              buttons: [
+                  {
+                      extend: 'copyHtml5', footer: true,
+                  },
+                  {
+                      extend: 'excelHtml5', footer: true,
+                  },
+                  {
+                      extend: 'pdfHtml5', footer: true,
+                      orientation: 'landscape'
+                  },
+                  {
+                      extend: 'print', footer: true,
+                      orientation: 'landscape'
+                  }
+              ],
+              columnDefs: [
+                { type: 'any-number', targets: [5, 6, 7, 8, 9, 10, 11, 12, 13] },
+                { type: 'date-us', targets: [3] }
+              ]
+
+          });
+      });
+
+    </script>
+
+}

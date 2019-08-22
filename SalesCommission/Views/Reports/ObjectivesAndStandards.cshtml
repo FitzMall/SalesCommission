@@ -1,0 +1,234 @@
+﻿@model SalesCommission.Models.ReportsModel
+
+@{
+    ViewBag.Title = "Objectives And Standards Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+}
+<style type="text/css">
+
+thead, tbody, tfoot { display: block; }
+
+tbody {
+    height: 350px;       /* Just for the demo          */
+    overflow-y: auto;    /* Trigger vertical scroll    */
+    overflow-x: hidden;  /* Hide the horizontal scroll */
+}
+ 
+</style>
+<div class="jumbotron">
+    <h1>Objectives and Standards Report</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+            {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- All Stores -", new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Deals</span>
+                    </div>
+                </div>                                
+                <div class="row">
+                    <div class="col-sm-8">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>            
+        </div>
+
+
+    }
+</div>
+
+    <div class="row">
+        <table class="table table-bordered">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center" style="width:180px;">Auto Mall</th>
+                    <th class="text-center" style="width:110px">Make</th>
+                    <th class="text-center" style="width:75px">Deal Count</th>
+                    <th class="text-center" style="width:75px">Finance %</th>
+                    <th class="text-center" style="width:75px">Finance $</th>
+                    <th class="text-center" style="width:65px">VSC %</th>
+                    <th class="text-center" style="width:65px">VSC $</th>
+                    <th class="text-center" style="width:75px">GAP % Fin</th>
+                    <th class="text-center" style="width:75px">GAP per Unit</th>
+                    <th class="text-center" style="width:65px">A/M %</th>
+                    <th class="text-center" style="width:75px">A/M per Unit</th>
+                    <th class="text-center" style="width:75px">BPP %</th>
+                    <th class="text-center" style="width:75px">BPP Coll %</th>
+                    <th class="text-center extra-right"  style="width:65px">Trade %</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ 
+                    var totalDealCount = 0;
+                    double totalFinanceIncCount = 0;
+                    double totalVSCCount = 0;
+                    double totalGAPCount = 0;
+                    double totalBPPCount = 0;
+                    double totalAftermarketCount = 0;
+
+                    double totalFinIncAmount = 0;
+                    double totalVSCAmount = 0;
+                    double totalGapAmount = 0;
+                    double totalOtherAmount = 0;
+                }
+
+                @foreach (var detail in Model.ObjectivesAndStandardsDetails)
+                {
+                    var brandCode = detail.BrandId;
+                    var storeName = "";
+
+                    foreach (var mapping in SalesCommission.Business.Enums.Stores)
+                    {
+                        if (mapping.StoreId.ToLower() == detail.AutoMall.ToLower())
+                        {
+                            storeName = mapping.Name;
+                            break;
+                        }
+                    }
+
+                    totalDealCount = totalDealCount + detail.DealCount;
+
+                    totalFinanceIncCount = totalFinanceIncCount + detail.FinanceIncCount;
+                    totalVSCCount = totalVSCCount + detail.VSCCount;
+                    totalGAPCount = totalGAPCount + detail.GAPCount;
+                    totalBPPCount = totalBPPCount + detail.BPPCount;
+                    totalAftermarketCount = totalAftermarketCount + detail.AftermarketCount;
+
+                    totalFinIncAmount = totalFinIncAmount + detail.FinIncAmount;
+                    totalVSCAmount = totalVSCAmount + detail.VSCAmount;
+                    totalGapAmount = totalGapAmount + detail.GapAmount;
+                    totalOtherAmount = totalOtherAmount + detail.OtherAmount;
+
+
+                    var finCntPercent = detail.FinanceIncCount / detail.DealCount;
+                    var vscPercent = detail.VSCCount / detail.DealCount;
+                    var gapPercent = detail.GAPCount / detail.DealCount;
+                    var bppPercent = detail.BPPCount / detail.DealCount;
+                    var aftermarketPercent = detail.AftermarketCount / detail.DealCount;
+                    var tradePercent = detail.TradeCount / detail.DealCount;
+
+                    double finIncPerUnit = 0;
+                    if (detail.FinanceIncCount > 0)
+                    {
+                        finIncPerUnit = detail.FinIncAmount / detail.FinanceIncCount;
+                    }
+
+                    double vscPerUnit = 0;
+                    if (detail.VSCCount > 0)
+                    {
+                        vscPerUnit = detail.VSCAmount / detail.VSCCount;
+                    }
+
+                    double gapPerUnit = 0;
+                    if (detail.GAPCount > 0)
+                    {
+                        gapPerUnit = detail.GapAmount / detail.GAPCount;
+                    }
+
+                    double aftermarketPerUnit = 0;
+                    if (detail.AftermarketCount > 0)
+                    {
+                        aftermarketPerUnit = detail.OtherAmount / detail.AftermarketCount;
+                    }
+
+                    <tr>
+                        <td class="text-center" style="width:180px">
+                            @storeName
+                        </td>
+                        <td class="text-center" style="width:110px">
+                            @detail.MakeName
+                        </td>
+                        <td class="text-center" style="width:75px">@detail.DealCount</td>
+                        <td class="text-center" style="width:75px">@finCntPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:75px">@finIncPerUnit.ToString("C", nfi)</td>
+                        <td class="text-center" style="width:65px">@vscPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:65px">@vscPerUnit.ToString("C", nfi)</td>
+                        <td class="text-center" style="width:75px">@gapPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:75px">@gapPerUnit.ToString("C", nfi)</td>
+                        <td class="text-center" style="width:65px">@aftermarketPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:75px">@aftermarketPerUnit.ToString("C", nfi)</td>
+                        <td class="text-center" style="width:75px">@bppPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:75px">@detail.BPPCollectionPercent.ToString("P", nfi)</td>
+                        <td class="text-center" style="width:65px">@tradePercent.ToString("P", nfi)</td>
+
+                    </tr>
+                }
+            </tbody>
+
+            @{ 
+                var totalfinCntPercent = totalFinanceIncCount / totalDealCount;
+                var totalvscPercent = totalVSCCount / totalDealCount;
+                var totalgapPercent = totalGAPCount / totalDealCount;
+                var totalbppPercent = totalBPPCount / totalDealCount;
+                var totalaftermarketPercent = totalAftermarketCount / totalDealCount;
+
+                double totalfinIncPerUnit = 0;
+                if (totalFinanceIncCount > 0)
+                {
+                    totalfinIncPerUnit = totalFinIncAmount / totalFinanceIncCount;
+                }
+
+                double totalvscPerUnit = 0;
+                if (totalVSCCount > 0)
+                {
+                    totalvscPerUnit = totalVSCAmount / totalVSCCount;
+                }
+
+                double totalgapPerUnit = 0;
+                if (totalGAPCount > 0)
+                {
+                    totalgapPerUnit = totalGapAmount / totalGAPCount;
+                }
+
+                double totalaftermarketPerUnit = 0;
+                if (totalAftermarketCount > 0)
+                {
+                    totalaftermarketPerUnit = totalOtherAmount / totalAftermarketCount;
+                }
+            }
+
+            <tfoot>
+                <tr>
+                    <th class="text-center" style="width:180px;">Totals / Avgs</th>
+                    <th class="text-center" style="width:110px"></th>
+                    <th class="text-center" style="width:75px">@totalDealCount</th>
+                    <th class="text-center" style="width:75px">@totalfinCntPercent.ToString("P", nfi)</th>
+                    <th class="text-center" style="width:75px">@totalfinIncPerUnit.ToString("C", nfi)</th>
+                    <th class="text-center" style="width:65px">@totalvscPercent.ToString("P", nfi)</th>
+                    <th class="text-center" style="width:65px">@totalvscPerUnit.ToString("C", nfi)</th>
+                    <th class="text-center" style="width:75px">@totalgapPercent.ToString("P", nfi)</th>
+                    <th class="text-center" style="width:75px">@totalgapPerUnit.ToString("C", nfi)</th>
+                    <th class="text-center" style="width:65px">@totalaftermarketPercent.ToString("P", nfi)</th>
+                    <th class="text-center" style="width:75px">@totalaftermarketPerUnit.ToString("C", nfi)</th>
+                    <th class="text-center" style="width:75px">@totalbppPercent.ToString("P", nfi)</th>
+                    <th class="text-center" style="width:75px"></th>
+                    <th class="text-center" style="width:65px"></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+

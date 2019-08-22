@@ -1,0 +1,719 @@
+﻿@model SalesCommission.Models.LeadSourceReportModel
+
+@{
+    ViewBag.Title = "Lead Source Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+    System.Globalization.NumberFormatInfo percents = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    percents.CurrencyDecimalDigits = 0;
+    percents.PercentDecimalDigits = 1;
+    percents.PercentPositivePattern = 1;
+    percents.CurrencySymbol = "";
+    percents.PercentSymbol = "";
+
+
+}
+@section CSS
+{
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+    <link rel="stylesheet" href="~/Scripts/jquery-ui.css">
+    
+
+    <script type="text/javascript">
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+    </script>
+}
+
+<style type="text/css">
+    th.text-center.sorting_asc {
+        background-color: #FFFF7C;
+    }
+
+    th.text-center.sorting_desc {
+        background-color: #FFFF7C;
+    }
+
+    td.text-center.sorting_1 {
+        background-color: #FFFF7C !important;
+    }
+
+    .ui-widget-content a{
+         color: #428bca;
+    }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Lead Source Report</h1>
+    <div class="row">
+        <div class="col-sm-3">
+            <h3>Select Store(s):</h3>
+        </div>
+        <div class="col-sm-2">
+            <h3>Start Date:</h3>
+        </div>
+        <div class="col-sm-2">
+            <h3>End Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.ListBoxFor(n => n.SelectedStores, new MultiSelectList(SalesCommission.Business.Enums.VinStores, "StoreId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Stores..." })
+                    </div>
+                    <div class="col-sm-2" style="margin-top:10px;">
+                        <input type="text" id="datepickerStart" name="datepickerStart" class="form-control form-inline" style="padding:4px;height:30px;" value="@Model.ReportStartDate.ToShortDateString()">
+                    </div>
+                    <div class="col-sm-2" style="margin-top:10px;">
+                        <input type="text" id="datepickerEnd" name="datepickerEnd" class="form-control form-inline" style="padding:4px;height:30px;" value="@Model.ReportEndDate.ToShortDateString()">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Leads</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+
+
+
+@if (Model.StoreLeadInformation != null)
+{
+    <div class="row">
+        <div class="col-md-10">
+            <h3>Lead Source Report for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()</h3>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:10px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+    </div>
+
+
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Store Name</th>
+                    <th class="text-center" style="border-right: 4px double #808080">Lead Source</th>
+                    <th class="text-center">Phone Leads</th>
+                    <th class="text-center">Phone Leads Sold</th>
+                    <th class="text-center" style="border-right: 4px double #808080">Phone Leads %</th>
+                    <th class="text-center">Walkin Leads</th>
+                    <th class="text-center">Walkin Leads Sold</th>
+                    <th class="text-center" style="border-right: 4px double #808080">Walkin Leads %</th>
+                    <th class="text-center">Internet Leads</th>
+                    <th class="text-center">Internet Leads Sold</th>
+                    <th class="text-center" style="border-right: 4px double #808080">Internet Leads %</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th class="text-center" style="background-color: #FFFF7C;">Store</th>
+                    <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">Lead Source</th>
+                    <th class="text-center" style="background-color: #FFFF7C">24</th>
+                    <th class="text-center" style="background-color: #FFFF7C">12</th>
+                    <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                    <th class="text-center" style="background-color: #FFFF7C">24</th>
+                    <th class="text-center" style="background-color: #FFFF7C">12</th>
+                    <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                    <th class="text-center" style="background-color: #FFFF7C">24</th>
+                    <th class="text-center" style="background-color: #FFFF7C">12</th>
+                    <th class="text-center" style="background-color: #FFFF7C;border-right: 4px double #808080">50%</th>
+                </tr>
+                @{
+                    decimal TotalUnitCount = 0;
+
+                    decimal TotalPhoneLeadCount = 0;
+                    decimal TotalWalkInLeadCount = 0;
+                    decimal TotalInternetLeadCount = 0;
+
+                    decimal TotalPhoneLeadSoldCount = 0;
+                    decimal TotalWalkInLeadSoldCount = 0;
+                    decimal TotalInternetLeadSoldCount = 0;
+
+                    decimal TotalPhoneLeadSoldPercent = 0;
+                    decimal TotalWalkInLeadSoldPercent = 0;
+                    decimal TotalInternetLeadSoldPercent = 0;
+
+
+                    decimal TotalcurrentAppointmentCount = 0;
+                    decimal TotalcurrentAppointmentCompleteCount = 0;
+                    decimal TotalcurrentAppointmentCompletePercent = 0;
+
+                    List<SalesCommission.Models.DataPoint> phoneLeadDataPoints = new List<SalesCommission.Models.DataPoint>();
+                    List<SalesCommission.Models.DataPoint> walkinLeadDataPoints = new List<SalesCommission.Models.DataPoint>();
+                    List<SalesCommission.Models.DataPoint> internetLeadDataPoints = new List<SalesCommission.Models.DataPoint>();
+
+                }
+
+
+                @foreach (var storeLead in Model.StoreLeadInformation)
+                {
+
+
+                    var leadSources = storeLead.StoreLeads.Select(o => o.LeadSourceGroupName).Distinct().ToList();
+
+                    foreach (var leadSource in leadSources)
+                    {
+                        decimal PhoneLeadCount = 0;
+                        decimal WalkInLeadCount = 0;
+                        decimal InternetLeadCount = 0;
+
+                        decimal PhoneLeadSoldCount = 0;
+                        decimal WalkInLeadSoldCount = 0;
+                        decimal InternetLeadSoldCount = 0;
+
+                        decimal PhoneLeadSoldPercent = 0;
+                        decimal WalkInLeadSoldPercent = 0;
+                        decimal InternetLeadSoldPercent = 0;
+
+                        var leads = storeLead.StoreLeads.FindAll(o => o.LeadSourceGroupName == leadSource);
+
+                        var cleanedLeadSource = "";
+                        if (String.IsNullOrEmpty(leadSource))
+                        {
+                            cleanedLeadSource = "Unassigned";
+                        }
+                        else
+                        {
+                            cleanedLeadSource = leadSource.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("~", "x").Replace("*", "").Replace("/", "").Replace("\\", "").Replace(".", "").Replace("!", "").Replace("|", "").Replace(";", "").Replace("&", "");
+                        }
+
+
+                        var phoneLeads = leads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+                        //var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                        PhoneLeadCount = phoneLeads.Count;
+                        //currentTotalLeadCount += PhoneLeadCount;
+                        PhoneLeadSoldCount = phoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (PhoneLeadCount > 0)
+                        {
+                            PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+                            phoneLeadDataPoints.Add(new SalesCommission.Models.DataPoint(cleanedLeadSource, (double)PhoneLeadCount));
+
+                        }
+
+                        var walkinLeads = leads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+                        //var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                        WalkInLeadCount = walkinLeads.Count;
+                        //currentTotalLeadCount += WalkInLeadCount;
+                        WalkInLeadSoldCount = walkinLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (WalkInLeadCount > 0)
+                        {
+                            WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+                            walkinLeadDataPoints.Add(new SalesCommission.Models.DataPoint(cleanedLeadSource, (double)WalkInLeadCount));
+                        }
+
+
+                        var internetLeads = leads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet" || x.LeadSourceTypeName.ToLower() == "websitechat");
+
+                        //var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= Model.ReportStartDate && x.LeadCreatedEastTime <= Model.ReportEndDate.AddDays(1));
+                        InternetLeadCount = internetLeads.Count;
+                        //currentTotalLeadCount += InternetLeadCount;
+                        InternetLeadSoldCount = internetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+                        if (InternetLeadCount > 0)
+                        {
+                            InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+                            internetLeadDataPoints.Add(new SalesCommission.Models.DataPoint(cleanedLeadSource, (double)InternetLeadCount));
+                        }
+
+
+                        var displayName = "";
+                        if(String.IsNullOrEmpty(leadSource))
+                        {
+                            displayName = "Unassigned";
+                        }
+                        else
+                        {
+                            displayName = leadSource;
+                        }
+
+                        <tr>
+                            <td class="text-center">@storeLead.StoreName</td>
+                            <td class="text-center" style="border-right: 4px double #808080"><a id="@cleanedLeadSource-showdetails">@displayName</a></td>
+                            <td class="text-center">@PhoneLeadCount</td>
+                            <td class="text-center">@PhoneLeadSoldCount</td>
+                            <td class="text-center" style="border-right: 4px double #808080">@PhoneLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@WalkInLeadCount</td>
+                            <td class="text-center">@WalkInLeadSoldCount</td>
+                            <td class="text-center" style="border-right: 4px double #808080">@WalkInLeadSoldPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@InternetLeadCount</td>
+                            <td class="text-center">@InternetLeadSoldCount</td>
+                            <td class="text-center" style="border-right: 4px double #808080">@InternetLeadSoldPercent.ToString("P", nfi)</td>
+                        </tr>
+
+
+                        TotalPhoneLeadCount += PhoneLeadCount;
+                        TotalWalkInLeadCount += WalkInLeadCount;
+                        TotalInternetLeadCount += InternetLeadCount;
+
+                        TotalPhoneLeadSoldCount += PhoneLeadSoldCount;
+                        TotalWalkInLeadSoldCount += WalkInLeadSoldCount;
+                        TotalInternetLeadSoldCount += InternetLeadSoldCount;
+                    }
+                }
+            </tbody>
+            <tfoot>
+
+                @{
+                    TotalPhoneLeadSoldPercent = TotalPhoneLeadSoldCount / TotalPhoneLeadCount;
+                    TotalWalkInLeadSoldPercent = TotalWalkInLeadSoldCount / TotalWalkInLeadCount;
+                    TotalInternetLeadSoldPercent = TotalInternetLeadSoldCount / TotalInternetLeadCount;
+                   
+
+                }
+
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center"></th>
+                    <th class="text-center" style="border-right: 4px double #808080">Totals</th>
+                    <th class="text-center">@TotalPhoneLeadCount</th>
+                    <th class="text-center">@TotalPhoneLeadSoldCount</th>
+                    <th class="text-center" style="border-right: 4px double #808080">@TotalPhoneLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@TotalWalkInLeadCount</th>
+                    <th class="text-center">@TotalWalkInLeadSoldCount</th>
+                    <th class="text-center" style="border-right: 4px double #808080">@TotalWalkInLeadSoldPercent.ToString("P", nfi)</th>
+                    <th class="text-center">@TotalInternetLeadCount</th>
+                    <th class="text-center">@TotalInternetLeadSoldCount</th>
+                    <th class="text-center" style="border-right: 4px double #808080">@TotalInternetLeadSoldPercent.ToString("P", nfi)</th>
+
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="row" id="phone-lead-row" style="page-break-before:always">
+        <hr/>
+        <div class="col-md-12">
+            <div id="chartContainerPhone" style="height: 370px; width: 100%;"></div>
+
+            <script type="text/javascript">
+                $(function () {
+                    var chart = new CanvasJS.Chart("chartContainerPhone", {
+                        title: {
+                            text: "Phone Lead Sources for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()",
+                            fontSize:18
+                        },
+                        animationEnabled: true,
+                        exportEnabled: true,
+                        legend: {
+                            verticalAlign: "center",
+                            horizontalAlign: "left",
+                            fontSize: 12,
+                            fontFamily: "Helvetica"
+                        },
+                        theme: "light2",
+                        data: [
+                        {
+                            type: "pie",
+                            indexLabelFontFamily: "Garamond",
+                            indexLabelFontSize: 12,
+                            indexLabel: "{label} {y}%",
+                            startAngle: -20,
+                            showInLegend: true,
+                            toolTipContent: "{legendText} {y}%",
+                            dataPoints: [
+                                @{
+                        var sortedLeads = phoneLeadDataPoints.OrderByDescending(x => x.Y);
+
+                        foreach(var dp in sortedLeads)
+                        {
+                            double leadPercent = ((double) dp.Y / (double)TotalPhoneLeadCount);
+
+
+                            @: { y: @leadPercent.ToString("P", percents), legendText: "@dp.Label", label: "@dp.Label" },
+                        }
+                    }
+
+                            //    { y: 72.48, legendText: "Google", label: "Google" },
+                            //    { y: 10.39, legendText: "Bing", label: "Bing" },
+                            //    { y: 7.78, legendText: "Yahoo!", label: "Yahoo!" },
+                            //    { y: 7.14, legendText: "Baidu", label: "Baidu" },
+                            //    { y: 0.22, legendText: "Ask", label: "Ask" },
+                            //    { y: 0.15, legendText: "AOL", label: "AOL" },
+                            //    { y: 1.84, legendText: "Others", label: "Others" }
+                            ],
+
+                            //You can add dynamic data from the controller as shown below. Check the controller and uncomment the line which generates dataPoints.
+                            //dataPoints: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(phoneLeadDataPoints)),
+                        }
+                        ]
+                    });
+                    chart.render();
+                });
+            </script>
+        </div>
+    </div>
+        <div class="row" style="page-break-before:always">            
+            <hr />
+                <div class="col-md-12">
+                    <div id="chartContainerWalkin" style="height: 370px; width: 100%;"></div>
+
+                    <script type="text/javascript">
+                        $(function () {
+                            var chart = new CanvasJS.Chart("chartContainerWalkin", {
+                                title: {
+                                    text: "Walkin Lead Sources for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()",
+                                    fontSize:18
+                                },
+                                animationEnabled: true,
+                                exportEnabled: true,
+                                legend: {
+                                    verticalAlign: "center",
+                                    horizontalAlign: "left",
+                                    fontSize: 12,
+                                    fontFamily: "Helvetica"
+                                },
+                                theme: "light2",
+                                data: [
+                                {
+                                    type: "pie",
+                                    indexLabelFontFamily: "Garamond",
+                                    indexLabelFontSize: 12,
+                                    indexLabel: "{label} {y}%",
+                                    startAngle: -20,
+                                    showInLegend: true,
+                                    toolTipContent: "{legendText} {y}%",
+                                    dataPoints: [
+                    @{
+    var sortedWalkinLeads = walkinLeadDataPoints.OrderByDescending(x => x.Y);
+
+        foreach(var dp in sortedWalkinLeads)
+        {
+            double leadPercent = ((double) dp.Y / (double)TotalWalkInLeadCount);
+
+
+            @: { y: @leadPercent.ToString("P", percents), legendText: "@dp.Label", label: "@dp.Label" },
+                                }
+    }
+                                        //{ y: 72.48, legendText: "Google", label: "Google" },
+                                        //{ y: 10.39, legendText: "Bing", label: "Bing" },
+                                        //{ y: 7.78, legendText: "Yahoo!", label: "Yahoo!" },
+                                        //{ y: 7.14, legendText: "Baidu", label: "Baidu" },
+                                        //{ y: 0.22, legendText: "Ask", label: "Ask" },
+                                        //{ y: 0.15, legendText: "AOL", label: "AOL" },
+                                        //{ y: 1.84, legendText: "Others", label: "Others" }
+                                    ],
+
+                                    //You can add dynamic data from the controller as shown below. Check the controller and uncomment the line which generates dataPoints.
+                                    //dataPoints: @Html.Raw(ViewBag.DataPoints),
+                                }
+                                ]
+                            });
+                            chart.render();
+                        });
+                    </script>
+                </div>
+        </div>
+        <div class="row" style="page-break-before:always">
+            <hr />
+            <div class="col-md-12">
+                <div id="chartContainerInternet" style="height: 370px; width: 100%;"></div>
+
+                <script type="text/javascript">
+                    $(function () {
+                        var chart = new CanvasJS.Chart("chartContainerInternet", {
+                            title: {
+                                text: "Internet Lead Sources for @Model.ReportStartDate.ToShortDateString() to @Model.ReportEndDate.ToShortDateString()",
+                                fontSize:18
+                            },
+                            animationEnabled: true,
+                            exportEnabled: true,
+                            legend: {
+                                verticalAlign: "center",
+                                horizontalAlign: "left",
+                                fontSize: 12,
+                                fontFamily: "Helvetica"
+                            },
+                            theme: "light2",
+                            data: [
+                            {
+                                type: "pie",
+                                indexLabelFontFamily: "Garamond",
+                                indexLabelFontSize: 12,
+                                indexLabel: "{label} {y}%",
+                                startAngle: -20,
+                                showInLegend: true,
+                                toolTipContent: "{legendText} {y}%",
+                                dataPoints: [
+                @{
+    var sortedInternetLeads = internetLeadDataPoints.OrderByDescending(x => x.Y);
+
+        foreach(var dp in sortedInternetLeads)
+        {
+            double leadPercent = ((double) dp.Y / (double)TotalInternetLeadCount);
+
+
+            @: { y: @leadPercent.ToString("P", percents), legendText: "@dp.Label", label: "@dp.Label" },
+                                }
+    }
+                                    //{ y: 72.48, legendText: "Google", label: "Google" },
+                                    //{ y: 10.39, legendText: "Bing", label: "Bing" },
+                                    //{ y: 7.78, legendText: "Yahoo!", label: "Yahoo!" },
+                                    //{ y: 7.14, legendText: "Baidu", label: "Baidu" },
+                                    //{ y: 0.22, legendText: "Ask", label: "Ask" },
+                                    //{ y: 0.15, legendText: "AOL", label: "AOL" },
+                                    //{ y: 1.84, legendText: "Others", label: "Others" }
+                                ],
+
+                                //You can add dynamic data from the controller as shown below. Check the controller and uncomment the line which generates dataPoints.
+                                //dataPoints: @Html.Raw(ViewBag.DataPoints),
+                            }
+                            ]
+                        });
+                        chart.render();
+                    });
+                </script>
+            </div>
+        </div>
+
+
+
+
+    foreach (var storeLead in Model.StoreLeadInformation)
+    {
+
+        var leadSources = storeLead.StoreLeads.Select(o => o.LeadSourceGroupName).Distinct().ToList();
+
+        foreach (var leadSource in leadSources)
+        {
+
+            var leads = storeLead.StoreLeads.FindAll(o => o.LeadSourceGroupName == leadSource);
+
+            var cleanedLeadSource = "";
+            if (String.IsNullOrEmpty(leadSource))
+            {
+                cleanedLeadSource = "Unassigned";
+            }
+            else
+            {
+                cleanedLeadSource = leadSource.Replace(" ", "").Replace("(", "").Replace(")", "").Replace("~", "x").Replace("*", "").Replace("/", "").Replace("\\", "").Replace(".", "").Replace("!", "").Replace("|", "").Replace(";", "").Replace("&", "");
+            }
+
+            <div class="row" style="margin:15px;display:none" id="@cleanedLeadSource-details">
+                <table class="table table-bordered table-striped" style="font-size:12px;" id="@cleanedLeadSource-table">
+                    <thead>
+                        <tr style="background-color:#d9edf7;">
+                            <th class="text-center">Lead ID</th>
+                            <th class="text-center">Lead Date</th>
+                            <th class="text-center">Customer</th>
+                            <th class="text-center">Lead Status</th>
+                            <th class="text-center">Lead Status Type</th>
+                            <th class="text-center">Lead Source</th>
+                            <th class="text-center">Lead Source Type</th>
+                            <th class="text-center">Lead Source Group</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lead in leads)
+                {
+                            <tr style="background-color:#d9edf7;">
+                                <td class="text-center">@lead.LeadId</td>
+                                <td class="text-center">@lead.LeadCreatedEastTime.ToShortDateString()</td>
+                                <td class="text-center"><a href="https://apps.vinmanager.com/CarDashboard/Pages/CRM/CustomerDashboard.aspx?GlobalCustomerID=@lead.CustomerId&r=@lead.CustomerId" target="_blank">@lead.CustomerName</a></td>
+                                <td class="text-center">@lead.LeadStatusName</td>
+                                <td class="text-center">@lead.LeadStatusTypeName</td>
+                                <td class="text-center">@lead.LeadSourceName</td>
+                                <td class="text-center">@lead.LeadSourceTypeName</td>
+                                <td class="text-center">@lead.LeadSourceGroupName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <script type="text/javascript">
+                $(function () {
+                    $("#@cleanedLeadSource-showdetails").click(function () {
+                        $('#@cleanedLeadSource-details').dialog({
+                            resizable: false,
+                            height: "auto",
+                            width: dialogWidth,
+                            position: { my: "center", at: "100px", of: window },
+                            title: '@leadSource Leads',
+                            modal: true,
+                            buttons: {
+                                "Close": function () {
+                                    $(this).dialog("close");
+                                }
+                            }
+                        });
+                    });
+                });
+
+                $('#@cleanedLeadSource-table').DataTable({
+                    searching: true,
+                    dom: 'Bfrtip',
+                    pageLength: 10,
+                    buttons: [
+                        {
+                            extend: 'copyHtml5', footer: true,
+                        },
+                        {
+                            extend: 'excelHtml5', footer: true,
+                        },
+                        {
+                            extend: 'pdfHtml5', footer: true,
+                            orientation: 'landscape'
+                        },
+                        {
+                            extend: 'print', footer: true,
+                            orientation: 'landscape'
+                        }
+                    ]
+                    //],
+                    //columnDefs: [
+                    //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                    //  { type: 'date-us', targets: [3] }
+                    //],
+                    //  order: [[ 1, 'desc' ]]
+                });
+
+            </script>
+            }
+            }
+            }
+            @section scripts
+{
+
+                <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+                <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+                <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+                <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+                <script>
+                    $(function () {
+                        $("#datepickerStart").datepicker({
+                            showOtherMonths: true,
+                            selectOtherMonths: true,
+                            showOtherMonths: true,
+                            selectOtherMonths: true
+                        });
+                    });
+                    $(function () {
+                        $("#datepickerEnd").datepicker({
+                            showOtherMonths: true,
+                            selectOtherMonths: true,
+                            showOtherMonths: true,
+                            selectOtherMonths: true
+                        });
+                    });
+                </script>
+
+                <script type="text/javascript">
+                    $(document).ready(function () {
+
+
+
+                        $('[data-toggle="tooltip"]').tooltip();
+
+                        $('#section1').DataTable({
+                            searching: true,
+                            dom: 'Bfrti',
+                            pageLength: -1,
+                            buttons: [
+                                {
+                                    extend: 'copyHtml5', footer: true,
+                                },
+                                {
+                                    extend: 'excelHtml5', footer: true,
+                                },
+                                {
+                                    extend: 'pdfHtml5', footer: true,
+                                    orientation: 'landscape'
+                                },
+                                {
+                                    extend: 'print', footer: true,
+                                    orientation: 'landscape'
+                                }
+                            ]
+                            //],
+                            //columnDefs: [
+                            //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                            //  { type: 'date-us', targets: [3] }
+                            //],
+                            //  order: [[ 1, 'desc' ]]
+                        });
+
+                    });
+
+                </script>
+
+                <script type="text/javascript">
+
+                    $(document).ready(function () {
+
+                        $('#select-anchor').change(function () {
+                            var targetPosition = $("#" + $(this).val()).offset().top - 50;
+                            $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+                        });
+
+                        var dialogWidth = 0;
+
+                        dialogWidth = ($(window).width() * .75);
+
+                        if ($(window).width() > 1199) {
+                            dialogWidth = 800;
+                        }
+
+
+
+
+
+                    });
+
+
+                </script>
+            }

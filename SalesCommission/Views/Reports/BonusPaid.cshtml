@@ -1,0 +1,196 @@
+﻿@model SalesCommission.Models.PaidBonusModel
+
+@{
+    ViewBag.Title = "Paid Bonus Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+
+
+}
+@section CSS
+{
+
+}
+
+<style type="text/css">
+    th.text-center.sorting_asc {
+        background-color: #FFFF7C;
+    }
+
+    th.text-center.sorting_desc {
+        background-color: #FFFF7C;
+    }
+
+    td.text-center.sorting_1 {
+        background-color: #FFFF7C !important;
+    }
+
+    .ui-widget-content a {
+        color: #428bca;
+    }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Bonus Paid Report</h1>
+    <div class="row">
+        <div class="col-sm-3">
+            <h3>Select Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+@if (Model.PaidBonuses != null)
+{
+    <div class="row">
+        <div class="col-md-10">
+            <h3>Bonus Paid Report</h3>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:10px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Store</th>
+                    <th class="text-center">Associate</th>
+                    <th class="text-center">Month/Year</th>
+                    <th class="text-center">Saved By</th>
+                    <th class="text-center">Saved Date</th>
+                    <th class="text-center">Amount</th>
+                    <th class="text-center">Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ 
+                    decimal TotalAmountPaid = 0;
+                }
+                @foreach (var bonus in Model.PaidBonuses)
+                {
+                
+                        <tr>
+                            <td class="text-center">@bonus.Store</td>
+                            <td class="text-center">@bonus.AssociateName</td>
+                            <td class="text-center">@bonus.MonthYear</td>
+                            <td class="text-center">@bonus.SaveUser</td>
+                            <td class="text-center">@bonus.SaveDate.ToShortDateString()</td>
+                            <td class="text-center">@bonus.Amount</td>
+                            <td class="text-center">@bonus.Comments</td>
+                        </tr>
+                    TotalAmountPaid += bonus.Amount;
+
+                }
+            </tbody>
+            <tfoot>
+
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@TotalAmountPaid</th>
+                    <th class="text-center"></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+                    }
+
+@section scripts
+{
+
+
+    <script type="text/javascript">
+                            $(document).ready(function () {
+
+
+
+                                $('[data-toggle="tooltip"]').tooltip();
+
+                                $('#section1').DataTable({
+                                    searching: true,
+                                    dom: 'Bfrti',
+                                    pageLength: -1,
+                                    buttons: [
+                                        {
+                                            extend: 'copyHtml5', footer: true,
+                                        },
+                                        {
+                                            extend: 'excelHtml5', footer: true,
+                                        },
+                                        {
+                                            extend: 'pdfHtml5', footer: true,
+                                            orientation: 'landscape'
+                                        },
+                                        {
+                                            extend: 'print', footer: true,
+                                            orientation: 'landscape'
+                                        }
+                                    ]
+                                    //],
+                                    //columnDefs: [
+                                    //  { type: 'any-number', targets: [ 8, 9, 10, 11, 12, 13,14,15,16,17] },
+                                    //  { type: 'date-us', targets: [3] }
+                                    //],
+                                    //  order: [[ 1, 'desc' ]]
+                                });
+
+                            });
+
+    </script>
+
+}

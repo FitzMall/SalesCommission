@@ -1,0 +1,13 @@
+﻿@model SalesCommission.Models.ImportModel
+
+@{
+    ViewBag.Title = "Import";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Import</h2>
+@using (Html.BeginForm())
+{
+
+    <input type="submit" id="btnSubmit" name="btnSubmit" value="Export to Commissions" class="btn btn-lg btn-primary">
+}

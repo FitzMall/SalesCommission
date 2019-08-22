@@ -1,0 +1,2617 @@
+﻿@model SalesCommission.Models.AssociateCommissionModel
+
+@{
+    ViewBag.Title = "Associate Score Card";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    //nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+    
+}
+
+@section CSS
+{
+    <style type="text/css">
+
+        textarea {
+            max-width: none;
+        }
+
+        .form-control {
+            padding: 3px 3px;
+            margin: 4px 0px;
+            height: 28px;
+        }
+
+        .scorecard-label {
+            margin-top: 12px;
+        }
+
+        .new-used{
+            display:none;
+        }
+        .ui-slider-vertical {
+            margin-left: 25px;
+        }
+
+        .ui-spinner-button {
+            background-image: url('@applicationPath/scripts/images/ui-icons_777777_256x240.png');
+        }
+
+        .ui-spinner-up {
+            background-position: 0 -16px;
+        }
+
+        .ui-spinner-down {
+            background-position: -65px -16px;
+        }
+
+        .ui-spinner a.ui-spinner-button {
+            width: 20px;
+        }
+
+        .form-control {
+            height: 22px;
+        }
+
+        .commission-display {
+            border: none;
+            background-color: transparent;
+            text-align: center;
+            box-shadow: none;
+        }
+
+        @@media print
+        {
+        .print-hide{ display:none;}
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary{
+            display:none;
+        }
+        
+        @@page {size: landscape;}
+        }
+    </style>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet">
+    <script src="~/Scripts/external/jquery/jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(function () {
+
+            $("#new-unit-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-commission-total-STD").val($(this).spinner('value') * $("#new-commission-STD").val());
+                    $("#new-commission-total-CERT").val($(this).spinner('value') * $("#new-commission-CERT").val());
+                    $("#new-commission-total-CERTELIT").val($(this).spinner('value') * $("#new-commission-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-bpp-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-bpp-total-STD").val($(this).spinner('value') * $("#new-bpp-STD").val());
+                    $("#new-bpp-total-CERT").val($(this).spinner('value') * $("#new-bpp-CERT").val());
+                    $("#new-bpp-total-CERTELIT").val($(this).spinner('value') * $("#new-bpp-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-trade-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-trade-total-STD").val($(this).spinner('value') * $("#new-trade-STD").val());
+                    $("#new-trade-total-CERT").val($(this).spinner('value') * $("#new-trade-CERT").val());
+                    $("#new-trade-total-CERTELIT").val($(this).spinner('value') * $("#new-trade-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-finance-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-finance-total-STD").val($(this).spinner('value') * $("#new-finance-STD").val());
+                    $("#new-finance-total-CERT").val($(this).spinner('value') * $("#new-finance-CERT").val());
+                    $("#new-finance-total-CERTELIT").val($(this).spinner('value') * $("#new-finance-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-service-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-service-total-STD").val($(this).spinner('value') * $("#new-service-STD").val());
+                    $("#new-service-total-CERT").val($(this).spinner('value') * $("#new-service-CERT").val());
+                    $("#new-service-total-CERTELIT").val($(this).spinner('value') * $("#new-service-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+
+                }
+            });
+            $("#new-gap-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-gap-total-STD").val($(this).spinner('value') * $("#new-gap-STD").val());
+                    $("#new-gap-total-CERT").val($(this).spinner('value') * $("#new-gap-CERT").val());
+                    $("#new-gap-total-CERTELIT").val($(this).spinner('value') * $("#new-gap-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-zurich-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-maintenance-total-STD").val($(this).spinner('value') * $("#new-maintenance-STD").val());
+                    $("#new-maintenance-total-CERT").val($(this).spinner('value') * $("#new-maintenance-CERT").val());
+                    $("#new-maintenance-total-CERTELIT").val($(this).spinner('value') * $("#new-maintenance-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#new-aftermarket-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-aftermarket-total-STD").val($(this).spinner('value') * $("#new-aftermarket-STD").val());
+                    $("#new-aftermarket-total-CERT").val($(this).spinner('value') * $("#new-aftermarket-CERT").val());
+                    $("#new-aftermarket-total-CERTELIT").val($(this).spinner('value') * $("#new-aftermarket-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#new-spiff-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#new-spiff-total-STD").val($(this).spinner('value') * $("#new-spiff-STD").val());
+                    $("#new-spiff-total-CERT").val($(this).spinner('value') * $("#new-spiff-CERT").val());
+                    $("#new-spiff-total-CERTELIT").val($(this).spinner('value') * $("#new-spiff-CERTELIT").val());
+
+                    $("#new-total-STD").val(parseInt($("#new-commission-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-spiff-total-STD").val()));
+                    $("#new-total-CERT").val(parseInt($("#new-commission-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-spiff-total-CERT").val()));
+                    $("#new-total-CERTELIT").val(parseInt($("#new-commission-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+
+            // NOW THE USED VALUES
+
+            $("#used-unit-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-commission-total-STD").val($(this).spinner('value') * $("#used-commission-STD").val());
+                    $("#used-commission-total-CERT").val($(this).spinner('value') * $("#used-commission-CERT").val());
+                    $("#used-commission-total-CERTELIT").val($(this).spinner('value') * $("#used-commission-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#used-bpp-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-bpp-total-STD").val($(this).spinner('value') * $("#used-bpp-STD").val());
+                    $("#used-bpp-total-CERT").val($(this).spinner('value') * $("#used-bpp-CERT").val());
+                    $("#used-bpp-total-CERTELIT").val($(this).spinner('value') * $("#used-bpp-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#used-trade-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-trade-total-STD").val($(this).spinner('value') * $("#used-trade-STD").val());
+                    $("#used-trade-total-CERT").val($(this).spinner('value') * $("#used-trade-CERT").val());
+                    $("#used-trade-total-CERTELIT").val($(this).spinner('value') * $("#used-trade-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+
+                }
+            });
+            $("#used-finance-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-finance-total-STD").val($(this).spinner('value') * $("#used-finance-STD").val());
+                    $("#used-finance-total-CERT").val($(this).spinner('value') * $("#used-finance-CERT").val());
+                    $("#used-finance-total-CERTELIT").val($(this).spinner('value') * $("#used-finance-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#used-service-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-service-total-STD").val($(this).spinner('value') * $("#used-service-STD").val());
+                    $("#used-service-total-CERT").val($(this).spinner('value') * $("#used-service-CERT").val());
+                    $("#used-service-total-CERTELIT").val($(this).spinner('value') * $("#used-service-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#used-gap-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-gap-total-STD").val($(this).spinner('value') * $("#used-gap-STD").val());
+                    $("#used-gap-total-CERT").val($(this).spinner('value') * $("#used-gap-CERT").val());
+                    $("#used-gap-total-CERTELIT").val($(this).spinner('value') * $("#used-gap-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#used-zurich-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-maintenance-total-STD").val($(this).spinner('value') * $("#used-maintenance-STD").val());
+                    $("#used-maintenance-total-CERT").val($(this).spinner('value') * $("#used-maintenance-CERT").val());
+                    $("#used-maintenance-total-CERTELIT").val($(this).spinner('value') * $("#used-maintenance-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#used-aftermarket-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-aftermarket-total-STD").val($(this).spinner('value') * $("#used-aftermarket-STD").val());
+                    $("#used-aftermarket-total-CERT").val($(this).spinner('value') * $("#used-aftermarket-CERT").val());
+                    $("#used-aftermarket-total-CERTELIT").val($(this).spinner('value') * $("#used-aftermarket-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#used-spiff-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#used-spiff-total-STD").val($(this).spinner('value') * $("#used-spiff-STD").val());
+                    $("#used-spiff-total-CERT").val($(this).spinner('value') * $("#used-spiff-CERT").val());
+                    $("#used-spiff-total-CERTELIT").val($(this).spinner('value') * $("#used-spiff-CERTELIT").val());
+
+                    $("#used-total-STD").val(parseInt($("#used-commission-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#used-trade-total-STD").val()) + parseInt($("#used-finance-total-STD").val()) + parseInt($("#used-service-total-STD").val()) + parseInt($("#used-gap-total-STD").val()) + parseInt($("#used-maintenance-total-STD").val()) + parseInt($("#used-aftermarket-total-STD").val()) + parseInt($("#used-spiff-total-STD").val()));
+                    $("#used-total-CERT").val(parseInt($("#used-commission-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#used-trade-total-CERT").val()) + parseInt($("#used-finance-total-CERT").val()) + parseInt($("#used-service-total-CERT").val()) + parseInt($("#used-gap-total-CERT").val()) + parseInt($("#used-maintenance-total-CERT").val()) + parseInt($("#used-aftermarket-total-CERT").val()) + parseInt($("#used-spiff-total-CERT").val()));
+                    $("#used-total-CERTELIT").val(parseInt($("#used-commission-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#used-trade-total-CERTELIT").val()) + parseInt($("#used-finance-total-CERTELIT").val()) + parseInt($("#used-service-total-CERTELIT").val()) + parseInt($("#used-gap-total-CERTELIT").val()) + parseInt($("#used-maintenance-total-CERTELIT").val()) + parseInt($("#used-aftermarket-total-CERTELIT").val()) + parseInt($("#used-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+
+            //NOW SETUP THE HANDYMAN
+
+            $("#handy-unit-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-commission-total-STD").val($(this).spinner('value') * $("#handy-commission-STD").val());
+                    $("#handy-commission-total-CERT").val($(this).spinner('value') * $("#handy-commission-CERT").val());
+                    $("#handy-commission-total-CERTELIT").val($(this).spinner('value') * $("#handy-commission-CERTELIT").val());
+                    
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-bpp-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-bpp-total-STD").val($(this).spinner('value') * $("#handy-bpp-STD").val());
+                    $("#handy-bpp-total-CERT").val($(this).spinner('value') * $("#handy-bpp-CERT").val());
+                    $("#handy-bpp-total-CERTELIT").val($(this).spinner('value') * $("#handy-bpp-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-trade-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-trade-total-STD").val($(this).spinner('value') * $("#handy-trade-STD").val());
+                    $("#handy-trade-total-CERT").val($(this).spinner('value') * $("#handy-trade-CERT").val());
+                    $("#handy-trade-total-CERTELIT").val($(this).spinner('value') * $("#handy-trade-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-finance-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-finance-total-STD").val($(this).spinner('value') * $("#handy-finance-STD").val());
+                    $("#handy-finance-total-CERT").val($(this).spinner('value') * $("#handy-finance-CERT").val());
+                    $("#handy-finance-total-CERTELIT").val($(this).spinner('value') * $("#handy-finance-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-service-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-service-total-STD").val($(this).spinner('value') * $("#handy-service-STD").val());
+                    $("#handy-service-total-CERT").val($(this).spinner('value') * $("#handy-service-CERT").val());
+                    $("#handy-service-total-CERTELIT").val($(this).spinner('value') * $("#handy-service-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-gap-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-gap-total-STD").val($(this).spinner('value') * $("#handy-gap-STD").val());
+                    $("#handy-gap-total-CERT").val($(this).spinner('value') * $("#handy-gap-CERT").val());
+                    $("#handy-gap-total-CERTELIT").val($(this).spinner('value') * $("#handy-gap-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-zurich-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-maintenance-total-STD").val($(this).spinner('value') * $("#handy-maintenance-STD").val());
+                    $("#handy-maintenance-total-CERT").val($(this).spinner('value') * $("#handy-maintenance-CERT").val());
+                    $("#handy-maintenance-total-CERTELIT").val($(this).spinner('value') * $("#handy-maintenance-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-aftermarket-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-aftermarket-total-STD").val($(this).spinner('value') * $("#handy-aftermarket-STD").val());
+                    $("#handy-aftermarket-total-CERT").val($(this).spinner('value') * $("#handy-aftermarket-CERT").val());
+                    $("#handy-aftermarket-total-CERTELIT").val($(this).spinner('value') * $("#handy-aftermarket-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+            $("#handy-spiff-spinner").spinner({
+                min: 0, max: 30, step: .5,
+                stop: function (event, ui) {
+                    $("#handy-spiff-total-STD").val($(this).spinner('value') * $("#handy-spiff-STD").val());
+                    $("#handy-spiff-total-CERT").val($(this).spinner('value') * $("#handy-spiff-CERT").val());
+                    $("#handy-spiff-total-CERTELIT").val($(this).spinner('value') * $("#handy-spiff-CERTELIT").val());
+
+                    $("#handy-total-STD").val(parseInt($("#handy-commission-total-STD").val()) + parseInt($("#handy-bpp-total-STD").val()) + parseInt($("#handy-trade-total-STD").val()) + parseInt($("#handy-finance-total-STD").val()) + parseInt($("#handy-service-total-STD").val()) + parseInt($("#handy-gap-total-STD").val()) + parseInt($("#handy-maintenance-total-STD").val()) + parseInt($("#handy-aftermarket-total-STD").val()) + parseInt($("#handy-spiff-total-STD").val()));
+                    $("#handy-total-CERT").val(parseInt($("#handy-commission-total-CERT").val()) + parseInt($("#handy-bpp-total-CERT").val()) + parseInt($("#handy-trade-total-CERT").val()) + parseInt($("#handy-finance-total-CERT").val()) + parseInt($("#handy-service-total-CERT").val()) + parseInt($("#handy-gap-total-CERT").val()) + parseInt($("#handy-maintenance-total-CERT").val()) + parseInt($("#handy-aftermarket-total-CERT").val()) + parseInt($("#handy-spiff-total-CERT").val()));
+                    $("#handy-total-CERTELIT").val(parseInt($("#handy-commission-total-CERTELIT").val()) + parseInt($("#handy-bpp-total-CERTELIT").val()) + parseInt($("#handy-trade-total-CERTELIT").val()) + parseInt($("#handy-finance-total-CERTELIT").val()) + parseInt($("#handy-service-total-CERTELIT").val()) + parseInt($("#handy-gap-total-CERTELIT").val()) + parseInt($("#handy-maintenance-total-CERTELIT").val()) + parseInt($("#handy-aftermarket-total-CERTELIT").val()) + parseInt($("#handy-spiff-total-CERTELIT").val()));
+
+                    $("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()) + parseInt($("#used-total-STD").val()) + parseInt($("#handy-total-STD").val()));
+                    $("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()) + parseInt($("#used-total-CERT").val()) + parseInt($("#handy-total-CERT").val()));
+                    $("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()) + parseInt($("#used-total-CERTELIT").val()) + parseInt($("#handy-total-CERTELIT").val()));
+                }
+            });
+
+            $('input[type=radio][name=level]').change(function () {
+                if (this.value == 'STD') {
+                    //alert("Standard");
+                    $("#NEW-STD").show();
+                    $("#NEW-STD-total").show();
+                    $("#USED-STD").show();
+                    $("#USED-STD-total").show();
+                    $("#HANDY-STD").show();
+                    $("#HANDY-STD-total").show();
+
+                    $("#NEW-CERT").hide();
+                    $("#NEW-CERT-total").hide();
+                    $("#USED-CERT").hide();
+                    $("#USED-CERT-total").hide();
+                    $("#HANDY-CERT").hide();
+                    $("#HANDY-CERT-total").hide();
+
+                    $("#NEW-CERTELIT").hide();
+                    $("#NEW-CERTELIT-total").hide();
+                    $("#USED-CERTELIT").hide();
+                    $("#USED-CERTELIT-total").hide();
+                    $("#HANDY-CERTELIT").hide();
+                    $("#HANDY-CERTELIT-total").hide();
+                }
+                else if (this.value == 'CERT') {
+                    //alert("Certified");
+                    $("#NEW-STD").hide();
+                    $("#NEW-STD-total").hide();
+                    $("#USED-STD").hide();
+                    $("#USED-STD-total").hide();
+                    $("#HANDY-STD").hide();
+                    $("#HANDY-STD-total").hide();
+
+                    $("#NEW-CERT").show();
+                    $("#NEW-CERT-total").show();
+                    $("#USED-CERT").show();
+                    $("#USED-CERT-total").show();
+                    $("#HANDY-CERT").show();
+                    $("#HANDY-CERT-total").show();
+
+                    $("#NEW-CERTELIT").hide();
+                    $("#NEW-CERTELIT-total").hide();
+                    $("#USED-CERTELIT").hide();
+                    $("#USED-CERTELIT-total").hide();
+                    $("#HANDY-CERTELIT").hide();
+                    $("#HANDY-CERTELIT-total").hide();
+                }
+                else if (this.value == 'CERTELIT') {
+                    //alert("Certified Elite");
+                    $("#NEW-STD").hide();
+                    $("#NEW-STD-total").hide();
+                    $("#USED-STD").hide();
+                    $("#USED-STD-total").hide();
+                    $("#HANDY-STD").hide();
+                    $("#HANDY-STD-total").hide();
+
+                    $("#NEW-CERT").hide();
+                    $("#NEW-CERT-total").hide();
+                    $("#USED-CERT").hide();
+                    $("#USED-CERT-total").hide();
+                    $("#HANDY-CERT").hide();
+                    $("#HANDY-CERT-total").hide();
+
+                    $("#NEW-CERTELIT").show();
+                    $("#NEW-CERTELIT-total").show();
+                    $("#USED-CERTELIT").show();
+                    $("#USED-CERTELIT-total").show();
+                    $("#HANDY-CERTELIT").show();
+                    $("#HANDY-CERTELIT-total").show();
+                }
+            });
+
+        });
+    </script>
+}
+
+
+@if (Model.AssociateInformation == null)
+{
+    <h2>The associate you requested could not be found.</h2>
+}
+else if (Model.AssociateInformation.AssociateDeals == null)
+{
+    <h2>The associate you requested has no deals for this month and year.</h2>
+}
+else if ((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
+{
+    <h2>You are not authorized to view this Associate's Score Card</h2>
+}
+else
+{
+
+    var bLocked = true;
+    var bDisabled = "disabled";
+    if ((bool)Session["IsCommissionAdmin"] == true)
+    {
+        bLocked = false;
+        bDisabled = "";
+    }
+
+    var payscaleName = "";
+    var payLevelName = "";
+
+    var nextMonthId = 0;
+    var previousMonthId = 0;
+    var nextMonthYearId = 0;
+    var previousMonthYearId = 0;
+
+    var currentMonth = new DateTime(Model.YearId, Model.MonthId, 1);
+    var previousMonth = currentMonth.AddMonths(-1);
+    var nextMonth = currentMonth.AddMonths(1);
+
+    previousMonthId = previousMonth.Month;
+    nextMonthId = nextMonth.Month;
+
+    previousMonthYearId = previousMonth.Year;
+    nextMonthYearId = nextMonth.Year;
+
+    foreach (var scale in SalesCommission.Business.Enums.Payscales)
+    {
+        if (Model.AssociateInformation.AssociatePayscale == scale.PayscaleID)
+        {
+            payscaleName = scale.Name;
+            break;
+        }
+    }
+
+    foreach (var level in SalesCommission.Business.Enums.PayLevels)
+    {
+        if (Model.AssociateInformation.AssociateLevel == level.PayLevelID)
+        {
+            payLevelName = level.Name;
+            break;
+        }
+    }
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-8">
+            <h2>Score Card for @Model.AssociateInformation.AssociateFullName for @Model.MonthId/@Model.YearId</h2>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:15px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+        <div class="col-md-2">
+                <a href="@applicationPath/Commission/Associate/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary" style="margin-top:15px;float:right">View Commission</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <p><strong>Level:</strong> @payLevelName</p>
+            <p><strong>Hire Date:</strong> @Model.AssociateInformation.AssociateHireDate.ToShortDateString()</p>
+            @if (Model.AssociateInformation.AssociateStatus != "NA" && Model.AssociateInformation.AssociateStatus != "" && Model.AssociateInformation.AssociateStatus != null)
+        {
+                <p><strong>Status:</strong> @Model.AssociateInformation.AssociateStatus</p>
+                if (Model.AssociateInformation.AssociateStatus != "Mentee")
+            {
+                    <p><strong>Mentor:</strong> @Model.AssociateInformation.AssociateMentor</p>
+                }
+        }
+            @if (Model.AssociateInformation.AssociateStatus == "Mentee")
+        {
+                <p><strong>Training End Date:</strong> @Model.AssociateInformation.AssociateGraduationDate.ToShortDateString()</p>
+            }
+        </div>
+        <div class="col-md-4">
+            <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartmentDescription</p>
+            <p><strong>Pay Scale:</strong> @payscaleName</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left">
+            <a href="@applicationPath/Commission/ScoreCard/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Scorecard</a>
+        </div>
+        <div class="col-md-6 text-right">
+@if (nextMonth <= DateTime.Now)
+        {
+            <a href="@applicationPath/Commission/ScoreCard/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Scorecard ></a>
+           
+}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+
+
+    decimal TotalDrawAmount = 0;
+    decimal TotalBonusAmount = 0;
+    decimal hoursPayAmount = 0;
+
+    double TotalAvgGrossProfit = 0;
+    double previousTotalAvgGrossProfit = 0;
+    double previous2TotalAvgGrossProfit = 0;
+    double previous3TotalAvgGrossProfit = 0;
+
+    if (Model.AssociateInformation.AssociateDraws != null)
+    {
+        foreach (var draw in Model.AssociateInformation.AssociateDraws)
+        {
+            TotalDrawAmount += draw.DrawAmount;
+        }
+    }
+    TotalDrawAmount = (TotalDrawAmount * -1);
+
+
+    if (Model.AssociateInformation.AssociateBonus != null)
+    {
+        foreach (var bonus in Model.AssociateInformation.AssociateBonus)
+        {
+            TotalBonusAmount += bonus.BonusAmount;
+        }
+    }
+
+    decimal hoursWorked = 0;
+
+    if (Model.AssociateInformation.AssociateHours != null && Model.AssociateInformation.AssociateHours.Count > 0)
+    {
+        hoursWorked = Model.AssociateInformation.AssociateHours[0].Hours;
+        hoursPayAmount = Math.Round((hoursWorked * @Model.AssociateInformation.AssociateWage));
+    }
+
+
+    decimal month3Goals = 0;
+    var associateGoal = new SalesCommission.Models.Goal();
+
+    if (Model.AssociateInformation.AssociateGoals != null && Model.AssociateInformation.AssociateGoals.Count > 0)
+    {
+        associateGoal = Model.AssociateInformation.AssociateGoals[0];
+        month3Goals = associateGoal.DealCount;
+    }
+
+    if (Model.AssociateInformation.AssociateGoals != null && Model.AssociateInformation.AssociateGoals.Count > 1)
+    {
+        var previousAssociateGoal = Model.AssociateInformation.AssociateGoals[1];
+        month3Goals += previousAssociateGoal.DealCount;
+    }
+    if (Model.AssociateInformation.AssociateGoals != null && Model.AssociateInformation.AssociateGoals.Count > 2)
+    {
+        var previousAssociateGoal = Model.AssociateInformation.AssociateGoals[2];
+        month3Goals += previousAssociateGoal.DealCount;
+    }
+
+    var storeStandards = new SalesCommission.Models.ObjectivesAndStandards();
+    if(Model.StoreObjectivesStandards != null && Model.StoreObjectivesStandards.Count > 0)
+    {
+        storeStandards = Model.StoreObjectivesStandards[0];
+    }
+
+    double bppGoalPercentage = 0;
+    double tradeGoalPercentage = 0;
+    double financeGoalPercentage = 0;
+    double serviceGoalPercentage = 0;
+    double gapGoalPercentage = 0;
+    double zurichGoalPercentage = 0;
+    double aftermarketGoalPercentage = 0;
+    double spiffGoalPercentage = 0;
+
+    if (associateGoal.DealCount > 0)
+    {
+        bppGoalPercentage = (double)associateGoal.BPPCount / (double)associateGoal.DealCount;
+        tradeGoalPercentage = (double)associateGoal.TradeCount / (double)associateGoal.DealCount;
+        financeGoalPercentage = (double)associateGoal.FinanceCount / (double)associateGoal.DealCount;
+        serviceGoalPercentage = (double)associateGoal.ServiceCount / (double)associateGoal.DealCount;
+        gapGoalPercentage = (double)associateGoal.GAPCount / (double)associateGoal.DealCount;
+        zurichGoalPercentage = (double)associateGoal.ZurichCount / (double)associateGoal.DealCount;
+        aftermarketGoalPercentage = (double)associateGoal.AftermarketCount / (double)associateGoal.DealCount;
+        spiffGoalPercentage = (double)associateGoal.SpiffCount / (double)associateGoal.DealCount;
+    }
+
+    System.Globalization.DateTimeFormatInfo mfi = new System.Globalization.DateTimeFormatInfo();
+
+    var currentDate = new DateTime(Model.YearId, Model.MonthId, 1);
+
+    var currentMonthName = mfi.GetMonthName(currentDate.Month).ToString();
+    var previousMonthName = mfi.GetMonthName(currentDate.AddMonths(-1).Month).ToString();
+    var previous2MonthName = mfi.GetMonthName(currentDate.AddMonths(-2).Month).ToString();
+    var previous3MonthName = mfi.GetMonthName(currentDate.AddMonths(-3).Month).ToString();
+
+    decimal currentUnits = 0;
+    decimal previousUnits = 0;
+    decimal previous2Units = 0;
+    decimal previous3Units = 0;
+
+    decimal month3Units = 0;
+
+    if (Model.AssociateInformation.AssociateUnits != null && Model.AssociateInformation.AssociateUnits.Count > 0)
+    {
+        var sortedUnits = Model.AssociateInformation.AssociateUnits.OrderByDescending(x => x.UnitDate).ToList();
+
+        if (@sortedUnits[0] != null)
+        {
+            currentUnits = sortedUnits[0].UnitCount;
+        }
+
+        if (@sortedUnits[1] != null)
+        {
+            previousUnits = sortedUnits[1].UnitCount;
+        }
+
+        if (@sortedUnits[2] != null)
+        {
+            previous2Units = sortedUnits[2].UnitCount;
+        }
+
+        if (@sortedUnits[3] != null)
+        {
+            previous3Units = sortedUnits[3].UnitCount;
+        }
+
+        month3Units = currentUnits + previousUnits + previous2Units;
+    }
+
+    decimal newBPPCount = 0;
+    decimal newVSCCount = 0;
+    decimal newTradeCount = 0;
+    decimal newFinanceCount = 0;
+    decimal newAfterSales = 0;
+
+    decimal usedBPPCount = 0;
+    decimal usedVSCCount = 0;
+    decimal usedTradeCount = 0;
+    decimal usedFinanceCount = 0;
+    decimal usedAfterSales = 0;
+
+
+    if (Model.AssociateInformation.AssociateDeals != null && Model.AssociateInformation.AssociateDeals.Count > 0)
+    {
+
+        decimal aftermarketPrice = 0;
+        decimal aftermarketCost = 0;
+        decimal aftermarketProfit = 0;
+        decimal TotalGrossProfit = 0;
+        decimal afterSalesAmount = 0;
+
+        foreach (var dealDetail in Model.AssociateInformation.AssociateDeals)
+        {
+
+            if (dealDetail.FinanceIncomeAmount > 0)
+            {
+                afterSalesAmount += dealDetail.FinanceIncomeAmount;
+            }
+            if (dealDetail.MaintenanceContractAmount > 0)
+            {
+                afterSalesAmount += dealDetail.MaintenanceContractAmount;
+            }
+            if (dealDetail.ServiceContractAmount > 0)
+            {
+                afterSalesAmount += dealDetail.ServiceContractAmount;
+            }
+            if (dealDetail.GAPAmount > 0)
+            {
+                afterSalesAmount += dealDetail.GAPAmount;
+            }
+            if (dealDetail.BPPAmount > 0)
+            {
+                afterSalesAmount += dealDetail.BPPAmount;
+            }
+
+            decimal dealAftermarketProfit = 0;
+
+            var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(dealDetail.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
+            foreach (var deal in aftermarketItems)
+            {
+
+                if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                {
+                    if (deal.AftermarketId == 16 && deal.AftermarketName == "LEASE FEE")
+                    {
+                        //DO NOT ADD TO THE TOTALS
+                    }
+                    else
+                    {
+                        aftermarketPrice += deal.AftermarketPrice;
+                        aftermarketCost += deal.AftermarketCost;
+                        aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+                        dealAftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+                    }
+                }
+                else if (deal.AftermarketId == 1)
+                {
+                    afterSalesAmount += deal.AftermarketPrice;
+                    dealAftermarketProfit += deal.AftermarketPrice;
+                }
+                else if (deal.AftermarketId == 20)
+                {
+                    //MSIDeal = true;
+                }
+            }
+
+
+
+            if (dealDetail.NewDealCount > 0)
+            {
+                newBPPCount += dealDetail.BPPCount;
+                newVSCCount += dealDetail.ServiceContractCount;
+                newTradeCount += dealDetail.TradeCount;
+                newFinanceCount += dealDetail.FinanceCount;
+                newAfterSales += dealDetail.FinanceIncomeAmount + dealDetail.MaintenanceContractAmount + dealDetail.ServiceContractAmount + dealDetail.GAPAmount + dealDetail.BPPAmount + dealAftermarketProfit;
+            }
+            if (dealDetail.UsedDealCount > 0)
+            {
+                usedBPPCount += dealDetail.BPPCount;
+                usedVSCCount += dealDetail.ServiceContractCount;
+                usedTradeCount += dealDetail.TradeCount;
+                usedFinanceCount += dealDetail.FinanceCount;
+                usedAfterSales += dealDetail.FinanceIncomeAmount + dealDetail.MaintenanceContractAmount + dealDetail.ServiceContractAmount + dealDetail.GAPAmount + dealDetail.BPPAmount + dealAftermarketProfit;
+            }
+
+        }
+
+        TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+        if (currentUnits > 0)
+        {
+            TotalAvgGrossProfit = (double)TotalGrossProfit / (double)currentUnits;
+        }
+    }
+
+    if (Model.AssociateInformation.PreviousAssociateDeals != null)
+    {
+        if (Model.AssociateInformation.PreviousAssociateDeals[0] != null)
+        {
+            var previousDeals = Model.AssociateInformation.PreviousAssociateDeals[0];
+            decimal aftermarketPrice = 0;
+            decimal aftermarketCost = 0;
+            decimal aftermarketProfit = 0;
+            decimal TotalGrossProfit = 0;
+            decimal afterSalesAmount = 0;
+
+            foreach (var dealDetail in previousDeals.AssociateDeals)
+            {
+
+                if (dealDetail.FinanceIncomeAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.FinanceIncomeAmount;
+                }
+                if (dealDetail.MaintenanceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.MaintenanceContractAmount;
+                }
+                if (dealDetail.ServiceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.ServiceContractAmount;
+                }
+                if (dealDetail.GAPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.GAPAmount;
+                }
+                if (dealDetail.BPPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.BPPAmount;
+                }
+
+                var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(dealDetail.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
+                foreach (var deal in aftermarketItems)
+                {
+
+                    if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                    {
+                        if (deal.AftermarketId == 16 && deal.AftermarketName == "LEASE FEE")
+                        {
+                            //DO NOT ADD TO THE TOTALS
+                        }
+                        else
+                        {
+                            aftermarketPrice += deal.AftermarketPrice;
+                            aftermarketCost += deal.AftermarketCost;
+                            aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+                        }
+                    }
+                    else if (deal.AftermarketId == 1)
+                    {
+                        afterSalesAmount += deal.AftermarketPrice;
+                    }
+                    else if (deal.AftermarketId == 20)
+                    {
+                        //MSIDeal = true;
+                    }
+                }
+
+
+            }
+
+            TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+            if (previousUnits > 0)
+            {
+                previousTotalAvgGrossProfit = (double)TotalGrossProfit / (double)previousUnits;
+            }
+        }
+        if (Model.AssociateInformation.PreviousAssociateDeals[1] != null)
+        {
+            var previousDeals = Model.AssociateInformation.PreviousAssociateDeals[1];
+
+            decimal aftermarketPrice = 0;
+            decimal aftermarketCost = 0;
+            decimal aftermarketProfit = 0;
+            decimal TotalGrossProfit = 0;
+            decimal afterSalesAmount = 0;
+
+            foreach (var dealDetail in previousDeals.AssociateDeals)
+            {
+
+                if (dealDetail.FinanceIncomeAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.FinanceIncomeAmount;
+                }
+                if (dealDetail.MaintenanceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.MaintenanceContractAmount;
+                }
+                if (dealDetail.ServiceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.ServiceContractAmount;
+                }
+                if (dealDetail.GAPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.GAPAmount;
+                }
+                if (dealDetail.BPPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.BPPAmount;
+                }
+
+                var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(dealDetail.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
+                foreach (var deal in aftermarketItems)
+                {
+
+                    if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                    {
+                        if (deal.AftermarketId == 16 && deal.AftermarketName == "LEASE FEE")
+                        {
+                            //DO NOT ADD TO THE TOTALS
+                        }
+                        else
+                        {
+                            aftermarketPrice += deal.AftermarketPrice;
+                            aftermarketCost += deal.AftermarketCost;
+                            aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+                        }
+                    }
+                    else if (deal.AftermarketId == 1)
+                    {
+                        afterSalesAmount += deal.AftermarketPrice;
+                    }
+                    else if (deal.AftermarketId == 20)
+                    {
+                        //MSIDeal = true;
+                    }
+                }
+
+
+            }
+
+            TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+            if (previous2Units > 0)
+            {
+                previous2TotalAvgGrossProfit = (double)TotalGrossProfit / (double)previous2Units;
+            }
+
+        }
+        if (Model.AssociateInformation.PreviousAssociateDeals[2] != null)
+        {
+            var previousDeals = Model.AssociateInformation.PreviousAssociateDeals[2];
+            decimal aftermarketPrice = 0;
+            decimal aftermarketCost = 0;
+            decimal aftermarketProfit = 0;
+            decimal TotalGrossProfit = 0;
+            decimal afterSalesAmount = 0;
+
+            foreach (var dealDetail in previousDeals.AssociateDeals)
+            {
+
+                if (dealDetail.FinanceIncomeAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.FinanceIncomeAmount;
+                }
+                if (dealDetail.MaintenanceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.MaintenanceContractAmount;
+                }
+                if (dealDetail.ServiceContractAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.ServiceContractAmount;
+                }
+                if (dealDetail.GAPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.GAPAmount;
+                }
+                if (dealDetail.BPPAmount > 0)
+                {
+                    afterSalesAmount += dealDetail.BPPAmount;
+                }
+
+                var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(dealDetail.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
+                foreach (var deal in aftermarketItems)
+                {
+
+                    if (deal.AftermarketId != 1 && deal.AftermarketId != 20)
+                    {
+                        if (deal.AftermarketId == 16 && deal.AftermarketName == "LEASE FEE")
+                        {
+                            //DO NOT ADD TO THE TOTALS
+                        }
+                        else
+                        {
+                            aftermarketPrice += deal.AftermarketPrice;
+                            aftermarketCost += deal.AftermarketCost;
+                            aftermarketProfit += (deal.AftermarketPrice - deal.AftermarketCost);
+                        }
+                    }
+                    else if (deal.AftermarketId == 1)
+                    {
+                        afterSalesAmount += deal.AftermarketPrice;
+                    }
+                    else if (deal.AftermarketId == 20)
+                    {
+                        //MSIDeal = true;
+                    }
+                }
+
+
+            }
+
+            TotalGrossProfit = afterSalesAmount + aftermarketProfit;
+
+            if (previous3Units > 0)
+            {
+                previous3TotalAvgGrossProfit = (double)TotalGrossProfit / (double)previous3Units;
+            }
+
+        }
+    }
+
+
+    if (Model.AssociateInformation.AssociateHours != null)
+    {
+        hoursWorked = Model.AssociateInformation.AssociateHours[0].Hours;
+    }
+
+    decimal previous1Hours = 0;
+    decimal previous2Hours = 0;
+    decimal previous3Hours = 0;
+
+    if (Model.AssociateInformation.PreviousAssociateHours != null)
+    {
+        if (Model.AssociateInformation.PreviousAssociateHours[0] != null)
+        {
+            var previousHours = Model.AssociateInformation.PreviousAssociateHours[0];
+            previous1Hours = previousHours.Hours;
+        }
+
+        if (Model.AssociateInformation.PreviousAssociateHours[1] != null)
+        {
+            var previousHours = Model.AssociateInformation.PreviousAssociateHours[1];
+            previous2Hours = previousHours.Hours;
+        }
+
+        if (Model.AssociateInformation.PreviousAssociateHours[2] != null)
+        {
+            var previousHours = Model.AssociateInformation.PreviousAssociateHours[2];
+            previous3Hours = previousHours.Hours;
+        }
+
+    }
+
+    decimal usedDealCount = 0;
+    decimal newDealCount = 0;
+
+    decimal bppCount = 0;
+    decimal financeCount = 0;
+    decimal svcContractCount = 0;
+    decimal tradeCount = 0;
+
+    decimal bppPercentage = 0;
+    decimal financePercentage = 0;
+    decimal svcContractPercentage = 0;
+    decimal tradePercentage = 0;
+
+    if (Model.AssociateInformation.AssociateDealCounts != null)
+    {
+        bppCount = Model.AssociateInformation.AssociateDealCounts.BPPCount;
+        financeCount = Model.AssociateInformation.AssociateDealCounts.FinanceCount;
+        svcContractCount = Model.AssociateInformation.AssociateDealCounts.ServiceContractCount;
+        tradeCount = Model.AssociateInformation.AssociateDealCounts.TradeCount;
+
+        usedDealCount = Model.AssociateInformation.AssociateDealCounts.UsedDealCount;
+        newDealCount = Model.AssociateInformation.AssociateDealCounts.NewDealCount;
+
+        if (currentUnits > 0)
+        {
+            bppPercentage = bppCount / currentUnits;
+            financePercentage = financeCount / currentUnits;
+            svcContractPercentage = svcContractCount / currentUnits;
+            tradePercentage = tradeCount / currentUnits;
+        }
+    }
+
+    decimal previousbppCount = 0;
+    decimal previousfinanceCount = 0;
+    decimal previoussvcContractCount = 0;
+    decimal previoustradeCount = 0;
+
+    decimal previousbppPercentage = 0;
+    decimal previousfinancePercentage = 0;
+    decimal previoussvcContractPercentage = 0;
+    decimal previoustradePercentage = 0;
+
+    decimal previous2bppCount = 0;
+    decimal previous2financeCount = 0;
+    decimal previous2svcContractCount = 0;
+    decimal previous2tradeCount = 0;
+
+    decimal previous2bppPercentage = 0;
+    decimal previous2financePercentage = 0;
+    decimal previous2svcContractPercentage = 0;
+    decimal previous2tradePercentage = 0;
+
+    decimal previous3bppCount = 0;
+    decimal previous3financeCount = 0;
+    decimal previous3svcContractCount = 0;
+    decimal previous3tradeCount = 0;
+
+    decimal previous3bppPercentage = 0;
+    decimal previous3financePercentage = 0;
+    decimal previous3svcContractPercentage = 0;
+    decimal previous3tradePercentage = 0;
+
+    if (Model.AssociateInformation.PreviousAssociateDealCounts != null)
+    {
+        if (Model.AssociateInformation.PreviousAssociateDealCounts[0] != null)
+        {
+            var previousDealCounts = Model.AssociateInformation.PreviousAssociateDealCounts[0];
+
+            previousbppCount = previousDealCounts.BPPCount;
+            previousfinanceCount = previousDealCounts.FinanceCount;
+            previoussvcContractCount = previousDealCounts.ServiceContractCount;
+            previoustradeCount = previousDealCounts.TradeCount;
+
+            if (previousUnits > 0)
+            {
+                previousbppPercentage = previousbppCount / previousUnits;
+                previousfinancePercentage = previousfinanceCount / previousUnits;
+                previoussvcContractPercentage = previoussvcContractCount / previousUnits;
+                previoustradePercentage = previoustradeCount / previousUnits;
+            }
+        }
+
+        if (Model.AssociateInformation.PreviousAssociateDealCounts[1] != null)
+        {
+            var previousDealCounts = Model.AssociateInformation.PreviousAssociateDealCounts[1];
+
+            previous2bppCount = previousDealCounts.BPPCount;
+            previous2financeCount = previousDealCounts.FinanceCount;
+            previous2svcContractCount = previousDealCounts.ServiceContractCount;
+            previous2tradeCount = previousDealCounts.TradeCount;
+
+            if (previous2Units > 0)
+            {
+                previous2bppPercentage = previous2bppCount / previous2Units;
+                previous2financePercentage = previous2financeCount / previous2Units;
+                previous2svcContractPercentage = previous2svcContractCount / previous2Units;
+                previous2tradePercentage = previous2tradeCount / previous2Units;
+            }
+        }
+
+        if (Model.AssociateInformation.PreviousAssociateDealCounts[2] != null)
+        {
+            var previousDealCounts = Model.AssociateInformation.PreviousAssociateDealCounts[2];
+
+            previous3bppCount = previousDealCounts.BPPCount;
+            previous3financeCount = previousDealCounts.FinanceCount;
+            previous3svcContractCount = previousDealCounts.ServiceContractCount;
+            previous3tradeCount = previousDealCounts.TradeCount;
+
+            if (previous3Units > 0)
+            {
+                previous3bppPercentage = previous3bppCount / previous3Units;
+                previous3financePercentage = previous3financeCount / previous3Units;
+                previous3svcContractPercentage = previous3svcContractCount / previous3Units;
+                previous3tradePercentage = previous3tradeCount / previous3Units;
+            }
+        }
+
+    }
+
+
+    decimal PhoneLeadCount = 0;
+    decimal WalkInLeadCount = 0;
+    decimal InternetLeadCount = 0;
+
+    decimal PhoneLeadSoldCount = 0;
+    decimal WalkInLeadSoldCount = 0;
+    decimal InternetLeadSoldCount = 0;
+
+    decimal PhoneLeadSoldPercent = 0;
+    decimal WalkInLeadSoldPercent = 0;
+    decimal InternetLeadSoldPercent = 0;
+
+    decimal previousPhoneLeadCount = 0;
+    decimal previousWalkInLeadCount = 0;
+    decimal previousInternetLeadCount = 0;
+
+    decimal previous2PhoneLeadCount = 0;
+    decimal previous2WalkInLeadCount = 0;
+    decimal previous2InternetLeadCount = 0;
+
+    decimal previous3PhoneLeadCount = 0;
+    decimal previous3WalkInLeadCount = 0;
+    decimal previous3InternetLeadCount = 0;
+
+    decimal previousPhoneLeadSoldCount = 0;
+    decimal previousWalkInLeadSoldCount = 0;
+    decimal previousInternetLeadSoldCount = 0;
+
+    decimal previous2PhoneLeadSoldCount = 0;
+    decimal previous2WalkInLeadSoldCount = 0;
+    decimal previous2InternetLeadSoldCount = 0;
+
+    decimal previous3PhoneLeadSoldCount = 0;
+    decimal previous3WalkInLeadSoldCount = 0;
+    decimal previous3InternetLeadSoldCount = 0;
+
+    decimal previousPhoneLeadSoldPercent = 0;
+    decimal previousWalkInLeadSoldPercent = 0;
+    decimal previousInternetLeadSoldPercent = 0;
+
+    decimal previous2PhoneLeadSoldPercent = 0;
+    decimal previous2WalkInLeadSoldPercent = 0;
+    decimal previous2InternetLeadSoldPercent = 0;
+
+    decimal previous3PhoneLeadSoldPercent = 0;
+    decimal previous3WalkInLeadSoldPercent = 0;
+    decimal previous3InternetLeadSoldPercent = 0;
+
+    if (Model.AssociateInformation.AssociateLeads != null)
+    {
+        var associateName = Model.AssociateInformation.AssociateFullName;
+
+        var lastName = associateName.Substring(associateName.LastIndexOf(' ') + 1).ToLower();
+        var partialFirstName = associateName.Substring(0, 3).ToLower();
+
+
+        var filteredLeads = Model.AssociateInformation.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower().Contains(lastName) && x.Sales_LastName.ToLower().Contains(partialFirstName));
+
+        var phoneLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "phone");
+
+        var PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime >= currentDate);
+        PhoneLeadCount = PhoneLeads.Count;
+        PhoneLeadSoldCount = PhoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (PhoneLeadCount > 0)
+        {
+            PhoneLeadSoldPercent = PhoneLeadSoldCount / PhoneLeadCount;
+        }
+
+        var previousPhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-1) && x.LeadCreatedEastTime < currentDate); ;
+        previousPhoneLeadCount = previousPhoneLeads.Count;
+        previousPhoneLeadSoldCount = previousPhoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previousPhoneLeadCount > 0)
+        {
+            previousPhoneLeadSoldPercent = previousPhoneLeadSoldCount / previousPhoneLeadCount;
+        }
+
+        var previous2PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-2) && x.LeadCreatedEastTime < currentDate.AddMonths(-1));
+        previous2PhoneLeadCount = previous2PhoneLeads.Count;
+        previous2PhoneLeadSoldCount = previous2PhoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous2PhoneLeadCount > 0)
+        {
+            previous2PhoneLeadSoldPercent = previous2PhoneLeadSoldCount / previous2PhoneLeadCount;
+        }
+
+        var previous3PhoneLeads = phoneLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-3) && x.LeadCreatedEastTime < currentDate.AddMonths(-2));
+        previous3PhoneLeadCount = previous3PhoneLeads.Count;
+        previous3PhoneLeadSoldCount = previous3PhoneLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous3PhoneLeadCount > 0)
+        {
+            previous3PhoneLeadSoldPercent = previous3PhoneLeadSoldCount / previous3PhoneLeadCount;
+        }
+
+        var walkinLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "walk-in");
+
+        var WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime >= currentDate);
+        WalkInLeadCount = WalkInLeads.Count;
+        WalkInLeadSoldCount = WalkInLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (WalkInLeadCount > 0)
+        {
+            WalkInLeadSoldPercent = (WalkInLeadSoldCount / WalkInLeadCount);
+        }
+
+        var previousWalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-1) && x.LeadCreatedEastTime < currentDate); ;
+        previousWalkInLeadCount = previousWalkInLeads.Count;
+        previousWalkInLeadSoldCount = previousWalkInLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previousWalkInLeadCount > 0)
+        {
+            previousWalkInLeadSoldPercent = (previousWalkInLeadSoldCount / previousWalkInLeadCount);
+        }
+
+        var previous2WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-2) && x.LeadCreatedEastTime < currentDate.AddMonths(-1));
+        previous2WalkInLeadCount = previous2WalkInLeads.Count;
+        previous2WalkInLeadSoldCount = previous2WalkInLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous2WalkInLeadCount > 0)
+        {
+            previous2WalkInLeadSoldPercent = (previous2WalkInLeadSoldCount / previous2WalkInLeadCount);
+        }
+
+        var previous3WalkInLeads = walkinLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-3) && x.LeadCreatedEastTime < currentDate.AddMonths(-2));
+        previous3WalkInLeadCount = previous3WalkInLeads.Count;
+        previous3WalkInLeadSoldCount = previous3WalkInLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous3WalkInLeadCount > 0)
+        {
+            previous3WalkInLeadSoldPercent = (previous3WalkInLeadSoldCount / previous3WalkInLeadCount);
+        }
+
+        var internetLeads = filteredLeads.FindAll(x => x.LeadSourceTypeName.ToLower() == "internet");
+
+        var InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime >= currentDate);
+        InternetLeadCount = InternetLeads.Count;
+        InternetLeadSoldCount = InternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (InternetLeadCount > 0)
+        {
+            InternetLeadSoldPercent = (InternetLeadSoldCount / InternetLeadCount);
+        }
+
+        var previousInternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-1) && x.LeadCreatedEastTime < currentDate); ;
+        previousInternetLeadCount = previousInternetLeads.Count;
+        previousInternetLeadSoldCount = previousInternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previousInternetLeadCount > 0)
+        {
+            previousInternetLeadSoldPercent = (previousInternetLeadSoldCount / previousInternetLeadCount);
+        }
+
+        var previous2InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-2) && x.LeadCreatedEastTime < currentDate.AddMonths(-1));
+        previous2InternetLeadCount = previous2InternetLeads.Count;
+        previous2InternetLeadSoldCount = previous2InternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous2InternetLeadCount > 0)
+        {
+            previous2InternetLeadSoldPercent = (previous2InternetLeadSoldCount / previous2InternetLeadCount);
+        }
+
+        var previous3InternetLeads = internetLeads.FindAll(x => x.LeadCreatedEastTime > currentDate.AddMonths(-3) && x.LeadCreatedEastTime < currentDate.AddMonths(-2));
+        previous3InternetLeadCount = previous3InternetLeads.Count;
+        previous3InternetLeadSoldCount = previous3InternetLeads.FindAll(x => x.LeadStatusTypeName.ToLower() == "sold").Count;
+
+        if (previous3InternetLeadCount > 0)
+        {
+            previous3InternetLeadSoldPercent = (previous3InternetLeadSoldCount / previous3InternetLeadCount);
+        }
+    }
+
+    double newBPPPercentage = 0;
+    double newVSCPercentage = 0;
+    double newTradePercentage = 0;
+    double newFinancePercentage = 0;
+    double newAfterSalesAvg = 0;
+
+    double usedBPPPercentage = 0;
+    double usedVSCPercentage = 0;
+    double usedTradePercentage = 0;
+    double usedFinancePercentage = 0;
+    double usedAfterSalesAvg = 0;
+
+    if (newDealCount > 0)
+    {
+        newBPPPercentage = (double)newBPPCount / (double)newDealCount;
+        newVSCPercentage = (double)newVSCCount / (double)newDealCount;
+        newTradePercentage = (double)newTradeCount / (double)newDealCount;
+        newFinancePercentage = (double)newFinanceCount / (double)newDealCount;
+        newAfterSalesAvg = (double)newAfterSales / (double)newDealCount;
+    }
+
+    if (usedDealCount > 0)
+    {
+        usedBPPPercentage = (double)usedBPPCount / (double)usedDealCount;
+        usedVSCPercentage = (double)usedVSCCount / (double)usedDealCount;
+        usedTradePercentage = (double)usedTradeCount / (double)usedDealCount;
+        usedFinancePercentage = (double)usedFinanceCount / (double)usedDealCount;
+        usedAfterSalesAvg = (double)usedAfterSales / (double)usedDealCount;
+    }
+
+
+    using (Html.BeginForm())
+    {
+    <input type="hidden" name="hdn-MonthId" id="hdn-MonthId" value="@Model.MonthId">
+        <input type="hidden" name="hdn-YearId" id="hdn-YearId" value="@Model.YearId">
+        <input type="hidden" name="associate-SSN" id="associate-SSN" value="@Model.AssociateInformation.AssociateSSN">
+        <input type="hidden" name="associate-id" id="associate-id" value="@Model.AssociateId">
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th>Requirements for Certification (bold items)<input id="btnToggleNewUsed" type="button" value="Show Details" class="btn btn-primary" style="padding: 0px 5px;float:right" /></th>
+                    <th class="text-center new-used">New</th>
+                    <th class="text-center new-used">Used</th>
+                    <th class="text-center">Actual</th>
+                    <th class="text-center">Standard</th>
+                    <th class="text-center">Goals</th>
+                    <th>Comments/Action Plan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Deliveries (Current Rolling 3 month) for @currentMonthName, @previousMonthName, @previous2MonthName</strong></td>
+                    <td class="text-center new-used"></td>
+                    <td class="text-center new-used"></td>
+                    <td class="text-center">@month3Units</td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@month3Goals</td>
+                    <td><textarea class="form-control" id="comments-rollingunits" name="comments-rollingunits" rows="1" @bDisabled >@Model.CurrentScorecard.Rolling3MonthComments</textarea></td>
+                </tr>
+                <tr>
+                    <td><strong>@currentMonthName Performance</strong></td>
+                    <td class="text-center new-used"><strong>New</strong></td>
+                    <td class="text-center new-used"><strong>Used</strong></td>
+                    <td class="text-center"><strong>Actual</strong></td>
+                    <td class="text-center"><strong>Standard</strong></td>
+                    <td class="text-center"><strong>Goals</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Deliveries</td>
+                    <td class="text-center new-used">@newDealCount</td>
+                    <td class="text-center new-used">@usedDealCount</td>
+                    <td class="text-center">@currentUnits</td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@associateGoal.DealCount</td>
+                    <td><textarea class="form-control" id="comments-units" name="comments-units" rows="1" @bDisabled >@Model.CurrentScorecard.DeliveriesComments</textarea></td>
+                </tr>
+                <tr>
+                    <td><strong>BPP Penetration</strong></td>
+                    <td class="text-center new-used">@newBPPCount<br />@newBPPPercentage.ToString("P", rev)</td>
+                    <td class="text-center new-used">@usedBPPCount<br />@usedBPPPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@bppCount<br/>@bppPercentage.ToString("P", rev)</td>
+                    <td class="text-center"><br />@storeStandards.BPPPercent %</td>
+                    <td class="text-center">@associateGoal.BPPCount<br/>@bppGoalPercentage.ToString("P", rev)</td>
+                    <td><textarea class="form-control" id="comments-bpp" name="comments-bpp" rows="1" @bDisabled >@Model.CurrentScorecard.BPPComments</textarea></td>
+                </tr>
+                <tr>
+                    <td><strong>VSC Penetration</strong></td>
+                    <td class="text-center new-used">@newVSCCount<br />@newVSCPercentage.ToString("P", rev)</td>
+                    <td class="text-center new-used">@usedVSCCount<br />@usedVSCPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@svcContractCount<br/>@svcContractPercentage.ToString("P", rev)</td>
+                    <td class="text-center"><br />@storeStandards.VSCPercent %</td>
+                    <td class="text-center">@associateGoal.ServiceCount<br />@serviceGoalPercentage.ToString("P", rev)</td>
+                    <td><textarea class="form-control" id="comments-service" name="comments-service" rows="1" @bDisabled >@Model.CurrentScorecard.VSCComments</textarea></td>
+                </tr>
+                <tr>
+                    <td>Trade Percentage</td>
+                    <td class="text-center new-used">@newTradeCount<br />@newTradePercentage.ToString("P", rev)</td>
+                    <td class="text-center new-used">@usedTradeCount<br />@usedTradePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@tradeCount<br/>@tradePercentage.ToString("P", rev)</td>
+                    <td class="text-center"><br />@storeStandards.TradePercent %</td>
+                    <td class="text-center">@associateGoal.TradeCount<br />@tradeGoalPercentage.ToString("P", rev)</td>
+                    <td><textarea class="form-control" id="comments-trade" name="comments-trade" rows="1" @bDisabled >@Model.CurrentScorecard.TradeComments</textarea></td>
+                </tr>
+                <tr>
+                    <td>Finance Penetration</td>
+                    <td class="text-center new-used">@newFinanceCount<br />@newFinancePercentage.ToString("P", rev)</td>
+                    <td class="text-center new-used">@usedFinanceCount<br />@usedFinancePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@financeCount<br/>@financePercentage.ToString("P", rev)</td>
+                    <td class="text-center"><br />@storeStandards.FinCntPercent %</td>
+                    <td class="text-center">@associateGoal.FinanceCount<br/>@financeGoalPercentage.ToString("P", rev)</td>
+                    <td><textarea class="form-control" id="comments-finance" name="comments-finance" rows="1" @bDisabled >@Model.CurrentScorecard.FinanceComments</textarea></td>
+                </tr>
+                <tr>
+                    <td>
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+                        <a href="@applicationPath/Reports/AfterSalesAssociatesFilter/@Model.AssociateId/@Model.MonthId/@Model.YearId" target="_blank">After Sales</a>
+}
+else
+{
+    @:After Sales
+}
+
+                        @*<a data-toggle="collapse" id="afterSales" style="cursor: pointer;" data-target="#collapse-afterSales">After Sales <i class="fa fa-caret-down" aria-hidden="true"></i></a>*@
+                        <div id="collapse-afterSales" class="collapse out">
+                            <table class="table table-bordered table-striped" style="font-size:11px">
+                                <thead>
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center"></th>
+                                        <th class="text-center">Deal #</th>
+                                        <th class="text-center">Finance Income Amount</th>
+                                        <th class="text-center">Service Contract Amount</th>
+                                        <th class="text-center">Maintenance Contract Amount</th>
+                                        <th class="text-center">GAP Amount</th>
+                                        <th class="text-center">BPP Amount</th>
+                                        <th class="text-center">Total After Sales</th>
+                                    </tr>
+                                </thead>
+@if (Model.AssociateInformation.AssociateDeals != null && Model.AssociateInformation.AssociateDeals.Count > 0)
+{
+                                <tbody>
+                                    @{
+        decimal TotalFinanceIncome = 0;
+        decimal TotalServiceContract = 0;
+        decimal TotalMaintenanceContract = 0;
+        decimal TotalGAP = 0;
+        decimal TotalBPP = 0;
+        decimal TotalAfterSales = 0;
+
+        double AvgFinanceIncome = 0;
+        double AvgServiceContract = 0;
+        double AvgMaintenanceContract = 0;
+        double AvgGAP = 0;
+        double AvgBPP = 0;
+        double AvgAfterSales = 0;
+
+        decimal afterIndex = 0;
+    }
+    @foreach (var dealDetail in Model.AssociateInformation.AssociateDeals)
+                                        {
+        afterIndex += dealDetail.NewDealCount + dealDetail.UsedDealCount;
+        TotalFinanceIncome += dealDetail.FinanceIncomeAmount;
+        TotalServiceContract += dealDetail.ServiceContractAmount;
+        TotalMaintenanceContract += dealDetail.MaintenanceContractAmount;
+        TotalGAP += dealDetail.GAPAmount;
+        TotalBPP += dealDetail.BPPAmount;
+
+        decimal afterSalesAmount = 0;
+        afterSalesAmount = dealDetail.FinanceIncomeAmount + dealDetail.ServiceContractAmount + dealDetail.MaintenanceContractAmount + dealDetail.GAPAmount + dealDetail.BPPAmount;
+
+        TotalAfterSales += afterSalesAmount;
+                                            <tr>
+                                                <td class="text-center">@afterIndex</td>
+                                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@dealDetail.DealKey" target="_blank">@dealDetail.DealKey</a></td>
+                                                <td class="text-center">@dealDetail.FinanceIncomeAmount.ToString("C",rev)</td>
+                                                <td class="text-center">@dealDetail.ServiceContractAmount.ToString("C", rev)</td>
+                                                <td class="text-center">@dealDetail.MaintenanceContractAmount.ToString("C", rev)</td>
+                                                <td class="text-center">@dealDetail.GAPAmount.ToString("C", rev)</td>
+                                                <td class="text-center">@dealDetail.BPPAmount.ToString("C", rev)</td>
+                                                <td class="text-center">@afterSalesAmount.ToString("C", rev)</td>
+                                            </tr>
+                                        }
+
+
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center" colspan="2">Totals</th>                                        
+                                        <th class="text-center">@TotalFinanceIncome.ToString("C", rev)</th>
+                                        <th class="text-center">@TotalServiceContract.ToString("C", rev)</th>
+                                        <th class="text-center">@TotalMaintenanceContract.ToString("C", rev)</th>
+                                        <th class="text-center">@TotalGAP.ToString("C", rev)</th>
+                                        <th class="text-center">@TotalBPP.ToString("C", rev)</th>
+                                        <th class="text-center">@TotalAfterSales.ToString("C", rev)</th>
+                                    </tr>
+                                    @{
+                                        AvgFinanceIncome = (double)TotalFinanceIncome / (double)afterIndex;
+                                        AvgServiceContract = (double)TotalServiceContract / (double)afterIndex;
+                                        AvgMaintenanceContract = (double)TotalMaintenanceContract / (double)afterIndex;
+                                        AvgGAP = (double)TotalGAP / (double)afterIndex;
+                                        AvgBPP = (double)TotalBPP / (double)afterIndex;
+                                        AvgAfterSales = (double)TotalAfterSales / (double)afterIndex;
+                                    }
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center" colspan="2">Averages</th>
+                                        <th class="text-center">@AvgFinanceIncome.ToString("C", rev)</th>
+                                        <th class="text-center">@AvgServiceContract.ToString("C", rev)</th>
+                                        <th class="text-center">@AvgMaintenanceContract.ToString("C", rev)</th>
+                                        <th class="text-center">@AvgGAP.ToString("C", rev)</th>
+                                        <th class="text-center">@AvgBPP.ToString("C", rev)</th>
+                                        <th class="text-center">@AvgAfterSales.ToString("C", rev)</th>
+                                    </tr>
+                                </tfoot>
+                                    }
+                            </table>
+
+                        </div>
+                    </td>
+                    <td class="text-center new-used">@newAfterSalesAvg.ToString("C",rev)</td>
+                    <td class="text-center new-used">@usedAfterSalesAvg.ToString("C", rev)</td>
+                    <td class="text-center">@TotalAvgGrossProfit.ToString("C",rev)</td>
+                    <td class="text-center">$@storeStandards.AftermarketPerCnt</td>
+                    <td class="text-center"></td>
+                    <td><textarea class="form-control" id="comments-aftermarket" name="comments-aftermarket" rows="1" @bDisabled >@Model.CurrentScorecard.AftermarketComments</textarea></td>
+                </tr>
+                <tr>
+                    <td>Key Improvement Opportunities</td>                    
+                    <td class="text-center new-used"></td>
+                    <td class="text-center new-used"></td>
+                    <td colspan="4"><textarea class="form-control" id="comments-ad-survey" name="comments-ad-survey" rows="2" @bDisabled >@Model.CurrentScorecard.SurveyComments</textarea></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-12">        
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th colspan="10">Previous Months Data</th>
+                    <th class="text-center" colspan="4" style="border-left:3px double #ddd">Leads</th>                    
+                </tr>
+                <tr style="background-color:#d9edf7">
+                    <th>Month</th>
+                    <th class="text-center">Units</th>
+                    <th class="text-center">BPP %</th>
+                    <th class="text-center">Finance %</th>
+                    <th class="text-center">SVC %</th>
+                    <th class="text-center">Trade %</th>
+                    <th class="text-center">After Sales</th>
+                    <th class="text-center">SSI</th>
+                    <th class="text-center">Overdrawn</th>
+                    <th class="text-center">Hours Worked</th>
+                    <th class="text-center" style="border-left:3px double #ddd">Phone</th>
+                    <th class="text-center">Internet</th>
+                    <th class="text-center">Walkin</th>
+                    <th class="text-center">Appointment</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>@currentMonthName</strong></td>
+                    <td class="text-center">@currentUnits</td>
+                    <td class="text-center">@bppCount<br />@bppPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@financeCount<br />@financePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@svcContractCount<br />@svcContractPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@tradeCount<br />@tradePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@TotalAvgGrossProfit.ToString("C", rev)</td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@hoursWorked</td>
+                    <td class="text-center" style="border-left:3px double #ddd">@PhoneLeadCount<br />@PhoneLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@InternetLeadCount<br />@InternetLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@WalkInLeadCount<br />@WalkInLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center"></td>
+                </tr>
+                <tr>
+                    <td><strong>@previousMonthName</strong></td>
+                    <td class="text-center">@previousUnits</td>
+                    <td class="text-center">@previousbppCount<br />@previousbppPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previousfinanceCount<br />@previousfinancePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previoussvcContractCount<br />@previoussvcContractPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previoustradeCount<br />@previoustradePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previousTotalAvgGrossProfit.ToString("C", rev)</td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@previous1Hours</td>
+                    <td class="text-center" style="border-left:3px double #ddd">@previousPhoneLeadCount<br/>@previousPhoneLeadSoldPercent.ToString("P",rev)</td>
+                    <td class="text-center">@previousInternetLeadCount<br />@previousInternetLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@previousWalkInLeadCount<br />@previousWalkInLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center"></td>
+                </tr>
+                <tr>
+                    <td><strong>@previous2MonthName</strong></td>
+                    <td class="text-center">@previous2Units</td>
+                    <td class="text-center">@previous2bppCount<br />@previous2bppPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous2financeCount<br />@previous2financePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous2svcContractCount<br />@previous2svcContractPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous2tradeCount<br />@previous2tradePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous2TotalAvgGrossProfit.ToString("C", rev)</td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@previous2Hours</td>
+                    <td class="text-center" style="border-left:3px double #ddd">@previous2PhoneLeadCount<br/>@previous2PhoneLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@previous2InternetLeadCount<br/>@previous2InternetLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@previous2WalkInLeadCount<br/>@previous2WalkInLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center"></td>
+                </tr>
+                <tr>
+                    <td><strong>@previous3MonthName</strong></td>
+                    <td class="text-center">@previous3Units</td>
+                    <td class="text-center">@previous3bppCount<br />@previous3bppPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous3financeCount<br />@previous3financePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous3svcContractCount<br />@previous3svcContractPercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous3tradeCount<br />@previous3tradePercentage.ToString("P", rev)</td>
+                    <td class="text-center">@previous3TotalAvgGrossProfit.ToString("C", rev)</td>
+                    <td class="text-center"></td>
+                    <td class="text-center"></td>
+                    <td class="text-center">@previous3Hours</td>
+                    <td class="text-center" style="border-left:3px double #ddd">@previous3PhoneLeadCount<br/>@previous3PhoneLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@previous3InternetLeadCount<br />@previous3InternetLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center">@previous3WalkInLeadCount<br />@previous3WalkInLeadSoldPercent.ToString("P", rev)</td>
+                    <td class="text-center"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+          
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <table class="table table-striped">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Manager Input</th>
+                        <th>Actual</th>
+                        <th>Objective</th>
+                        <th>Comments/Action Plan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Customer Satisfaction Score</strong></td>
+                        <td><input type="text" class="form-control" id="satisfaction-actual" name="satisfaction-actual" value="@Model.CurrentScorecard.SatisfactionActual" @bDisabled  /></td>
+                        <td><input type="text" class="form-control" id="satisfaction-objective" name="satisfaction-objective" value="@Model.CurrentScorecard.SatisfactionObjective" @bDisabled /></td>
+                        <td><textarea class="form-control" id="comments-satisfaction" name="comments-satisfaction" rows="1" @bDisabled >@Model.CurrentScorecard.SatisfactionComments</textarea></td>
+                    </tr>
+                    <tr>
+                        <td>Manufacturer Training</td>
+                        <td>@Html.RadioButton("yesno", "Yes", new { id = "yes" }) Yes @Html.RadioButton("yesno", "No", new { id = "no" }) No</td>
+                        <td></td>
+                        <td><textarea class="form-control" id="comments-training" name="comments-training" rows="1" @bDisabled >@Model.CurrentScorecard.TrainingComments</textarea></td>
+                    </tr>
+                    <tr>
+                        <td>F &amp; I Information Process</td>
+                        <td>@Html.RadioButton("yesno", "Yes", new { id = "yes" }) Yes @Html.RadioButton("yesno", "No", new { id = "no" }) No</td>
+                        <td></td>
+                        <td><textarea class="form-control" id="comments-fandi" name="comments-fandi" rows="1" @bDisabled >@Model.CurrentScorecard.FandIProcessComments</textarea></td>
+                    </tr>
+                    <tr>
+                        <td>Fitzway Process</td>
+                        <td>@Html.RadioButton("yesno", "Yes", new { id = "yes" }) Yes @Html.RadioButton("yesno", "No", new { id = "no" }) No</td>
+                        <td></td>
+                        <td><textarea class="form-control" id="comments-fitzway" name="comments-fitzway" rows="1" @bDisabled >@Model.CurrentScorecard.FitzwayProcessComments</textarea></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-4">
+            <table class="table table-striped">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th></th>
+                        <th>Calculated</th>
+                        <th>Approve</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Standard</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Certified</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Certified Elite</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Overdrawn</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+    <div class="row text-center">
+        <div class="col-sm-12">
+            @if (!bLocked)
+            {
+            <button class="btn btn-primary" style="vertical-align: top; text-align:right" type="submit" value="submit" name="SaveComments">Save</button>
+            <button class="btn btn-primary" style="vertical-align: top; text-align:right" type="submit" value="submit" name="FinalizeScorecard">Finalize Scorecard</button>
+            }
+        </div>
+    </div>
+    }
+    <div class="row text-center" style="margin-top:10px;">
+        <div class="col-sm-12">
+            @if (Model.CurrentScorecard.UpdateDate != null && (Model.CurrentScorecard.UpdateDate.ToShortDateString() != "1/1/1900" && Model.CurrentScorecard.UpdateDate.ToShortDateString() != "1/1/0001"))
+            {
+                 @:<p><strong>Last Saved: @Model.CurrentScorecard.UpdateDate by @Model.CurrentScorecard.UpdateUser</strong></p>
+            }                
+            @if (Model.CurrentScorecard.FinalizeDate != null && (Model.CurrentScorecard.FinalizeDate.ToShortDateString() != "1/1/1900" && Model.CurrentScorecard.FinalizeDate.ToShortDateString() != "1/1/0001"))
+            {
+                @:<p><strong>Finalized: @Model.CurrentScorecard.FinalizeDate by @Model.CurrentScorecard.FinalizeUser</strong></p>
+            }
+
+            </div>
+
+
+        </div>
+
+
+        <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+
+    <div class="row print-hide" style="margin-top:15px;">
+        <div class="col-md-10">
+            <h2>Goal Setter and Interactive for @Model.AssociateInformation.AssociateFullName for @Model.MonthId/@Model.YearId</h2>
+        </div>
+    </div>
+    <div class="row print-hide">
+        <div class="col-md-12">
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th></th>
+                        <th class="text-center">Number of Deals</th>
+                        <th class="text-center">New Vehicles Sold</th>
+                        <th class="text-center">Used Vehicles Sold</th>
+                        <th class="text-center">BPP (Paid)</th>
+                        <th class="text-center">Trade Ins</th>
+                        <th class="text-center">Finance/Lease Contracts</th>
+                        <th class="text-center">Service Contracts</th>
+                        <th class="text-center">GAP</th>
+                        <th class="text-center">Zurich Shield</th>
+                        <th class="text-center">Aftermarket (each)</th>
+                        @*<th class="text-center">Manufacturer Spiff</th>*@
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @using (Html.BeginForm())
+                    {
+
+
+                        <input type="hidden" name="hdn-MonthId" id="hdn-MonthId" value="@Model.MonthId">
+                        <input type="hidden" name="hdn-YearId" id="hdn-YearId" value="@Model.YearId">
+                        <input type="hidden" name="associate-SSN" id="associate-SSN" value="@Model.AssociateInformation.AssociateSSN">
+                        <input type="hidden" name="associate-id" id="associate-id" value="@Model.AssociateId">
+                        <tr>
+                            <td class="text-center"><strong>Goals</strong></td>
+                            <td class="text-center"><input type="text" class="form-control" id="dealCount" name="dealCount" value="@associateGoal.DealCount"/></td>
+                            <td class="text-center"><input type="text" class="form-control" id="newCount" name="newCount" value="@associateGoal.NewCount" /></td>
+                            <td class="text-center"><input type="text" class="form-control" id="usedCount" name="usedCount" value="@associateGoal.UsedCount" /></td>
+                            <td class="text-center"><input type="text" class="form-control" id="bppCount" name="bppCount" value="@associateGoal.BPPCount" /><br />@bppGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="tradeCount" name="tradeCount" value="@associateGoal.TradeCount" /><br />@tradeGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="financeCount" name="financeCount" value="@associateGoal.FinanceCount"/><br />@financeGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="serviceCount" name="serviceCount" value="@associateGoal.ServiceCount" /><br />@serviceGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="gapCount" name="gapCount" value="@associateGoal.GAPCount" /><br />@gapGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="zurichCount" name="zurichCount" value="@associateGoal.ZurichCount" /><br />@zurichGoalPercentage.ToString("P", rev)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="aftermarketCount" name="aftermarketCount" value="@associateGoal.AftermarketCount" /><br />@aftermarketGoalPercentage.ToString("P", rev)</td>
+                            @*<td class="text-center"><input type="text" class="form-control" id="spiffCount" name="spiffCount" value="@associateGoal.SpiffCount" /><br />@spiffGoalPercentage.ToString("P",rev)</td>*@
+                            <td class="text-center">
+                            @if (!bLocked)
+                            {
+                                    <button class="btn btn-primary" style="vertical-align: top; text-align:right" type="submit" value="submit" name="SaveGoals">Save</button>
+                            }
+                            </td>
+                        </tr>
+                    }
+                    <tr>
+                        @{
+                            decimal dealIndex = 0;
+                            decimal totalNewCount = 0;
+                            decimal totalUsedCount = 0;
+                            decimal totalBPPCount = 0;
+                            decimal totalTradeCount = 0;
+                            decimal totalFinanceCount = 0;
+                            decimal totalServiceCount = 0;
+                            decimal totalMaintenanceCount = 0;
+                            decimal totalGAPCount = 0;
+                            decimal totalAftermarketCount = 0;
+
+                            decimal totalSpiffCount = 0;
+                        }
+                        @if (Model.AssociateInformation.AssociateDealCounts != null)
+                        {
+
+
+                            dealIndex = Model.AssociateInformation.AssociateDealCounts.TotalDealCount;
+                            totalNewCount = Model.AssociateInformation.AssociateDealCounts.NewDealCount;
+                            totalUsedCount = Model.AssociateInformation.AssociateDealCounts.UsedDealCount;
+                            totalBPPCount = Model.AssociateInformation.AssociateDealCounts.BPPCount;
+                            totalTradeCount = Model.AssociateInformation.AssociateDealCounts.TradeCount;
+                            totalFinanceCount = Model.AssociateInformation.AssociateDealCounts.FinanceCount;
+                            totalServiceCount = Model.AssociateInformation.AssociateDealCounts.ServiceContractCount;
+                            totalMaintenanceCount = Model.AssociateInformation.AssociateDealCounts.MaintenanceContractCount;
+                            totalGAPCount = Model.AssociateInformation.AssociateDealCounts.GAPCount;
+                            totalAftermarketCount = Model.AssociateInformation.AssociateDealCounts.AftermarketCount;
+
+
+                        }
+                        <td class="text-center"><strong>MTD</strong></td>
+                        <td class="text-center">@dealIndex</td>
+                        <td class="text-center">@totalNewCount</td>
+                        <td class="text-center">@totalUsedCount</td>
+                        <td class="text-center">@totalBPPCount</td>
+                        <td class="text-center">@totalTradeCount</td>
+                        <td class="text-center">@totalFinanceCount</td>
+                        <td class="text-center">@totalServiceCount</td>
+                        <td class="text-center">@totalGAPCount</td>
+                        <td class="text-center">@totalMaintenanceCount</td>
+                        <td class="text-center">@totalAftermarketCount</td>
+                        @*<td class="text-center">@totalSpiffCount</td>*@
+                        <td class="text-center"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><strong>Needed</strong></td>
+                        <td class="text-center">@((associateGoal.DealCount - dealIndex) < 0 ? 0 : associateGoal.DealCount - dealIndex)</td>
+                        <td class="text-center">@((associateGoal.NewCount - totalNewCount) < 0 ? 0 : associateGoal.NewCount - totalNewCount)</td>
+                        <td class="text-center">@((associateGoal.UsedCount - totalUsedCount) < 0 ? 0 : associateGoal.UsedCount - totalUsedCount)</td>
+                        <td class="text-center">@((associateGoal.BPPCount - totalBPPCount) < 0 ? 0 : associateGoal.BPPCount - totalBPPCount)</td>
+                        <td class="text-center">@((associateGoal.TradeCount - totalTradeCount) < 0 ? 0 : associateGoal.TradeCount - totalTradeCount)</td>
+                        <td class="text-center">@((associateGoal.FinanceCount - totalFinanceCount) < 0 ? 0 : associateGoal.FinanceCount - totalFinanceCount)</td>
+                        <td class="text-center">@((associateGoal.ServiceCount - totalServiceCount) < 0 ? 0 : associateGoal.ServiceCount - totalServiceCount)</td>
+                        <td class="text-center">@((associateGoal.GAPCount - totalGAPCount) < 0 ? 0 : associateGoal.GAPCount - totalGAPCount)</td>
+                        <td class="text-center">@((associateGoal.ZurichCount - totalMaintenanceCount) < 0 ? 0 : associateGoal.ZurichCount - totalMaintenanceCount)</td>
+                        <td class="text-center">@((associateGoal.AftermarketCount - totalAftermarketCount) < 0 ? 0 : associateGoal.AftermarketCount - totalAftermarketCount)</td>
+                        @*<td class="text-center">@((associateGoal.SpiffCount - totalSpiffCount) < 0 ? 0 : associateGoal.SpiffCount - totalSpiffCount)</td>*@
+                        <td class="text-center"></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center"><strong>Totals</strong></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        <td class="text-center"></td>
+                        @*<td class="text-center"></td>*@
+                        <td class="text-center"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row print-hide">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+
+                            @*var stdSelected = "";
+                            var certSelected = "";
+                            var certeliteSelected = "";
+
+                            if (Model.AssociateInformation.AssociateLevel == "STD")
+                            {
+                                stdSelected = "checked";
+                            }
+                            else if (Model.AssociateInformation.AssociateLevel == "CERT")
+                            {
+                                certSelected = "checked";
+                            }
+                            else if (Model.AssociateInformation.AssociateLevel == "CERTELIT")
+                            {
+                                certeliteSelected = "checked";
+                            }
+
+
+                            if (Model.AssociateInformation.AllPayscales != null)
+                            {
+    <div class="row print-hide">
+        <div class="col-md-2">
+            <h4>Standard <input type="radio" name="level" value="STD" @stdSelected /></h4>
+        </div>
+        <div class="col-md-2">
+            <h4>Certified <input type="radio" name="level" value="CERT" @certSelected /></h4>
+        </div>
+        <div class="col-md-2">
+            <h4>Certified Elite <input type="radio" name="level" value="CERTELIT" @certeliteSelected /></h4>
+        </div>
+    </div>*@
+
+    <div class="row print-hide">
+        <div class="col-md-12">
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Interactive Commission</th>
+                        <th class="text-center">New Units</th>
+                        <th class="text-center">Used Units</th>
+                        <th class="text-center">BPP (Paid)</th>
+                        <th class="text-center">Trade Ins</th>
+                        <th class="text-center">Finance/Lease Contracts</th>
+                        <th class="text-center">Service Contracts</th>
+                        <th class="text-center">GAP</th>
+                        <th class="text-center">Zurich Shield</th>
+                        <th class="text-center">Aftermarket (each)</th>
+                        <th class="text-center">Manufacturer Spiff</th>
+                        <th class="text-center">Total Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Counts</strong></td>
+                        <td class="text-center"><input id="new-unit-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-unit-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-bpp-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-bpp-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-trade-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-finance-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-service-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-gap-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-zurich-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-aftermarket-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="new-survey-spinner" class="form-control form-inline" value="0"></td>
+                        @*<td class="text-center"><input id="new-spiff-spinner" class="form-control form-inline" value="0"></td>*@
+                        <td></td>
+                    </tr>
+                    @*@{
+                            var newPayscale = Model.AssociateInformation.AssociatePayscales.Find(o => o.ps_NewUsedHandy == "NEW");
+                        }
+                        <tr>
+                            <td><strong>Values</strong></td>
+                            <td class="text-center"><input type="text" id="new-commission" class="form-control commission-display" value="@newPayscale.ps_BaseCommission" /></td>
+                            <td class="text-center"><input type="text" id="new-bpp" class="form-control commission-display" value="@newPayscale.ps_FullBPP" /></td>
+                            <td class="text-center"><input type="text" id="new-trade" class="form-control commission-display" value="@newPayscale.ps_TradeIn" /></td>
+                            <td class="text-center"><input type="text" id="new-finance" class="form-control commission-display" value="@newPayscale.ps_FinanceLease" /></td>
+                            <td class="text-center"><input type="text" id="new-service" class="form-control commission-display" value="@newPayscale.ps_ServiceContract" /></td>
+                            <td class="text-center"><input type="text" id="new-gap" class="form-control commission-display" value="@newPayscale.ps_GAP" /></td>
+                            <td class="text-center"><input type="text" id="new-maintenance" class="form-control commission-display" value="@newPayscale.ps_Maintenance" /></td>
+                            <td class="text-center"><input type="text" id="new-aftermarket" class="form-control commission-display" value="@newPayscale.ps_AftermarketPerItem" /></td>
+                            <td class="text-center"><input type="text" id="new-spiff" class="form-control commission-display" value="@newPayscale.ps_ManufacturerSpiffGuarantee" /></td>
+                            <td></td>
+                        </tr>*@
+
+
+                    @{
+
+                        var allNewPayscales = Model.AssociateInformation.AllPayscales.FindAll(o => o.ps_NewUsedHandy == "NEW");
+
+
+                        foreach (var newPayscale in allNewPayscales)
+                        {
+                            var display = "";
+
+                            if (Model.AssociateInformation.AssociateLevel == newPayscale.ps_PayLevel)
+                            {
+                                display = "";
+                            }
+                            else
+                            {
+                                display = "display:none";
+                            }
+
+                            var displayLevelName = "";
+
+                            foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                            {
+                                if (newPayscale.ps_PayLevel == level.PayLevelID)
+                                {
+                                    displayLevelName = level.Name;
+                                    break;
+                                }
+                            }
+
+                            <tr id="@newPayscale.ps_NewUsedHandy-@newPayscale.ps_PayLevel" style="@display">
+                                <td><strong>@displayLevelName Values</strong></td>
+                                <td class="text-center"><input type="text" id="new-commission-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_BaseCommission" /></td>
+                                <td class="text-center"><input type="text" id="new-bpp-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_FullBPP" /></td>
+                                <td class="text-center"><input type="text" id="new-trade-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_TradeIn" /></td>
+                                <td class="text-center"><input type="text" id="new-finance-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_FinanceLease" /></td>
+                                <td class="text-center"><input type="text" id="new-service-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_ServiceContract" /></td>
+                                <td class="text-center"><input type="text" id="new-gap-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_GAP" /></td>
+                                <td class="text-center"><input type="text" id="new-maintenance-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_Maintenance" /></td>
+                                <td class="text-center"><input type="text" id="new-aftermarket-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_AftermarketPerItem" /></td>
+                                <td class="text-center"><input type="text" id="new-spiff-@newPayscale.ps_PayLevel" class="form-control commission-display" value="@newPayscale.ps_ManufacturerSpiffGuarantee" /></td>
+                                <td></td>
+                            </tr>
+                        }
+
+                        }
+                </tbody>
+                <tfoot>
+
+                    @foreach (var newPayscale in allNewPayscales)
+                    {
+                        var display = "";
+
+                        if (Model.AssociateInformation.AssociateLevel == newPayscale.ps_PayLevel)
+                        {
+                            display = "";
+                        }
+                        else
+                        {
+                            display = "display:none";
+                        }
+
+                        var displayLevelName = "";
+
+                        foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                        {
+                            if (newPayscale.ps_PayLevel == level.PayLevelID)
+                            {
+                                displayLevelName = level.Name;
+                                break;
+                            }
+                        }
+
+                        <tr id="@newPayscale.ps_NewUsedHandy-@newPayscale.ps_PayLevel-total" style="background-color:#d9edf7; @display">
+                            <th>@displayLevelName Totals</th>
+                            <th class="text-center"><input type="text" id="new-commission-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-bpp-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-trade-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-finance-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-service-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-gap-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-maintenance-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-aftermarket-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-spiff-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="new-total-@newPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                        </tr>
+
+                    }
+
+
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row print-hide">
+        <div class="col-md-12">
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Used Commission</th>
+                        <th class="text-center">Units</th>
+                        <th class="text-center">BPP (Paid)</th>
+                        <th class="text-center">Trade Ins</th>
+                        <th class="text-center">Finance/Lease Contracts</th>
+                        <th class="text-center">Service Contracts</th>
+                        <th class="text-center">GAP</th>
+                        <th class="text-center">Zurich Shield</th>
+                        <th class="text-center">Aftermarket (each)</th>
+                        <th class="text-center">Internal Survey</th>
+                        <th class="text-center">Total Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Counts</strong></td>
+
+                        <td class="text-center"><input id="used-trade-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-finance-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-service-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-gap-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-zurich-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-aftermarket-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="used-spiff-spinner" class="form-control form-inline" value="0"></td>
+                        <td></td>
+                    </tr>
+                    @*@{
+                            var usedPayscale = Model.AssociateInformation.AssociatePayscales.Find(o => o.ps_NewUsedHandy == "USED");
+                        }
+                        <tr>
+                            <td><strong>Values</strong></td>
+                            <td class="text-center"><input type="text" id="used-commission" class="form-control commission-display" value="@usedPayscale.ps_BaseCommission" /></td>
+                            <td class="text-center"><input type="text" id="used-bpp" class="form-control commission-display" value="@usedPayscale.ps_FullBPP" /></td>
+                            <td class="text-center"><input type="text" id="used-trade" class="form-control commission-display" value="@usedPayscale.ps_TradeIn" /></td>
+                            <td class="text-center"><input type="text" id="used-finance" class="form-control commission-display" value="@usedPayscale.ps_FinanceLease" /></td>
+                            <td class="text-center"><input type="text" id="used-service" class="form-control commission-display" value="@usedPayscale.ps_ServiceContract" /></td>
+                            <td class="text-center"><input type="text" id="used-gap" class="form-control commission-display" value="@usedPayscale.ps_GAP" /></td>
+                            <td class="text-center"><input type="text" id="used-maintenance" class="form-control commission-display" value="@usedPayscale.ps_Maintenance" /></td>
+                            <td class="text-center"><input type="text" id="used-aftermarket" class="form-control commission-display" value="@usedPayscale.ps_AftermarketPerItem" /></td>
+                            <td class="text-center"><input type="text" id="used-spiff" class="form-control commission-display" value="@usedPayscale.ps_InternalSurvey" /></td>
+                            <td></td>
+                        </tr>*@
+
+                    @{
+                        var allUsedPayscales = Model.AssociateInformation.AllPayscales.FindAll(o => o.ps_NewUsedHandy == "USED");
+
+
+                        foreach (var usedPayscale in allUsedPayscales)
+                        {
+                            var display = "";
+
+                            if (Model.AssociateInformation.AssociateLevel == usedPayscale.ps_PayLevel)
+                            {
+                                display = "";
+                            }
+                            else
+                            {
+                                display = "display:none";
+                            }
+
+                            var displayLevelName = "";
+
+                            foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                            {
+                                if (usedPayscale.ps_PayLevel == level.PayLevelID)
+                                {
+                                    displayLevelName = level.Name;
+                                    break;
+                                }
+                            }
+                            <tr id="@usedPayscale.ps_NewUsedHandy-@usedPayscale.ps_PayLevel" style="@display">
+                                <td><strong>@displayLevelName Values</strong></td>
+                                <td class="text-center"><input type="text" id="used-commission-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_BaseCommission" /></td>
+                                <td class="text-center"><input type="text" id="used-bpp-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_FullBPP" /></td>
+                                <td class="text-center"><input type="text" id="used-trade-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_TradeIn" /></td>
+                                <td class="text-center"><input type="text" id="used-finance-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_FinanceLease" /></td>
+                                <td class="text-center"><input type="text" id="used-service-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_ServiceContract" /></td>
+                                <td class="text-center"><input type="text" id="used-gap-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_GAP" /></td>
+                                <td class="text-center"><input type="text" id="used-maintenance-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_Maintenance" /></td>
+                                <td class="text-center"><input type="text" id="used-aftermarket-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_AftermarketPerItem" /></td>
+                                <td class="text-center"><input type="text" id="used-spiff-@usedPayscale.ps_PayLevel" class="form-control commission-display" value="@usedPayscale.ps_InternalSurvey" /></td>
+                                <td></td>
+                            </tr>
+                        }
+
+                    }
+
+
+                </tbody>
+                <tfoot>
+                    @foreach (var usedPayscale in allUsedPayscales)
+                    {
+                        var display = "";
+
+                        if (Model.AssociateInformation.AssociateLevel == usedPayscale.ps_PayLevel)
+                        {
+                            display = "";
+                        }
+                        else
+                        {
+                            display = "display:none";
+                        }
+                        var displayLevelName = "";
+
+                        foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                        {
+                            if (usedPayscale.ps_PayLevel == level.PayLevelID)
+                            {
+                                displayLevelName = level.Name;
+                                break;
+                            }
+                        }
+                        <tr id="@usedPayscale.ps_NewUsedHandy-@usedPayscale.ps_PayLevel-total" style="background-color:#d9edf7; @display">
+                            <th>@displayLevelName Totals</th>
+                            <th class="text-center"><input type="text" id="used-commission-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-bpp-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-trade-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-finance-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-service-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-gap-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-maintenance-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-aftermarket-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-spiff-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="used-total-@usedPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                        </tr>
+                    }
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row print-hide" style="display:none;">
+        <div class="col-md-12">
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Handyman Commission</th>
+                        <th class="text-center">Units</th>
+                        <th class="text-center">BPP (Paid)</th>
+                        <th class="text-center">Trade Ins</th>
+                        <th class="text-center">Finance/Lease Contracts</th>
+                        <th class="text-center">Service Contracts</th>
+                        <th class="text-center">GAP</th>
+                        <th class="text-center">Zurich Shield</th>
+                        <th class="text-center">Aftermarket (each)</th>
+                        <th class="text-center">Internal Survey</th>
+                        <th class="text-center">Total Commission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Counts</strong></td>
+                        <td class="text-center"><input id="handy-unit-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-bpp-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-trade-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-finance-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-service-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-gap-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-zurich-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-aftermarket-spinner" class="form-control form-inline" value="0"></td>
+                        <td class="text-center"><input id="handy-spiff-spinner" class="form-control form-inline" value="0"></td>
+                        <td></td>
+                    </tr>
+                    @*@{
+                            var handyPayscale = Model.AssociateInformation.AssociatePayscales.Find(o => o.ps_NewUsedHandy == "HANDY");
+                        }
+                        <tr>
+                            <td><strong>Values</strong></td>
+                            <td class="text-center"><input type="text" id="handy-commission" class="form-control commission-display" value="@handyPayscale.ps_BaseCommission" /></td>
+                            <td class="text-center"><input type="text" id="handy-bpp" class="form-control commission-display" value="@handyPayscale.ps_FullBPP" /></td>
+                            <td class="text-center"><input type="text" id="handy-trade" class="form-control commission-display" value="@handyPayscale.ps_TradeIn" /></td>
+                            <td class="text-center"><input type="text" id="handy-finance" class="form-control commission-display" value="@handyPayscale.ps_FinanceLease" /></td>
+                            <td class="text-center"><input type="text" id="handy-service" class="form-control commission-display" value="@handyPayscale.ps_ServiceContract" /></td>
+                            <td class="text-center"><input type="text" id="handy-gap" class="form-control commission-display" value="@handyPayscale.ps_GAP" /></td>
+                            <td class="text-center"><input type="text" id="handy-maintenance" class="form-control commission-display" value="@handyPayscale.ps_Maintenance" /></td>
+                            <td class="text-center"><input type="text" id="handy-aftermarket" class="form-control commission-display" value="@handyPayscale.ps_AftermarketPerItem" /></td>
+                            <td class="text-center"><input type="text" id="handy-spiff" class="form-control commission-display" value="@handyPayscale.ps_InternalSurvey" /></td>
+                            <td></td>
+                        </tr>*@
+
+                    @{
+                        var allHandyPayscales = Model.AssociateInformation.AllPayscales.FindAll(o => o.ps_NewUsedHandy == "HANDY");
+
+
+                        foreach (var handyPayscale in allHandyPayscales)
+                        {
+                            var display = "";
+
+                            if (Model.AssociateInformation.AssociateLevel == handyPayscale.ps_PayLevel)
+                            {
+                                display = "";
+                            }
+                            else
+                            {
+                                display = "display:none";
+                            }
+
+                            var displayLevelName = "";
+                            foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                            {
+                                if (handyPayscale.ps_PayLevel == level.PayLevelID)
+                                {
+                                    displayLevelName = level.Name;
+                                    break;
+                                }
+                            }
+
+                            <tr id="@handyPayscale.ps_NewUsedHandy-@handyPayscale.ps_PayLevel" style="@display">
+                                <td><strong>@displayLevelName Values</strong></td>
+                                <td class="text-center"><input type="text" id="handy-commission-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_BaseCommission" /></td>
+                                <td class="text-center"><input type="text" id="handy-bpp-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_FullBPP" /></td>
+                                <td class="text-center"><input type="text" id="handy-trade-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_TradeIn" /></td>
+                                <td class="text-center"><input type="text" id="handy-finance-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_FinanceLease" /></td>
+                                <td class="text-center"><input type="text" id="handy-service-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_ServiceContract" /></td>
+                                <td class="text-center"><input type="text" id="handy-gap-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_GAP" /></td>
+                                <td class="text-center"><input type="text" id="handy-maintenance-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_Maintenance" /></td>
+                                <td class="text-center"><input type="text" id="handy-aftermarket-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_AftermarketPerItem" /></td>
+                                <td class="text-center"><input type="text" id="handy-spiff-@handyPayscale.ps_PayLevel" class="form-control commission-display" value="@handyPayscale.ps_InternalSurvey" /></td>
+                                <td></td>
+                            </tr>
+                        }
+
+                    }
+
+
+                </tbody>
+                <tfoot>
+
+
+                    @foreach (var handyPayscale in allHandyPayscales)
+                    {
+                        var display = "";
+
+                        if (Model.AssociateInformation.AssociateLevel == handyPayscale.ps_PayLevel)
+                        {
+                            display = "";
+                        }
+                        else
+                        {
+                            display = "display:none";
+                        }
+
+                        var displayLevelName = "";
+                        foreach (var level in SalesCommission.Business.Enums.PayLevels)
+                        {
+                            if (handyPayscale.ps_PayLevel == level.PayLevelID)
+                            {
+                                displayLevelName = level.Name;
+                                break;
+                            }
+                        }
+
+                        <tr id="@handyPayscale.ps_NewUsedHandy-@handyPayscale.ps_PayLevel-total" style="background-color:#d9edf7; @display">
+                            <th>@displayLevelName Totals</th>
+                            <th class="text-center"><input type="text" id="handy-commission-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-bpp-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-trade-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-finance-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-service-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-gap-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-maintenance-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-aftermarket-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-spiff-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                            <th class="text-center"><input type="text" id="handy-total-@handyPayscale.ps_PayLevel" value="0" class="form-control commission-display" /></th>
+                        </tr>
+                    }
+
+
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row print-hide">
+        <div class="col-md-12">
+            <h4>Total Commission</h4>
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th></th>
+                        <th class="text-center">Standard</th>
+                        <th class="text-center">Certified</th>
+                        <th class="text-center">Certified Elite</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Total Commission</strong></td>
+                        <td class="text-center"><input type="text" id="STD-Total-Commission" value="0" class="form-control commission-display" style="font-size:24px" /></td>
+                        <td class="text-center"><input type="text" id="CERT-Total-Commission" value="0" class="form-control commission-display" style="font-size:24px" /></td>
+                        <td class="text-center"><input type="text" id="CERTELIT-Total-Commission" value="0" class="form-control commission-display" style="font-size:24px" /></td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+                            }
+                        }
+
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    
+@section scripts
+{
+
+
+ 
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#btnToggleNewUsed').click(function () {
+
+
+                if ($('#btnToggleNewUsed').val() == 'Show Details') {
+                    $('.new-used').show();
+                    $('#btnToggleNewUsed').val("Hide Details");
+                }
+                else {
+                    $('.new-used').hide();
+                    $('#btnToggleNewUsed').val("Show Details");
+                }
+
+            });
+        });
+    </script>
+}

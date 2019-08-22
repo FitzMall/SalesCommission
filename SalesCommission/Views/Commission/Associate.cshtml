@@ -1,0 +1,1294 @@
+﻿@model SalesCommission.Models.AssociateCommissionModel
+
+@{
+    ViewBag.Title = "Associate Commission";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    //nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+
+
+    decimal TotalDrawAmount = 0;
+
+    var bIsAssociate = false;
+
+    var bShowValues = false;
+    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 30))
+    {
+        bShowValues = true;
+    }
+
+    var bShowLevel = false;
+    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 24))
+    {
+        bShowLevel = true;
+    }
+
+    if ((bool)Session["IsCommissionAdmin"] == true)
+    {
+        bShowValues = true;
+    }
+    else
+    {
+
+    }
+
+    if (Model.AssociateInformation.AssociateNumber != null && Session["AssociateId"] != null)
+    {
+        if (Model.AssociateInformation.AssociateNumber.Trim().ToLower() == Session["AssociateId"].ToString().Trim().ToLower())
+        {
+            bIsAssociate = true;
+        }
+    }
+}
+
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+}
+<style type="text/css">
+
+    .commission-table {
+        font-size: 11px;
+    }
+
+    .table thead>tr>th, .table tbody>tr>th, .table tfoot>tr>th, .table thead>tr>td, .table tbody>tr>td, .table tfoot>tr>td
+    {
+        padding:6px;
+    }
+
+    @@media print {
+        .navbar {
+            display: none;
+        }
+
+        body{
+            padding-top:0px;
+        }
+
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+    .commission-table {
+        font-size: 10px;
+    }
+    .table thead>tr>th, .table tbody>tr>th, .table tfoot>tr>th, .table thead>tr>td, .table tbody>tr>td, .table tfoot>tr>td
+    {
+        padding:4px;
+        line-height:1.0em;
+    }
+    .associate-approval {background-color:#efefef}
+    hr {
+        margin-top:0px;
+        margin-bottom: 0px;
+    }
+        @@page {
+            size: portrait;
+            margin: 2cm;
+        }
+    }
+
+        h5.editInfo{
+        color:#428bca;
+    }
+
+    h5.editInfo:hover{
+        text-decoration:underline;
+        color: #428bca;
+        cursor: pointer;
+    }
+</style>
+
+@if (Model.AssociateInformation == null)
+{
+    <h2>The associate you requested could not be found.</h2>
+}
+else if (Model.AssociateInformation.AssociateDeals == null)
+{
+    <h2>The associate you requested has no deals for this month and year.</h2>
+            }
+            else if((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
+            {
+                <h2>You are not authorized to view this Associate's Commission</h2>
+}
+else
+{
+    decimal hoursPayAmount = 0;
+    decimal totalUnits = 0;
+    var payscaleName = "";
+    var payLevelName = "";
+
+    var nextMonthId = 0;
+    var previousMonthId = 0;
+    var nextMonthYearId = 0;
+    var previousMonthYearId = 0;
+
+    var currentMonth = new DateTime(Model.YearId, Model.MonthId, 1);
+    var previousMonth = currentMonth.AddMonths(-1);
+    var nextMonth = currentMonth.AddMonths(1);
+
+    previousMonthId = previousMonth.Month;
+    nextMonthId = nextMonth.Month;
+
+    previousMonthYearId = previousMonth.Year;
+    nextMonthYearId = nextMonth.Year;
+
+    foreach (var scale in SalesCommission.Business.Enums.Payscales)
+    {
+        if (Model.AssociateInformation.AssociatePayscale == scale.PayscaleID)
+        {
+            payscaleName = scale.Name;
+            break;
+        }
+    }
+
+    foreach (var level in SalesCommission.Business.Enums.PayLevels)
+    {
+        if (Model.AssociateInformation.AssociateLevel == level.PayLevelID)
+        {
+            payLevelName = level.Name;
+            break;
+        }
+    }
+
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-8">
+            <h2>Commission for @Model.AssociateInformation.AssociateFullName for @Model.MonthId/@Model.YearId</h2>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:15px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+        <div class="col-md-2">
+            <a href="@applicationPath/Commission/ScoreCard/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary"  style="margin-top:15px;float:right">View Score Card</a>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 text-left">
+            <a href="@applicationPath/Commission/Associate/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
+        </div>
+        <div class="col-md-6 text-right">
+            @if (nextMonth <= DateTime.Now)
+        {
+                <a href="@applicationPath/Commission/Associate/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-4">
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+            <p><strong>Level:</strong> @payLevelName</p>            
+}
+            <p><strong>Hire Date:</strong> @Model.AssociateInformation.AssociateHireDate.ToShortDateString()</p>
+            @if (Model.AssociateInformation.AssociateStatus != "NA" && Model.AssociateInformation.AssociateStatus != "" && Model.AssociateInformation.AssociateStatus != null)
+    {
+                <p><strong>Status:</strong> @Model.AssociateInformation.AssociateStatus</p>
+                if (Model.AssociateInformation.AssociateStatus != "Mentee")
+        {
+                    <p><strong>Mentor:</strong> @Model.AssociateInformation.AssociateMentor</p>
+                }
+    }
+            @if (Model.AssociateInformation.AssociateStatus == "Mentee")
+    {
+                <p><strong>Training End Date:</strong> @Model.AssociateInformation.AssociateGraduationDate.ToShortDateString()</p>
+            }            
+            <p><strong>SSI:</strong> @Model.AssociateInformation.AssociateSSI</p>
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+            <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartmentDescription</p>
+            <p><strong>Pay Scale:</strong> @payscaleName</p>
+}
+            @*<p><strong>Store Volume:</strong> @Model.AssociateInformation.AssociateStoreVolume</p>
+            <p><strong>Longevity Units:</strong> 0</p>*@
+        </div>
+        <div class="col-xs-4">
+            <p><strong>Prior Units</strong></p>
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Month</th>
+                        <th>Units</th>                        
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AssociateInformation.AssociateUnits != null && Model.AssociateInformation.AssociateUnits.Count > 0)
+                    {
+                        var sortedUnits = Model.AssociateInformation.AssociateUnits.OrderByDescending(x => x.UnitDate).ToList();                       
+
+                        for (var i = 0; i < 3; i++)
+                        {
+                            totalUnits += sortedUnits[i].UnitCount;
+                            <tr>
+                                @if (i == 0)
+                                {
+                                    <td>Current</td>
+                                }
+                                else
+                                {
+                                    <td>@sortedUnits[i].UnitDate.Month/@sortedUnits[i].UnitDate.Year</td>
+                                }
+                                <td>@sortedUnits[i].UnitCount</td>
+                            </tr>
+                        }
+                    }
+
+
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th>@totalUnits</th>
+                    </tr>
+                </tfoot>
+            </table>            
+        </div>
+        
+        <div class="col-xs-4">
+            <h4>Unearned Commissions</h4>
+        </div>
+
+    </div>
+    if (bShowLevel)
+    {
+        if (Model.AssociateInformation.PayLevelCalculation != null && Model.AssociateInformation.PayLevelCalculation.pl_CalculatedPayLevel != "")
+        {
+            var levelName = "";
+            switch (Model.AssociateInformation.PayLevelCalculation.pl_CalculatedPayLevel)
+            {
+                case "STD":
+                    levelName = "Standard";
+                    break;
+                case "CERT":
+                    levelName = "Certified";
+                    break;
+                case "CERTELIT":
+                    levelName = "Certified Elite";
+                    break;
+                default:
+                    levelName = "Not Currently Set";
+                    break;
+            }
+
+
+        <div class="row text-center" style="margin-bottom:15px;">
+            <div class="col-sm-12">
+                <h4>Current Calculated Pay Level: @levelName</h4>                
+                @if (DateTime.Now.Day >= 25)
+                {
+                    <strong><span style="color:red">* Your level is currently locked and cannot drop below the currently calculated level</span></strong><br />
+                }
+
+                <strong>Based on data as of @Model.AssociateInformation.PayLevelCalculation.pl_UpdateDate.ToShortDateString()</strong>
+            </div>
+        </div>
+        }
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+@if ((bool)Session["IsCommissionAdmin"] == true || DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 1).AddMonths(1))
+{
+        <div class="col-xs-3">
+            <h4>Draws</h4>
+
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Date</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AssociateInformation.AssociateDraws != null)
+                    {
+                        foreach (var draw in Model.AssociateInformation.AssociateDraws)
+                        {
+                            <tr>
+                                <td>@draw.DrawDate.ToShortDateString()</td>
+                                <td>@draw.DrawAmount.ToString("C")</td>
+                            </tr>
+                            TotalDrawAmount += draw.DrawAmount;
+                        }
+                    }
+                    @{
+                        TotalDrawAmount = (TotalDrawAmount * -1);
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th>@TotalDrawAmount.ToString("C")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+}
+        <div class="col-xs-3">
+            <h4>Bonus</h4>
+            @{
+                decimal TotalBonusAmount = 0;
+            }
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Date</th>
+                        <th>Comment</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AssociateInformation.AssociateBonus != null)
+                    {
+                        foreach (var bonus in Model.AssociateInformation.AssociateBonus)
+                        {
+                            <tr>
+                                <td>@bonus.BonusDate</td>
+                                <td>@bonus.BonusComments</td>
+                                <td>@bonus.BonusAmount.ToString("C")</td>
+                            </tr>
+                            TotalBonusAmount += bonus.BonusAmount;
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th>@TotalBonusAmount.ToString("C")</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+            <h5 class="editInfo" rel="@Model.AssociateInformation.AssociateNumber.Trim()"><i class="fa fa-pencil" aria-hidden="true"></i> Bonus and Draws</h5>    
+}
+        </div>
+@if (Model.AssociateInformation.AssociatePayscale == "MOCO")
+{
+        <div class="col-xs-3">
+            
+            @{ 
+                double earnedAmount = 0;
+                decimal currentUnits = 0;
+                decimal cummulativeUnits = 0;
+
+                var anniversaryDate = new DateTime(DateTime.Now.Year, Model.AssociateInformation.AssociateHireDate.Month, Model.AssociateInformation.AssociateHireDate.Day);
+
+                var anniversaryMonthStart = new DateTime(DateTime.Now.Year, Model.AssociateInformation.AssociateHireDate.Month, 1);
+
+                var startMonth = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(anniversaryDate.Month);
+                var endMonth = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(anniversaryDate.AddMonths(11).Month);
+
+            }
+            <h4>Longevity Bonus (@startMonth - @endMonth)</h4>
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Cumulative</th>
+                        <th>Per Unit</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var unitMultiplier = 0;
+                    }
+                    @if (Model.AssociateInformation.AssociateUnits != null && Model.AssociateInformation.AssociateUnits.Count > 0)
+                    {
+                        var sortedUnits = Model.AssociateInformation.AssociateUnits.OrderByDescending(x => x.UnitDate).ToList();
+
+                        if (anniversaryMonthStart > new DateTime(Model.YearId,Model.MonthId,1))
+                        {
+                            anniversaryDate = anniversaryDate.AddYears(-1);
+                        }
+
+                        var dateDiff = (DateTime.Now - Model.AssociateInformation.AssociateHireDate).TotalDays;
+
+                        
+
+                        if(dateDiff < 365)
+                        {
+                            unitMultiplier = 5;
+                        }
+                        else if (dateDiff >= 365 && dateDiff < 730)
+                        {
+                            unitMultiplier = 10;
+                        }
+                        if (dateDiff >= 730 && dateDiff < 1095)
+                        {
+                            unitMultiplier = 15;
+                        }
+                        if (dateDiff >= 1095 && dateDiff < 1460)
+                        {
+                            unitMultiplier = 20;
+                        }
+                        if (dateDiff >= 1460)
+                        {
+                            unitMultiplier = 25;
+                        }
+
+                        currentUnits = sortedUnits[0].UnitCount;
+
+                        foreach (var unit in sortedUnits)
+                        {
+                            if (unit.UnitDate >= new DateTime(anniversaryDate.Year,anniversaryDate.Month,1))
+                            {
+                                cummulativeUnits += unit.UnitCount;
+                            }
+                        }
+
+                        earnedAmount = (double)cummulativeUnits * (double)unitMultiplier;
+
+                    }
+
+                    <tr>                        
+                        <td>@cummulativeUnits</td>
+                        <td>@unitMultiplier</td>
+                        <td>@earnedAmount.ToString("C")</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>Effective Date: </strong> @anniversaryDate.ToShortDateString() </p>
+        </div>
+                }
+        <div class="col-xs-3">
+
+@{
+    decimal hoursWorked = 0;
+
+    if (Model.AssociateInformation.AssociateHours != null && Model.AssociateInformation.AssociateHours.Count > 0)
+    {
+        hoursWorked = Model.AssociateInformation.AssociateHours[0].Hours;
+        hoursPayAmount = Math.Round((hoursWorked * @Model.AssociateInformation.AssociateWage));
+    }
+
+    if (Model.AssociateInformation.AssociatePayscale == "MOCO")
+    {
+        var datePlusFour = Model.AssociateInformation.AssociateHireDate.AddMonths(4);
+        var lessThanDate = new DateTime(datePlusFour.Year, datePlusFour.Month, 1);
+
+        // Have been here less than 3 full months and worked over 190 hours, so minimum is $2500
+        if (DateTime.Now < lessThanDate && hoursWorked > 190)
+        {
+            if (hoursPayAmount < 2500)
+            {
+                hoursPayAmount = 2500;
+            }
+
+        }
+
+
+    }
+
+}
+
+@if ((bool)Session["IsCommissionAdmin"] == true && Model.AssociateInformation.AssociatePayscale != "FL")
+{
+            <h4>Hourly Pay</h4>
+                               
+            <table class="table table-bordered table-striped" style="font-size:12px">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th>Hours</th>
+                        <th>Rate</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@hoursWorked</td>
+                        <td>@Model.AssociateInformation.AssociateWage</td>
+                        <td>@hoursPayAmount.ToString("C")</td>
+                    </tr>
+                </tbody>
+            </table>
+                }
+        </div>
+    </div>
+    <div class="row" @*style="page-break-after: always;"*@>
+        <div class="col-md-12">
+            <hr />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>@Model.AssociateInformation.AssociateLastName Deals</h4>
+            @if (Model.AssociateInformation.AssociateDeals.Count > 0)
+                    {
+            <table class="table table-bordered table-striped commission-table">
+                <thead>
+                    <tr style="background-color:#d9edf7">
+                        <th class="text-center"></th>
+                        <th class="text-center">Deal #</th>
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+                        <th class="text-center">UE</th>
+}
+else
+{
+    <th class="text-center"></th>
+}
+                        <th class="text-center">Customer</th>
+                        <th class="text-center">Stk #</th>
+                        <th class="text-center">N/U</th>
+                        @*<th class="text-center">V/I</th>
+                        <th class="text-center">Deal Count</th>*@
+                        <th class="text-center">&nbsp;</th>
+                        <th class="text-center">Comm</th>
+                        <th class="text-center">BPP</th>
+                        <th class="text-center">Trade</th>
+                        <th class="text-center">Fin Inc</th>
+                        <th class="text-center">VSC</th>
+                        <th class="text-center">Maint</th>
+                        <th class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @:GAP 
+                            }
+                        </th>
+                        <th class="text-center">&nbsp;</th>
+                        <th class="text-center">After market</th>
+                        <th class="text-center">Manu. Spiff</th>
+                        <th class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @:SSI
+                            }
+                        </th>
+                        <th class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @:Int Survey
+                            }
+                        </th>
+                        <th class="text-center">Vol Bonus</th>
+                        <th class="text-center">Total</th>
+                        <th class="text-center associate-approval">Approved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        decimal dealIndex = 0;
+                        decimal commissionSumTotal = 0;
+                        decimal commissionSubTotal = 0;
+                        decimal commissionOverallTotal = 0;
+
+                        decimal totalNewCount = 0;
+                        decimal totalUsedCount = 0;
+                        decimal totalBPPCount = 0;
+                        decimal totalTradeCount = 0;
+                        decimal totalFinanceCount = 0;
+                        decimal totalServiceCount = 0;
+                        decimal totalMaintenanceCount = 0;
+                        decimal totalGAPCount = 0;
+                        decimal totalAftermarketCount = 0;
+
+                        decimal tooFewVSC = 0;
+
+                    }
+                    @foreach (var deal in Model.AssociateInformation.AssociateDeals)
+                    {
+
+                        decimal totalTrade = deal.Trade1Amount + deal.Trade2Amount;
+                        decimal dealValue = deal.NewDealCount + deal.UsedDealCount;
+
+                        int tradeCount = 0;
+                        if (deal.Trade1Amount > 0)
+                        {
+                            tradeCount += 1;
+                        }
+                        if (deal.Trade2Amount > 0)
+                        {
+                            tradeCount += 1;
+                        }
+
+                        if (deal.MakeCode != "AA")
+                        {
+                            totalNewCount += deal.NewDealCount;
+                            totalUsedCount += deal.UsedDealCount;
+
+                            dealIndex += dealValue;
+                        }
+
+                        var dealNU = "";
+                        if (deal.VehicleCondition == "NEW")
+                        {
+                            dealNU = "N";
+                        }
+                        else if (deal.VehicleCondition == "USED")
+                        {
+                            dealNU = "U";
+                        }
+                        else
+                        {
+                            dealNU = "U";
+                        }
+
+                        //IF IT IS A USED, IS IT A HANDYMAN?
+                        if (deal.VehicleCondition == "USED" && deal.VehicleCertification == "HDM" && Model.AssociateInformation.AssociatePayscale != "MOCO")
+                        {
+                            dealNU = "H";
+                            deal.VehicleCondition = "HANDY";
+                        }
+
+                        //Determine Value, Internet or Half Value
+                        var valueInternet = "";
+                        if ((deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.BPPAmount > 495 && deal.VehicleCategory == "R"))
+                        {
+                            valueInternet = "V";
+                        }
+                        else if (deal.BPPAmount <= 495 && deal.BPPAmount > 250 && deal.VehicleCategory == "R")
+                        {
+                            valueInternet = "V3";
+                        }
+                        else
+                        {
+                            valueInternet = "I";
+                        }
+
+                        if(deal.FinanceCount == 0 && deal.VehicleTerm > 1)
+                        {
+                            deal.FinanceCount = dealValue;
+                        }
+
+                        if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+                        {
+                            valueInternet = "V";
+                        }
+                        else if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000)
+                        {
+                            valueInternet = "V";
+                        }
+
+                        var dealPayscale = Model.AssociateInformation.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
+
+                        decimal baseCommission = 0;
+                        decimal bppCommission = 0;
+                        decimal tradeInCommission = 0;
+                        decimal financeCommission = 0;
+                        decimal serviceCommission = 0;
+                        decimal maintenanceCommission = 0;
+                        decimal GAPCommission = 0;
+                        decimal aftermarketCommission = 0;
+                        decimal commissionTotal = 0;
+                        decimal SSICommission = 0;
+                        decimal volumeCommission = 0;
+                        decimal spiffCommission = 0;
+                        decimal internalSurveyCommission = 0;
+
+                        decimal baseCommissionCount = 0;
+                        decimal bppCommissionCount = 0;
+                        decimal tradeInCommissionCount = 0;
+                        decimal financeCommissionCount = 0;
+                        decimal serviceCommissionCount = 0;
+                        decimal maintenanceCommissionCount = 0;
+                        decimal GAPCommissionCount = 0;
+                        decimal aftermarketCommissionCount = 0;
+                        decimal commissionTotalCount = 0;
+                        decimal SSICommissionCount = 0;
+                        decimal volumeCommissionCount = 0;
+                        decimal spiffCommissionCount = 0;
+                        decimal internalSurveyCommissionCount = 0;
+
+                        totalBPPCount += deal.BPPCount;
+                        totalTradeCount += tradeCount * dealValue;//deal.TradeCount;
+                        totalFinanceCount += deal.FinanceCount;
+                        totalServiceCount += deal.ServiceContractCount;
+                        totalMaintenanceCount += deal.MaintenanceContractCount;
+                        totalGAPCount += deal.GAPCount;
+                        //totalAftermarketCount += deal.AftermarketCount;
+
+
+                        if (dealPayscale != null)
+                        {
+
+                            if(deal.MakeCode != "AA")
+                            {
+
+                                if (dealPayscale.ps_PlanCode == "FL")
+                                {
+                                    tooFewVSC = dealPayscale.ps_LessServiceContracts;
+                                }
+
+                                baseCommission = dealPayscale.ps_BaseCommission * dealValue;
+                                baseCommissionCount = dealValue;
+
+                                if (valueInternet == "V")
+                                {
+                                    bppCommission = dealPayscale.ps_FullBPP * dealValue;
+                                    bppCommissionCount = dealValue;
+                                }
+                                else if (valueInternet == "V3")
+                                {
+                                    bppCommission = dealPayscale.ps_HalfBPP * dealValue;
+                                    bppCommissionCount = dealValue;
+                                }
+                                else
+                                {
+                                    bppCommission = 0;
+                                    bppCommissionCount = 0;
+                                }
+
+                                tradeInCommission = dealPayscale.ps_TradeIn * (tradeCount * dealValue);// deal.TradeCount;
+                                tradeInCommissionCount = (tradeCount * dealValue);
+
+                                if (dealNU == "N")
+                                {
+                                    var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+
+                                    if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
+                                    {
+                                        spiffCommission = dealPayscale.ps_ManufacturerSpiffGuarantee * dealValue;
+                                        spiffCommissionCount = dealValue;
+                                    }
+                                }
+
+                                if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                                {
+                                    GAPCommission = dealPayscale.ps_GAP * deal.GAPCount;
+                                    GAPCommissionCount = deal.GAPCount;
+
+                                    if (Model.AssociateInformation.AssociateSSI == null)
+                                    {
+                                        Model.AssociateInformation.AssociateSSI = "NO";
+                                    }
+                                    if (Model.AssociateInformation.AssociateSSI.ToUpper() == "YES")
+                                    {
+                                        SSICommission = dealPayscale.ps_ManufacturerSalesSatisfaction * dealValue;
+                                        SSICommissionCount = dealValue;
+                                    }
+                                    else
+                                    {
+                                        SSICommission = 0;
+                                        SSICommissionCount = 0;
+                                    }
+
+                                    if (dealNU == "U" || dealNU == "H")
+                                    {
+                                        internalSurveyCommission = dealPayscale.ps_InternalSurvey * dealValue;
+                                        internalSurveyCommissionCount = dealValue;
+                                    }
+                                }
+
+                                if (Model.AssociateInformation.AssociatePayscaleSetup.Count > 0)
+                                {
+                                    var payscaleSetup = Model.AssociateInformation.AssociatePayscaleSetup[0];
+
+                                    if (dealIndex < payscaleSetup.ps_VolumeBonusLevel1High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                    }
+                                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel2Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel2High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                    }
+                                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel3Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel3High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                    }
+                                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel4Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel4High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                    }
+                                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel5Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel5High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                    }
+                                    else if (dealIndex >= payscaleSetup.ps_VolumeBonusLevel6Low && dealIndex < payscaleSetup.ps_VolumeBonusLevel6High + 1)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                    }
+                                    else
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                    }
+                                }
+                                else
+                                {
+
+                                    if (dealIndex < 6)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel1 * dealValue;
+                                    }
+                                    else if (dealIndex >= 6 && dealIndex < 11)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel2 * dealValue;
+                                    }
+                                    else if (dealIndex >= 11 && dealIndex < 16)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel3 * dealValue;
+                                    }
+                                    else if (dealIndex >= 16 && dealIndex < 21)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel4 * dealValue;
+                                    }
+                                    else if (dealIndex >= 21 && dealIndex < 26)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel5 * dealValue;
+                                    }
+                                    else if (dealIndex >= 26 && dealIndex < 31)
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel6 * dealValue;
+                                    }
+                                    else
+                                    {
+                                        volumeCommission = dealPayscale.ps_VolumeBonusLevel7 * dealValue;
+                                    }
+                                }
+                            }
+
+                            financeCommission = dealPayscale.ps_FinanceLease * deal.FinanceCount;
+                            financeCommissionCount = deal.FinanceCount;
+
+                            serviceCommission = dealPayscale.ps_ServiceContract * deal.ServiceContractCount;
+                            serviceCommissionCount = deal.ServiceContractCount;
+
+                            maintenanceCommission = dealPayscale.ps_Maintenance * deal.MaintenanceContractCount;
+                            maintenanceCommissionCount = deal.MaintenanceContractCount;
+
+                            //This should be per aftermarket item
+
+                            if (deal.AftermarketCount > 0)
+                            {
+                                var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+                                decimal aftermarketCount = 0;
+                                foreach (var item in aftermarketItems)
+                                {
+                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+                                    decimal points = 0;
+
+                                    if (item.AftermarketProfitPerPoint == 0)
+                                    {
+                                        item.AftermarketProfitPerPoint = 1;
+                                    }
+
+                                    if (item.AftermarketProfitPerPoint > 0)
+                                    {
+                                        var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                        if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                        {
+                                            points = 0;
+                                        }
+                                        else if (profitPerPoint < item.AftermarketPoints)
+                                        {
+                                            points = Math.Truncate(profitPerPoint);
+                                        }
+                                        else
+                                        {
+                                            points = item.AftermarketPoints;
+                                        }
+                                    }
+
+                                    aftermarketCount += (points);
+                                }
+                                aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                                aftermarketCommissionCount = aftermarketCount;
+                                totalAftermarketCount += aftermarketItems.Count;
+                            }
+
+
+                            commissionTotal = baseCommission + bppCommission + tradeInCommission + financeCommission + serviceCommission + maintenanceCommission + GAPCommission + aftermarketCommission + spiffCommission + SSICommission + volumeCommission + internalSurveyCommission;
+
+                            commissionSumTotal += commissionTotal;
+                        }
+
+                        <tr>
+@if ((bool)Session["IsCommissionAdmin"] == true)
+{
+                            <td><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@dealIndex</a></td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+}
+else
+{
+                            <td>@dealIndex</td>
+                            <td class="text-center">@deal.DealKey</td>
+}
+                            
+                            <td class="text-center">
+                                @if ((bool)Session["IsCommissionAdmin"] == true)
+                                {
+                                    <input type="checkbox" name="chk-@deal.DealKey" id="chk-@deal.DealKey"/>
+                                }
+                            </td>
+                            <td class="text-center">@deal.CustomerLastName</td>
+                            <td class="text-center">@deal.StockNumber</td>
+                            <td class="text-center">@dealNU</td>
+                            @*<td class="text-center">@valueInternet</td>
+                            <td class="text-center">@dealValue</td>*@
+                            <td class="text-center"></td>
+                            @if(bShowValues)
+                            {
+                            <td class="text-center">@baseCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@bppCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@tradeInCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@financeCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@serviceCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@maintenanceCommission.ToString("C", nfi)</td>
+                            <td class="text-center">
+                                @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                                {
+                                    @GAPCommission.ToString("C", nfi)
+                                }
+                            </td>
+                            <td class="text-center"></td>
+                            <td class="text-center">@aftermarketCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@spiffCommission.ToString("C", nfi)</td>
+                            <td class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @SSICommission.ToString("C", nfi)
+                            }
+                            </td>
+                            <td class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @internalSurveyCommission.ToString("C", nfi)
+                            }
+                            </td>
+                            <td class="text-center">@volumeCommission.ToString("C", nfi)</td>
+                            <td class="text-center">@commissionTotal.ToString("C", nfi)</td>
+                            }
+                            else
+                            {
+                                <td class="text-center">@baseCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@bppCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@tradeInCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@financeCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@serviceCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@maintenanceCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">
+                                    @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                                    {
+                                        @GAPCommissionCount.ToString("#.##")
+                                    }
+                                </td>
+                                <td class="text-center"></td>
+                                <td class="text-center">@aftermarketCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">@spiffCommissionCount.ToString("#.##")</td>
+                                <td class="text-center">
+                                    @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                        @SSICommissionCount.ToString("#.##")
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                        @internalSurveyCommissionCount.ToString("#.##")
+                                    }
+                                </td>
+                                <td class="text-center"></td>
+                                <td class="text-center"></td>
+                            }
+
+
+                            <td class="text-center associate-approval">
+                                @if (bIsAssociate)
+                                {
+                                    if (Model.DealApprovals != null)
+                                    {
+                                        var dealApproval = Model.DealApprovals.Find(x => x.DealKey == deal.DealKey);
+
+                                        if (dealApproval != null)
+                                        {
+                                            @:@dealApproval.ApprovalDate.ToShortDateString()
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" name="chk-@deal.DealKey-approval" id="chk-@deal.DealKey-approval" />
+                                            <script type="text/javascript">
+                                                $('#chk-@deal.DealKey-approval').bind('click', function () {
+
+                                                    var url = '@applicationPath/Commission/UpdateDealApproval?dealKey=@deal.DealKey&yearId=@Model.YearId&monthId=@Model.MonthId';
+                                                    $.ajax({
+                                                        url: url,
+                                                        success: $('#chk-@deal.DealKey-approval').attr("disabled", true),
+                                                        type: 'POST',
+                                                        dataType: 'json'
+                                                    });
+                                                });
+                                            </script>
+                                        }
+                                    }
+
+                                }
+                                else
+                                {
+                                    if (Model.DealApprovals != null)
+                                    {
+                                        var dealApproval = Model.DealApprovals.Find(x => x.DealKey == deal.DealKey);
+
+                                        if (dealApproval != null)
+                                        {
+                                            @:@dealApproval.ApprovalDate.ToShortDateString()
+                                        }
+                                    }
+
+                                }
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+
+                @{
+
+
+
+                    var newPercent = (totalNewCount / dealIndex).ToString("P", nfi);
+                    var usedPercent = (totalUsedCount / dealIndex).ToString("P", nfi);
+
+                    var BPPPercent = (totalBPPCount / dealIndex).ToString("P", nfi);
+                    var TradePercent = (totalTradeCount / dealIndex).ToString("P", nfi);
+                    var FinancePercent = (totalFinanceCount / dealIndex).ToString("P", nfi);
+                    var ServicePercent = (totalServiceCount / dealIndex).ToString("P", nfi);
+                    var MaintenancePercent = (totalMaintenanceCount / dealIndex).ToString("P", nfi);
+                    var GAPPercent = (totalGAPCount / dealIndex).ToString("P", nfi);
+                    var AftermarketPercent = (totalAftermarketCount / dealIndex).ToString("P", nfi);
+
+                    decimal totalTooFewVSC = 0;
+
+                    if(totalServiceCount > 0 && totalServiceCount < 3)
+                    {
+                        totalTooFewVSC = totalServiceCount * tooFewVSC;
+                    }
+                    
+                    commissionSubTotal = commissionSumTotal + TotalBonusAmount + totalTooFewVSC;
+
+                    decimal baseAmount = 0;
+
+                    if (hoursPayAmount > commissionSubTotal)
+                    {
+                        baseAmount = hoursPayAmount;
+
+                    }
+                    else
+                    {
+                        baseAmount = commissionSubTotal;
+                    }
+
+                    commissionOverallTotal = baseAmount + TotalDrawAmount;
+
+
+                        }
+
+
+                <tfoot>
+                    <tr style="background-color:#d9edf7">
+                        <th class="text-right" colspan="3">Counts:</th>
+                        <th class="text-center" colspan="2">New: @totalNewCount</th>
+                        <th class="text-center" colspan="2">Used:@totalUsedCount</th>
+                        <th class="text-center"></th>
+                        @*<th class="text-center"></th>*@
+                        <th class="text-center">@totalBPPCount</th>
+                        <th class="text-center">@totalTradeCount</th>
+                        <th class="text-center">@totalFinanceCount</th>
+                        <th class="text-center">@totalServiceCount</th>
+                        <th class="text-center">@totalMaintenanceCount</th>
+                        <th class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @totalGAPCount
+                            }
+                        </th>
+                        <th class="text-center"></th>
+                        <th class="text-center">@totalAftermarketCount</th>
+                        <th class="text-center"></th>
+                        <th class="text-center"></th>
+                        
+@if (bShowValues)
+{
+    <th class="text-right" colspan="2">Sum Total:</th>
+    <th class="text-center">@commissionSumTotal.ToString("C")</th>
+}
+else
+{
+    <th class="text-center"></th>
+    <th class="text-center"></th>
+}
+                    </tr>
+                    <tr style="background-color:#d9edf7">
+                        <th class="text-right" colspan="3">Percentages:</th>
+                        <th class="text-center" colspan="2">New: @newPercent</th>
+                        <th class="text-center" colspan="2">Used: @usedPercent</th>
+                        @*<th class="text-center"></th>*@
+                        <th class="text-center"></th>
+                        <th class="text-center">@BPPPercent</th>
+                        <th class="text-center">@TradePercent</th>
+                        <th class="text-center">@FinancePercent</th>
+                        <th class="text-center">@ServicePercent</th>
+                        <th class="text-center">@MaintenancePercent</th>
+                        <th class="text-center">
+                            @if (Model.AssociateInformation.AssociatePayscale != "MOCO")
+                            {
+                                @GAPPercent
+                            }
+                        </th>
+                        <th class="text-center"></th>
+                        <th class="text-center">@AftermarketPercent</th>
+                        <th class="text-center"></th>
+                        <th class="text-center"></th>
+@if (bShowValues)
+{
+                        <th class="text-right" colspan="2">Bonus:</th>
+                        <th class="text-center">@TotalBonusAmount.ToString("C")</th>
+}
+else
+{
+    <th class="text-center"></th>
+        <th class="text-center"></th>
+}
+                    </tr>
+                    @if (Model.AssociateInformation.AssociatePayscale == "FL")
+                    {
+                    <tr style="background-color:#d9edf7">
+                        <th class="text-center" colspan="18"></th>
+                        <th class="text-right" colspan="2">Less than 3 VSC:</th>
+                        <th class="text-center">@totalTooFewVSC.ToString("C")</th>
+                    </tr>
+                    }
+@if (bShowValues)
+{
+                    <tr style="background-color:#d9edf7">
+                        <th class="text-center" colspan="18"></th>
+                        <th class="text-right" colspan="2">Comm Sub Total:</th>
+                        <th class="text-center">@commissionSubTotal.ToString("C")</th>
+                    </tr>
+}
+                    @if ((bool)Session["IsCommissionAdmin"] == true || DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 1).AddMonths(1))
+                    {
+                        if (bShowValues)
+                        {
+                        <tr style="background-color:#d9edf7">
+                            <th class="text-center" colspan="18"></th>
+                            <th class="text-right" colspan="2">Comm/Salary/Hourly:</th>
+                            <th class="text-center">@baseAmount.ToString("C")</th>
+                        </tr>
+                        <tr style="background-color:#d9edf7">
+                            <th class="text-center" colspan="18"></th>
+                            <th class="text-right" colspan="2">Draws:</th>
+                            <th class="text-center">@TotalDrawAmount.ToString("C")</th>
+                        </tr>
+                        <tr style="background-color:#d9edf7; font-size:16px;">
+                            <th class="text-center" colspan="18"></th>
+                            <th class="text-right" colspan="2">Comm Due:</th>
+                            <th class="text-center">@commissionOverallTotal.ToString("C")</th>
+                        </tr>
+                            }
+                        }
+                </tfoot>
+
+            </table>
+                    }
+        </div>
+    </div>
+            }
+
+@section Scripts
+{
+    
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $('#select-anchor').change(function () {
+            var targetPosition = $("#" + $(this).val()).offset().top - 50;
+            $('html,body').animate({ scrollTop: targetPosition }, 'slow');
+        });
+
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+
+        $('body').on('click','.editInfo', function (event) {
+
+            var id = $(this).attr('rel');
+            var url = "@applicationPath/Commission/BonusAndDraws/" + id + "/@Model.MonthId/@Model.YearId";
+            var dialogBox = $("<div>");
+
+            $(dialogBox).dialog({
+                resizable: false,
+                height:"auto",
+                width: dialogWidth,
+                position: { my: "center", at: "top+25%", of: window },
+                title: 'Associate Bonus and Draws',
+                modal: true,
+                open: function (event, ui) {
+                    $(this).load(url);
+                    //$('#BonusDraws').validate();
+                },
+                buttons: {
+                    "Save": function () {
+                        var $this = this;
+                        var form = $('#BonusDraws', $this);
+                        //if (!$(form).valid()) {
+                        //    return false;
+                        //}
+
+                        $.ajax({
+                            async: false,
+                            type: 'POST',
+                            url: form.attr("action"),
+                            data: $(form).serialize(),
+                            success: $($this).dialog("close").dialog("destroy").remove()
+                        });
+
+                        location.reload();
+                   },
+
+                    "Close": function () {
+                        $(this).dialog("close");
+                        $(this).empty();
+                    }
+                }
+            });
+            $(dialogBox).dialog('open');
+        });
+
+
+    });
+
+
+</script>    
+    }
+

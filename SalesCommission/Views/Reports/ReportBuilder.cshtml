@@ -1,0 +1,174 @@
+﻿@model SalesCommission.Models.ReportsModel
+
+@{
+    ViewBag.Title = "ReportBuilder";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section CSS
+{
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css" />
+    @*<link rel="stylesheet" href="~/Scripts/Chosen/docsupport/style.css">
+    <link rel="stylesheet" href="~/Scripts/Chosen/docsupport/prism.css">*@
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+}
+
+<div class="jumbotron">
+    <h1>Report Generator</h1>
+    <div class="row">
+        <div class="col-sm-8">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+            {
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-8">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"),new { @class = "form-control form-inline chosen-select", multiple="" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    }
+</div>
+
+<h2>Report Builder</h2>
+
+<div id="builder-import_export"></div>
+
+<div class="btn-group">
+    <button class="btn btn-warning reset" id="btn-reset" data-target="import_export">Reset</button>
+</div>
+
+<div class="btn-group">
+    <button class="btn btn-primary parse-sql" id="btn-get-sql" data-target="import_export" data-stmt="false">
+        SQL 
+    </button>
+</div>
+
+@section Scripts
+{
+<script>
+    var rules_basic = {
+        condition: 'AND',
+        rules: [{
+            id: 'price',
+            operator: 'less',
+            value: 10.25
+        }, {
+            condition: 'OR',
+            rules: [{
+                id: 'mall',
+                operator: 'equal',
+                value: 'LFT'
+            }, {
+                id: 'mall',
+                operator: 'equal',
+                value: 'LFO'
+            }]
+        }]
+    };
+
+    $('#builder-import_export').queryBuilder({
+        plugins: ['bt-tooltip-errors'],
+
+        filters: [{
+            id: 'name',
+            label: 'Name',
+            type: 'string'
+        }, {
+            id: 'mall',
+            label: 'Automall',
+            type: 'string',
+            input: 'select',
+            values: {
+
+                'FOC': 'Annapolis Cadillac/Volkswagen',
+                'FMM': 'Annapolis Mazda/Mitsubishi',
+                'FTN': 'Chambersburg Toyota/Nissan',
+                'CJE': 'Clearwater',
+                'FAM': 'Frederick Baughmans Lane',
+                'FSS': 'Frederick Route 85',
+                'LFO': 'Gaithersburg Hyundai/Subaru',
+                'LFM': 'Germantown',
+                'LFT': 'Gaithersburg Toyota',
+                'FLP': 'Lexington Park',
+                'FBN': 'Rockville Nicholson',
+                'CDO': 'Rockville Hyundai',
+                'FBS': 'Rockville Subaru',
+                'WDC': 'Wheaton'
+            },
+            operators: ['equal', 'not_equal', 'in', 'not_in', 'is_null', 'is_not_null']
+        }, {
+            id: 'in_stock',
+            label: 'In stock',
+            type: 'integer',
+            input: 'radio',
+            values: {
+                1: 'Yes',
+                0: 'No'
+            },
+            operators: ['equal']
+        }, {
+            id: 'price',
+            label: 'Price',
+            type: 'double',
+            validation: {
+                min: 0,
+                step: 0.01
+            }
+        }, {
+            id: 'id',
+            label: 'Identifier',
+            type: 'string',
+            placeholder: '____-____-____',
+            operators: ['equal', 'not_equal'],
+            validation: {
+                format: /^.{4}-.{4}-.{4}$/
+            }
+        }],
+
+        rules: rules_basic
+    });
+
+    $('#btn-reset').on('click', function () {
+        $('#builder-import_export').queryBuilder('reset');
+    });
+
+    $('#btn-set').on('click', function () {
+        $('#builder-import_export').queryBuilder('setRules', rules_basic);
+    });
+
+    $('#btn-get').on('click', function () {
+        var result = $('#builder-import_export').queryBuilder('getRules');
+
+        if (!$.isEmptyObject(result)) {
+            alert(JSON.stringify(result, null, 2));
+        }
+    });
+
+    $('#btn-get-sql').on('click', function () {
+        var result = $('#builder-import_export').queryBuilder('getSQL');
+
+        if (result.sql.length) {
+            alert(result.sql + '\n\n' + JSON.stringify(result.params, null, 2));
+        }
+    });
+
+</script>
+
+<script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+<script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+<script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+}

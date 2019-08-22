@@ -1,0 +1,530 @@
+﻿@model SalesCommission.Models.FICommissionModel
+
+@{
+    ViewBag.Title = "F and I Manager Commission Dashboard";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "$";
+
+    
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+}
+
+<style type="text/css">
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+
+    th.rotate {
+        /* Something you can count on */
+        height: 150px;
+        white-space: nowrap;
+    }
+
+        th.rotate > div {
+            transform:
+            /* Magic Numbers */
+            translate(3px, 0px)
+            /* 45 is really 360 - 45 */
+            rotate(270deg);
+            width: 30px;
+        }
+
+            th.rotate > div > span {
+                border-bottom: 0px solid #ccc;
+                padding: 5px 10px;
+            }
+
+    .aft {
+        display: none;
+    }
+
+    .aft-percent {
+        display: none;
+    }
+
+    .finance-column-hide {
+        display: none;
+    }
+
+    .service-column-hide {
+        display: none;
+    }
+
+    .maintenance-column-hide {
+        display: none;
+    }
+
+    .gap-column-hide {
+        display: none;
+    }
+
+    .bpp-column-hide {
+        display: none;
+    }
+
+    .total-column-hide {
+        display: none;
+    }
+
+    .aftermarket-column-hide {
+        display: none;
+    }
+
+    .btnToggleFinance:after {
+        content: '\002B';
+    }
+
+    .btnToggleService:after {
+        content: '\002B';
+    }
+
+    .btnToggleMaintenance:after {
+        content: '\002B';
+    }
+
+    .btnToggleGAP:after {
+        content: '\002B';
+    }
+
+    .btnToggleBPP:after {
+        content: '\002B';
+    }
+
+    .btnToggleTotal:after {
+        content: '\002B';
+    }
+
+    .changed:after {
+        content: '\2212';
+    }
+
+    .changed {
+        font-weight: bold;
+    }
+
+    .selected-row {
+        background-color: #f7f4e0; /*#f5f5f5;*/
+    }
+
+    .table-bordered > thead > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > thead > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+
+</style>
+
+<div class="jumbotron">
+    <h1>F and I Manager Commissions</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select a Store and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.FIManagerStores, "StoreId", "Name"), new { @class = "form-control form-inline"})
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+@if (Model.AftermarketDealDetails != null)
+{
+    var autoMallName = "";
+    autoMallName = SalesCommission.Business.Enums.FIManagerStores.First(o => o.StoreId == Model.StoreId).Name;
+
+    var StoreTotalDeals = 0;
+
+    decimal StoreTotalGross = 0;
+    decimal StoreTotalFinance = 0;
+    decimal StoreTotalService = 0;
+    decimal StoreTotalMaintenance = 0;
+    decimal StoreTotalGAP = 0;
+
+    int StoreFinanceCount = 0;
+    int StoreServiceCount = 0;
+    int StoreMaintenanceCount = 0;
+    int StoreGAPCount = 0;
+
+    double StoreFinancePercent = 0;
+    double StoreServicePercent = 0;
+    double StoreMaintenancePercent = 0;
+    double StoreGAPPercent = 0;
+
+    decimal StoreDollarPerCar = 0;
+    decimal StoreProductDollarPerCar = 0;
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3>F and I Commission for @autoMallName (@Model.MonthId/@Model.YearId)</h3>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+            <thead>
+
+                <tr style="background-color:#d9edf7;font-size:11px;">
+                    <th class="text-center">Manager</th>
+                    <th class="text-center extra-right">Total<br/>Deals</th>
+                    <th class="text-center">VSC</th>
+                    <th class="text-center extra-right">VSC<br />Amount</th>
+                    <th class="text-center">GAP</th>
+                    <th class="text-center extra-right">GAP<br/>Amount</th>
+                    <th class="text-center">Finance</th>                    
+                    <th class="text-center extra-right">Finance<br/>Amount</th>                    
+                    <th class="text-center">Maint</th>
+                    <th class="text-center extra-right">Maint<br/>Amount</th>
+                    <th class="text-center">Total<br />Gross</th>
+                    <th class="text-center">Total $<br/>Per Car</th>
+                    <th class="text-center">Product $<br/>Per Car</th>
+                    <th class="text-center">Charge<br/>backs</th>
+                    <th class="text-center">Comm<br/>Due</th>
+                    <th class="text-center">Adjustments</th>
+                    <th class="text-center">Draws</th>
+                    <th class="text-center">Total<br/>Due</th>
+                </tr>
+
+            </thead>
+            <tbody>
+                @foreach (var manager in Model.FIManagerDealDetails)
+                {
+                    decimal TotalGross = 0;
+                    decimal TotalFinance = 0;
+                    decimal TotalService = 0;
+                    decimal TotalMaintenance = 0;
+                    decimal TotalGAP = 0;
+
+                    int FinanceCount = 0;
+                    int ServiceCount = 0;
+                    int MaintenanceCount = 0;
+                    int GAPCount = 0;
+
+                    double FinancePercent = 0;
+                    double ServicePercent = 0;
+                    double MaintenancePercent = 0;
+                    double GAPPercent = 0;
+
+                    decimal DollarPerCar = 0;
+                    decimal ProductDollarPerCar = 0;
+
+                    var bShowOtherManager = false;
+                    if (manager.FIManagerAssociateNumber == "000")
+                    {
+                        bShowOtherManager = true;
+                    }
+
+                    foreach (var deal in manager.AftermarketDealDetails)
+                    {
+                        TotalGross += deal.DealGrossAmount;
+
+                        if (deal.FinanceIncomeAmount > 0)
+                        {
+                            TotalFinance += deal.FinanceIncomeAmount;
+                            FinanceCount += 1;
+                        }
+
+                        if (deal.VSCAmount > 0)
+                        {
+                            TotalService += deal.VSCAmount;
+                            ServiceCount += 1;
+                        }
+
+                        if (deal.MaintenanceAmount > 0)
+                        {
+                            TotalMaintenance += deal.MaintenanceAmount;
+                            MaintenanceCount += 1;
+                        }
+
+                        if (deal.GAPAmount > 0)
+                        {
+                            TotalGAP += deal.GAPAmount;
+                            GAPCount += 1;
+                        }
+
+                    }
+
+                    if (manager.AftermarketDealDetails.Count > 0)
+                    {
+                        FinancePercent = (double)FinanceCount / (double)manager.AftermarketDealDetails.Count;
+                        ServicePercent = (double)ServiceCount / (double)manager.AftermarketDealDetails.Count;
+                        MaintenancePercent = (double)MaintenanceCount / (double)manager.AftermarketDealDetails.Count;
+                        GAPPercent = (double)GAPCount / (double)FinanceCount;
+
+                        DollarPerCar = TotalGross / manager.AftermarketDealDetails.Count;
+                        ProductDollarPerCar = (TotalFinance + TotalService + TotalMaintenance + TotalGAP) / manager.AftermarketDealDetails.Count;
+                    }
+                    StoreTotalGross += TotalGross;
+
+                    StoreFinanceCount += FinanceCount;
+                    StoreServiceCount += ServiceCount;
+                    StoreGAPCount += GAPCount;
+                    StoreMaintenanceCount += MaintenanceCount;
+
+                    StoreTotalFinance += TotalFinance;
+                    StoreTotalService += TotalService;
+                    StoreTotalGAP += TotalGAP;
+                    StoreTotalMaintenance += TotalMaintenance;
+
+
+                    <tr>
+                        <td>
+                            <a href="@applicationPath/FICommission/Associate/@manager.FIManagerAssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@manager.FIManagerName</a><br />
+                            <a class="hide-print" href="@applicationPath/FICommission/ScoreCard/@manager.FIManagerAssociateNumber.Trim()/@Model.MonthId/@Model.YearId">Score Card</a><br/>
+                            <a class="hide-print" data-toggle="collapse" id="Deals" style="cursor: pointer;" data-target="#collapse-@manager.FIManagerSSN">Deal Details <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                        </td>
+                        <td class="text-center extra-right">@manager.AftermarketDealDetails.Count</td>
+                        <td class="text-center">@ServicePercent.ToString("P", nfi)<br/>(@ServiceCount)</td>
+                        <td class="text-center extra-right">@TotalService.ToString("C", nfi)</td>
+
+                        <td class="text-center">@GAPPercent.ToString("P", nfi)<br />(@GAPCount)</td>
+                        <td class="text-center extra-right">@TotalGAP.ToString("C", nfi)</td>
+
+                        <td class="text-center">@FinancePercent.ToString("P", nfi)<br />(@FinanceCount)</td>
+                        <td class="text-center extra-right">@TotalFinance.ToString("C", nfi)</td>
+
+                        <td class="text-center">@MaintenancePercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
+                        <td class="text-center extra-right">@TotalMaintenance.ToString("C", nfi)</td>
+
+                        <td class="text-center">@TotalGross.ToString("C", nfi)</td>
+                        <td class="text-center">@DollarPerCar.ToString("C", nfi)</td>
+                        <td class="text-center">@ProductDollarPerCar.ToString("C", nfi)</td>
+
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                        <td class="text-center">0</td>
+                    </tr>
+                    <tr id="collapse-@manager.FIManagerSSN" class="collapse out" style="background-color:#f5f5f5;">
+                        <td colspan="22">
+                            <h4>Deals for @manager.FIManagerName</h4>
+
+
+                            @if (manager.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
+                            {
+
+
+
+
+                                    <table class="table table-bordered table-striped" style="font-size:11px">
+                                        <thead>
+                                            <tr style="background-color:#d9edf7">
+                                                @if (bShowOtherManager)
+                                                {
+                                                    <th class="text-center">Manager</th>
+                                                }
+                                                <th class="text-center">Deal #</th>
+                                                <th class="text-center">Stk #</th>
+                                                <th class="text-center">Cond</th>
+                                                <th class="text-center">Year</th>
+                                                <th class="text-center">Make</th>
+                                                <th class="text-center">Model</th>
+                                                <th class="text-center">Days</th>
+                                                <th class="text-center">Miles</th>
+                                                <th class="text-center">Deal Gross</th>
+                                                <th class="text-center">Finance<br/>Income</th>
+                                                <th class="text-center">Service<br/>Contract</th>
+                                                <th class="text-center">Maint<br/>Contract</th>
+                                                <th class="text-center">GAP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var deal in manager.AftermarketDealDetails)
+                                            {
+                                                var isHandy = "";
+                                                if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                                {
+                                                    isHandy = "(H)";
+                                                }
+
+                                                <tr>
+                                                    @if (bShowOtherManager)
+                                                    {
+                                                        <td>@deal.FandIManager</td>
+                                                    }
+                                                    <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                                    <td class="text-center">@deal.VehicleStockNumber</td>
+                                                    <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                                    <td class="text-center">@deal.VehicleYear</td>
+                                                    <td class="text-center">@deal.VehicleMake</td>
+                                                    <td class="text-center">@deal.VehicleCarline</td>
+                                                    <td class="text-center">@deal.VehicleDaysInStock</td>
+                                                    <td class="text-center">@deal.VehicleMiles</td>
+                                                    <td class="text-center">@deal.DealGrossAmount</td>
+                                                    <td class="text-center">@deal.FinanceIncomeAmount</td>
+                                                    <td class="text-center">@deal.VSCAmount</td>
+                                                    <td class="text-center">@deal.MaintenanceAmount</td>
+                                                    <td class="text-center">@deal.GAPAmount</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="background-color:#d9edf7">
+                                                @if (bShowOtherManager)
+                                                {
+                                                    <th class="text-center"></th>
+                                                }
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center"></th>
+                                                <th class="text-center">@TotalGross.ToString("C", nfi)</th>
+                                                <th class="text-center">@TotalFinance.ToString("C", nfi)</th>
+                                                <th class="text-center">@TotalService.ToString("C", nfi)</th>
+                                                <th class="text-center">@TotalMaintenance.ToString("C", nfi)</th>
+                                                <th class="text-center">@TotalGAP.ToString("C", nfi)</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                            }
+
+                        </td>
+                    </tr>
+
+                    StoreTotalDeals += manager.AftermarketDealDetails.Count;
+                }
+
+                @{ 
+                    StoreFinancePercent = (double)StoreFinanceCount / (double)StoreTotalDeals;
+                    StoreServicePercent = (double)StoreServiceCount / (double)StoreTotalDeals;
+                    StoreMaintenancePercent = (double)StoreMaintenanceCount / (double)StoreTotalDeals;
+                    StoreGAPPercent = (double)StoreGAPCount / (double)StoreFinanceCount;
+
+                    StoreDollarPerCar = StoreTotalGross / StoreTotalDeals;
+                    StoreProductDollarPerCar = (StoreTotalFinance + StoreTotalService + StoreTotalMaintenance + StoreTotalGAP) / StoreTotalDeals;
+
+
+                }
+
+            </tbody>
+            <tfoot>
+                <tr style="background-color:#d9edf7;font-size:11px;">
+                    <th class="text-center">Totals</th>
+                    <th class="text-center extra-right">@StoreTotalDeals</th>
+                    <th class="text-center">@StoreServicePercent.ToString("P", nfi)<br />(@StoreServiceCount)</th>
+                    <th class="text-center extra-right">@StoreTotalService.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreGAPPercent.ToString("P", nfi)<br />(@StoreGAPCount)</th>
+                    <th class="text-center extra-right">@StoreTotalGAP.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreFinancePercent.ToString("P", nfi)<br />(@StoreFinanceCount)</th>
+                    <th class="text-center extra-right">@StoreTotalFinance.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreMaintenancePercent.ToString("P", nfi)<br />(@StoreMaintenanceCount)</th>
+                    <th class="text-center extra-right">@StoreTotalMaintenance.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreTotalGross.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreDollarPerCar.ToString("C", nfi)</th>
+                    <th class="text-center">@StoreProductDollarPerCar.ToString("C", nfi)</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>
+                    <th class="text-center">0</th>       
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+
+
+                    }
+
+
+
+
+
+@section scripts
+{
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+        
+    </script>
+
+}
