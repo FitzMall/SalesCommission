@@ -1213,7 +1213,7 @@ else
         if (VinName != null && VinName != "")
         {
             var VINLastName = VinName.Substring(VinName.LastIndexOf(' ') + 1).ToLower();
-            var VINFirstName = associateName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
+            var VINFirstName = VinName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
 
 
             filteredLeads = Model.AssociateInformation.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower() == VINLastName.ToLower() && x.Sales_FirstName.ToLower() == VINFirstName.ToLower());
@@ -1377,7 +1377,7 @@ else
         if (VinName != null && VinName != "")
         {
             var VINLastName = VinName.Substring(VinName.LastIndexOf(' ') + 1).ToLower();
-            var VINFirstName = associateName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
+            var VINFirstName = VinName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
             
             filteredAppointments = Model.AssociateInformation.AssociateAppointments.FindAll(x => x.AssociateName.ToLower().Contains(VinName.ToLower()));
         }

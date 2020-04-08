@@ -88,6 +88,7 @@ namespace SalesCommission.Models
         public string CustomerName { get; set; }
         public bool HasBeenContacted { get; set; }
         public string Team { get; set; }
+        public string PostalCode { get; set; }
         public string VOfInterest_InventoryType { get; set; }
         public string VOfInterest_Make { get; set; }
         public string VOfInterest_Model { get; set; }
@@ -269,6 +270,34 @@ namespace SalesCommission.Models
         public string AssociateFirstName { get; set; }
         public string AssociateLastName { get; set; }
         public string AssociateFullName { get; set; }
+    }
+
+
+    public class FIManagersModel
+    {
+        public IEnumerable<SelectListItem> FIManagers { get; set; }
+        public List<SelectListItem> FIPayscaleSelectList { get; set; }
+        public FIAssociate SelectedManager { get; set; }
+        public int MonthId { get; set; }
+        public int YearId { get; set; }
+        public string AssociateId { get; set; }
+    }
+
+    public class FIAssociate
+    {
+        public int Key { get; set; }
+        public string ManagerMonthYear { get; set; }
+        public string ManagerLocation { get; set; }
+        public string ManagerPayscaleID { get; set; }
+        public string ManagerPayscaleName { get; set; }
+        public string ManagerFullName { get; set; }
+        public string ManagerSSN { get; set; }
+        public string ManagerEmployeeNumber { get; set; }
+        public DateTime ManagerEmploymentDate { get; set; }
+        public decimal ManagerSalary { get; set; }
+        public string UpdateUser { get; set; }
+        public DateTime UpdateDate { get; set; }
+
     }
 
 }

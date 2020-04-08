@@ -239,7 +239,7 @@ namespace SalesCommission.Controllers
                     dealInfo.SalesAssociates2 = SqlQueries.GetSalesAssociates();
 
                     dealInfo.FinanceSources = SqlQueries.GetFinanceSources();
-                    dealInfo.FinanceManagers = SqlQueries.GetFinanceManagers();
+                    dealInfo.FinanceManagers = SqlQueries.GetSalesAssociates();
                     dealInfo.ServiceCompanies = SqlQueries.GetServiceCompanies();
                     dealInfo.Malls = SqlQueries.GetMalls();
                     dealInfo.Makes = SqlQueries.GetMakes(dealInfo.sl_mall_id.ToString());
@@ -778,7 +778,7 @@ namespace SalesCommission.Controllers
 
             // Save the form details
             dealInfo.FinanceSources = SqlQueries.GetFinanceSources();
-            dealInfo.FinanceManagers = SqlQueries.GetFinanceManagers();
+            dealInfo.FinanceManagers = SqlQueries.GetSalesAssociates();
             dealInfo.ServiceCompanies = SqlQueries.GetServiceCompanies();
             dealInfo.SalesAssociates = SqlQueries.GetSalesAssociates();
             dealInfo.SalesAssociates2 = SqlQueries.GetSalesAssociates();

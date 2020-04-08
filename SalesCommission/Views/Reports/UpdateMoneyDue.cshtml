@@ -1,0 +1,197 @@
+﻿@model SalesCommission.Models.MoneyDueModel
+
+@{
+    ViewBag.Title = "Update Money Due Report";
+    Layout = null;
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 2;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+}
+
+
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+<style>
+        .chosen-container-single .chosen-single {
+        height: 34px;
+        line-height: 34px;
+    }
+
+        .chosen-container-single .chosen-single div {
+            top: 5px;
+        }
+
+        .chosen-container-single .chosen-single abbr {
+            top: 11px;
+        }
+</style>
+
+    <div id="interested" class="module clearfloats">
+    <h3>Update Money Due</h3>
+
+    @using (Html.BeginForm("UpdateMoneyDue", "Reports", FormMethod.Post, new { id = "UpdateMoneyDue" }))
+    {
+
+        <table class="table table-bordered table-striped" style="font-size:12px">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center">Stock #</th>
+                    <th class="text-center">Deal #</th>
+                    <th class="text-center">Schedule<br />Days</th>
+                    <th class="text-center">Deal Date</th>
+                    <th class="text-center">Due From</th>
+                    <th class="text-center">Customer #</th>
+                    <th class="text-center">Control<br />Balance</th>
+                    <th class="text-center">Customer Name</th>
+                    <th class="text-center">Business<br />Phone</th>
+                    <th class="text-center">Residential<br />Phone</th>
+                    <th class="text-center">Sales Manager</th>
+                    <th class="text-center">FI Manager</th>
+                    <th class="text-center">Bank Name</th>
+                    <th class="text-center">Funded</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var moneyDue = new SalesCommission.Models.MoneyDue();
+                    if(Model.MoneyDue != null)
+                    {
+                        moneyDue = Model.MoneyDue[0];
+                    }
+
+                    var currentHistory = new SalesCommission.Models.MoneyDue();
+                    if (Model.MoneyDueHistory != null && Model.MoneyDueHistory.Count > 0)
+                    {
+                        currentHistory = Model.MoneyDueHistory[0];
+                    }
+                }
+                <tr>
+                    <td class="text-center">
+                        @moneyDue.StockNumber
+                    <input type="hidden" name="hdn-CustomerNumber" id="hdn-CustomerNumber" value="@moneyDue.CustomerNumber" />
+                    <input type="hidden" name="hdn-DueFrom" id="hdn-DueFrom" value="@moneyDue.DueFrom" />
+                    <input type="hidden" name="hdn-Location" id="hdn-Location" value="@moneyDue.Location" />
+                    <input type="hidden" name="hdn-DealNumber" id="hdn-DealNumber" value="@moneyDue.DealNumber" />
+                    <input type="hidden" name="hdn-StockNumber" id="hdn-StockNumber" value="@moneyDue.StockNumber" />
+                    <input type="hidden" name="hdn-ScheduleDays" id="hdn-ScheduleDays" value="@moneyDue.ScheduleDays" />
+                    <input type="hidden" name="hdn-DealDate" id="hdn-DealDate" value="@moneyDue.DealDate" />
+                    <input type="hidden" name="hdn-ControlBalance" id="hdn-ControlBalance" value="@moneyDue.ControlBalance" />
+                    <input type="hidden" name="hdn-CustomerFirstName" id="hdn-CustomerFirstName" value="@moneyDue.CustomerFirstName" />
+                     <input type="hidden" name="hdn-CustomerLastName" id="hdn-CustomerLastName" value="@moneyDue.CustomerLastName" />
+                    <input type="hidden" name="hdn-BusinessPhone" id="hdn-BusinessPhone" value="@moneyDue.BusinessPhone" />
+                    <input type="hidden" name="hdn-ResidencePhone" id="hdn-ResidencePhone" value="@moneyDue.ResidencePhone" />
+                    <input type="hidden" name="hdn-SalesManager" id="hdn-SalesManager" value="@moneyDue.SalesManager" />
+                    <input type="hidden" name="hdn-FIManager" id="hdn-FIManager" value="@moneyDue.FIManager" />
+                    <input type="hidden" name="hdn-BankName" id="hdn-BankName" value="@moneyDue.BankName" />
+                    
+                    <input type="hidden" name="hdn-CommentOrder" id="hdn-CommentOrder" value="@currentHistory.CommentOrder" />
+                    <input type="hidden" name="hdn-FundedStatus" id="hdn-FundedStatus" value="@currentHistory.FundedStatus" />
+                    <input type="hidden" name="hdn-CommentUser" id="hdn-CommentUser" value="@currentHistory.CommentUser" />
+                    <input type="hidden" name="hdn-CommentDate" id="hdn-CommentDate" value="@currentHistory.CommentDate" />
+
+                    </td>
+                    <td class="text-center">
+
+                        @if (moneyDue.DealNumber != "")
+                        {
+                            <a href="@applicationPath/Sales/DealDetail/@moneyDue.Location@moneyDue.DealNumber" target="_blank">@moneyDue.Location@moneyDue.DealNumber</a>
+                        }
+                    </td>
+                    <td class="text-center">@moneyDue.ScheduleDays</td>
+                    <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                    @if (moneyDue.DueFrom.Contains("106"))
+                    {
+                        <td class="text-center">Bank</td>
+                    }
+                    else if (moneyDue.DueFrom.Contains("111"))
+                    {
+                        <td class="text-center">Customer</td>
+                    }
+
+
+                    <td class="text-center">@moneyDue.CustomerNumber</td>
+                    <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                    <td class="text-center">@moneyDue.CustomerName</td>
+                    <td class="text-center">@moneyDue.BusinessPhone</td>
+                    <td class="text-center">@moneyDue.ResidencePhone</td>
+                    <td class="text-center">@moneyDue.SalesManager</td>
+                    <td class="text-center">@moneyDue.FIManager</td>
+                    <td class="text-center">@moneyDue.BankName</td>
+                    <td class="text-center">@currentHistory.FundedStatus</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+        if (Model.MoneyDueHistory != null)
+        {
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <th>F and I Manager</th>
+                    <th>Root Cause</th>
+                    <th>Funded Status</th>                    
+                    <th>Comments</th>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.DropDownListFor(x => x.FIManagerNumber, Model.FIManagers, new { @class = "form-control form-inline chosen-select" })
+                    </td>
+                    <td>
+                        <select class="form-control" name="rootCause" id="rootCause">
+                            <option value=""></option>
+                            <option value="CUSTOMERDUE" @(currentHistory.RootCause == "CUSTOMERDUE" ? "selected" : "")>Due from Customer</option>
+                            <option value="CREDITUNIONDUE" @(currentHistory.RootCause == "CREDITUNIONDUE" ? "selected" : "")>Due from Credit Union</option>
+                            <option value="FIRSTPAYMENTDUE" @(currentHistory.RootCause == "FIRSTPAYMENTDUE" ? "selected" : "")>1st Payment Due</option>
+                            <option value="BOUNCEDCHECK" @(currentHistory.RootCause == "BOUNCEDCHECK" ? "selected" : "")>Bounced Check</option>
+                            <option value="CONTRACTINCORRECT" @(currentHistory.RootCause == "CONTRACTINCORRECT" ? "selected" : "")>Contract Incorrect</option>
+                            <option value="TRADEOUTSIDEDEAL" @(currentHistory.RootCause == "TRADEOUTSIDEDEAL" ? "selected" : "")>Trade Outside Deal</option>
+                            <option value="PAYOFFDIFFERENCE" @(currentHistory.RootCause == "PAYOFFDIFFERENCE" ? "selected" : "")>Payoff Difference</option>
+                            <option value="TAXDIFFERENCE" @(currentHistory.RootCause == "TAXDIFFERENCE" ? "selected" : "")>Tax/Tag Difference</option>
+                            <option value="FORMSNEEDED" @(currentHistory.RootCause == "FORMSNEEDED" ? "selected" : "")>Forms Needed</option>
+                            <option value="STIPSNEEDED" @(currentHistory.RootCause == "STIPSNEEDED" ? "selected" : "")>Stips Needed</option>
+                            <option value="PRODUCTCANCELLED" @(currentHistory.RootCause == "PRODUCTCANCELLED" ? "selected" : "")>Product Cancellation</option>
+                            <option value="INSURANCEINFO" @(currentHistory.RootCause == "INSURANCEINFO" ? "selected" : "")>Insurance Info</option>
+                            <option value="OTHER" @(currentHistory.RootCause == "OTHER" ? "selected" : "")>Other</option>
+
+                           
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control" name="fundedStatus" id="fundedStatus">
+                            <option value=""></option>
+                            <option value="BOOKED" @(currentHistory.FundedStatus == "BOOKED" ? "selected" : "")>Booked</option>
+                            <option value="FUNDED" @(currentHistory.FundedStatus == "FUNDED" ? "selected" : "")>Funded</option>
+                            <option value="COLLECT" @(currentHistory.FundedStatus == "COLLECT" ? "selected" : "")>Collected</option>
+                        </select>
+                    </td>
+                    <td width="50%">
+                        @foreach (var history in Model.MoneyDueHistory)
+                        {
+                            <p>@Html.Raw(history.Comment)</p>
+                        }
+                        <textarea class="form-control" name="userComments" id="userComments"></textarea>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+            }
+                   }
+</div>
+
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>

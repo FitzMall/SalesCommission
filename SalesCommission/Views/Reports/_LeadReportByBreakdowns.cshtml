@@ -8,6 +8,43 @@
     nfi.CurrencySymbol = "";
 
     var breakdownLabel = "Location / Associate";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    var filters = "";
+
+    if(Model.ExcludeBadDuplicates)
+    {
+        filters = filters + "t,";
+    }
+    else
+    {
+        filters = filters + "f,";
+    }
+
+    if(Model.ShowExcludedGroups)
+    {
+        filters = filters + "t,";
+    }
+    else
+    {
+        filters = filters + "f,";
+    }
+
+    if(Model.ExcludeAllBad)
+    {
+        filters = filters + "t";
+    }
+    else
+    {
+        filters = filters + "f";
+    }
+
 }
 
 <style type="text/css">
@@ -378,6 +415,22 @@
                                 breakdownLevel1Values = Model.AssociateLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                 break;
 
+                            case "zip":
+                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "inventorytype":
+                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "leaddate":
+                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "leadtime":
+                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                break;
+
                             default:
                                 // breakdownLevel1Values = Model.AssociateLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                 break;
@@ -447,6 +500,28 @@
 
                                 case "stock":
                                     BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.VOfInterest_StockNumber == breakdown1);
+                                    break;
+
+                                case "zip":
+                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.PostalCode == breakdown1);
+                                    break;
+
+                                case "inventorytype":
+                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.VOfInterest_InventoryType == breakdown1);
+                                    break;
+
+                                case "leaddate":
+                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == breakdown1);
+                                    break;
+
+                                case "leadtime":
+                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == breakdown1);
+
+                                    TimeSpan result = TimeSpan.FromHours(Int32.Parse(breakdown1));
+                                    string fromTimeString = result.ToString("hh':'mm");
+
+                                    label1 = fromTimeString;
+
                                     break;
 
                                 default:
@@ -631,11 +706,12 @@
                                 BreakDown1TotalLeadSoldPercent = BreakDown1TotalLeadSoldCount / BreakDown1TotalLeadCount;
                             }
 
+                            var bd1URL = applicationPath + "/Reports/LeadReportDetails/" + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + "&bd3=" + "&bd4=" + "&vt=" + Model.VehicleType + "&lt=all&ft=" + filters;
 
                             <tr class="location-bd1-data-row-@breakdown1Index @label1.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd1-collapse-@breakdown1Index">
 
                                 <td class="divider-column breakdown-column"><a data-toggle="collapse" id="location-bd1-collapse-@breakdown1Index" style="cursor: pointer;" class="location-bd1-collapse-@breakdown1Index-href collapsed" data-target=".location-bd1-collapse-@breakdown1Index">@label1 </a></td>
-                                <td class="text-center">@BreakDown1TotalLeadCount</td>
+                                <td class="text-center"><a href="@bd1URL" class="lead-detail-link" target="_blank">@BreakDown1TotalLeadCount</a></td>
                                 <td class="text-center">@BreakDown1TotalLeadSoldCount</td>
                                 <td class="text-center divider-column">@BreakDown1TotalLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -718,6 +794,23 @@
                                     breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                     break;
 
+                                case "zip":
+                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "inventorytype":
+                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "leaddate":
+                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "leadtime":
+                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+
                                 default:
                                     //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                     break;
@@ -786,6 +879,28 @@
 
                                     case "stock":
                                         BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_StockNumber == breakdown2);
+                                        break;
+
+                                    case "zip":
+                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.PostalCode == breakdown2);
+                                        break;
+
+                                    case "inventorytype":
+                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_InventoryType == breakdown2);
+                                        break;
+
+                                    case "leaddate":
+                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == breakdown2);
+                                        break;
+
+                                    case "leadtime":
+                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == breakdown2);
+
+                                        TimeSpan result = TimeSpan.FromHours(Int32.Parse(breakdown2));
+                                        string fromTimeString = result.ToString("hh':'mm");
+
+                                        label2 = fromTimeString;
+
                                         break;
 
                                     default:
@@ -965,12 +1080,12 @@
                                 {
                                     BreakDown2TotalLeadSoldPercent = BreakDown2TotalLeadSoldCount / BreakDown2TotalLeadCount;
                                 }
-
+                                var bd2URL = applicationPath + "/Reports/LeadReportDetails/" + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + "&bd4=" + "&vt=" + Model.VehicleType + "&lt=all&ft=" + filters;
 
                                 <tr class="location-bd1-collapse-@breakdown1Index collapse out location-bd2-data-row-@breakdown2Index @label2.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd2-collapse-@breakdown2Index">
 
                                     <td class="divider-column indent-td2"><a data-toggle="collapse" id="location-bd2-collapse-@breakdown2Index" style="cursor: pointer;" class="location-bd2-collapse-@breakdown2Index-href collapsed indent-2" data-target=".location-bd2-collapse-@breakdown2Index">@label2 </a></td>
-                                    <td class="text-center">@BreakDown2TotalLeadCount</td>
+                                    <td class="text-center"><a href="@bd2URL" class="lead-detail-link" target="_blank">@BreakDown2TotalLeadCount</a></td>
                                     <td class="text-center">@BreakDown2TotalLeadSoldCount</td>
                                     <td class="text-center divider-column">@BreakDown2TotalLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -1053,6 +1168,22 @@
                                         breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                         break;
 
+                                    case "zip":
+                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "inventorytype":
+                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "leaddate":
+                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "leadtime":
+                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
                                     default:
                                         //breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                         break;
@@ -1120,6 +1251,27 @@
                                             BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_StockNumber == BreakDown3);
                                             break;
 
+                                        case "zip":
+                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.PostalCode == BreakDown3);
+                                            break;
+
+                                        case "inventorytype":
+                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_InventoryType == BreakDown3);
+                                            break;
+
+                                        case "leaddate":
+                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == BreakDown3);
+                                            break;
+
+                                        case "leadtime":
+                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == BreakDown3);
+
+                                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(BreakDown3));
+                                            string fromTimeString = result.ToString("hh':'mm");
+
+                                            label3 = fromTimeString;
+
+                                            break;
 
                                         default:
                                             BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DealerId.ToString() == BreakDown3);
@@ -1299,12 +1451,13 @@
                                         BreakDown3TotalLeadSoldPercent = BreakDown3TotalLeadSoldCount / BreakDown3TotalLeadCount;
                                     }
 
+                                    var bd3URL = applicationPath + "/Reports/LeadReportDetails/" + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + Model.BreakDownLevel3 + "," + BreakDown3 + "&bd4=" + "&vt=" + Model.VehicleType + "&lt=all&ft=" + filters;
 
                                     <tr class="location-bd2-collapse-@breakdown2Index collapse out location-bd3-data-row-@BreakDown3Index @label3.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd3-collapse-@BreakDown3Index">
 
                                         <td class="divider-column indent-td3"><a data-toggle="collapse" id="location-bd3-collapse-@BreakDown3Index" style="cursor: pointer;" class="location-bd3-collapse-@BreakDown3Index-href collapsed indent-3" data-target=".location-bd3-collapse-@BreakDown3Index">@label3 </a></td>
                                         
-                                        <td class="text-center">@BreakDown3TotalLeadCount</td>
+                                        <td class="text-center"><a href="@bd3URL" class="lead-detail-link" target="_blank">@BreakDown3TotalLeadCount</a></td>
                                         <td class="text-center">@BreakDown3TotalLeadSoldCount</td>
                                         <td class="text-center divider-column">@BreakDown3TotalLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -1388,6 +1541,22 @@
                                             breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                             break;
 
+                                        case "zip":
+                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                            break;
+
+                                        case "inventorytype":
+                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                            break;
+
+                                        case "leaddate":
+                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                            break;
+
+                                        case "leadtime":
+                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                            break;
+
                                         default:
                                             //breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                             break;
@@ -1455,6 +1624,27 @@
                                                 BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_StockNumber == BreakDown4);
                                                 break;
 
+                                            case "zip":
+                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.PostalCode == BreakDown4);
+                                                break;
+
+                                            case "inventorytype":
+                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_InventoryType == BreakDown4);
+                                                break;
+
+                                            case "leaddate":
+                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == BreakDown4);
+                                                break;
+
+                                            case "leadtime":
+                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == BreakDown4);
+
+                                                TimeSpan result = TimeSpan.FromHours(Int32.Parse(BreakDown4));
+                                                string fromTimeString = result.ToString("hh':'mm");
+
+                                                label4 = fromTimeString;
+
+                                                break;
 
                                             default:
                                                 BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.DealerId.ToString() == BreakDown4);
@@ -1634,12 +1824,13 @@
                                             BreakDown4TotalLeadSoldPercent = BreakDown4TotalLeadSoldCount / BreakDown4TotalLeadCount;
                                         }
 
+                                        var bd4URL = applicationPath + "/Reports/LeadReportDetails/" + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + Model.BreakDownLevel3 + "," + BreakDown3 + "&bd4=" + Model.BreakDownLevel4 + "," + BreakDown4 + "&vt=" + Model.VehicleType + "&lt=all&ft=" + filters;
 
                                         <tr class="location-bd3-collapse-@BreakDown3Index collapse out location-bd3-data-row-@BreakDown4Index @BreakDown4.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd3-collapse-@BreakDown4Index">
 
                                             <td class="divider-column indent-td4"><span class="indent-4">@label4</span></td>
 
-                                            <td class="text-center">@BreakDown4TotalLeadCount</td>
+                                            <td class="text-center"><a href="@bd4URL" class="lead-detail-link" target="_blank">@BreakDown4TotalLeadCount</a></td>
                                             <td class="text-center">@BreakDown4TotalLeadSoldCount</td>
                                             <td class="text-center divider-column">@BreakDown4TotalLeadSoldPercent.ToString("P", nfi)</td>
 

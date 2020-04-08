@@ -82,6 +82,14 @@ namespace SalesCommission.Business
             foreach (var detail in salesReportDetails)
             {
                 detail.TotalAmount =  detail.DealGrossAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; //detail.OtherAmount + detail.FTDAmount
+
+                var currentSelectedDate = new DateTime(salesLogReportModel.YearId, salesLogReportModel.MonthId, 1);
+                var grossChangeDate = new DateTime(2020, 1, 31);
+                if (currentSelectedDate > grossChangeDate)
+                {
+                    detail.TotalAmount += detail.BackGrossItemAmount;
+                }
+
                 detail.VariancePercentage = (double)detail.VarianceCount / (double)detail.DealCount;
 
                 if (detail.DealCount > 0 && detail.TotalAmount != 0)
@@ -371,6 +379,14 @@ namespace SalesCommission.Business
             foreach (var detail in salesReportDetails)
             {
                 detail.TotalAmount = detail.DealGrossAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; //detail.OtherAmount + detail.FTDAmount
+
+                var currentSelectedDate = new DateTime(salesLogReportModel.YearId, salesLogReportModel.MonthId, 1);
+                var grossChangeDate = new DateTime(2020, 1, 31);
+                if (currentSelectedDate > grossChangeDate)
+                {
+                    detail.TotalAmount += detail.BackGrossItemAmount;
+                }
+
                 detail.VariancePercentage = (double)detail.VarianceCount / (double)detail.DealCount;
 
                 if (detail.DealCount > 0 && detail.TotalAmount != 0)
@@ -681,6 +697,125 @@ namespace SalesCommission.Business
             return dealHistory;
         }
 
+        public static List<MoneyDue> GetAllMoneyDueHistory()
+        {
+          
+            var moneyDue = SqlMapperUtil.StoredProcWithParams<MoneyDue>("sp_SalesLogReportGetAllMoneyDueHistory", null, "SalesCommission");
+            foreach (var deal in moneyDue)
+            {
+
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Nicholson";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+
+            return moneyDue;
+
+        }
+
+        public static List<MoneyDue> GetAllMoneyDue()
+        {
+            var moneyDue = SqlMapperUtil.StoredProcWithParams<MoneyDue>("sp_SalesLogReportGetMoneyDue", null, "SalesCommission");
+            var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+            var allAssociates = SqlQueries.GetSalesAssociates();
+
+            foreach (var deal in moneyDue)
+            {
+
+                var moneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == deal.CustomerNumber && x.DueFrom == deal.DueFrom && x.Location == deal.Location).OrderByDescending(x => x.CommentOrder).ToList();
+                if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                {
+                    if (moneyDueHistory[0].FIManagerNumber != null && moneyDueHistory[0].FIManagerNumber != "")
+                    {
+                        var manager = allAssociates.Find(x => x.Value.Trim() == moneyDueHistory[0].FIManagerNumber.Trim());
+
+                        //Check to see if we have an update in the history table
+                        deal.FIManagerNumber = moneyDueHistory[0].FIManagerNumber;
+
+                        if (manager != null)
+                        {
+                            deal.FIManager = manager.Text;
+                        }
+                    }
+                }
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Buick Subaru";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+
+            return moneyDue;
+        }
+
         public static AftermarketReportModel GetAftermarketReportByDate(AftermarketReportModel aftermarketReportModel, bool includeHandyman)
         {
 
@@ -690,7 +825,6 @@ namespace SalesCommission.Business
 
             if (aftermarketRecords != null && aftermarketRecords.Count > 0)
             {
-
 
                 var aftermarketDealGroups = new List<AftermarketDealGroup>();
 
@@ -1172,7 +1306,7 @@ namespace SalesCommission.Business
             return completeAftermarketReportModel;
         }
 
-        public static FICommissionModel GetFIManagerDealsByDate(FICommissionModel FICommissionModel)
+        public static FICommissionModel GetFIManagerDealsByDateAndId(FICommissionModel FICommissionModel, string fiManagerNumber)
         {
             var completeFICommissionModel = new FICommissionModel();
             var reportDate = new DateTime(FICommissionModel.YearId, FICommissionModel.MonthId, 1);
@@ -1180,7 +1314,7 @@ namespace SalesCommission.Business
             var FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId }, "SalesCommission");
             completeFICommissionModel.FIManagers = FIManagers;
 
-            var aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = FICommissionModel.StoreId }, "SalesCommission");
+            var aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndID", new { ReportDate = reportDate, @IncludeHandyman = true, FinanceManagerNumber = fiManagerNumber }, "SalesCommission");
 
             if (aftermarketRecords != null && aftermarketRecords.Count > 0)
             {
@@ -1207,7 +1341,622 @@ namespace SalesCommission.Business
                     aftermarketDealDetail.VehicleDaysInStock = aftermarketRecord.VehicleDaysInStock;
                     aftermarketDealDetail.CertificationLevel = aftermarketRecord.CertificationLevel;
                     aftermarketDealDetail.VehicleMiles = aftermarketRecord.VehicleMiles;
+                    aftermarketDealDetail.VehicleBank = aftermarketRecord.VehicleBank;
+                    aftermarketDealDetail.VehicleTerm = aftermarketRecord.VehicleTerm;
 
+                    aftermarketDealDetail.VehicleCategory = aftermarketRecord.VehicleCategory;
+
+                    aftermarketDealDetail.APR = aftermarketRecord.APR;
+                    aftermarketDealDetail.BuyRate = aftermarketRecord.BuyRate;
+
+                    aftermarketDealDetail.DealKey = aftermarketRecord.DealKey;
+                    aftermarketDealDetail.DealGrossAmount = aftermarketRecord.DealGrossAmount;
+                    aftermarketDealDetail.BPPAmount = aftermarketRecord.BPPAmount;
+                    aftermarketDealDetail.NitrogenAmount = aftermarketRecord.NitrogenAmount;
+                    aftermarketDealDetail.ZurichAmount = aftermarketRecord.ZurichAmount;
+                    aftermarketDealDetail.TireWheelAmount = aftermarketRecord.TireWheelAmount;
+                    aftermarketDealDetail.SecurityAmount = aftermarketRecord.SecurityAmount;
+
+                    aftermarketDealDetail.AdjustmentAmount = aftermarketRecord.AdjustmentAmount;
+                    aftermarketDealDetail.CertFeeAmount = aftermarketRecord.CertFeeAmount;
+                    aftermarketDealDetail.GAPAmount = aftermarketRecord.GAPAmount;
+                    aftermarketDealDetail.VSCAmount = aftermarketRecord.VSCAmount;
+                    aftermarketDealDetail.FinanceIncomeAmount = aftermarketRecord.FinanceIncomeAmount;
+                    aftermarketDealDetail.MaintenanceAmount = aftermarketRecord.MaintenanceAmount;
+
+                    aftermarketDealDetail.OtherAmount = aftermarketRecord.OtherAmount;
+                    aftermarketDealDetail.Loaner = aftermarketRecord.Loaner;
+                    aftermarketDealDetail.BPP = aftermarketRecord.BPP;
+
+
+                    aftermarketDealDetail.SalesAssociateId1 = aftermarketRecord.SalesAssociate1;
+                    aftermarketDealDetail.SalesAssociate1 = aftermarketRecord.SalesAssociate1;
+
+                    aftermarketDealDetail.SalesAssociate2 = aftermarketRecord.SalesAssociate2;
+
+                    aftermarketDealDetail.FandIManager = aftermarketRecord.FandIManager;
+                    aftermarketDealDetail.FinanceManagerNumber = aftermarketRecord.FinanceManagerNumber;
+
+                    aftermarketDealDetail.ShowroomValidatedBy = aftermarketRecord.ShowroomValidatedBy;
+
+                    var allAssociates = SqlQueries.GetSalesAssociates();
+
+                    if (aftermarketRecord.SalesAssociate1 != null && aftermarketRecord.SalesAssociate1 != "")
+                    {
+                        var associate1 = allAssociates.Find(x => x.Value == aftermarketRecord.SalesAssociate1);
+
+                        if (associate1 != null && associate1.Text != null)
+                        {
+                            aftermarketDealDetail.SalesAssociate1 = associate1.Text;
+                        }
+                    }
+
+                    if (aftermarketRecord.SalesAssociate2 != null && aftermarketRecord.SalesAssociate2 != "")
+                    {
+                        var associate2 = allAssociates.Find(x => x.Value == aftermarketRecord.SalesAssociate2);
+
+                        if (associate2 != null && associate2.Text != null)
+                        {
+                            aftermarketDealDetail.SalesAssociate2 = associate2.Text;
+                        }
+                    }
+
+                    var aftermarketItems = new List<AftermarketItem>();
+
+                    if (aftermarketRecord.AFTP1 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD1;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP1;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST1;
+                        aItem.AftermarketId = 1;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP2 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD2;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP2;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST2;
+                        aItem.AftermarketId = 2;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP3 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD3;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP3;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST3;
+                        aItem.AftermarketId = 3;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP4 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD4;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP4;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST4;
+                        aItem.AftermarketId = 4;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP5 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD5;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP5;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST5;
+                        aItem.AftermarketId = 5;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP6 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD6;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP6;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST6;
+                        aItem.AftermarketId = 6;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP7 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD7;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP7;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST7;
+                        aItem.AftermarketId = 7;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP8 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD8;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP8;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST8;
+                        aItem.AftermarketId = 8;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP9 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD9;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP9;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST9;
+                        aItem.AftermarketId = 9;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP10 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD10;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP10;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST10;
+                        aItem.AftermarketId = 10;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP11 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD11;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP11;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST11;
+                        aItem.AftermarketId = 11;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP12 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD12;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP12;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST12;
+                        aItem.AftermarketId = 12;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP13 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD13;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP13;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST13;
+                        aItem.AftermarketId = 13;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP14 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD14;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP14;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST14;
+                        aItem.AftermarketId = 14;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP15 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD15;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP15;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST15;
+                        aItem.AftermarketId = 15;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP16 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD16;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP16;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST16;
+                        aItem.AftermarketId = 16;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP17 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD17;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP17;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST17;
+                        aItem.AftermarketId = 17;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP18 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD18;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP18;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST18;
+                        aItem.AftermarketId = 18;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP19 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD19;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP19;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST19;
+                        aItem.AftermarketId = 19;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP20 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD20;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP20;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST20;
+                        aItem.AftermarketId = 20;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP21 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD21;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP21;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST21;
+                        aItem.AftermarketId = 21;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP22 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD22;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP22;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST22;
+                        aItem.AftermarketId = 22;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP23 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD23;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP23;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST23;
+                        aItem.AftermarketId = 23;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP24 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD24;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP24;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST24;
+                        aItem.AftermarketId = 24;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP25 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD25;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP25;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST25;
+                        aItem.AftermarketId = 25;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP26 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD26;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP26;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST26;
+                        aItem.AftermarketId = 26;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP27 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD27;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP27;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST27;
+                        aItem.AftermarketId = 27;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP28 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD28;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP28;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST28;
+                        aItem.AftermarketId = 28;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP29 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD29;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP29;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST29;
+                        aItem.AftermarketId = 29;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP30 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD30;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP30;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST30;
+                        aItem.AftermarketId = 30;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP31 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD31;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP31;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST31;
+                        aItem.AftermarketId = 31;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP32 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD32;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP32;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST32;
+                        aItem.AftermarketId = 32;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP33 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD33;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP33;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST33;
+                        aItem.AftermarketId = 33;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    if (aftermarketRecord.AFTP34 > 0)
+                    {
+                        var aItem = new AftermarketItem();
+                        aItem.AftermarketName = aftermarketRecord.AFTD34;
+                        aItem.AftermarketPrice = aftermarketRecord.AFTP34;
+                        aItem.AftermarketCost = aftermarketRecord.AFTCOST34;
+                        aItem.AftermarketId = 34;
+
+                        aftermarketItems.Add(aItem);
+                    }
+
+                    aftermarketDealDetail.AftermarketItems = aftermarketItems;
+
+                    aftermarketDealDetails.Add(aftermarketDealDetail);
+
+                }
+
+
+                completeFICommissionModel.AftermarketDealDetails = aftermarketDealDetails;
+            }
+
+            completeFICommissionModel.MonthId = FICommissionModel.MonthId;
+            completeFICommissionModel.YearId = FICommissionModel.YearId;
+            completeFICommissionModel.StoreId = FICommissionModel.StoreId;
+
+
+            return completeFICommissionModel;
+        }
+
+        public static List<SelectListItem> GetFIAdjustmentLines()
+        {
+            var AdjustmentLines = new List<SelectListItem>();
+
+            var blankitem = new SelectListItem();
+            blankitem.Text = "";
+            blankitem.Value = "";
+            AdjustmentLines.Add(blankitem);
+
+            var item1 = new SelectListItem();
+            item1.Text = "Commission";
+            item1.Value = "COMMISSION";
+            AdjustmentLines.Add(item1);
+
+            var item2 = new SelectListItem();
+            item2.Text = "Revenue";
+            item2.Value = "REVENUE";
+            AdjustmentLines.Add(item2);
+
+
+            return AdjustmentLines;
+        }
+
+        public static List<SelectListItem> GetFIAdjustmentTypes()
+        {
+            var AdjustmentTypes = new List<SelectListItem>();
+
+            var blankitem = new SelectListItem();
+            blankitem.Text = "";
+            blankitem.Value = "";
+            AdjustmentTypes.Add(blankitem);
+
+            var item1 = new SelectListItem();
+            item1.Text = "Finance Reserve";
+            item1.Value = "FINANCE";
+            AdjustmentTypes.Add(item1);
+
+            var item2 = new SelectListItem();
+            item2.Text = "GAP";
+            item2.Value = "GAP";
+            AdjustmentTypes.Add(item2);
+
+            var item3 = new SelectListItem();
+            item3.Text = "Service Contract";
+            item3.Value = "SERVICE";
+            AdjustmentTypes.Add(item3);
+
+            var item4 = new SelectListItem();
+            item4.Text = "Other";
+            item4.Value = "OTHER";
+            AdjustmentTypes.Add(item4);
+
+
+            return AdjustmentTypes;
+        }
+
+        public static List<SelectListItem> GetFIManagerDealNumbers(FIAdjustmentModel FIAdjustmentModel)
+        {
+            var FIManagerNumbers = new List<SelectListItem>();
+
+            var blankitem = new SelectListItem();
+            blankitem.Text = "";
+            blankitem.Value = "";
+            FIManagerNumbers.Add(blankitem);
+
+            var reportDate = new DateTime(FIAdjustmentModel.YearId, FIAdjustmentModel.MonthId, 1);
+            var aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndID", new { ReportDate = reportDate, @IncludeHandyman = true, FinanceManagerNumber = FIAdjustmentModel.FinanceManagerNumber }, "SalesCommission");
+
+            foreach(var deal in aftermarketRecords)
+            {
+                var item = new SelectListItem();
+
+                item.Text = deal.DealKey;
+                item.Value = deal.DealKey;
+
+                FIManagerNumbers.Add(item);
+            }
+
+            return FIManagerNumbers;
+        }
+
+        public static List<FIAdjustment> GetFIManagerAdjustments(string associateNumber, int yearId, int monthId)
+        {
+            var FIManagerAdjustments = new List<FIAdjustment>();
+
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+            FIManagerAdjustments = SqlMapperUtil.StoredProcWithParams<FIAdjustment>("sp_CommissionGetFIAdjustmentsByDateAndId", new { MonthYear = monthYear, AssociateNumber = associateNumber}, "SalesCommission");
+
+            return FIManagerAdjustments;
+        }
+
+        public static int SaveFIManagerAdjustments(FIAdjustment adjustment)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIAdjustments", adjustment, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
+
+        public static FICommissionModel GetFIManagerDealsByDate(FICommissionModel FICommissionModel)
+        {
+            var completeFICommissionModel = new FICommissionModel();
+            var reportDate = new DateTime(FICommissionModel.YearId, FICommissionModel.MonthId, 1);
+
+            var FIManagers = new List<Associate>();
+            var aftermarketRecords = new List<AftermarketRecord>();
+
+            if (FICommissionModel.StoreId.Contains(","))
+            {
+                var locations = FICommissionModel.StoreId.Split(',');
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByTwoLocations", new { Location = locations[0], Location2 = locations[1] }, "SalesCommission");
+
+                aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = locations[0] }, "SalesCommission");
+
+                var store2AftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = locations[1] }, "SalesCommission");
+
+                aftermarketRecords.AddRange(store2AftermarketRecords);
+            }
+            else
+            {
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId }, "SalesCommission");
+                aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = FICommissionModel.StoreId }, "SalesCommission");
+            }
+            
+            completeFICommissionModel.FIManagers = FIManagers;
+           
+            if (aftermarketRecords != null && aftermarketRecords.Count > 0)
+            {
+
+                var aftermarketDealDetails = new List<AftermarketDealDetail>();
+
+                foreach (var aftermarketRecord in aftermarketRecords)
+                {
+                    var aftermarketDealDetail = new AftermarketDealDetail();
+
+                    aftermarketDealDetail.MakeId = aftermarketRecord.MakeId;
+                    aftermarketDealDetail.MakeName = aftermarketRecord.MakeName;
+                    aftermarketDealDetail.BrandId = aftermarketRecord.BrandId;
+                    aftermarketDealDetail.ModelName = aftermarketRecord.ModelName;
+
+
+                    aftermarketDealDetail.VehicleCondition = aftermarketRecord.VehicleCondition;
+                    aftermarketDealDetail.VehicleMake = aftermarketRecord.VehicleMake;
+                    aftermarketDealDetail.VehicleYear = aftermarketRecord.VehicleYear;
+                    aftermarketDealDetail.VehicleCarline = aftermarketRecord.VehicleCarline;
+                    aftermarketDealDetail.VehicleModelNumber = aftermarketRecord.VehicleModelNumber;
+                    aftermarketDealDetail.VehicleStockNumber = aftermarketRecord.VehicleStockNumber;
+                    aftermarketDealDetail.VehicleVIN = aftermarketRecord.VehicleVIN;
+                    aftermarketDealDetail.VehicleDaysInStock = aftermarketRecord.VehicleDaysInStock;
+                    aftermarketDealDetail.CertificationLevel = aftermarketRecord.CertificationLevel;
+                    aftermarketDealDetail.VehicleMiles = aftermarketRecord.VehicleMiles;
+                    aftermarketDealDetail.VehicleBank = aftermarketRecord.VehicleBank;
+                    aftermarketDealDetail.VehicleTerm = aftermarketRecord.VehicleTerm;
+
+                    aftermarketDealDetail.VehicleCategory = aftermarketRecord.VehicleCategory;
+
+                    aftermarketDealDetail.APR = aftermarketRecord.APR;
+                    aftermarketDealDetail.BuyRate = aftermarketRecord.BuyRate;
 
                     aftermarketDealDetail.DealKey = aftermarketRecord.DealKey;
                     aftermarketDealDetail.DealGrossAmount = aftermarketRecord.DealGrossAmount;
@@ -1233,6 +1982,9 @@ namespace SalesCommission.Business
                     aftermarketDealDetail.SalesAssociate2 = aftermarketRecord.SalesAssociate2;
 
                     aftermarketDealDetail.FandIManager = aftermarketRecord.FandIManager;
+                    aftermarketDealDetail.FinanceManagerNumber = aftermarketRecord.FinanceManagerNumber;
+
+                    aftermarketDealDetail.ShowroomValidatedBy = aftermarketRecord.ShowroomValidatedBy;
 
                     var allAssociates = SqlQueries.GetSalesAssociates();
 
@@ -1697,6 +2449,7 @@ namespace SalesCommission.Business
                     aftermarketDealDetail.Loaner = aftermarketRecord.Loaner;
                     aftermarketDealDetail.BPP = aftermarketRecord.BPP;
 
+                    aftermarketDealDetail.VehicleCategory = aftermarketRecord.VehicleCategory;
 
                     aftermarketDealDetail.SalesAssociate1 = aftermarketRecord.SalesAssociate1;
                     aftermarketDealDetail.SalesAssociate2 = aftermarketRecord.SalesAssociate2;
@@ -3338,6 +4091,24 @@ namespace SalesCommission.Business
 
         }
 
+        public static List<FIPayscaleAftermarket> GetFIPayscaleAftermarketByIDAndDate(int yearId, int monthId, string payscaleId)
+        {
+            var monthYear = monthId + "/" + yearId;
+            var FIPayscales = SqlMapperUtil.StoredProcWithParams<FIPayscaleAftermarket>("sp_CommissionGetFIPayscaleAftermarketByIDAndDate", new { MonthYear = monthYear, PlanCode = payscaleId }, "SalesCommission");
+
+            return FIPayscales;
+
+        }
+
+        public static List<FIPayscaleSetup> GetFIPayscaleSetupByIDAndDate(int yearId, int monthId, string payscaleId)
+        {
+            var monthYear = monthId + "/" + yearId;
+            var FIPayscales = SqlMapperUtil.StoredProcWithParams<FIPayscaleSetup>("sp_CommissionGetFIPayscaleSetupByIDAndDate", new { MonthYear = monthYear, PlanCode = payscaleId }, "SalesCommission");
+
+            return FIPayscales;
+
+        }
+
         public static List<SelectListItem> GetMakes(string mallId)
         {
             var sqlGet = "Select id as MakeId, make as MakeName, mall_id as MallId, makecode from [Make] where on_off <> 'D' and mall_id = '" + mallId + "' order by MallId, Id";
@@ -3367,11 +4138,6 @@ namespace SalesCommission.Business
             var payscales = SqlMapperUtil.SqlWithParams<FIPayscale>(sqlGet, null, "SalesCommission");
 
             var items = new List<SelectListItem>();
-
-            var blankItem = new SelectListItem();
-            blankItem.Text = string.Empty;
-            blankItem.Value = string.Empty;
-            items.Add(blankItem);
 
             foreach (var payscale in payscales)
             {
@@ -3419,10 +4185,36 @@ namespace SalesCommission.Business
             return associateLevelHistory;
         }
 
+        public static FIAssociate GetSelectedFIManager(int monthId, int yearId, string associateId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetails", new { MonthYear = monthYear, EmployeeNumber = associateId }, "SalesCommission");
+            var FIManager = new FIAssociate();
+
+            if(selectedMangers != null && selectedMangers.Count > 0)
+            {
+                FIManager = selectedMangers[0];
+            }
+
+            return FIManager;
+        }
+
+        public static int SaveFIManagerDetails(FIAssociate selectedFIManager)
+        {
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIManagerDetails", selectedFIManager, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+
+        }
+
+
 
         public static List<SelectListItem> GetSalesAssociates()
         {
-            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' order by emp_lname";
+            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' order by emp_lname";
             var salesAssociates = SqlMapperUtil.SqlWithParams<SalesAssociate>(sqlGet, null, "JJFServer");
 
             var items = new List<SelectListItem>();
@@ -3446,6 +4238,15 @@ namespace SalesCommission.Business
             items.Add(houseItem);
 
             return items;
+        }
+
+        public static List<Associate> GetSalesAssociateList()
+        {
+
+            var sqlGet = "Select distinct emp_pkey, emp_empnumber as AssociateNumber, emp_lname, emp_loc as AssociateLocation, (emp_fname + ' ' + emp_Lname) as AssociateFullName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' order by emp_lname";
+            var associates = SqlMapperUtil.SqlWithParams<Associate>(sqlGet, null, "JJFServer");
+
+            return associates;
         }
 
         public static List<SelectListItem> GetSalesAssociatesByStore(string locationCode)
@@ -3600,7 +4401,8 @@ namespace SalesCommission.Business
             individualDealDetails.sl_Adjustments = individualDeal.sl_Adjustments;
             individualDealDetails.sl_CertFee = individualDeal.sl_CertFee;
 
-            var includedTotalPost = Convert.ToDecimal(individualDeal.sl_BPP) + individualDeal.sl_maint + individualDeal.sl_insurance + individualDeal.sl_leaseWnT + individualDeal.sl_etch + individualDeal.sl_Adjustments + individualDeal.sl_CertFee + individualDeal.sl_otheram;
+            //var includedTotalPost = Convert.ToDecimal(individualDeal.sl_BPP) + individualDeal.sl_maint + individualDeal.sl_insurance + individualDeal.sl_leaseWnT + individualDeal.sl_etch + individualDeal.sl_Adjustments + individualDeal.sl_CertFee + individualDeal.sl_otheram;
+            var includedTotalPost = individualDeal.sl_Adjustments + individualDeal.sl_CertFee;
 
             var difference = includedTotalPost - includedTotalPre;
             var dealGross = individualDeal.sl_dealGross + difference;
@@ -3674,6 +4476,7 @@ namespace SalesCommission.Business
             individualDealDetails.sl_CustomerName = individualDeal.sl_CustomerName;
             individualDealDetails.sl_SalesAssociate1 = individualDeal.sl_SalesAssociate1;
             individualDealDetails.sl_SalesAssociate2 = individualDeal.sl_SalesAssociate2;
+            individualDealDetails.sl_FinanceManagerNumber = individualDeal.sl_FinanceManagerNumber;
 
             if (individualDeal.Validation == "Office Validate")
             {
@@ -4765,6 +5568,26 @@ namespace SalesCommission.Business
 
         }
 
+        public static List<FIDealApproval> GetFIDealApprovalsByDate(int yearId, int monthId, string id)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var dealApprovals = SqlMapperUtil.StoredProcWithParams<FIDealApproval>("sp_CommissionGetFIDealApprovalsByDate", new { MonthYear = monthYear, AssociateNumer = id }, "SalesCommission");
+
+            return dealApprovals;
+
+        }
+
+        public static List<FIDealApproval> GetFIDealApprovalsByDate(int yearId, int monthId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var dealApprovals = SqlMapperUtil.StoredProcWithParams<FIDealApproval>("sp_CommissionGetFIDealApprovalsAllByDate", new { MonthYear = monthYear }, "SalesCommission");
+
+            return dealApprovals;
+
+        }
+
         public static List<PaidBonus> GetBonusesPaidByDate(int yearId, int monthId)
         {
             var monthYear = monthId.ToString() + "/" + yearId.ToString();
@@ -4779,6 +5602,33 @@ namespace SalesCommission.Business
         {
             int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionUpdateDealApprovalByUser", new { MonthYear = monthYear, DealKey = dealKey, ApprovalUser = approvalUser } , "SalesCommission");
             return saveObjStn;
+        }
+
+        public static int SaveFIDealApprovals(FIDealApproval dealApproval)
+        {
+            int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIAssociateApprovals", dealApproval, "SalesCommission");
+            return saveObjStn;
+        }
+
+        public static Associate GetFIAssociateInformationDrawsAndBonus(string location, string associateId, int yearId, int monthId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+            var dealMonth = new DateTime(yearId, monthId, 1);
+
+            var associate = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIAssociateById", new { Location = location, EmployeeNumber = associateId }, "SalesCommission");
+
+            var completeAssociate = new Associate();
+
+            if (associate != null && associate.Count > 0)
+            {
+                completeAssociate = associate[0];
+
+                completeAssociate.AssociateDraws = SqlMapperUtil.StoredProcWithParams<Draw>("sp_CommissionGetAssociatesDrawsByStoreAndDate", new { AssociateSSN = completeAssociate.AssociateSSN, MonthYear = monthYear }, "SalesCommission");
+                completeAssociate.AssociateBonus = SqlMapperUtil.StoredProcWithParams<Bonus>("sp_CommissionGetAssociatesBonusByStoreAndDate", new { AssociateSSN = completeAssociate.AssociateSSN, MonthYear = monthYear }, "SalesCommission");
+
+            }
+
+            return completeAssociate;
         }
 
         public static Associate GetAssociateInformationDrawsAndBonus(string associateId, int yearId, int monthId)
@@ -4802,14 +5652,20 @@ namespace SalesCommission.Business
             return completeAssociate;
         }
 
-        public static Associate GetFIAssociateInformationByDate(string associateId)
+        public static Associate GetFIAssociateInformationByDate(string location, string associateId, int yearId, int monthId)
         {
-            var associate = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIAssociateById", new { EmployeeNumber = associateId }, "SalesCommission");
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var associate = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIAssociateById", new { Location = location, EmployeeNumber = associateId }, "SalesCommission");
 
             var completeAssociate = new Associate();
             if (associate != null && associate.Count > 0)
             {
                 completeAssociate = associate[0];
+
+                completeAssociate.AssociateDraws = SqlMapperUtil.StoredProcWithParams<Draw>("sp_CommissionGetAssociatesDrawsByStoreAndDate", new { AssociateSSN = completeAssociate.AssociateSSN, MonthYear = monthYear }, "SalesCommission");
+                completeAssociate.AssociateBonus = SqlMapperUtil.StoredProcWithParams<Bonus>("sp_CommissionGetAssociatesBonusByStoreAndDate", new { AssociateSSN = completeAssociate.AssociateSSN, MonthYear = monthYear }, "SalesCommission");
+
             }
             return completeAssociate;
         }
@@ -5303,6 +6159,24 @@ namespace SalesCommission.Business
 
             var selectedStores = leadReportModel.SelectedStores;
 
+            var excludedLeadGroups = SqlQueries.GetExcludedLeadGroups();
+
+            var procedureName = "sp_CommissionGetAssociateLeadsByDate";
+
+            if(leadReportModel.ExcludeBadDuplicates == true)
+            {
+                procedureName = "sp_CommissionGetAssociateLeadsByDate";
+            }
+            else
+            {
+                procedureName = "sp_CommissionGetAssociateAllLeadsByDate";
+            }
+
+            if(leadReportModel.ExcludeAllBad == true)
+            {
+                procedureName = "sp_CommissionGetAssociateAllNoBadLeadsByDate";
+            }
+
             if (selectedStores == null || (selectedStores != null && selectedStores.Contains("ALL")))
             {
 
@@ -5311,9 +6185,12 @@ namespace SalesCommission.Business
                 selectedStores = new string[] { "annapolis", "chambersburg", "clearwater", "frederick", "hagerstown", "lakeforest(russell)", "Lakeforest(355)", "lexingtonpark(lexpark)", "nicholson", "colonial", "wheaton" };
             }
 
+
             foreach (var storeId in selectedStores)
             {
                 var storeLead = new StoreLeadInformation();
+
+                
 
                 storeLead.StoreId = storeId;
 
@@ -5374,11 +6251,22 @@ namespace SalesCommission.Business
                 StoreLeads.Add(storeLead);
 
             }
-            var associateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = leadReportModel.ReportStartDate, EndDate = leadReportModel.ReportEndDate }, "ReynoldsData"); //ReportEndDate.AddDays(1)
+            var associateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>(procedureName, new { StartDate = leadReportModel.ReportStartDate, EndDate = leadReportModel.ReportEndDate }, "ReynoldsData"); //ReportEndDate.AddDays(1)
             //if(leadReportModel.IncludeHandyman == false)
             //{
             //    associateLeads = associateLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
             //}
+
+            if (leadReportModel.ShowExcludedGroups == false)
+            {
+                if (excludedLeadGroups != null && excludedLeadGroups.Count > 0)
+                {
+                    foreach (var leadGroup in excludedLeadGroups)
+                    {
+                        associateLeads = associateLeads.FindAll(x => x.LeadGroupMapping != leadGroup.LeadGroupName);
+                    }
+                }
+            }
 
             foreach (var lead in associateLeads)
             {
@@ -5407,22 +6295,36 @@ namespace SalesCommission.Business
                 {
                     lead.VOfInterest_InventoryType = "";
                 }
+
+                if(lead.LeadStatusName.ToUpper().Trim() == "NO INTENT TO BUY" || lead.LeadStatusName.ToUpper().Trim() == "NO CONTACT IN FIVE DAYS")
+                {
+                    lead.LeadStatusTypeName = "Lost";
+                    lead.LeadStatusName = lead.LeadStatusName + " (Bad)";
+                }
             }
 
-            var associateAppointments = SqlMapperUtil.StoredProcWithParams<AssociateAppointment>("sp_CommissionGetAssociateAppointmentsByDate", new { StartDate = leadReportModel.ReportStartDate, EndDate = leadReportModel.ReportEndDate.AddDays(1) }, "SalesCommission");
+            //var associateAppointments = SqlMapperUtil.StoredProcWithParams<AssociateAppointment>("sp_CommissionGetAssociateAppointmentsByDate", new { StartDate = leadReportModel.ReportStartDate, EndDate = leadReportModel.ReportEndDate.AddDays(1) }, "SalesCommission");
 
             leadReportModel.AssociateLeads = associateLeads;
-            leadReportModel.AssociateAppointments = associateAppointments;
+            //leadReportModel.AssociateAppointments = associateAppointments;
 
             /////////////////////////////////////// - Comparison Dates
 
             if (leadReportModel.CompareDates)
             {
-                var comparisonLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = leadReportModel.ComparisonReportStartDate, EndDate = leadReportModel.ComparisonReportEndDate }, "ReynoldsData"); //ComparisonReportEndDate.AddDays(1)
+                var comparisonLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>(procedureName, new { StartDate = leadReportModel.ComparisonReportStartDate, EndDate = leadReportModel.ComparisonReportEndDate }, "ReynoldsData"); //ComparisonReportEndDate.AddDays(1)
                 //if (leadReportModel.IncludeHandyman == false)
                 //{
                 //    comparisonLeads = comparisonLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
                 //}
+                if(excludedLeadGroups != null && excludedLeadGroups.Count > 0)
+                {
+                    foreach(var leadGroup in excludedLeadGroups)
+                    {
+                        comparisonLeads = comparisonLeads.FindAll(x => x.LeadGroupMapping != leadGroup.LeadGroupName);
+                    }
+                }
+
 
                 foreach (var lead in comparisonLeads)
                 {
@@ -5452,9 +6354,9 @@ namespace SalesCommission.Business
                     }
                 }
 
-                var comparisonAppointments = SqlMapperUtil.StoredProcWithParams<AssociateAppointment>("sp_CommissionGetAssociateAppointmentsByDate", new { StartDate = leadReportModel.ComparisonReportStartDate, EndDate = leadReportModel.ComparisonReportEndDate.AddDays(1) }, "SalesCommission");
+                //var comparisonAppointments = SqlMapperUtil.StoredProcWithParams<AssociateAppointment>("sp_CommissionGetAssociateAppointmentsByDate", new { StartDate = leadReportModel.ComparisonReportStartDate, EndDate = leadReportModel.ComparisonReportEndDate.AddDays(1) }, "SalesCommission");
                 leadReportModel.ComparisonLeads = comparisonLeads;
-                leadReportModel.ComparisonAppointments = comparisonAppointments;
+                //leadReportModel.ComparisonAppointments = comparisonAppointments;
             }
 
 
@@ -5700,6 +6602,17 @@ namespace SalesCommission.Business
             return saveInputs;
         }
 
+        public static int UpdateMoneyDueReport(MoneyDue moneyDue)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_SalesLogReportUpdateMoneyDue", moneyDue, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
         public static int UpdateAssociateDraws(Draw associateDraw)
         {
 
@@ -5799,6 +6712,52 @@ namespace SalesCommission.Business
             return saveInputs;
         }
 
+        public static int SaveFIPayscaleSetup(FIPayscaleSetup payscale)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIPayscaleSetupByDate", payscale, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
+
+        public static int CreateNewFIPayscale(FIPayscaleSetup payscale)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionCreateNewFIPayscale", payscale, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
+
+        public static int SaveFIPayscaleSettings(FIPayscale payscale)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIPayscaleByDate", payscale, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
+        public static int SaveFIPayscaleAftermarket(FIPayscaleAftermarket payscale)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIPayscaleAftermarketByDate", payscale, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
         public static PayscaleModel GetPayscaleByIDAndDate(PayscaleModel payscaleModel)
         {
             var monthYear = payscaleModel.MonthId.ToString() + "/" + payscaleModel.YearId.ToString();
@@ -5844,6 +6803,14 @@ namespace SalesCommission.Business
             return payscaleModel;
         }
 
+        public static int UpdateFIPayscalesFromPrevious(FIPayscaleModel payscaleModel)
+        {
+            // Take the current date and create new records for the previous month
+            var payscales = SqlMapperUtil.StoredProcWithParams<NewPayscale>("sp_UpdateFIPayscalesFromPreviousByDate", new { YearId = payscaleModel.YearId, MonthId = payscaleModel.MonthId, PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+            
+            return 1;
+        }
+
         public static List<AdditionalCommission> GetAdditionalCommissionsByStoreAndDate(AdditionalCommissionModel additionalCommissionModel)
         {
             var monthYear = additionalCommissionModel.MonthId.ToString() + "/" + additionalCommissionModel.YearId.ToString();
@@ -5887,6 +6854,13 @@ namespace SalesCommission.Business
             return leadGroups;
         }
 
+        public static List<LeadGroup> GetExcludedLeadGroups()
+        {
+            var leadGroups = SqlMapperUtil.StoredProcWithParams<LeadGroup>("sp_LeadsGetExcludedLeadGroups", null, "SalesCommission");
+
+            return leadGroups;
+        }
+
         public static List<LeadMapping> GetAllVINLeadSources()
         {
             var leadMappings = SqlMapperUtil.SqlWithParams<LeadMapping>("Select distinct LeadSourceName, LeadSourceGroupName from [VINSolutions_API].[dbo].[Vin_LeadInfo] where LeadCreatedEastTime > '12/31/2018' ", null, "SQLServer");
@@ -5918,6 +6892,13 @@ namespace SalesCommission.Business
             return saveObjStn;
         }
 
+        public static int SaveLeadGroup(LeadGroup leadGroup)
+        {
+            //Now save everything to the database and save the files...
+            int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_LeadsSaveLeadGroup", leadGroup, "SalesCommission");
+
+            return saveObjStn;
+        }
 
         public static List<SelectListItem> GetPayscales(string location)
         {

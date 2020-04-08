@@ -18,6 +18,17 @@ namespace SalesCommission.Controllers
             return View();
         }
 
+        public ActionResult MoneyDue()
+        {
+            var moneyDueModel = new MoneyDueModel();
+
+            moneyDueModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            moneyDueModel.MoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+
+            return View(moneyDueModel);
+        }
+
+
         public ActionResult ObjectivesAndStandards()
         {
             //SetUserInformation();
@@ -385,7 +396,7 @@ namespace SalesCommission.Controllers
 
             if (!aftermarketReportModel.SelectedStores.Contains("ALL"))
             {
-                var storeDetailsRemoved = aftermarketReportModel.AftermarketDealGroups.RemoveAll(o => !(aftermarketReportModel.SelectedStores.Contains(o.AutoMall.ToLower())));
+                var storeDetailsRemoved = aftermarketReportModel.AftermarketDealGroups.RemoveAll(o => !(aftermarketReportModel.SelectedStores.Contains(o.AutoMall)));
             }
 
             if (aftermarketReportModel.ConditionId != "ALL")
@@ -920,6 +931,10 @@ namespace SalesCommission.Controllers
 
             leadReportModel.IncludeHandyman = true;
             leadReportModel.VehicleType = "All";
+            leadReportModel.ExcludeBadDuplicates = true;
+            leadReportModel.ShowExcludedGroups = true;
+            leadReportModel.ExcludeAllBad = false;
+
             //leadReportModel = SqlQueries.GetLeadReportByDateAndStore(leadReportModel);
 
 
@@ -976,7 +991,7 @@ namespace SalesCommission.Controllers
                 {
                     newGroup.LeadGroupName = Request.Form["newGroupName"];
                     newGroup.UpdateDate = DateTime.Now;
-                    newGroup.UpdateUser = "New Source Import";
+                    newGroup.UpdateUser = Session["Username"].ToString();
 
                     var bAdded = SqlQueries.AddLeadGroup(newGroup);
                 }
@@ -987,10 +1002,32 @@ namespace SalesCommission.Controllers
                 {
                     var leadGroup = Request.Form["leadGroups"];
                     leadMappingModel.SelectedLeadGroupId = Int32.Parse(leadGroup);
+                    
+
+
                 }
             }
             else if (Request.Form["SaveGroup"] != null)
             {
+
+                var leadGroups = SqlQueries.GetLeadGroups();
+
+                //First Update the Group Information...
+                var saveLeadGroup = leadGroups.Find(x => x.Id == leadMappingModel.SelectedLeadGroupId);
+
+                saveLeadGroup.UpdateDate = DateTime.Now;
+                saveLeadGroup.UpdateUser = Session["Username"].ToString();
+
+                var excludeFromReporting = false;
+                if (Request.Form["chkExcludeFromReporting"] != null && Request.Form["chkExcludeFromReporting"] == "on")
+                {
+                    excludeFromReporting = true;
+                }
+                saveLeadGroup.ExcludeFromReporting = excludeFromReporting;
+
+                var bGroupSaved = SqlQueries.SaveLeadGroup(saveLeadGroup);
+
+
                 var totalIndex = 0;
 
                 if (Request.Form["hdnIndex"] != null && Request.Form["hdnIndex"] != "")
@@ -1001,7 +1038,7 @@ namespace SalesCommission.Controllers
 
                 if(totalIndex > 0)
                 {
-                    var leadGroups = SqlQueries.GetLeadGroups();
+                    //var leadGroups = SqlQueries.GetLeadGroups();
 
                     for (var i = 0; i < totalIndex; i++)
                     {
@@ -1048,16 +1085,492 @@ namespace SalesCommission.Controllers
                 }
 
 
+
             }
 
             leadMappingModel.VINLeadSourceMappings = SqlQueries.GetAllVINLeadSources();
             leadMappingModel.LeadSourceMappings = SqlQueries.GetLeadMappings();
             leadMappingModel.LeadGroups = SqlQueries.GetLeadGroups();
 
+            if (leadMappingModel.SelectedLeadGroupId > 0)
+            {
+                var selectedLeadGroup = leadMappingModel.LeadGroups.Find(x => x.Id == leadMappingModel.SelectedLeadGroupId);
+                if (selectedLeadGroup != null)
+                {
+                    leadMappingModel.ExcludeFromReporting = selectedLeadGroup.ExcludeFromReporting;
+                    leadMappingModel.SelectedLeadGroupName = selectedLeadGroup.LeadGroupName;
+                }
+            }
+
             return View(leadMappingModel);
         }
 
+        public ActionResult LeadReportDetails(DateTime startdate, DateTime enddate, string bd1, string bd2, string bd3, string bd4, string vt, string lt, string ft)
+        {
+            var leadReportModel = new LeadReportModel();
+            var leadReportDetailsModel = new LeadReportDetailsModel();
 
+            var bdValue1 = "";
+            var bdValue2 = "";
+            var bdValue3 = "";
+            var bdValue4 = "";
+
+            if (bd1 != null && bd1 != "")
+            {
+                leadReportModel.BreakDownLevel1 = bd1.Split(',')[0];                
+                bdValue1 = bd1.Split(',')[1];
+
+                leadReportDetailsModel.BreakDownLevel1 = bd1.Split(',')[0];
+                leadReportDetailsModel.BreakDownLevel1Value = bdValue1;
+            }
+
+            if (bd2 != null && bd2 != "")
+            {
+                leadReportModel.BreakDownLevel2 = bd2.Split(',')[0];
+                bdValue2 = bd2.Split(',')[1];
+
+                leadReportDetailsModel.BreakDownLevel2 = bd2.Split(',')[0];
+                leadReportDetailsModel.BreakDownLevel2Value = bdValue2;
+            }
+
+            if (bd3 != null && bd3 != "")
+            {
+                leadReportModel.BreakDownLevel3 = bd3.Split(',')[0];
+                bdValue3 = bd3.Split(',')[1];
+
+                leadReportDetailsModel.BreakDownLevel3 = bd3.Split(',')[0];
+                leadReportDetailsModel.BreakDownLevel3Value = bdValue3;
+            }
+
+            if (bd4 != null && bd4 != "")
+            {
+                leadReportModel.BreakDownLevel4 = bd4.Split(',')[0];
+                bdValue4 = bd4.Split(',')[1];
+
+                leadReportDetailsModel.BreakDownLevel4 = bd4.Split(',')[0];
+                leadReportDetailsModel.BreakDownLevel4Value = bdValue4;
+            }
+
+            if (vt != null && vt != "")
+            {
+                leadReportModel.VehicleType = vt;
+                leadReportDetailsModel.VehicleType = vt;
+            }
+
+            if(ft != null && ft != "")
+            {
+                if(ft.Split(',')[0] == "t")
+                {
+                    leadReportModel.ExcludeBadDuplicates = true;
+                    leadReportDetailsModel.ExcludeBadDuplicates = true;
+                }
+
+                if (ft.Split(',')[1] == "t")
+                {
+                    leadReportModel.ShowExcludedGroups = true;
+                    leadReportDetailsModel.ShowExcludedGroups = true;
+                }
+
+                if (ft.Split(',')[2] == "t")
+                {
+                    leadReportModel.ExcludeAllBad = true;
+                    leadReportDetailsModel.ExcludeAllBad = true;
+                }
+                
+            }
+
+            leadReportModel.IncludeHandyman = false;
+            
+            leadReportModel.ReportStartDate = startdate;
+            leadReportDetailsModel.ReportStartDate = startdate;
+
+            leadReportModel.ReportEndDate = enddate;
+            leadReportDetailsModel.ReportEndDate = enddate;
+
+            leadReportModel = SqlQueries.GetLeadReportNewByDateAndStore(leadReportModel, false);
+
+
+            var Label1Value = "";
+            var Label2Value = "";
+            var Label3Value = "";
+            var Label4Value = "";
+
+            var BreakDown1filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+            var BreakDown2filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+            var BreakDown3filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+            var BreakDown4filteredLeads = new List<SalesCommission.Models.AssociateLead>();
+
+            if (leadReportModel.AssociateLeads != null && leadReportModel.AssociateLeads.Count > 0)
+            {
+
+                #region Breakdown 1
+                
+                if (leadReportModel.BreakDownLevel1 != null)
+                {
+                    Label1Value = bdValue1;
+                    switch (leadReportModel.BreakDownLevel1)
+                    {
+                        case "associatename":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.Sales_LastName == bdValue1);
+                            break;
+
+                        case "brand":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue1);
+                            break;
+
+                        case "leadgroupname":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadGroupMapping == bdValue1);
+                            break;
+
+                        case "leadsourcename":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadSourceName == bdValue1);
+                            break;
+
+                        case "leadstatusname":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadStatusName == bdValue1);
+                            break;
+
+                        case "leadstatustype":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadStatusTypeName == bdValue1);
+                            break;
+
+                        case "locationid":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.DealerId.ToString() == bdValue1);
+
+                            foreach (var store in SalesCommission.Business.Enums.VinStores)
+                            {
+                                if (store.StoreId == bdValue1)
+                                {
+                                    Label1Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "salesteam":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.Team == bdValue1);
+                            break;
+
+                        case "make":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_Make == bdValue1);
+                            break;
+
+                        case "model":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_Model == bdValue1);
+                            break;
+
+                        case "stock":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_StockNumber == bdValue1);
+                            break;
+
+                        case "zip":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.PostalCode == bdValue1);
+                            break;
+
+                        case "inventorytype":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_InventoryType == bdValue1);
+                            break;
+
+                        case "leaddate":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == bdValue1);
+                            break;
+
+                        case "leadtime":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == bdValue1);
+
+                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(bdValue1));
+                            string fromTimeString = result.ToString("hh':'mm");
+
+                            Label1Value = fromTimeString;
+
+                            break;
+
+                        default:
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.DealerId.ToString() == bdValue1);
+                            break;
+                    }
+
+                    leadReportDetailsModel.AssociateLeads = BreakDown1filteredLeads;
+                }
+                #endregion Breadown 1
+
+                #region Breakdown 2
+
+                if (leadReportModel.BreakDownLevel2 != null)
+                {
+                    Label2Value = bdValue2;
+                    switch (leadReportModel.BreakDownLevel2)
+                    {
+                        case "associatename":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Sales_LastName == bdValue2);
+                            break;
+
+                        case "brand":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue2);
+                            break;
+
+                        case "leadgroupname":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadGroupMapping == bdValue2);
+                            break;
+
+                        case "leadsourcename":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadSourceName == bdValue2);
+                            break;
+
+                        case "leadstatusname":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadStatusName == bdValue2);
+                            break;
+
+                        case "leadstatustype":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadStatusTypeName == bdValue2);
+                            break;
+
+                        case "locationid":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue2);
+
+                            foreach (var store in SalesCommission.Business.Enums.VinStores)
+                            {
+                                if (store.StoreId == bdValue2)
+                                {
+                                    Label2Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "salesteam":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Team == bdValue2);
+                            break;
+
+                        case "make":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue2);
+                            break;
+
+                        case "model":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Model == bdValue2);
+                            break;
+
+                        case "stock":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_StockNumber == bdValue2);
+                            break;
+
+                        case "zip":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.PostalCode == bdValue2);
+                            break;
+
+                        case "inventorytype":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_InventoryType == bdValue2);
+                            break;
+
+                        case "leaddate":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == bdValue2);
+                            break;
+
+                        case "leadtime":
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == bdValue2);
+
+                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(bdValue2));
+                            string fromTimeString = result.ToString("hh':'mm");
+
+                            Label2Value = fromTimeString;
+
+                            break;
+
+                        default:
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue2);
+                            break;
+                    }
+                    leadReportDetailsModel.AssociateLeads = BreakDown2filteredLeads;
+                }
+                #endregion Breadown 2
+
+                #region Breakdown 3
+
+                if (leadReportModel.BreakDownLevel3 != null)
+                {
+                    Label3Value = bdValue3;
+                    switch (leadReportModel.BreakDownLevel3)
+                    {
+                        case "associatename":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Sales_LastName == bdValue3);
+                            break;
+
+                        case "brand":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue3);
+                            break;
+
+                        case "leadgroupname":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadGroupMapping == bdValue3);
+                            break;
+
+                        case "leadsourcename":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadSourceName == bdValue3);
+                            break;
+
+                        case "leadstatusname":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadStatusName == bdValue3);
+                            break;
+
+                        case "leadstatustype":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadStatusTypeName == bdValue3);
+                            break;
+
+                        case "locationid":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue3);
+
+                            foreach (var store in SalesCommission.Business.Enums.VinStores)
+                            {
+                                if (store.StoreId == bdValue3)
+                                {
+                                    Label3Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "salesteam":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Team == bdValue3);
+                            break;
+
+                        case "make":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue3);
+                            break;
+
+                        case "model":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Model == bdValue3);
+                            break;
+
+                        case "stock":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_StockNumber == bdValue3);
+                            break;
+
+                        case "zip":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.PostalCode == bdValue3);
+                            break;
+
+                        case "inventorytype":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_InventoryType == bdValue3);
+                            break;
+
+                        case "leaddate":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == bdValue3);
+                            break;
+
+                        case "leadtime":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == bdValue3);
+
+                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(bdValue3));
+                            string fromTimeString = result.ToString("hh':'mm");
+
+                            Label3Value = fromTimeString;
+
+                            break;
+
+                        default:
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue3);
+                            break;
+                    }
+                    leadReportDetailsModel.AssociateLeads = BreakDown3filteredLeads;
+                }
+                #endregion Breadown 3
+
+                #region Breakdown 4
+
+                if (leadReportModel.BreakDownLevel4 != null)
+                {
+                    Label4Value = bdValue4;
+                    switch (leadReportModel.BreakDownLevel4)
+                    {
+                        case "associatename":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Sales_LastName == bdValue4);
+                            break;
+
+                        case "brand":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue4);
+                            break;
+
+                        case "leadgroupname":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadGroupMapping == bdValue4);
+                            break;
+
+                        case "leadsourcename":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadSourceName == bdValue4);
+                            break;
+
+                        case "leadstatusname":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadStatusName == bdValue4);
+                            break;
+
+                        case "leadstatustype":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadStatusTypeName == bdValue4);
+                            break;
+
+                        case "locationid":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue4);
+
+                            foreach (var store in SalesCommission.Business.Enums.VinStores)
+                            {
+                                if (store.StoreId == bdValue4)
+                                {
+                                    Label4Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "salesteam":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Team == bdValue4);
+                            break;
+
+                        case "make":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue4);
+                            break;
+
+                        case "model":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Model == bdValue4);
+                            break;
+
+                        case "stock":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_StockNumber == bdValue4);
+                            break;
+
+                        case "zip":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.PostalCode == bdValue4);
+                            break;
+
+                        case "inventorytype":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_InventoryType == bdValue4);
+                            break;
+
+                        case "leaddate":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == bdValue4);
+                            break;
+
+                        case "leadtime":
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == bdValue4);
+
+                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(bdValue4));
+                            string fromTimeString = result.ToString("hh':'mm");
+
+                            Label4Value = fromTimeString;
+
+                            break;
+
+                        default:
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue4);
+                            break;
+                    }
+                    leadReportDetailsModel.AssociateLeads = BreakDown4filteredLeads;
+                }
+                #endregion Breadown 4
+
+            }
+
+            //NOW GO THROUGH BREAKDOWNS AND RETURN THE LAST BREAKDOWN
+
+
+            return View(leadReportDetailsModel);
+        }
         public ActionResult SavedLeadReport(DateTime startdate, DateTime enddate, string bd1, string bd2,string bd3,string bd4,string vt, DateTime? compstartdate = null, DateTime? compenddate = null)
         {
             //SetUserInformation();
@@ -1223,7 +1736,26 @@ namespace SalesCommission.Controllers
             }
             leadReportModel.CompareDates = compareDates;
 
+            var excludeBadDups = false;
+            if (Request.Form["chkBadDuplicates"] != null && Request.Form["chkBadDuplicates"] == "on")
+            {
+                excludeBadDups = true;
+            }
+            leadReportModel.ExcludeBadDuplicates = excludeBadDups;
 
+            var excludeAllBad = false;
+            if (Request.Form["chkExcludeAllBad"] != null && Request.Form["chkExcludeAllBad"] == "on")
+            {
+                excludeAllBad = true;
+            }
+            leadReportModel.ExcludeAllBad = excludeAllBad;
+
+            var showExcluded = false;
+            if (Request.Form["chkShowExcluded"] != null && Request.Form["chkShowExcluded"] == "on")
+            {
+                showExcluded = true;
+            }
+            leadReportModel.ShowExcludedGroups = showExcluded;
 
             leadReportModel = SqlQueries.GetLeadReportNewByDateAndStore(leadReportModel, false);
 
@@ -1297,11 +1829,33 @@ namespace SalesCommission.Controllers
             leadReportModel.ReportEndDate = endDate;
 
             var compareDates = false;
-            if (Request.Form["chkComparison"] != null && Request.Form["chkComparison"] == "on")
+            if (Request.Form["chkComparison"] != null && Request.Form["chkComparison"].Contains("on"))
             {
                 compareDates = true;
             }
+
+            var excludeBadDups = false;
+            if (Request.Form["chkBadDuplicates"] != null && Request.Form["chkBadDuplicates"].Contains("on"))
+            {
+                excludeBadDups = true;
+            }
+            
+            var excludeAllBad = false;
+            if (Request.Form["chkExcludeAllBad"] != null && Request.Form["chkExcludeAllBad"].Contains("on"))
+            {
+                excludeAllBad = true;
+            }
+            
+            var showExcluded = false;
+            if (Request.Form["chkShowExcluded"] != null && Request.Form["chkShowExcluded"].Contains("on"))
+            {
+                showExcluded = true;
+            }
+
             leadReportModel.CompareDates = compareDates;
+            leadReportModel.ExcludeBadDuplicates = excludeBadDups;
+            leadReportModel.ExcludeAllBad = excludeAllBad;
+            leadReportModel.ShowExcludedGroups = showExcluded;
 
             leadReportModel = SqlQueries.GetLeadReportNewByDateAndStore(leadReportModel,false);
 
@@ -1405,6 +1959,109 @@ namespace SalesCommission.Controllers
             }
 
             return View(leadSourceReportModel);
+        }
+
+        public ActionResult UpdateMoneyDue(string id, string location, string dueFrom)
+        {
+            var moneyDueModel = new MoneyDueModel();
+
+            var allMoneyDue = SqlQueries.GetAllMoneyDue();
+            var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+
+            moneyDueModel.MoneyDue = allMoneyDue.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location);
+            moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x=>x.CommentOrder).ToList();
+
+            moneyDueModel.FIManagers = SqlQueries.GetSalesAssociates();
+
+            if (moneyDueModel.MoneyDue != null && moneyDueModel.MoneyDue.Count > 0)
+            {
+                moneyDueModel.FIManagerNumber = moneyDueModel.MoneyDue[0].FIManagerNumber;
+            }
+
+            if(moneyDueModel.MoneyDueHistory != null && moneyDueModel.MoneyDueHistory.Count > 0)
+            {
+                if (moneyDueModel.MoneyDueHistory[0].FIManagerNumber != null && moneyDueModel.MoneyDueHistory[0].FIManagerNumber != "")
+                {                    
+                    //Check to see if we have an update in the history table
+                    moneyDueModel.FIManagerNumber = moneyDueModel.MoneyDueHistory[0].FIManagerNumber;                    
+                }
+
+            }
+
+
+
+            return View(moneyDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult UpdateMoneyDue()
+        {
+            var newComment = new MoneyDue();
+
+            if (Request.Form != null)
+            {
+                newComment.Location = Request.Form["hdn-Location"];
+                newComment.StockNumber = Request.Form["hdn-StockNumber"];
+                newComment.ScheduleDays = (Request.Form["hdn-ScheduleDays"] != null ? Convert.ToInt32(Request.Form["hdn-ScheduleDays"]) : 0);
+                newComment.DealDate = (Request.Form["hdn-DealDate"] != null ? Convert.ToDateTime(Request.Form["hdn-DealDate"]) : new DateTime(1900, 1, 1));
+
+                if (newComment.DealDate < new DateTime(1900, 1, 1))
+                {
+                    newComment.DealDate = new DateTime(1900, 1, 1);
+                }
+
+                newComment.DueFrom = Request.Form["hdn-DueFrom"];
+                newComment.CustomerNumber = Request.Form["hdn-CustomerNumber"];
+                newComment.ControlBalance = (Request.Form["hdn-ControlBalance"] != null ? Convert.ToDecimal(Request.Form["hdn-ControlBalance"]) : 0);
+                newComment.CustomerFirstName = Request.Form["hdn-CustomerFirstName"];
+                newComment.CustomerLastName = Request.Form["hdn-CustomerLastName"];
+                newComment.FIManager = Request.Form["hdn-FIManager"];
+                newComment.BankName = Request.Form["hdn-BankName"];
+                newComment.FIManagerNumber = Request.Form["FIManagerNumber"];
+                newComment.DealNumber = Request.Form["hdn-DealNumber"];
+
+                newComment.BusinessPhone = Request.Form["hdn-BusinessPhone"];
+                newComment.ResidencePhone = Request.Form["hdn-ResidencePhone"];
+                newComment.SalesManager = Request.Form["hdn-SalesManager"];
+
+                newComment.CommentOrder = (Request.Form["hdn-CommentOrder"] != null ? Convert.ToInt32(Request.Form["hdn-CommentOrder"]) : 0) + 1;
+
+                var rootCause = Request.Form["rootCause"];
+                var fundedStatus = Request.Form["fundedStatus"];
+                var userComments = "(" + Session["UserName"].ToString() + "-" + DateTime.Now + ")" + Request.Form["userComments"];
+
+                var oldStatus = Request.Form["hdn-FundedStatus"];
+                var oldcommentUser = Request.Form["hdn-CommentUser"];
+
+                newComment.RootCause = rootCause;
+
+                newComment.Comment = userComments;
+
+                if (oldStatus != fundedStatus)
+                {
+                    newComment.FundedStatus = fundedStatus;
+                    newComment.CommentDate = DateTime.Now;
+                    newComment.CommentUser = Session["UserName"].ToString();
+                }
+                else
+                {
+                    newComment.FundedStatus = fundedStatus;
+                    newComment.CommentDate = (Request.Form["hdn-CommentDate"] != null ? Convert.ToDateTime(Request.Form["hdn-CommentDate"]) : new DateTime(1900, 1, 1));
+
+                    if(newComment.CommentDate < new DateTime(1900, 1, 1))
+                    {
+                        newComment.CommentDate = DateTime.Now;
+                    }
+
+                    newComment.CommentUser = oldcommentUser;
+                }
+
+                newComment.LastUpdatedDate = DateTime.Now;
+
+                var success = SqlQueries.UpdateMoneyDueReport(newComment);
+            }
+
+            return new EmptyResult();
         }
 
         //public void SetUserInformation()

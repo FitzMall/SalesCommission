@@ -12,6 +12,8 @@ namespace SalesCommission.Models
         public List<LeadMapping> VINLeadSourceMappings { get; set; }
 
         public int SelectedLeadGroupId { get; set; }
+        public string SelectedLeadGroupName { get; set; }
+        public bool ExcludeFromReporting { get; set; }
     }
 
     public class LeadMapping
@@ -31,6 +33,7 @@ namespace SalesCommission.Models
         public string LeadGroupName { get; set; }
         public string UpdateUser { get; set; }
         public DateTime UpdateDate { get; set; }
+        public bool ExcludeFromReporting { get; set; }
 
     }
 

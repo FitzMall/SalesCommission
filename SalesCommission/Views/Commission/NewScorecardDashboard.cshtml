@@ -553,11 +553,20 @@
 
                         if (VinName != null && VinName != "")
                         {
+
                             var VINLastName = VinName.Substring(VinName.LastIndexOf(' ') + 1).ToLower();
-                            var VINFirstName = associateName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
 
+                            var VINFirstName = "";
+                            if (VinName.LastIndexOf(' ') > 0)
+                            {
+                                VINFirstName = VinName.Substring(0, VinName.LastIndexOf(' ')).ToLower();
+                            }
+                            else
+                            {
+                                VINFirstName = "";
+                            }
 
-                            filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower() == VINLastName.ToLower() && x.Sales_FirstName.ToLower() == VINFirstName.ToLower());                            
+                            filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName.ToLower() == VINLastName.ToLower() && x.Sales_FirstName.ToLower() == VINFirstName.ToLower());
                         }
                         else
                         {

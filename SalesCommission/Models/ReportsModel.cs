@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
+using System.Web.Mvc;
 
 namespace SalesCommission.Models
 {
@@ -113,6 +113,9 @@ namespace SalesCommission.Models
         public bool IncludeHandyman { get; set; }
         public bool CompareDates { get; set; }
         public bool ShowOnlyHandyman { get; set; }
+        public bool ExcludeBadDuplicates { get; set; }
+        public bool ExcludeAllBad { get; set; }
+        public bool ShowExcludedGroups { get; set; }
         public string BreakDownLevel1 { get; set; }
         public string BreakDownLevel2 { get; set; }
         public string BreakDownLevel3 { get; set; }
@@ -123,6 +126,29 @@ namespace SalesCommission.Models
         public List<AssociateAppointment> AssociateAppointments { get; set; }
         public List<AssociateLead> ComparisonLeads { get; set; }
         public List<AssociateAppointment> ComparisonAppointments { get; set; }
+    }
+
+    public class LeadReportDetailsModel
+    {
+        public string StoreId { get; set; }
+        public string[] SelectedStores { get; set; }
+        public DateTime ReportStartDate { get; set; }
+        public DateTime ReportEndDate { get; set; }
+        public bool ExcludeBadDuplicates { get; set; }
+        public bool ExcludeAllBad { get; set; }
+        public bool ShowExcludedGroups { get; set; }
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+        public string BreakDownLevel1Value { get; set; }
+        public string BreakDownLevel2Value { get; set; }
+        public string BreakDownLevel3Value { get; set; }
+        public string BreakDownLevel4Value { get; set; }
+        public string VehicleType { get; set; }
+        public List<StoreLeadInformation> StoreLeadInformation { get; set; }
+        public List<AssociateLead> AssociateLeads { get; set; }
+
     }
 
     public class LeadSourceReportModel
@@ -324,7 +350,7 @@ namespace SalesCommission.Models
         public string VisitId { get; set; }
         public string LeadId { get; set; }
         public DateTime StartUTCDate { get; set; }
-        public DateTime StartLocalDate { get; set;}
+        public DateTime StartLocalDate { get; set; }
         public string SalesRepUserId { get; set; }
         public string Sales_LastName { get; set; }
         public string Sales_FirstName { get; set; }
@@ -334,6 +360,42 @@ namespace SalesCommission.Models
 
     }
 
+    public class MoneyDueModel
+    {
+        public List<MoneyDue> MoneyDue { get; set; }
+        public List<MoneyDue> MoneyDueHistory { get; set; }
+        public IEnumerable<SelectListItem> FIManagers { get; set; }
+        public string FIManagerNumber { get; set; }
+    }
 
+    public class MoneyDue { 
+        public string Location { get; set; }
+        public string LocationName { get; set; }
+        public string StockNumber { get; set; }
+        public int ScheduleDays { get; set; }
+        public DateTime DealDate { get; set; }
+        public string DueFrom { get; set; }
+        public string CustomerNumber { get; set; }
+        public decimal ControlBalance { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerFirstName { get; set; }
+        public string CustomerLastName { get; set; }
+        public string BusinessPhone { get; set; }
+        public string ResidencePhone { get; set; }
+        public string SalesManager { get; set; }
+        public string FIManager { get; set; }
+        public string BankName { get; set; }
+        public string FIManagerNumber { get; set; }
+        public string SalesManagerNumber { get; set; }
+        public string DealNumber { get; set; }
+        public DateTime LastUpdatedDate { get; set; }
+        public string Comment { get; set; }
+        public DateTime CommentDate { get; set; }
+        public string CommentUser { get; set; }
+        public int CommentOrder { get; set; }
+        public string RootCause { get; set; }
+        public string FundedStatus { get; set; }
+
+    }
 
 }

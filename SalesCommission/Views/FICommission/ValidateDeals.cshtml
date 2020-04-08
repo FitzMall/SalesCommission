@@ -1,0 +1,1155 @@
+﻿@model SalesCommission.Models.FIAssociateCommissionModel
+
+@{
+    ViewBag.Title = "F and I Manager Unvalidated Deals";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "$";
+
+    System.Globalization.NumberFormatInfo noSymbol = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    noSymbol.CurrencyDecimalDigits = 0;
+    noSymbol.PercentDecimalDigits = 1;
+    noSymbol.PercentPositivePattern = 1;
+    noSymbol.CurrencySymbol = "";
+    noSymbol.CurrencyGroupSeparator = "";
+
+    System.Globalization.NumberFormatInfo markupFormat = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    noSymbol.CurrencyDecimalDigits = 0;
+    noSymbol.PercentDecimalDigits = 2;
+    noSymbol.PercentPositivePattern = 1;
+    noSymbol.CurrencySymbol = "";
+    noSymbol.CurrencyGroupSeparator = "";
+
+    var bIsAssociate = false;
+
+    if (Model.AssociateInformation.AssociateNumber != null && Session["AssociateId"] != null)
+    {
+        if (Model.AssociateInformation.AssociateNumber.Trim().ToLower() == Session["AssociateId"].ToString().Trim().ToLower())
+        {
+            bIsAssociate = true;
+        }
+    }
+
+}
+@section CSS
+{
+
+}
+
+<style type="text/css">
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .selected-row {
+        background-color: #f7f4e0; /*#f5f5f5;*/
+    }
+
+    .table-bordered > thead > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > thead > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+</style>
+
+
+@if (Model.AssociateInformation == null)
+{
+    <h2>The associate you requested could not be found.</h2>
+}
+else if ((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
+{
+    <h2>You are not authorized to view this Associate's Commission</h2>
+}
+else
+{
+    <div class="row" style="margin-top:15px;">
+        <div class="col-sm-12">
+            <h2>Unvalidated F and I Deals for @Model.AssociateInformation.AssociateFirstName @Model.AssociateInformation.AssociateLastName for @Model.MonthId/@Model.YearId</h2>
+            <a href="@applicationPath/FICommission/Associate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary" style="margin-bottom:15px;">View Commission</a>
+        </div>
+    </div>
+    if (Model.FIPayscales != null && Model.FIPayscales.Count > 0)
+    {
+        <div class="row" style="margin-top:15px;">
+            <div class="col-sm-12">
+                <p><strong>PayScale:</strong> @Model.FIPayscales[0].PlanName</p>
+            </div>
+        </div>
+    }
+
+    if (Model.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
+    {
+
+        <h4>Deals To Be Validated</h4>
+        foreach (var deal in Model.AftermarketDealDetails)
+        {
+            if (deal.ShowroomValidatedBy != null)
+            {
+                if (Model.DealApprovals.FindAll(x => x.DealKey == deal.DealKey).Count == 0)
+                {
+
+                    using (Html.BeginForm())
+                    {
+
+
+                <div class="row" style="border-bottom:1px solid #ddd; margin-bottom: 20px;">
+                    <div class="col-sm-12">
+
+                        <table class="table table-bordered table-striped" style="font-size:11px">
+                            <thead>
+                                <tr style="background-color:#d9edf7">
+                                    <th class="text-center">Deal #</th>
+                                    <th class="text-center">Stk #</th>
+                                    <th class="text-center">Cond</th>
+                                    <th class="text-center">Year</th>
+                                    <th class="text-center">Make</th>
+                                    <th class="text-center">Model</th>
+                                    <th class="text-center">Miles</th>
+                                    <th class="text-center">Bank</th>
+                                    <th class="text-center">Term</th>
+                                    <th class="text-center">Markup</th>
+
+                                    <th class="text-center">Total $</th>
+                                    <th class="text-center">Product $</th>
+                                    <th class="text-center">Title Due</th>
+                                    <th class="text-center">$ Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+
+                                    var dealApproval = Model.DealApprovals.FindAll(x => x.DealKey == deal.DealKey);
+
+                                    var isHandy = "";
+                                    if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                    {
+                                        isHandy = "(H)";
+                                    }
+
+                                    decimal EligibleDealDollar = 0;
+                                    decimal EligibleProductDollar = 0;
+                                    var moneyDueBGColor = "";
+                                    decimal dealMoneyDue = 0;
+
+                                    var markup = deal.APR - deal.BuyRate;
+
+                                    //Check to see if they are 10 years or older, have over 150K miles or just getting credit for Revenue
+                                    var currentYear = Model.YearId;
+
+                                    decimal otherItemAmount = 0;
+                                    if (deal.AftermarketItems.Count > 0)
+                                    {
+                                        foreach (var item in deal.AftermarketItems)
+                                        {
+                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)
+                                            {
+                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                otherItemAmount += profit;
+                                            }
+                                        }
+
+                                    }
+
+
+
+                                    EligibleDealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);//
+                                    EligibleProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); //
+
+
+
+                                    var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                    if (itemMoneyDue != null)
+                                    {
+                                        foreach (var money in itemMoneyDue)
+                                        {
+                                            dealMoneyDue += money.ControlBalance;
+                                        }
+                                    }
+
+
+
+                                    if (dealMoneyDue > 0)
+                                    {
+                                        moneyDueBGColor = "background-color: #d2070769";
+                                    }
+
+
+
+                                }
+                                <tr>
+
+                                    <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                    <td class="text-center">@deal.VehicleStockNumber</td>
+                                    <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                    <td class="text-center">@deal.VehicleYear</td>
+                                    <td class="text-center">@deal.VehicleMake</td>
+                                    <td class="text-center">@deal.VehicleCarline</td>
+                                    <td class="text-center">@deal.VehicleMiles</td>
+                                    <td class="text-center">@deal.VehicleBank</td>
+                                    <td class="text-center">@deal.VehicleTerm</td>
+                                    <td class="text-center">@markup.ToString("0.##")</td>
+
+                                    <td class="text-center">@EligibleDealDollar.ToString("C", noSymbol)</td>
+                                    <td class="text-center">@EligibleProductDollar.ToString("C", noSymbol)</td>
+                                    <td class="text-center"></td>
+                                    <td class="text-center">@dealMoneyDue.ToString("C", nfi)</td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <table class="table table-bordered table-striped" style="font-size:11px">
+                                    <thead>
+                                        <tr style="background-color:#d9edf7">
+                                            <th class="text-center">Core Products</th>
+                                            <th class="text-center">Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center">Finance Income</td>
+                                            <td class="text-center">@deal.FinanceIncomeAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-finance" id="hdnAmount-finance" value="@deal.FinanceIncomeAmount" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center">Service Contract</td>
+                                            <td class="text-center">@deal.VSCAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-service" id="hdnAmount-service" value="@deal.VSCAmount" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center">Maintenance Contract</td>
+                                            <td class="text-center">@deal.MaintenanceAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-maintenance" id="hdnAmount-maintenance" value="@deal.MaintenanceAmount" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center">GAP</td>
+                                            <td class="text-center">@deal.GAPAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-GAP" id="hdnAmount-GAP" value="@deal.GAPAmount" /></td>
+                                        </tr>
+                                        @foreach (var coreItem in Model.FIPayscaleAftermarket)
+                                        {
+                                            if (coreItem.AftermarketOrder > 4 && coreItem.CoreItem == true && coreItem.PaidItem == true)
+                                            {
+                                                var aftermarketItem = deal.AftermarketItems.Find(x => x.AftermarketId == coreItem.AftermarketIndex);
+
+                                                decimal profit = 0;
+                                                if (aftermarketItem != null)
+                                                {
+                                                    profit = aftermarketItem.AftermarketPrice - aftermarketItem.AftermarketCost;
+
+                                                }
+
+                                                switch (coreItem.AftermarketIndex)
+                                                {
+                                                    case 2:
+                                                        if (deal.NitrogenAmount > 0)
+                                                        {
+                                                            profit = deal.NitrogenAmount;
+                                                        }
+                                                        break;
+                                                    case 3:
+                                                        if (deal.ZurichAmount > 0)
+                                                        {
+                                                            profit = deal.ZurichAmount;
+                                                        }
+                                                        break;
+                                                    case 5:
+                                                        if (deal.TireWheelAmount > 0)
+                                                        {
+                                                            profit = deal.TireWheelAmount;
+                                                        }
+                                                        break;
+                                                    case 9:
+                                                        if (deal.SecurityAmount > 0)
+                                                        {
+                                                            profit = deal.SecurityAmount;
+                                                        }
+                                                        break;
+                                                }
+
+                                                <tr>
+                                                    <td class="text-center">@coreItem.AftermarketItem</td>
+                                                    <td class="text-center">@profit.ToString("C", nfi)<input type="hidden" name="hdnAmount-@coreItem.AftermarketIndex" id="hdnAmount-@coreItem.AftermarketIndex" value="@profit" /><input type="checkbox" name="chk-@coreItem.AftermarketIndex" id="chk-@coreItem.AftermarketIndex" checked style="visibility:hidden;width:1px;height:1px" /></td>
+                                                </tr>
+                                            }
+                                        }
+
+
+
+                                    </tbody>
+                                </table>
+
+
+                            </div>
+
+
+
+                            <div class="col-sm-5">
+                                <table class="table table-bordered table-striped" style="font-size:11px">
+                                    <thead>
+                                        <tr style="background-color:#d9edf7">
+                                            <th class="text-center">Other Products</th>
+                                            <th class="text-center">Profit</th>
+                                            <th class="text-center">Sold By F and I</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (deal.AftermarketItems.Count > 0)
+                                        {
+
+                                            foreach (var item in deal.AftermarketItems)
+                                            {
+                                                var coreItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                if (item.AftermarketId == 1)
+                                                {
+                                                    coreItem.CoreItem = false;
+                                                }
+                                                else
+                                                {
+                                                    coreItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
+                                                }
+                                                if (item.AftermarketId != 3 && item.AftermarketId != 20 && coreItem.CoreItem == false)
+                                                {
+                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                    <tr>
+                                                        <td class="text-center">@item.AftermarketName</td>
+                                                        <td class="text-center">@profit.ToString("C", nfi)<input type="hidden" name="hdnAmount-@item.AftermarketId" id="hdnAmount-@item.AftermarketId" value="@profit" /></td>
+                                                        <td class="text-center">
+                                                            @if (item.AftermarketId == 1)
+                                        {
+                                            var bBPPSelected = false;
+
+                                            if (item.AftermarketCost == .02m)
+                                            {
+                                                bBPPSelected = true;
+                                            }
+
+                                            if (dealApproval.Count > 0)
+                                            {
+                                                if (dealApproval[0].BPPPaid == true)
+                                                {
+                                                    bBPPSelected = true;
+                                                }
+                                            }
+
+
+
+                                                                <input type="checkbox" name="chk-@item.AftermarketId" id="chk-@item.AftermarketId" onclick="javascript:showBPPAlert(this.id, '@deal.SalesAssociate1')" @(bBPPSelected == true ? "checked" : "")/>
+                                                                                <p id="warning-paydeduct">If checked, $50 will be removed<br /> from @deal.SalesAssociate1's pay.</p>
+                                                                                <input type="hidden" name="hdn-sales-associate-id" id="hdn-sales-associate-id" value="@deal.SalesAssociateId1"/>
+                                                            }
+                                                            else
+                                                            {
+                                                                var bItemSelected = false;
+
+                                                                switch (item.AftermarketId)
+                                                                {
+
+                                                                    case 2: //Nitrogen
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].NitrogenPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 3: //Zurichshield
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].ZurichShieldPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 4: // Select Protect
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].SelectProtectionPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 5: // Tire and Wheel
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].TireWheelPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 6: // Key Replacement 
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].KeyReplacementPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 7: //Windshield Protection
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].WindshieldProtectionPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 8: //Excess Wear and Tear
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].WearAndTearPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 9: //Secure Guard
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].SecureGuardPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 10: //Fitzgerald Total Package
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].FitzTotalPackagePaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 11: //Rust Inhibitor/Undercoating
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].RustInhibitUnderCoatPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 12: //Undercoating
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].UndercoatingPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 13: //Rust Inhibitor
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].RustInhibitorPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 14: //Ultimate Titanium - Data Dots
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].DataDotsPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 15: //Paint and Dent Repair
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].PaintDentPaid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 16: //Other Aftermarket 1
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].Miscellaneous1Paid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 17: //Other Aftermarket 2
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].Miscellaneous2Paid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 18:  //Other Aftermarket 3
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].Miscellaneous3Paid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                    case 19: //Other Aftermarket 4
+                                                                        if (dealApproval.Count > 0)
+                                                                        {
+                                                                            if (dealApproval[0].Miscellaneous4Paid == true)
+                                                                            {
+                                                                                bItemSelected = true;
+                                                                            }
+                                                                        }
+                                                                        break;
+
+                                                                }
+
+
+                                                                <input type="checkbox" name="chk-@item.AftermarketId" id="chk-@item.AftermarketId" @(bItemSelected == true ? "checked" : "") />
+                                                            }
+                                                        </td>
+                                                    </tr>
+
+                                                }
+                                            }
+
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-sm-4">
+                                <h4>Comments</h4>
+                                <textarea id="comments" name="comments" class="form-control"></textarea>
+
+                                <input type="hidden" name="dealkey" id="dealkey" value="@deal.DealKey" />
+                                <input type="hidden" name="associate" id="associate" value="@Model.AssociateId" />
+                                <input type="hidden" name="month" id="month" value="@Model.MonthId" />
+                                <input type="hidden" name="year" id="year" value="@Model.YearId" />
+                                @if (dealApproval.Count == 0)
+                                {
+                                    <input type="submit" value="Validate" id="submit" name="submit" class="btn btn-primary" style="margin-top:20px;" />
+                                }
+                                else if (dealApproval.Count > 0)
+                                {
+                                    <input type="submit" value="Re-Validate" id="submit" name="submit" class="btn btn-primary" style="margin-top:20px;" />
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                    <input id="btnToggleValidatedDeals" type="button" value="Show Validated Deals" class="btn btn-primary" style="" />
+                                    <div class="validated-deals" style="display:none;">
+                                    <h4>Deals Previously Validated</h4>
+                                    @foreach (var deal in Model.AftermarketDealDetails)
+                                    {
+                                        if (deal.ShowroomValidatedBy != null)
+                                        {
+                                            if (Model.DealApprovals.FindAll(x => x.DealKey == deal.DealKey).Count > 0)
+                                            {
+
+                                                using (Html.BeginForm())
+                                                {
+
+
+                                                <div class="row" style="border-bottom:1px solid #ddd; margin-bottom: 20px;">
+                                                    <div class="col-sm-12">
+
+                                                        <table class="table table-bordered table-striped" style="font-size:11px">
+                                                            <thead>
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th class="text-center">Deal #</th>
+                                                                    <th class="text-center">Stk #</th>
+                                                                    <th class="text-center">Cond</th>
+                                                                    <th class="text-center">Year</th>
+                                                                    <th class="text-center">Make</th>
+                                                                    <th class="text-center">Model</th>
+                                                                    <th class="text-center">Miles</th>
+                                                                    <th class="text-center">Bank</th>
+                                                                    <th class="text-center">Term</th>
+                                                                    <th class="text-center">Markup</th>
+
+                                                                    <th class="text-center">Total $</th>
+                                                                    <th class="text-center">Product $</th>
+                                                                    <th class="text-center">Title Due</th>
+                                                                    <th class="text-center">$ Due</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @{
+
+                                                                    var dealApproval = Model.DealApprovals.FindAll(x => x.DealKey == deal.DealKey);
+
+                                                                    var isHandy = "";
+                                                                    if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                                                    {
+                                                                        isHandy = "(H)";
+                                                                    }
+
+                                                                    decimal EligibleDealDollar = 0;
+                                                                    decimal EligibleProductDollar = 0;
+                                                                    var moneyDueBGColor = "";
+                                                                    decimal dealMoneyDue = 0;
+
+                                                                    var markup = deal.APR - deal.BuyRate;
+
+                                                                    //Check to see if they are 10 years or older, have over 150K miles or just getting credit for Revenue
+                                                                    var currentYear = Model.YearId;
+
+                                                                    decimal otherItemAmount = 0;
+                                                                    if (deal.AftermarketItems.Count > 0)
+                                                                    {
+                                                                        foreach (var item in deal.AftermarketItems)
+                                                                        {
+                                                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)
+                                                                            {
+                                                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                otherItemAmount += profit;
+                                                                            }
+                                                                        }
+
+                                                                    }
+
+
+
+                                                                    EligibleDealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);//
+                                                                    EligibleProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); //
+
+
+
+                                                                    var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                                                    if (itemMoneyDue != null)
+                                                                    {
+                                                                        foreach (var money in itemMoneyDue)
+                                                                        {
+                                                                            dealMoneyDue += money.ControlBalance;
+                                                                        }
+                                                                    }
+
+
+
+                                                                    if (dealMoneyDue > 0)
+                                                                    {
+                                                                        moneyDueBGColor = "background-color: #d2070769";
+                                                                    }
+
+
+
+                                                                }
+                                                                <tr>
+
+                                                                    <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                                                    <td class="text-center">@deal.VehicleStockNumber</td>
+                                                                    <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                                                    <td class="text-center">@deal.VehicleYear</td>
+                                                                    <td class="text-center">@deal.VehicleMake</td>
+                                                                    <td class="text-center">@deal.VehicleCarline</td>
+                                                                    <td class="text-center">@deal.VehicleMiles</td>
+                                                                    <td class="text-center">@deal.VehicleBank</td>
+                                                                    <td class="text-center">@deal.VehicleTerm</td>
+                                                                    <td class="text-center">@markup.ToString("0.##")</td>
+
+                                                                    <td class="text-center">@EligibleDealDollar.ToString("C", noSymbol)</td>
+                                                                    <td class="text-center">@EligibleProductDollar.ToString("C", noSymbol)</td>
+                                                                    <td class="text-center"></td>
+                                                                    <td class="text-center">@dealMoneyDue.ToString("C", nfi)</td>
+                                                                </tr>
+
+                                                            </tbody>
+
+                                                        </table>
+
+                                                        <div class="row">
+                                                            <div class="col-sm-3">
+                                                                <table class="table table-bordered table-striped" style="font-size:11px">
+                                                                    <thead>
+                                                                        <tr style="background-color:#d9edf7">
+                                                                            <th class="text-center">Core Products</th>
+                                                                            <th class="text-center">Profit</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="text-center">Finance Income</td>
+                                                                            <td class="text-center">@deal.FinanceIncomeAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-finance" id="hdnAmount-finance" value="@deal.FinanceIncomeAmount" /></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-center">Service Contract</td>
+                                                                            <td class="text-center">@deal.VSCAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-service" id="hdnAmount-service" value="@deal.VSCAmount" /></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-center">Maintenance Contract</td>
+                                                                            <td class="text-center">@deal.MaintenanceAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-maintenance" id="hdnAmount-maintenance" value="@deal.MaintenanceAmount" /></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td class="text-center">GAP</td>
+                                                                            <td class="text-center">@deal.GAPAmount.ToString("C", nfi)<input type="hidden" name="hdnAmount-GAP" id="hdnAmount-GAP" value="@deal.GAPAmount" /></td>
+                                                                        </tr>
+                                                                        @foreach (var coreItem in Model.FIPayscaleAftermarket)
+                                                                        {
+                                                                            if (coreItem.AftermarketOrder > 4 && coreItem.CoreItem == true && coreItem.PaidItem == true)
+                                                                            {
+                                                                                var aftermarketItem = deal.AftermarketItems.Find(x => x.AftermarketId == coreItem.AftermarketIndex);
+
+                                                                                decimal profit = 0;
+                                                                                if (aftermarketItem != null)
+                                                                                {
+                                                                                    profit = aftermarketItem.AftermarketPrice - aftermarketItem.AftermarketCost;
+
+                                                                                }
+
+                                                                                switch (coreItem.AftermarketIndex)
+                                                                                {
+                                                                                    case 2:
+                                                                                        if (deal.NitrogenAmount > 0)
+                                                                                        {
+                                                                                            profit = deal.NitrogenAmount;
+                                                                                        }
+                                                                                        break;
+                                                                                    case 3:
+                                                                                        if (deal.ZurichAmount > 0)
+                                                                                        {
+                                                                                            profit = deal.ZurichAmount;
+                                                                                        }
+                                                                                        break;
+                                                                                    case 5:
+                                                                                        if (deal.TireWheelAmount > 0)
+                                                                                        {
+                                                                                            profit = deal.TireWheelAmount;
+                                                                                        }
+                                                                                        break;
+                                                                                    case 9:
+                                                                                        if (deal.SecurityAmount > 0)
+                                                                                        {
+                                                                                            profit = deal.SecurityAmount;
+                                                                                        }
+                                                                                        break;
+                                                                                }
+                                                                                <tr>
+                                                                                    <td class="text-center">@coreItem.AftermarketItem</td>
+                                                                                    <td class="text-center">@profit.ToString("C", nfi)<input type="hidden" name="hdnAmount-@coreItem.AftermarketIndex" id="hdnAmount-@coreItem.AftermarketIndex" value="@profit" /><input type="checkbox" name="chk-@coreItem.AftermarketIndex" id="chk-@coreItem.AftermarketIndex" checked style="visibility:hidden;width:1px;height:1px" /></td>
+                                                                                </tr>
+                                                                            }
+                                                                        }
+
+
+
+                                                                    </tbody>
+                                                                </table>
+
+
+                                                            </div>
+
+
+
+                                                            <div class="col-sm-5">
+                                                                <table class="table table-bordered table-striped" style="font-size:11px">
+                                                                    <thead>
+                                                                        <tr style="background-color:#d9edf7">
+                                                                            <th class="text-center">Other Products</th>
+                                                                            <th class="text-center">Profit</th>
+                                                                            <th class="text-center">Sold By F and I</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @if (deal.AftermarketItems.Count > 0)
+                                                                        {
+
+                                                                            foreach (var item in deal.AftermarketItems)
+                                                                            {
+                                                                                var coreItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                                                if (item.AftermarketId == 1)
+                                                                                {
+                                                                                    coreItem.CoreItem = false;
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    coreItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
+                                                                                }
+                                                                                if (item.AftermarketId != 3 && item.AftermarketId != 20 && coreItem.CoreItem == false)
+                                                                                {
+                                                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                                    <tr>
+                                                                                        <td class="text-center">@item.AftermarketName</td>
+                                                                                        <td class="text-center">@profit.ToString("C", nfi)<input type="hidden" name="hdnAmount-@item.AftermarketId" id="hdnAmount-@item.AftermarketId" value="@profit" /></td>
+                                                                                        <td class="text-center">
+                                                                                            @if (item.AftermarketId == 1)
+                                                                                            {
+                                                                                                var bBPPSelected = false;
+
+                                                                                                if (item.AftermarketCost == .02m)
+                                                                                                {
+                                                                                                    bBPPSelected = true;
+                                                                                                }
+
+                                                                                                if (dealApproval.Count > 0)
+                                                                                                {
+                                                                                                    if (dealApproval[0].BPPPaid == true)
+                                                                                                    {
+                                                                                                        bBPPSelected = true;
+                                                                                                    }
+                                                                                                }
+
+
+
+                                                                                                <input type="checkbox" name="chk-@item.AftermarketId" id="chk-@item.AftermarketId" onclick="javascript:showBPPAlert(this.id, '@deal.SalesAssociate1')" @(bBPPSelected == true ? "checked" : "") />
+                                                                                                <p id="warning-paydeduct">If checked, $50 will be removed<br /> from @deal.SalesAssociate1's pay.</p>
+                                                                                                <input type="hidden" name="hdn-sales-associate-id" id="hdn-sales-associate-id" value="@deal.SalesAssociateId1" />
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                var bItemSelected = false;
+
+                                                                                                switch (item.AftermarketId)
+                                                                                                {
+
+                                                                                                    case 2: //Nitrogen
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].NitrogenPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 3: //Zurichshield
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].ZurichShieldPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 4: // Select Protect
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].SelectProtectionPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 5: // Tire and Wheel
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].TireWheelPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 6: // Key Replacement
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].KeyReplacementPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 7: //Windshield Protection
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].WindshieldProtectionPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 8: //Excess Wear and Tear
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].WearAndTearPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 9: //Secure Guard
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].SecureGuardPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 10: //Fitzgerald Total Package
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].FitzTotalPackagePaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 11: //Rust Inhibitor/Undercoating
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].RustInhibitUnderCoatPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 12: //Undercoating
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].UndercoatingPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 13: //Rust Inhibitor
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].RustInhibitorPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 14: //Ultimate Titanium - Data Dots
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].DataDotsPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 15: //Paint and Dent Repair
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].PaintDentPaid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 16: //Other Aftermarket 1
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].Miscellaneous1Paid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 17: //Other Aftermarket 2
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].Miscellaneous2Paid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 18:  //Other Aftermarket 3
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].Miscellaneous3Paid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                    case 19: //Other Aftermarket 4
+                                                                                                        if (dealApproval.Count > 0)
+                                                                                                        {
+                                                                                                            if (dealApproval[0].Miscellaneous4Paid == true)
+                                                                                                            {
+                                                                                                                bItemSelected = true;
+                                                                                                            }
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                }
+
+
+                                                                                                <input type="checkbox" name="chk-@item.AftermarketId" id="chk-@item.AftermarketId" @(bItemSelected == true ? "checked" : "") />
+                                                                                            }
+                                                                                        </td>
+                                                                                    </tr>
+
+                                                                                }
+                                                                            }
+
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="col-sm-4">
+                                                                <h4>Comments</h4>
+                                                                <textarea id="comments" name="comments" class="form-control"></textarea>
+
+                                                                <input type="hidden" name="dealkey" id="dealkey" value="@deal.DealKey" />
+                                                                <input type="hidden" name="associate" id="associate" value="@Model.AssociateId" />
+                                                                <input type="hidden" name="month" id="month" value="@Model.MonthId" />
+                                                                <input type="hidden" name="year" id="year" value="@Model.YearId" />
+                                                                @if (dealApproval.Count == 0)
+                                                                {
+                                                                    <input type="submit" value="Validate" id="submit" name="submit" class="btn btn-primary" style="margin-top:20px;" />
+                                                                }
+                                                                else if (dealApproval.Count > 0)
+                                                                {
+                                                                    <input type="submit" value="Re-Validate" id="submit" name="submit" class="btn btn-primary" style="margin-top:20px;" />
+                                                                }
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+
+                                                                                        }
+
+                                                                                    }
+
+                                                                                }
+                                                                            }
+                                                                            </div>
+
+
+
+
+
+
+
+
+                                                                        }
+
+
+
+                                                                    }
+
+
+                @section scripts
+{
+
+                    <script type="text/javascript">
+
+                        $(document).ready(function () {
+                            $('#btnToggleValidatedDeals').click(function () {
+
+
+                                if ($('#btnToggleValidatedDeals').val() == 'Show Validated Deals') {
+                                    $('.validated-deals').show();
+                                    $('#btnToggleValidatedDeals').val("Hide Validated Deals");
+                                }
+                                else {
+                                    $('.validated-deals').hide();
+                                    $('#btnToggleValidatedDeals').val("Show Validated Deals");
+                                }
+
+                            });
+                        });
+
+
+                        function showBPPAlert(id, assoc) {
+                            var checkBox = document.getElementById(id);
+
+                            if (checkBox.checked == true) {
+                                alert("By confirming you sold BPP on this deal, you will be deducting $50 from Associate " + assoc + "'s pay.");
+                            }
+                        }
+                    </script>
+
+
+
+                }

@@ -388,12 +388,12 @@ namespace SalesCommission.Business
         public static IEnumerable<Store> FIManagerStores = new List<Store> {
             new Store {
                 StoreId = "FOC",
-                Name = "Annapolis Cadillac/Volkswagen"
+                Name = "Annapolis"
             },
-            new Store {
-                StoreId = "FOC",
-                Name = "Annapolis Mazda/Mitsubishi"
-            },
+            //new Store {
+            //    StoreId = "FOC",
+            //    Name = "Annapolis Mazda/Mitsubishi"
+            //},
             new Store {
                 StoreId = "FTN",
                 Name = "Chambersburg"
@@ -407,13 +407,13 @@ namespace SalesCommission.Business
                 Name = "Frederick"
             },
             new Store {
-                StoreId = "FHT",
-                Name = "Hagerstown Chrysler"
+                StoreId = "FHT,FHG",
+                Name = "Hagerstown"
             },
-            new Store {
-                StoreId = "FHG",
-                Name = "Hagerstown GM"
-            },
+            //new Store {
+            //    StoreId = "FHG",
+            //    Name = "Hagerstown GM"
+            //},
             new Store {
                 StoreId = "LFO",
                 Name = "Gaithersburg Hyundai/Subaru"
@@ -427,13 +427,13 @@ namespace SalesCommission.Business
                 Name = "Lexington Park"
             },
             new Store {
-                StoreId = "FBS",
-                Name = "Rockville Nicholson"
+                StoreId = "FBS,CDO",
+                Name = "Rockville"
             },
-            new Store {
-                StoreId = "CDO",
-                Name = "Rockville Hyundai"
-            },
+            //new Store {
+            //    StoreId = "CDO",
+            //    Name = "Rockville Hyundai"
+            //},
             new Store {
                 StoreId = "WDC",
                 Name = "Wheaton"
@@ -1242,6 +1242,15 @@ namespace SalesCommission.Business
             new Payscale {
                 PayscaleID = "COMFRED",
                 Name = "Compensation Plan - Frederick"
+            }
+            ,
+            new Payscale {
+                PayscaleID = "COMCHBG",
+                Name = "Compensation Plan - Chambersburg"
+            },
+            new Payscale {
+                PayscaleID = "COMHGR",
+                Name = "Compensation Plan - Hagerstown"
             }
         };
 

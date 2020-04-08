@@ -272,17 +272,24 @@ else
                         hoursPayAmount = Math.Round((hoursWorked * @associate.AssociateWage));
                     }
 
+                    var minimumAmount = 2500;
+
+                    if (associate.AssociateLocation == "FAM" || associate.AssociateLocation == "FTN")
+                    {
+                        minimumAmount = 2000;
+                    }
+
                     // Minimum Salary, if person worked 180 hours, then minimum is $2500, less that 180hours then (# hours/180)*2500
                     if (hoursWorked >= 180)
                     {
-                        if (hoursPayAmount < 2500)
+                        if (hoursPayAmount < minimumAmount)
                         {
-                            hoursPayAmount = 2500;
+                            hoursPayAmount = minimumAmount;
                         }
                     }
                     else
                     {
-                        var calculatedSalary = (hoursWorked / 180) * 2500;
+                        var calculatedSalary = (hoursWorked / 180) * minimumAmount;
                         if (hoursPayAmount < calculatedSalary)
                         {
                             hoursPayAmount = calculatedSalary;
@@ -423,6 +430,14 @@ else
                                     valueInternet = "I";
                                 }
 
+                                if (associate.AssociateLocation == "FTN")
+                                {
+                                    if(deal.ServiceContractAmount < 500)
+                                    {
+                                        deal.ServiceContractCount = 0;
+                                    }
+                                }
+
                                 if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
                                 {
                                     deal.FinanceCount = dealValue;
@@ -453,6 +468,18 @@ else
                                 else if (associate.AssociateLocation == "FOC" && deal.VehicleCondition == "NEW" && (deal.MakeCode == "CD" || deal.MakeCode == "VW") && deal.BPPAmount < 375)
                                 {
                                     valueInternet = "I";
+                                }
+
+                                if (associate.AssociateLocation == "FTN")
+                                {
+                                    if ((deal.VehicleCondition == "NEW" && deal.BPPAmount >= 495) || (deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.VehicleCondition == "USED" && deal.BPPAmount >= 295 && deal.VehiclePrice < 10000) || (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000))
+                                    {
+                                        valueInternet = "V";
+                                    }
+                                    else
+                                    {
+                                        valueInternet = "I";
+                                    }
                                 }
 
                                 var dealPayscale = associate.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
@@ -649,6 +676,63 @@ else
                                                 }
 
                                             }
+                                            else if (associate.AssociateLocation == "FTN")
+                                            {
+
+                                                if (item.AftermarketId >= 16) // FOR CHAMERBERSBURG ONLY, 16-19 are 1 point for every $100 profit, then fractions
+                                                {
+                                                    var profitPerPoint = (profit / 100);
+
+                                                    var wholePoints = Math.Truncate(profitPerPoint);
+                                                    var partialProfit = (profitPerPoint - Math.Truncate(profitPerPoint)) * 100;
+
+                                                    decimal partialPoints = 0;
+
+                                                    if (partialProfit >= 25 && partialProfit < 50)
+                                                    {
+                                                        partialPoints = .25m;
+                                                    }
+                                                    else if (partialProfit >= 50 && partialProfit < 100)
+                                                    {
+                                                        partialPoints = .5m;
+                                                    }
+
+                                                    points = wholePoints + partialPoints;
+
+                                                }
+                                                else
+                                                {
+                                                    if (item.AftermarketProfitPerPoint == 0)
+                                                    {
+                                                        item.AftermarketProfitPerPoint = 1;
+                                                    }
+
+                                                    //FOR CHAMBERSBURG -- ZurichShield is 3 points
+                                                    if (item.AftermarketId == 3)
+                                                    {
+                                                        item.AftermarketPoints = 3;
+                                                    }
+
+                                                    if (item.AftermarketProfitPerPoint > 0)
+                                                    {
+                                                        var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                        if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                        {
+                                                            points = 0;
+                                                        }
+                                                        else if (profitPerPoint < item.AftermarketPoints)
+                                                        {
+                                                            points = Math.Truncate(profitPerPoint);
+                                                        }
+                                                        else
+                                                        {
+                                                            points = item.AftermarketPoints;
+                                                        }
+                                                    }
+                                                }
+
+                                            }
                                             else
                                             {
                                                 if (item.AftermarketProfitPerPoint == 0)
@@ -739,18 +823,30 @@ else
                         @{
 
 
+                            var newPercent = "0";
+                            var usedPercent = "0";
 
-                            var newPercent = (totalNewCount / dealIndex).ToString("P", nfi);
-                            var usedPercent = (totalUsedCount / dealIndex).ToString("P", nfi);
+                            var BPPPercent = "0";
+                            var TradePercent = "0";
+                            var FinancePercent = "0";
+                            var ServicePercent = "0";
+                            var MaintenancePercent = "0";
+                            var GAPPercent = "0";
+                            var AftermarketPercent = "0";
 
-                            var BPPPercent = (totalBPPCount / dealIndex).ToString("P", nfi);
-                            var TradePercent = (totalTradeCount / dealIndex).ToString("P", nfi);
-                            var FinancePercent = (totalFinanceCount / dealIndex).ToString("P", nfi);
-                            var ServicePercent = (totalServiceCount / dealIndex).ToString("P", nfi);
-                            var MaintenancePercent = (totalMaintenanceCount / dealIndex).ToString("P", nfi);
-                            var GAPPercent = (totalGAPCount / dealIndex).ToString("P", nfi);
-                            var AftermarketPercent = (totalAftermarketItemsCount / dealIndex).ToString("P", nfi);
+                            if (dealIndex > 0)
+                            {
+                                newPercent = (totalNewCount / dealIndex).ToString("P", nfi);
+                                usedPercent = (totalUsedCount / dealIndex).ToString("P", nfi);
 
+                                BPPPercent = (totalBPPCount / dealIndex).ToString("P", nfi);
+                                TradePercent = (totalTradeCount / dealIndex).ToString("P", nfi);
+                                FinancePercent = (totalFinanceCount / dealIndex).ToString("P", nfi);
+                                ServicePercent = (totalServiceCount / dealIndex).ToString("P", nfi);
+                                MaintenancePercent = (totalMaintenanceCount / dealIndex).ToString("P", nfi);
+                                GAPPercent = (totalGAPCount / dealIndex).ToString("P", nfi);
+                                AftermarketPercent = (totalAftermarketItemsCount / dealIndex).ToString("P", nfi);
+                            }
                             decimal totalTooFewVSC = 0;
 
                             //if (totalServiceCount > 0 && totalServiceCount < 3)

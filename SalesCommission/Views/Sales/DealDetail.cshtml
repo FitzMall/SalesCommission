@@ -11,6 +11,43 @@
         applicationPath = "";
     }
 
+    var MoneyDue = SalesCommission.Business.SqlQueries.GetAllMoneyDue();
+
+    var bMoneyDue = false;
+    decimal MoneyDueAmount = 0;
+    int MoneyDueDays = 0;
+    var MoneyDueFrom = "";
+
+
+    if(Model.StockNumer != null)
+    {
+        var dealMoneyDue = MoneyDue.FindAll(x => x.StockNumber.Trim() == Model.StockNumer.Trim());
+        if(dealMoneyDue != null)
+        {
+
+            foreach(var item in dealMoneyDue)
+            {
+                MoneyDueAmount += item.ControlBalance;
+                MoneyDueDays = item.ScheduleDays;
+
+                if (item.DueFrom.Contains("106"))
+                {
+                    MoneyDueFrom = "Bank";
+                }
+                else if (item.DueFrom.Contains("111"))
+                {
+                    MoneyDueFrom = "Customer";
+                }
+
+            }
+
+            if(MoneyDueAmount > 0)
+            {
+                bMoneyDue = true;
+            }
+
+        }
+    }
     System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
     nfi.CurrencyDecimalDigits = 0;
 
@@ -56,6 +93,14 @@
         <h2>Details for Deal @Model.sl_dealkey <a href="@applicationPath/Sales/?locationId=@Model.LocationCode&monthId=@Model.sl_dealmonth.Month&yearId=@Model.sl_dealmonth.Year" class="btn btn-primary" style="float:right">Return to Dashboard</a></h2>
     </div>
 </div>
+    if (bMoneyDue)
+    {
+        <div class="row" style="margin:5px 0px; background-color:#d2070769">
+            <div class="col-md-12 text-center">
+                <h3 style="padding-top:10px;">There is @MoneyDueAmount.ToString("C",nfi) due from the @MoneyDueFrom over @MoneyDueDays days on this deal!</h3>
+            </div>
+        </div>
+    }
 <div class="row">
     <div class="col-md-12">
         <table class="table table-bordered">
@@ -163,7 +208,9 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
         @Html.HiddenFor(n => n.sl_dxHoldback)
         @Html.HiddenFor(n => n.sl_certificationLevel)
 
-        var includedTotalPre = Convert.ToDecimal(Model.sl_BPP) + Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + Model.sl_Adjustments + Model.sl_CertFee + Model.sl_otheram;
+        //var includedTotalPre = Convert.ToDecimal(Model.sl_BPP) + Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + Model.sl_Adjustments + Model.sl_CertFee + Model.sl_otheram;
+
+        var includedTotalPre = Model.sl_Adjustments + Model.sl_CertFee;
 
         <input type="hidden" name="includedTotalPre" id="includedTotalPre" value="@includedTotalPre" />
 
@@ -179,7 +226,9 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         Model.sl_gap +
                         Model.sl_financeInc +
                         Model.sl_bankFee +
-                        Model.sl_ftdpcadj;
+                        Model.sl_ftdpcadj +
+                        Convert.ToDecimal(Model.sl_BPP) +
+                        Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + +Model.sl_otheram;
                 //+ Model.sl_Adjustments;
                 // + Model.sl_CertFee;
                 //+
@@ -196,7 +245,10 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             Model.PreviousSavedValues.sl_gap +
                             Model.PreviousSavedValues.sl_financeInc +
                             Model.PreviousSavedValues.sl_bankFee +
-                        Model.PreviousSavedValues.sl_ftdpcadj;
+                            Model.PreviousSavedValues.sl_ftdpcadj +
+                            Convert.ToDecimal(Model.PreviousSavedValues.sl_BPP) +
+                            Model.PreviousSavedValues.sl_maint + Model.PreviousSavedValues.sl_insurance + Model.PreviousSavedValues.sl_leaseWnT + Model.PreviousSavedValues.sl_etch + Model.PreviousSavedValues.sl_otheram;
+
                     //+ Model.PreviousSavedValues.sl_Adjustments;
                     //       + Model.PreviousSavedValues.sl_CertFee;
                     //+
@@ -309,11 +361,11 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         }*@
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="border-bottom:1px solid #eee;border-top:1px solid #eee; padding: 5px 0">                    
                     <label for="financeManager" class="col-sm-5 control-label" style="padding-top:0px">Finance Manager</label>
                     <div class="col-sm-7">
 
-                        @Html.TextBoxFor(n => n.sl_FinMgr, new { @class = "form-control", placeholder = "" })
+                        @Html.TextBoxFor(n => n.sl_FinMgr, new { @class = "form-control", @readonly = "readonly", placeholder = "" })
                         @foreach (var deal in Model.DealHistory)
                         {
                             if (deal.sl_FinMgr != Model.sl_FinMgr)
@@ -327,14 +379,31 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         {
                             <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_FinMgr</label>
                         }*@
+                        <label>Note: You must select a Manager below to validate</label>
 
-                        @*@Html.DropDownListFor(n => n.sl_FinMgr, Model.FinanceManagers, new { @class = "form-control form-inline" })
-                        @if(Model.PreviousSavedValues != null && Model.sl_FinMgr != Model.PreviousSavedValues.sl_FinMgr)
-            {
-                var selected = Model.FinanceManagers.First(o => o.Value == Model.PreviousSavedValues.sl_FinMgr);
+                        @if (Model.LocationCode == "FHT" || Model.LocationCode == "FHG")
+                        {
+                            @Html.DropDownListFor(n => n.sl_FinanceManagerNumber, Model.FinanceManagers, new { @class = "form-control form-inline chosen-select-deselect " })
+                        }
+                        else
+                        {
+                            @Html.DropDownListFor(n => n.sl_FinanceManagerNumber, Model.FinanceManagers, new { @class = "form-control form-inline chosen-select-deselect ", required = "" })
+                        }
+                       
+                        @if(Model.PreviousSavedValues != null && Model.sl_FinanceManagerNumber != Model.PreviousSavedValues.sl_FinanceManagerNumber && Model.PreviousSavedValues.sl_FinanceManagerNumber != null)
+                        {
+                            var selected = new SelectListItem();
+                            try
+                            {
+                                selected = Model.FinanceManagers.First(o => o.Value == Model.PreviousSavedValues.sl_FinanceManagerNumber);
+                            }
+                            catch(Exception ex)
+                            {
+                                selected.Text = "";
+                            }
 
                             <label style="background-color:#fcf8e3;margin-left:13px" > @selected.Text </label>
-                        }*@
+                        }
                     </div>
                 </div>
                            
@@ -730,11 +799,6 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         }*@
                     </div>
                 </div>
-            </div>
-            <div class="form-horizontal form-shaded">
-                <div class="form-group text-center">
-                    <h4>Items included in Front Gross</h4>
-                </div>
                 <div class="form-group">
                     <label for="bpp" class="col-sm-5 control-label">BPP</label>
                     <div class="col-sm-7">
@@ -746,11 +810,11 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_BPP</label>
                                 break;
                             }
-                        } 
+                        }
                         @*@if (Model.PreviousSavedValues != null && Model.sl_BPP != Model.PreviousSavedValues.sl_BPP)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_BPP </label>
-                        }*@
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_BPP </label>
+                }*@
                     </div>
                 </div>
                 <div class="form-group">
@@ -764,11 +828,11 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_maint</label>
                                 break;
                             }
-                        } 
+                        }
                         @*@if (Model.PreviousSavedValues != null && Model.sl_maint != Model.PreviousSavedValues.sl_maint)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_maint </label>
-                        }*@
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_maint </label>
+                }*@
                     </div>
                 </div>
                 <div class="form-group">
@@ -782,19 +846,19 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_insurance</label>
                                 break;
                             }
-                        } 
+                        }
                         @*@if (Model.PreviousSavedValues != null && Model.sl_insurance != Model.PreviousSavedValues.sl_insurance)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_insurance </label>
-                        }*@
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_insurance </label>
+                }*@
                     </div>
                 </div>
                 @*<div class="form-group">
-                <label for="pdr" class="col-sm-5 control-label">PDR</label>
-                <div class="col-sm-7">
-                    <input type="text" class="form-control" id="pdr" placeholder="0.00">
-                </div>
-            </div>*@
+            <label for="pdr" class="col-sm-5 control-label">PDR</label>
+            <div class="col-sm-7">
+                <input type="text" class="form-control" id="pdr" placeholder="0.00">
+            </div>
+        </div>*@
                 <div class="form-group">
                     <label for="tirewheel" class="col-sm-5 control-label">Tire/Wheel</label>
                     <div class="col-sm-7">
@@ -806,11 +870,11 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_leaseWnT</label>
                                 break;
                             }
-                        } 
+                        }
                         @*@if (Model.PreviousSavedValues != null && Model.sl_leaseWnT != Model.PreviousSavedValues.sl_leaseWnT)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_leaseWnT</label>
-                        }*@
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_leaseWnT</label>
+                }*@
                     </div>
                 </div>
                 <div class="form-group">
@@ -824,14 +888,68 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_etch</label>
                                 break;
                             }
-                        } 
+                        }
 
                         @*@if (Model.PreviousSavedValues != null && Model.sl_etch != Model.PreviousSavedValues.sl_etch)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_etch</label>
-                        }*@
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_etch</label>
+                }*@
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <label for="aftermarket" class="col-sm-5 control-label" style="padding-top:0px">Other Aftermarket</label>
+                <div class="col-sm-7">
+                    @Html.TextBoxFor(n => n.sl_otheram, new { @class = "form-control", placeholder = "0.00" })
+
+                    @foreach (var deal in Model.DealHistory)
+                    {
+                        if (deal.sl_otheram != Model.sl_otheram)
+                        {
+                            <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_otheram</label>
+                            break;
+                        }
+                    }
+
+                    @*@if (Model.PreviousSavedValues != null && Model.sl_otheram != Model.PreviousSavedValues.sl_otheram)
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_otheram</label>
+                }*@
+                </div>
+            </div>
+            <div class="form-group text-center">
+
+                <label class="aftermarket-toggle">Aftermarket Details <i class="fa fa-chevron-down" aria-hidden="true"></i></label>
+
+                <div class="col-sm-12 aftermarket-entry" style="display:none;">
+                    <table class="table table-bordered" style="background-color:white;">
+                        <thead>
+                            <tr style="background-color:#d9edf7">
+                                <th class="text-center">Item</th>
+                                <th class="text-center">Sell Price</th>
+                                <th class="text-center">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.AftermarketItems)
+                            {
+                                <tr>
+                                    <th class="text-center">@item.AftermarketName</th>
+                                    <th class="text-center">@item.AftermarketPrice</th>
+                                    <th class="text-center">@item.AftermarketPoints</th>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-horizontal form-shaded">
+                <div class="form-group text-center">
+                    <h4>Items included in Front Gross</h4>
+                </div>
+                
                 <div class="form-group">
                     <label for="adjustments" class="col-sm-5 control-label">Adjustments</label>
                     <div class="col-sm-7">
@@ -871,53 +989,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="aftermarket" class="col-sm-5 control-label" style="padding-top:0px">Other Aftermarket</label>
-                    <div class="col-sm-7">
-                        @Html.TextBoxFor(n => n.sl_otheram, new { @class = "form-control", placeholder = "0.00" })
-
-                        @foreach (var deal in Model.DealHistory)
-                        {
-                            if (deal.sl_otheram != Model.sl_otheram)
-                            {
-                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_otheram</label>
-                                break;
-                            }
-                        }
-
-                        @*@if (Model.PreviousSavedValues != null && Model.sl_otheram != Model.PreviousSavedValues.sl_otheram)
-                        {
-                            <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_otheram</label>
-                        }*@
-                    </div>
-                </div>
-                <div class="form-group text-center">
-
-                    <label class="aftermarket-toggle">Aftermarket Details <i class="fa fa-chevron-down" aria-hidden="true"></i></label>
-
-                    <div class="col-sm-12 aftermarket-entry" style="display:none;">
-                        <table class="table table-bordered" style="background-color:white;">
-                            <thead>
-                                <tr style="background-color:#d9edf7">
-                                    <th class="text-center">Item</th>
-                                    <th class="text-center">Sell Price</th>
-                                    <th class="text-center">Points</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.AftermarketItems)
-                                {
-                                    <tr>
-                                        <th class="text-center">@item.AftermarketName</th>
-                                        <th class="text-center">@item.AftermarketPrice</th>
-                                        <th class="text-center">@item.AftermarketPoints</th>
-                                    </tr>
-                                }
-                            </tbody>
-
-                        </table>
-                    </div>
-                </div>
+                
             </div>
 
         </div>

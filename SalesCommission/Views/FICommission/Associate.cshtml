@@ -20,6 +20,13 @@
     rev.PercentDecimalDigits = 1;
 
 
+    System.Globalization.NumberFormatInfo noSymbol = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    noSymbol.CurrencyDecimalDigits = 0;
+    noSymbol.PercentDecimalDigits = 1;
+    noSymbol.PercentPositivePattern = 1;
+    noSymbol.CurrencySymbol = "";
+    noSymbol.CurrencyGroupSeparator = "";
+
     decimal TotalDrawAmount = 0;
 
     var bIsAssociate = false;
@@ -30,10 +37,12 @@
         bShowValues = true;
     }
 
-    var bShowLevel = false;
-    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 24))
+    var bShowPay = false;
+    DateTime today = DateTime.Today;
+    DateTime endOfMonth = new DateTime(Model.YearId, Model.MonthId, DateTime.DaysInMonth(Model.YearId, Model.MonthId));
+    if (DateTime.Now > endOfMonth)
     {
-        bShowLevel = true;
+        bShowPay = true;
     }
 
     if ((bool)Session["IsCommissionAdmin"] == true)
@@ -55,7 +64,8 @@
 }
 
 @section CSS
-{
+            {
+<link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
 
     <script src="~/Scripts/jquery-ui.js"></script>
     <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
@@ -67,6 +77,18 @@
 
     .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
         padding: 6px;
+    }
+
+    .percent-highlight {
+        background-color: yellow;
+    }
+
+    th.text-center.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    td.text-center.extra-right {
+        border-right: 3px solid #dddddd;
     }
 
     @@media print {
@@ -108,6 +130,71 @@
             margin-bottom: 0px;
         }
 
+        .col-print-1 {
+            width: 8%;
+            float: left;
+        }
+
+        .col-print-2 {
+            width: 16%;
+            float: left;
+        }
+
+        .col-print-3 {
+            width: 25%;
+            float: left;
+        }
+
+        .col-print-4 {
+            width: 33%;
+            float: left;
+        }
+
+        .col-print-5 {
+            width: 42%;
+            float: left;
+        }
+
+        .col-print-6 {
+            width: 50%;
+            float: left;
+        }
+
+        .col-print-7 {
+            width: 58%;
+            float: left;
+        }
+
+        .col-print-8 {
+            width: 66%;
+            float: left;
+        }
+
+        .col-print-9 {
+            width: 75%;
+            float: left;
+        }
+
+        .col-print-10 {
+            width: 83%;
+            float: left;
+        }
+
+        .col-print-11 {
+            width: 92%;
+            float: left;
+        }
+
+        .col-print-12 {
+            width: 100%;
+            float: left;
+        }
+
+        .percent-highlight {
+            background-color: lightgrey;
+            -webkit-print-color-adjust: exact;
+        }
+
         @@page {
             size: portrait;
             margin: 2cm;
@@ -129,10 +216,10 @@
 {
     <h2>The associate you requested could not be found.</h2>
 }
-@*else if (Model.AssociateInformation.AssociateDeals == null)
-{
-    <h2>The associate you requested has no deals for this month and year.</h2>
-}*@
+    @*else if (Model.AssociateInformation.AssociateDeals == null)
+        {
+            <h2>The associate you requested has no deals for this month and year.</h2>
+        }*@
 else if ((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
 {
     <h2>You are not authorized to view this Associate's Commission</h2>
@@ -154,7 +241,8 @@ else
     previousMonthYearId = previousMonth.Year;
     nextMonthYearId = nextMonth.Year;
 
-    decimal TotalAdjustments = 0;
+    decimal TotalRevenueAdjustments = 0;
+    decimal TotalCommissionAdjustments = 0;
 
     <div class="row" style="margin-top:15px;">
         <div class="col-md-8">
@@ -172,16 +260,36 @@ else
         <div class="col-xs-3">
             <p><strong>Hire Date:</strong> @Model.AssociateInformation.AssociateHireDate.ToShortDateString()</p>
             <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartment</p>
+            @if(Model.FIPayscales != null && Model.FIPayscales.Count > 0)
+            {
+                <p><strong>PayScale:</strong> @Model.FIPayscales[0].PlanName</p>
+            }
+        </div>
+        <div class="col-xs-5">
+            &nbsp;
+        </div>
+        <div class="col-xs-4 text-right">
+            @if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
+            {
+                <select id="associate-select" class="form-control chosen-select">
+                    <option>Go To Associate...</option>
+                    @foreach (var associate in Model.FIManagerList)
+
+                    {
+                        <option value="@applicationPath/FICommission/Associate/@associate.AssociateLocation/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@associate.AssociateFullName</option>
+                    }
+                </select>
+            }
         </div>
     </div>
     <div class="row">
         <div class="col-md-6 text-left">
-            <a href="@applicationPath/FICommission/Associate/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
+            <a href="@applicationPath/FICommission/Associate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
         </div>
         <div class="col-md-6 text-right">
             @if (nextMonth <= DateTime.Now)
             {
-                <a href="@applicationPath/FICommission/Associate/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
+                <a href="@applicationPath/FICommission/Associate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
             }
         </div>
     </div>
@@ -192,276 +300,471 @@ else
     </div>
     <div class="row">
         <div class="col-xs-12">
-    <h4>Monthly Summary</h4>
-    <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
-        <thead>
+            <h4>Monthly Summary</h4>
+            <table class="table table-bordered table-striped" style="font-size:12px;" id="section1">
+                <thead>
 
-            <tr style="background-color:#d9edf7;font-size:11px;">                
-                <th class="text-center extra-right">Total<br />Deals</th>
-                <th class="text-center extra-right">Eligible<br />Deals</th>
-                <th class="text-center">VSC %</th>
-                <th class="text-center extra-right">VSC $ per<br />Item</th>
-                <th class="text-center">GAP % of<br/>Finance</th>
-                <th class="text-center extra-right">GAP $ per<br />Item</th>
-                <th class="text-center">Finance %</th>
-                <th class="text-center extra-right">Avg Finance<br />Reserve</th>
-                <th class="text-center">Maint %</th>
-                <th class="text-center extra-right">Maint $<br />Per Item</th>
-                <th class="text-center">Zurich %</th>
-                <th class="text-center extra-right">Zurich $<br />Per Item</th>
-                <th class="text-center">Total<br />Gross</th>
-                <th class="text-center">Total $<br />Per Deal</th>
-                <th class="text-center">Product $<br />Per Deal</th>
-                <th class="text-center"></th>
-                <th class="text-center">Other Item Total Dollars</th>
-                <th class="text-center">% of E<br/>Contract</th>
-                <th class="text-center">% Deals<br/>Funded<br/>7 Days</th>
-            </tr>
+                    <tr style="background-color:#d9edf7;font-size:11px;">
+                        <th class="text-center">Total<br />Deals</th>
+                        <th class="text-center">Eligible<br />Deals</th>
+                        <th class="text-center">SR<br />UNV<br />Deals</th>
+                        <th class="text-center extra-right">F &amp; I<br />UNV<br />Deals</th>
+                        <th class="text-center">VSC %</th>
+                        <th class="text-center extra-right">VSC $ per<br />Item</th>
+                        <th class="text-center">Maint %</th>
+                        <th class="text-center extra-right">Maint $<br />Per Item</th>
+                        <th class="text-center">Lease W&T %</th>
+                        <th class="text-center extra-right">Lease W&T $<br />Per Item</th>
+                        <th class="text-center">GAP % of<br />Finance</th>
+                        <th class="text-center extra-right">GAP $ per<br />Item</th>
+                        <th class="text-center">Finance %</th>
+                        <th class="text-center extra-right">Avg Finance<br />Reserve</th>
+                        <th class="text-center">Zurich %</th>
+                        <th class="text-center extra-right">Zurich $<br />Per Item</th>
+                        <th class="text-center">Total<br />Gross</th>
+                        <th class="text-center">Total $<br />Per Deal</th>
+                        <th class="text-center">Product $<br />Per Deal</th>
+                        <th class="text-center"></th>
+                        <th class="text-center">Other Item Total Dollars</th>
+                        <th class="text-center">$ Due</th>
+                        <th class="text-center">BPP<br />Checkoff</th>
+                        @*
+                            <th class="text-center">% of E<br/>Contract</th>
+                            <th class="text-center">% Deals<br/>Funded<br/>7 Days</th>*@
+                    </tr>
 
-        </thead>
-        <tbody>
-            @{ 
-                decimal TotalGross = 0;
-                decimal TotalFinance = 0;
-                decimal TotalService = 0;
-                decimal TotalMaintenance = 0;
-                decimal TotalGAP = 0;
-                decimal TotalZurich = 0;
+                </thead>
+                <tbody>
+                    @{
+                        decimal TotalGross = 0;
+                        decimal TotalFinance = 0;
+                        decimal TotalService = 0;
+                        decimal TotalMaintenance = 0;
+                        decimal TotalGAP = 0;
+                        decimal TotalZurich = 0;
+                        decimal TotalOther = 0;
+                        decimal TotalMoneyDue = 0;
+                        decimal TotalLeaseWandT = 0;
 
-                decimal TotalDeals = 0;
-                decimal TotalEligibleDeals = 0;
+                        decimal AverageFinance = 0;
+                        decimal AverageService = 0;
+                        decimal AverageMaintenance = 0;
+                        decimal AverageGAP = 0;
+                        decimal AverageZurich = 0;
+                        decimal AverageLeaseWandT = 0;
 
-                int FinanceCount = 0;
-                int ServiceCount = 0;
-                int MaintenanceCount = 0;
-                int GAPCount = 0;
-                int ZurichCount = 0;
+                        decimal TotalDeals = 0;
+                        decimal TotalEligibleDeals = 0;
 
-                double FinancePercent = 0;
-                double ServicePercent = 0;
-                double MaintenancePercent = 0;
-                double GAPPercent = 0;
-                double ZurichPercent = 0;
+                        int FinanceCount = 0;
+                        int ServiceCount = 0;
+                        int MaintenanceCount = 0;
+                        int GAPCount = 0;
+                        int ZurichCount = 0;
+                        int LeaseCount = 0;
+                        int LeaseWandTCount = 0;
 
-                decimal DollarPerCar = 0;
-                decimal ProductDollarPerCar = 0;
+                        double FinancePercent = 0;
+                        double ServicePercent = 0;
+                        double JustServicePercent = 0;
+                        double MaintenancePercent = 0;
+                        double GAPPercent = 0;
+                        double ZurichPercent = 0;
+                        double LeaseWandTPercent = 0;
 
+                        decimal TotalDollarPerDeal = 0;
+                        decimal ProductDollarPerDeal = 0;
 
-                if (Model.AftermarketDealDetails != null)
-                {
-                    foreach (var deal in Model.AftermarketDealDetails)
-                    {
-                        TotalGross += deal.DealGrossAmount;
+                        decimal TotalUnvalidated = 0;
+                        decimal TotalBPPValidated = 0;
+                        decimal ShowroomUnvalidated = 0;
 
-                        if (deal.FinanceIncomeAmount > 0)
+                        if (Model.AftermarketDealDetails != null)
                         {
-                            TotalFinance += deal.FinanceIncomeAmount;
-                            FinanceCount += 1;
+                            foreach (var deal in Model.AftermarketDealDetails)
+                            {
+                                if (deal.ShowroomValidatedBy == null)
+                                {
+                                    ShowroomUnvalidated += 1;
+                                }
+                                if (deal.ShowroomValidatedBy != null)
+                                {
+                                    //TotalGross += deal.DealGrossAmount;
+
+                                    var bHandy = false;
+                                    if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                    {
+                                        bHandy = true;
+                                    }
+
+                                    if (deal.FinanceIncomeAmount > 0)
+                                    {
+                                        TotalFinance += deal.FinanceIncomeAmount;
+                                        FinanceCount += 1;
+                                    }
+
+                                    if (deal.VSCAmount > 0)
+                                    {
+                                        TotalService += deal.VSCAmount;
+                                        ServiceCount += 1;
+                                    }
+
+                                    if (deal.MaintenanceAmount > 0)
+                                    {
+                                        TotalMaintenance += deal.MaintenanceAmount;
+                                        MaintenanceCount += 1;
+                                    }
+
+                                    if (deal.GAPAmount > 0)
+                                    {
+                                        TotalGAP += deal.GAPAmount;
+                                        GAPCount += 1;
+                                    }
+
+                                    if (deal.ZurichAmount > 0)
+                                    {
+                                        TotalZurich += deal.ZurichAmount;
+                                        ZurichCount += 1;
+                                    }
+
+                                    if (deal.VehicleCategory == "L")
+                                    {
+                                        LeaseCount += 1;
+                                    }
+
+                                    decimal otherItemAmount = 0;
+                                    if (deal.AftermarketItems.Count > 0)
+                                    {
+                                        foreach (var item in deal.AftermarketItems)
+                                        {
+                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                            {
+                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                otherItemAmount += profit;
+                                            }
+
+                                            if (item.AftermarketId == 8)
+                                            {
+                                                LeaseWandTCount += 1;
+                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                TotalLeaseWandT += profit;
+                                            }
+                                        }
+
+                                    }
+
+                                    TotalOther += otherItemAmount;
+
+                                    //Check to see if they are 10 years or older, have over 150K miles or just getting credit for Revenue
+                                    var currentYear = Model.YearId;
+
+                                    if (deal.VehicleYear != "")
+                                    {
+                                        var vehicleYear = Int32.Parse(deal.VehicleYear);
+                                        var vehicleMiles = Int32.Parse(deal.VehicleMiles);
+
+                                        if ((currentYear - vehicleYear) < 10 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 100000)
+                                        {
+                                            TotalEligibleDeals += 1;
+                                        }
+                                    }
+
+
+                                    //decimal dealMoneyDue = 0;
+
+                                    //var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                    //if (itemMoneyDue != null)
+                                    //{
+                                    //    foreach (var money in itemMoneyDue)
+                                    //    {
+                                    //        dealMoneyDue += money.ControlBalance;
+                                    //    }
+                                    //}
+
+                                    //TotalMoneyDue += dealMoneyDue;
+
+                                }
+
+                                TotalDeals = Model.AftermarketDealDetails.Count;
+                            }
+
+                            decimal totalDealMoneyDue = 0;
+
+                            var totalItemMoneyDue = Model.MoneyDue.FindAll(x => x.FIManagerNumber.Trim() == Model.AssociateId.Trim());
+
+                            if (totalItemMoneyDue != null)
+                            {
+                                foreach (var money in totalItemMoneyDue)
+                                {
+                                    totalDealMoneyDue += money.ControlBalance;
+                                }
+                            }
+
+                            TotalMoneyDue += totalDealMoneyDue;
+
+                            if (Model.DealApprovals != null)
+                            {
+                                TotalUnvalidated = Model.AftermarketDealDetails.Count - Model.DealApprovals.Count();
+
+                                var bppValidatedDeals = Model.DealApprovals.FindAll(x => x.BPPPaid == true);
+                                TotalBPPValidated = bppValidatedDeals.Count;
+                            }
+
+                            if (TotalEligibleDeals > 0)
+                            {
+                                FinancePercent = (double)FinanceCount / (double)TotalEligibleDeals;
+                                JustServicePercent = ((double)ServiceCount) / (double)TotalEligibleDeals;
+                                ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
+                                MaintenancePercent = (double)MaintenanceCount / (double)TotalEligibleDeals;
+                                GAPPercent = (double)GAPCount / (double)(FinanceCount - LeaseCount);
+                                ZurichPercent = (double)ZurichCount / (double)TotalEligibleDeals;
+                                LeaseWandTPercent = (double)LeaseWandTCount / (double)LeaseCount;
+
+                                TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther+ TotalLeaseWandT) / TotalEligibleDeals;
+                                ProductDollarPerDeal = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT) / TotalEligibleDeals;
+                            }
+
+                            TotalGross = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT);
+
+                            if (FinanceCount > 0)
+                            {
+                                AverageFinance = TotalFinance / FinanceCount;
+                            }
+
+                            if (ServiceCount > 0)
+                            {
+                                AverageService = TotalService / ServiceCount;
+                            }
+
+                            if (MaintenanceCount > 0)
+                            {
+                                AverageMaintenance = TotalMaintenance / MaintenanceCount;
+                            }
+
+                            if (GAPCount > 0)
+                            {
+                                AverageGAP = TotalGAP / GAPCount;
+                            }
+
+                            if (ZurichCount > 0)
+                            {
+                                AverageZurich = TotalZurich / ZurichCount;
+                            }
+
+                            if (LeaseWandTCount > 0)
+                            {
+                                AverageLeaseWandT = TotalLeaseWandT / LeaseWandTCount;
+                            }
                         }
-
-                        if (deal.VSCAmount > 0)
-                        {
-                            TotalService += deal.VSCAmount;
-                            ServiceCount += 1;
-                        }
-
-                        if (deal.MaintenanceAmount > 0)
-                        {
-                            TotalMaintenance += deal.MaintenanceAmount;
-                            MaintenanceCount += 1;
-                        }
-
-                        if (deal.GAPAmount > 0)
-                        {
-                            TotalGAP += deal.GAPAmount;
-                            GAPCount += 1;
-                        }
-
-                        if(deal.ZurichAmount > 0)
-                        {
-                            TotalZurich += deal.ZurichAmount;
-                            ZurichCount += 1;
-                        }
-
-                        var currentYear = Model.YearId;
-                        var vehicleYear = Int32.Parse(deal.VehicleYear);
-
-                        if((currentYear - vehicleYear) < 10)
-                        {
-                            TotalEligibleDeals += 1;
-                        }
-
                     }
+                    <tr>
 
-                    TotalDeals = Model.AftermarketDealDetails.Count;
+                        <td class="text-center">@TotalDeals</td>
+                        <td class="text-center">@TotalEligibleDeals</td>
+                        <td class="text-center">@ShowroomUnvalidated</td>
+                        <td class="text-center extra-right"><a href="@applicationPath/FICommission/ValidateDeals/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@Model.MonthId/@Model.YearId">@TotalUnvalidated</a></td>
 
-                    if (TotalEligibleDeals > 0)
-                    {
-                        FinancePercent = (double)FinanceCount / (double)TotalEligibleDeals;
-                        ServicePercent = (double)ServiceCount / (double)TotalEligibleDeals;
-                        MaintenancePercent = (double)MaintenanceCount / (double)TotalEligibleDeals;
-                        GAPPercent = (double)GAPCount / (double)FinanceCount;
+                        <td class="text-center">@JustServicePercent.ToString("P", nfi)<br />(@ServiceCount)</td>
+                        <td class="text-center extra-right">@AverageService.ToString("C", nfi)</td>
 
-                        DollarPerCar = TotalGross / TotalEligibleDeals;
-                        ProductDollarPerCar = (TotalFinance + TotalService + TotalMaintenance + TotalGAP) / TotalEligibleDeals;
-                    }
-                }
-            }
-                <tr>
+                        <td class="text-center">@MaintenancePercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
+                        <td class="text-center extra-right">@AverageMaintenance.ToString("C", nfi)</td>
+                        
+                        <td class="text-center">@LeaseWandTPercent.ToString("P", nfi)<br />(@LeaseWandTCount of @LeaseCount)</td>
+                        <td class="text-center extra-right">@AverageLeaseWandT.ToString("C", nfi)</td>
 
-                    <td class="text-center extra-right">@TotalDeals</td>
-                    <td class="text-center extra-right">@TotalEligibleDeals</td>
-                    <td class="text-center">@ServicePercent.ToString("P", nfi)<br />(@ServiceCount)</td>
-                    <td class="text-center extra-right">@TotalService.ToString("C", nfi)</td>
+                        <td class="text-center">@GAPPercent.ToString("P", nfi)<br />(@GAPCount)</td>
+                        <td class="text-center extra-right">@AverageGAP.ToString("C", nfi)</td>
 
-                    <td class="text-center">@GAPPercent.ToString("P", nfi)<br />(@GAPCount)</td>
-                    <td class="text-center extra-right">@TotalGAP.ToString("C", nfi)</td>
-
-                    <td class="text-center">@FinancePercent.ToString("P", nfi)<br />(@FinanceCount)</td>
-                    <td class="text-center extra-right">@TotalFinance.ToString("C", nfi)</td>
-
-                    <td class="text-center">@MaintenancePercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
-                    <td class="text-center extra-right">@TotalMaintenance.ToString("C", nfi)</td>
-
-                    <td class="text-center">@ZurichPercent.ToString("P", nfi)<br />(@MaintenanceCount)</td>
-                    <td class="text-center extra-right">@TotalZurich.ToString("C", nfi)</td>
+                        <td class="text-center">@FinancePercent.ToString("P", nfi)<br />(@FinanceCount)</td>
+                        <td class="text-center extra-right">@AverageFinance.ToString("C", nfi)</td>
 
 
-                    <td class="text-center">@TotalGross.ToString("C", nfi)</td>
-                    <td class="text-center">@DollarPerCar.ToString("C", nfi)</td>
-                    <td class="text-center">@ProductDollarPerCar.ToString("C", nfi)</td>
+                        <td class="text-center">@ZurichPercent.ToString("P", nfi)<br />(@ZurichCount)</td>
+                        <td class="text-center extra-right">@AverageZurich.ToString("C", nfi)</td>
 
-                    <td class="text-center"></td>
-                    <td class="text-center"></td>
-                    <td class="text-center"></td>
-                    <td class="text-center"></td>
-                </tr>
-            
-        </tbody>
-        </table>
+
+                        <td class="text-center">@TotalGross.ToString("C", nfi)</td>
+                        <td class="text-center">@TotalDollarPerDeal.ToString("C", nfi)</td>
+                        <td class="text-center">@ProductDollarPerDeal.ToString("C", nfi)</td>
+
+                        <td class="text-center"></td>
+                        <td class="text-center">@TotalOther.ToString("C", nfi)</td>
+                        <td class="text-center">@TotalMoneyDue.ToString("C", nfi)</td>
+                        <td class="text-center">@TotalBPPValidated</td>
+                    </tr>
+
+                </tbody>
+            </table>
 
         </div>
     </div>
     <div class="row">
-@{
+        @{
 
-    decimal DollarPerCarPay = 0;
-    decimal ProductDollarPerCarPay = 0;
-    decimal VSCPercentPay = 0;
-    decimal GAPPercentPay = 0;
+            decimal DollarPerCarPay = 0;
+            decimal ProductDollarPerCarPay = 0;
+            decimal VSCPercentPay = 0;
+            decimal GAPPercentPay = 0;
 
-    var payTypes = Model.FIPayscales.Select(x => x.PayTypeCode).Distinct().ToList();
+            var payTypes = Model.FIPayscales.Select(x => x.PayTypeCode).Distinct().ToList();
 
-    foreach (var payType in payTypes)
-    {
-        var settings = Model.FIPayscales.FindAll(x => x.PayTypeCode == payType).OrderBy(x => x.Order).ToList();
+            foreach (var payType in payTypes)
+            {
+                var settings = Model.FIPayscales.FindAll(x => x.PayTypeCode == payType).OrderBy(x => x.Order).ToList();
 
-        if (settings != null)
-        {
-            <div class="col-sm-2">
-                <p style="font-size:12px;"><strong>@settings[0].PayTypeName</strong></p>
+                if (settings != null)
+                {
+                    <div class="col-sm-2 col-print-2">
+                        <p style="font-size:12px;"><strong>@settings[0].PayTypeName</strong></p>
 
-                @{
-                    var payTypeCode = settings[0].PayTypeCode;
+                        @{
+                            var payTypeCode = settings[0].PayTypeCode;
 
 
 
-                    double calculatedValue = 0;
-                    var levelId = 0;
+                            double calculatedValue = 0;
+                            var levelId = 0;
 
-                    switch (payTypeCode)
-                    {
-                        case "DOLLARPERCAR":
-                            calculatedValue = (double)DollarPerCar;
-                            foreach (var setting in settings)
+                            switch (payTypeCode)
                             {
-                                if (calculatedValue >= (double)setting.LevelAmount)
-                                {
-                                    levelId = setting.Order;
-                                    DollarPerCarPay = setting.PayAmount;
+                                case "DOLLARPERCAR":
+                                    calculatedValue = (double)TotalDollarPerDeal;
+                                    foreach (var setting in settings)
+                                    {
+                                        if (calculatedValue >= (double)setting.LevelAmount)
+                                        {
+                                            levelId = setting.Order;
+                                            DollarPerCarPay = setting.PayAmount;
+                                            break;
+                                        }
+                                    }
                                     break;
+                                case "PRODUCTDOLLARPERCAR":
+                                    calculatedValue = (double)ProductDollarPerDeal;
+                                    foreach (var setting in settings)
+                                    {
+                                        if (calculatedValue >= (double)setting.LevelAmount)
+                                        {
+                                            levelId = setting.Order;
+                                            ProductDollarPerCarPay = setting.PayAmount;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                case "VSCPERCENT":
+                                    calculatedValue = ServicePercent;
+                                    foreach (var setting in settings)
+                                    {
+                                        if ((calculatedValue * 100) >= (double)setting.LevelAmount)
+                                        {
+                                            levelId = setting.Order;
+                                            VSCPercentPay = setting.PayAmount;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                case "GAPPERCENT":
+                                    calculatedValue = GAPPercent;
+                                    foreach (var setting in settings)
+                                    {
+                                        if ((calculatedValue * 100) >= (double)setting.LevelAmount)
+                                        {
+                                            levelId = setting.Order;
+                                            GAPPercentPay = setting.PayAmount;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                            }
+
+                        }
+
+                        <table class="table table-bordered" style="font-size:11px">
+                            <thead>
+                                <tr style="background-color:#d9edf7;">
+                                    <th>Level Amount</th>
+                                    <th>Pay %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var setting in settings)
+                                {
+                                    var backgroundClass = "";
+                                    var levelIndicator = "";
+
+                                    if (setting.Order == levelId)
+                                    {
+                                        backgroundClass = "percent-highlight";
+                                        levelIndicator = " *";
+                                    }
+                                    <tr class="@backgroundClass">
+                                        <td>
+                                            @if (setting.PayType == "DOLLAR")
+                                            {
+                                                @:$@setting.LevelAmount and above
+                                    }
+                                            else
+                                            {
+                                                @:@setting.LevelAmount% and above
+                                    }
+                                        </td>
+                                        <td>@setting.PayAmount @levelIndicator</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                                 }
                             }
-                            break;
-                        case "PRODUCTDOLLARPERCAR":
-                            calculatedValue = (double)ProductDollarPerCar;
-                            foreach (var setting in settings)
-                            {
-                                if (calculatedValue >= (double)setting.LevelAmount)
-                                {
-                                    levelId = setting.Order;
-                                    ProductDollarPerCarPay = setting.PayAmount;
-                                    break;
-                                }
-                            }
-                            break;
-                        case "VSCPERCENT":
-                            calculatedValue = ServicePercent;
-                            foreach (var setting in settings)
-                            {
-                                if ((calculatedValue * 100) >= (double) setting.LevelAmount)
-                                {
-                                    levelId = setting.Order;
-                                    VSCPercentPay = setting.PayAmount;
-                                    break;
-                                }
-                            }
-                            break;
-                        case "GAPPERCENT":
-                            calculatedValue = GAPPercent;
-                            foreach (var setting in settings)
-                            {
-                                if ((calculatedValue * 100) >= (double) setting.LevelAmount)
-                                {
-                                    levelId = setting.Order;
-                                    GAPPercentPay = setting.PayAmount;
-                                    break;
-                                }
-                            }
-                            break;
-                    }
 
-                }
-
+        }
+        <div class="col-sm-4 col-print-4">
+            <h4>Adjustments</h4>
+            @if (Model.FIAdjustments != null)
+            {
                 <table class="table table-bordered" style="font-size:11px">
                     <thead>
                         <tr style="background-color:#d9edf7;">
-                            <th>Level Amount</th>
-                            <th>Pay %</th>
+                            <th>Type</th>
+                            <th>Line</th>
+                            <th>Amount</th>
+                            <th>Deal #</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var setting in settings)
+                        @foreach (var adjustment in Model.FIAdjustments)
                         {
-                            var backgroundColor = "";
-                            if(setting.Order == levelId)
+                            if (adjustment.AdjustmentAmount != 0)
                             {
-                                backgroundColor = "background-color:yellow";
-                            }
-                            <tr style="@backgroundColor">
+                            <tr>
+                                <td>@adjustment.AdjustmentType</td>
+                                <td>@adjustment.AdjustmentLine</td>
+                                <td>@adjustment.AdjustmentAmount.ToString("C", nfi)</td>
                                 <td>
-                                    @if (setting.PayType == "DOLLAR")
-                                    {
-                                        @:$@setting.LevelAmount and above
-                                    }
-                                    else
-                                    {
-                                        @:@setting.LevelAmount% and above
-                                    }
-                                </td>                                
-                                <td>@setting.PayAmount</td>
+                                    <a href="@applicationPath/Sales/DealDetail/@adjustment.DealNumber" target="_blank">@adjustment.DealNumber</a>
+                                </td> 
                             </tr>
+
+                                if(adjustment.AdjustmentLine == "REVENUE")
+                                {
+                                    TotalRevenueAdjustments += adjustment.AdjustmentAmount;
+                                }
+                                if (adjustment.AdjustmentLine == "COMMISSION")
+                                {
+                                    TotalCommissionAdjustments += adjustment.AdjustmentAmount;
+                                }
+                            }
                         }
                     </tbody>
                 </table>
-            </div>
-        }
-    }
 
-}
-        <div class="col-sm-4">
-           <h4>Adjustments</h4>
-
+                if ((bool)Session["IsCommissionAdmin"] == true)
+                {
+                    <h5><a href="@applicationPath/FICommission/Adjustments/@Model.AssociateInformation.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId" target="_blank"><i class="fa fa-pencil" aria-hidden="true"></i> Edit Adjustments</a></h5>
+                }
+            }
         </div>
     </div>
 
@@ -474,7 +777,7 @@ else
         @if ((bool)Session["IsCommissionAdmin"] == true || DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 1).AddMonths(1))
         {
             <div class="col-xs-3">
-                <h4>Advances (Draws)</h4>
+                <h4>Amount Paid</h4>
 
                 <table class="table table-bordered table-striped" style="font-size:12px">
                     <thead>
@@ -485,9 +788,9 @@ else
                     </thead>
                     <tbody>
                         @if (Model.AssociateInformation.AssociateDraws != null)
-                    {
-                        foreach (var draw in Model.AssociateInformation.AssociateDraws)
                         {
+                            foreach (var draw in Model.AssociateInformation.AssociateDraws)
+                            {
                                 <tr>
                                     <td>@draw.DrawDate.ToShortDateString()</td>
                                     <td>@draw.DrawAmount.ToString("C")</td>
@@ -550,27 +853,39 @@ else
             }
         </div>
 
-        <div class="col-xs-6">        
+        <div class="col-xs-6">
             <h4>Monthly Commission</h4>
+            <h5>Salary: @Model.ManagerSalary.ToString("C")</h5>
+            @{
 
-            @{ 
                 decimal TotalGrossAndAdjustments = 0;
                 decimal TotalCommissionGross = 0;
-                decimal GrossPercent = .8M;
+                decimal FinalCommissionGross = 0;
+                decimal GrossPercent = (Model.GrossPercentagePaid / 100);
                 decimal TotalPercentPay = 0;
 
+                decimal TotalSalaryDrawAmount = 0;
+                decimal MontlySalary = Model.ManagerSalary;
+
+                TotalSalaryDrawAmount = ((TotalDrawAmount * -1) - MontlySalary) * -1;
+                if(TotalSalaryDrawAmount > 0)
+                {
+                    TotalSalaryDrawAmount = 0; //Only show draw amount if less than 0
+                }
                 TotalPercentPay = DollarPerCarPay + ProductDollarPerCarPay + VSCPercentPay + GAPPercentPay;
 
-                TotalGrossAndAdjustments = TotalGross + TotalAdjustments;
+                TotalGrossAndAdjustments = TotalGross + TotalRevenueAdjustments;
                 TotalCommissionGross = (TotalGrossAndAdjustments * GrossPercent);
 
-                decimal TotalDollarPerCarPay = TotalCommissionGross * (DollarPerCarPay / 100);
-                decimal TotalProductDollarPerCarPay = TotalCommissionGross * (ProductDollarPerCarPay / 100);
-                decimal TotalVSCPay = TotalCommissionGross * (VSCPercentPay / 100);
-                decimal TotalGAPPay = TotalCommissionGross * (GAPPercentPay / 100);
+                FinalCommissionGross = TotalCommissionGross + TotalCommissionAdjustments;
+
+                decimal TotalDollarPerCarPay = FinalCommissionGross * (DollarPerCarPay / 100);
+                decimal TotalProductDollarPerCarPay = FinalCommissionGross * (ProductDollarPerCarPay / 100);
+                decimal TotalVSCPay = FinalCommissionGross * (VSCPercentPay / 100);
+                decimal TotalGAPPay = FinalCommissionGross * (GAPPercentPay / 100);
 
                 decimal TotalPay = 0;
-                TotalPay = TotalDollarPerCarPay + TotalProductDollarPerCarPay + TotalVSCPay + TotalGAPPay;
+                TotalPay = TotalDollarPerCarPay + TotalProductDollarPerCarPay + TotalVSCPay + TotalGAPPay + TotalSalaryDrawAmount + TotalBonusAmount;
 
             }
             <table class="table table-bordered" style="font-size:12px;">
@@ -585,12 +900,12 @@ else
                     <tr>
                         <td><strong>Total Gross</strong></td>
                         <td></td>
-                        <td class="text-right">@TotalGross.ToString("C",rev)</td>
+                        <td class="text-right">@TotalGross.ToString("C", rev)</td>
                     </tr>
                     <tr>
-                        <td><strong>Adjustments</strong></td>
+                        <td><strong>Revenue Adjustments</strong></td>
                         <td></td>
-                        <td class="text-right">@TotalAdjustments.ToString("C", rev)</td>
+                        <td class="text-right">@TotalRevenueAdjustments.ToString("C", rev)</td>
                     </tr>
                     <tr>
                         <td><strong>Sub Total</strong></td>
@@ -599,172 +914,957 @@ else
                     </tr>
                     <tr style="border-bottom: 3px double">
                         <td><strong>Commission Gross</strong></td>
-                        <td class="text-right">80%</td>
+                        <td class="text-right">@GrossPercent.ToString("P",rev)</td>
                         <td class="text-right">@TotalCommissionGross.ToString("C", rev)</td>
                     </tr>
                     <tr>
-                        <td><strong>Average $ Per Retail Unit</strong></td>
-                        <td class="text-right">@DollarPerCarPay%</td>
-                        <td class="text-right">@TotalDollarPerCarPay.ToString("C",rev)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Average Product $ Per Unit</strong></td>
-                        <td class="text-right">@ProductDollarPerCarPay%</td>
-                        <td class="text-right">@TotalProductDollarPerCarPay.ToString("C", rev)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>VSC Against Retail Sales</strong></td>
-                        <td class="text-right">@VSCPercentPay%</td>
-                        <td class="text-right">@TotalVSCPay.ToString("C", rev)</td>
+                        <td><strong>Commission Adjustments</strong></td>
+                        <td></td>
+                        <td class="text-right">@TotalCommissionAdjustments.ToString("C", rev)</td>
                     </tr>
                     <tr style="border-bottom: 3px double">
-                        <td><strong>GAP Against Finance Deals</strong></td>
-                        <td class="text-right">@GAPPercentPay%</td>
-                        <td class="text-right">@TotalGAPPay.ToString("C", rev)</td>
+                        <td><strong>Final Commission Gross</strong></td>
+                        <td class="text-right"></td>
+                        <td class="text-right">@FinalCommissionGross.ToString("C", rev)</td>
                     </tr>
+                    @if (bShowPay)
+                    {
+                        <tr>
+                            <td><strong>Average $ Per Retail Unit</strong></td>
+                            <td class="text-right">@DollarPerCarPay%</td>
+                            <td class="text-right">@TotalDollarPerCarPay.ToString("C", rev)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Product $ Per Unit</strong></td>
+                            <td class="text-right">@ProductDollarPerCarPay%</td>
+                            <td class="text-right">@TotalProductDollarPerCarPay.ToString("C", rev)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>VSC/Maint Against Retail Sales</strong></td>
+                            <td class="text-right">@VSCPercentPay%</td>
+                            <td class="text-right">@TotalVSCPay.ToString("C", rev)</td>
+                        </tr>
+                        <tr style="border-bottom: 3px double">
+                            <td><strong>GAP Against Finance Deals</strong></td>
+                            <td class="text-right">@GAPPercentPay%</td>
+                            <td class="text-right">@TotalGAPPay.ToString("C", rev)</td>
+                        </tr>
+                        if (TotalBonusAmount > 0)
+                        {
+                            <tr style="border-bottom: 3px double">
+                                <td><strong>Bonus Amount</strong></td>
+                                <td class="text-right"></td>
+                                <td class="text-right">@TotalBonusAmount.ToString("C", rev)</td>
+                            </tr>
+                        }
 
+                        if (TotalSalaryDrawAmount < 0)
+                        {
+                            <tr style="border-bottom: 3px double">
+                                <td><strong>Salary Draw</strong></td>
+                                <td class="text-right"></td>
+                                <td class="text-right">@TotalSalaryDrawAmount.ToString("C", rev)</td>
+                            </tr>
+                        }
+                    }
                 </tbody>
-                <tfoot>
-                    <tr style="background-color:#d9edf7">
-                        <th>Total</th>
-                        <th class="text-right">@TotalPercentPay%</th>
-                        <th class="text-right">@TotalPay.ToString("C", rev)</th>
-                    </tr>
-                </tfoot>
+                @if (bShowPay)
+                {
+                    <tfoot>
+                        <tr style="background-color:#d9edf7">
+                            <th>Total</th>
+                            <th class="text-right">@TotalPercentPay%</th>
+                            <th class="text-right">@TotalPay.ToString("C", rev)</th>
+                        </tr>
+                    </tfoot>
+                }
             </table>
         </div>
     </div>
-    <div class="row" @*style="page-break-after: always;"*@>
+    <div class="row" style="page-break-after: always;">
         <div class="col-md-12">
             <hr />
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <h4>@Model.AssociateInformation.AssociateLastName Deals</h4>
-            @if (Model.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
-            {
-                <table class="table table-bordered table-striped" style="font-size:11px">
-                    <thead>
-                        <tr style="background-color:#d9edf7">
-                            <th class="text-center">Deal #</th>
-                            <th class="text-center">Stk #</th>
-                            <th class="text-center">Cond</th>
-                            <th class="text-center">Year</th>
-                            <th class="text-center">Make</th>
-                            <th class="text-center">Model</th>
-                            <th class="text-center">Days</th>
-                            <th class="text-center">Miles</th>
-                            <th class="text-center">Deal Gross</th>
-                            <th class="text-center">Finance<br />Income</th>
-                            <th class="text-center">Service<br />Contract</th>
-                            <th class="text-center">Maint<br />Contract</th>
-                            <th class="text-center">GAP</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var deal in Model.AftermarketDealDetails)
-                        {
-                            var isHandy = "";
-                            if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+
+                if (TotalEligibleDeals != TotalDeals)
+                {
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4>@Model.AssociateInformation.AssociateLastName Non-Eligible Deals</h4>
+                            @if (Model.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
                             {
-                                isHandy = "(H)";
-                            }
 
-                            <tr>
+                                decimal NonEligibleFinanceTotal = 0;
+                                decimal NonEligibleServiceTotal = 0;
+                                decimal NonEligibleMaintenanceTotal = 0;
+                                decimal NonEligibleGAPTotal = 0;
+                                decimal NonEligibleZurichTotal = 0;
+                                decimal NonEligibleOtherTotal = 0;
+                                decimal NonEligibleMoneyDueTotal = 0;
+                                decimal dealIndex = 0;
 
-                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
-                                <td class="text-center">@deal.VehicleStockNumber</td>
-                                <td class="text-center">@deal.VehicleCondition @isHandy</td>
-                                <td class="text-center">@deal.VehicleYear</td>
-                                <td class="text-center">@deal.VehicleMake</td>
-                                <td class="text-center">@deal.VehicleCarline</td>
-                                <td class="text-center">@deal.VehicleDaysInStock</td>
-                                <td class="text-center">@deal.VehicleMiles</td>
-                                <td class="text-center">@deal.DealGrossAmount</td>
-                                <td class="text-center">@deal.FinanceIncomeAmount</td>
-                                <td class="text-center">@deal.VSCAmount</td>
-                                <td class="text-center">@deal.MaintenanceAmount</td>
-                                <td class="text-center">@deal.GAPAmount</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-    </div>
+                                <table class="table table-bordered table-striped" style="font-size:11px">
+                                    <thead>
+                                        <tr style="background-color:#d9edf7">
+                                            <th class="text-center"></th>
+                                            <th class="text-center">Deal #</th>
+                                            <th class="text-center">Val</th>
+                                            <th class="text-center">Stk #</th>
+                                            <th class="text-center">Cond</th>
+                                            <th class="text-center">Year</th>
+                                            <th class="text-center">Make</th>
+                                            <th class="text-center">Model</th>
+                                            <th class="text-center">Miles</th>
+                                            <th class="text-center">Bank</th>
+                                            <th class="text-center">Term</th>
+                                            <th class="text-center">Markup</th>
+                                            <th class="text-center">Finance<br />Income</th>
+                                            <th class="text-center">Service<br />Contract</th>
+                                            <th class="text-center">Maint<br />Contract</th>
+                                            <th class="text-center">GAP</th>
+                                            <th class="text-center">Zurich</th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center">Additional Items</th>
+                                            <th class="text-center">Total $</th>
+                                            <th class="text-center">Product $</th>
+                                            <th class="text-center">Money Due</th>
+                                            <th class="text-center">BPP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var deal in Model.AftermarketDealDetails)
+                                        {
+                                            if (deal.ShowroomValidatedBy != null)
+                                            {
+                                                dealIndex += 1;
+                                                var isHandy = "";
+                                                var bHandy = false;
+                                                if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                                {
+                                                    isHandy = "(H)";
+                                                    bHandy = true;
+                                                }
+
+                                                var bValidated = false;
+                                                var bppValidated = false;
+                                                var validDeal = Model.DealApprovals.Find(x => x.DealKey == deal.DealKey);
+
+                                                if (validDeal != null)
+                                                {
+                                                    bValidated = true;
+
+                                                    if (validDeal.BPPPaid == true)
+                                                    {
+                                                        bppValidated = true;
+                                                    }
+                                                }
+
+                                                //Check to see if they are 10 years or older, have over 150K miles or just getting credit for Revenue
+                                                var currentYear = Model.YearId;
+
+                                                //deal.BrandId == "AA"
+                                                if (deal.VehicleYear != "")
+                                                {
+
+                                                    var vehicleYear = Int32.Parse(deal.VehicleYear);
+                                                    var vehicleMiles = Int32.Parse(deal.VehicleMiles);
+                                                    
+                                                    if ((currentYear - vehicleYear) >= 10 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 100000)
+                                                    {
+
+                                                        decimal otherItemAmount = 0;
+                                                        if (deal.AftermarketItems.Count > 0)
+                                                        {
+                                                            foreach (var item in deal.AftermarketItems)
+                                                            {
+                                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                {
+                                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                    otherItemAmount += profit;
+                                                                }
+                                                            }
+
+                                                        }
+
+                                                        decimal NonEligibleDealDollar = 0;
+                                                        decimal NonEligibleProductDollar = 0;
+
+                                                        NonEligibleDealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);//
+                                                        NonEligibleProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); //
+
+                                                        decimal dealMoneyDue = 0;
+
+                                                        var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                                        if (itemMoneyDue != null)
+                                                        {
+                                                            foreach (var money in itemMoneyDue)
+                                                            {
+                                                                dealMoneyDue += money.ControlBalance;
+                                                            }
+                                                        }
+
+                                                        var moneyDueBGColor = "";
+                                                        var moneyDueWarning = deal.DealKey + " Details";
+
+                                                        if (dealMoneyDue > 0)
+                                                        {
+                                                            moneyDueBGColor = "background-color: #d2070769";
+                                                            moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal";
+                                                        }
+
+                                                        var markup = (deal.APR - deal.BuyRate).ToString("0.##");
+
+                                                        if (deal.VehicleCategory == "L")
+                                                        {
+                                                            markup = "L";
+                                                        }
+                                        <tr>
+                                            <td class="text-center">@dealIndex</td>
+                                            <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
+                                            <td class="text-center">
+                                                @if (bValidated)
+                                                {
+                                                    <i class="fa fa-check" aria-hidden="true"></i>
+                                                }
+                                            </td>
+                                            <td class="text-center">@deal.VehicleStockNumber</td>
+                                            <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                            <td class="text-center">@deal.VehicleYear</td>
+                                            <td class="text-center">@deal.VehicleMake</td>
+                                            <td class="text-center">@deal.VehicleCarline</td>
+                                            <td class="text-center">@deal.VehicleMiles</td>
+                                            <td class="text-center">@deal.VehicleBank</td>
+                                            <td class="text-center">@deal.VehicleTerm</td>
+                                            <td class="text-center">@markup</td>
+                                            <td class="text-center">@deal.FinanceIncomeAmount</td>
+                                            <td class="text-center">@deal.VSCAmount</td>
+                                            <td class="text-center">@deal.MaintenanceAmount</td>
+                                            <td class="text-center">@deal.GAPAmount</td>
+                                            <td class="text-center">@deal.ZurichAmount</td>
+                                            <td class="text-center"></td>
+                                            <td class="text-center">
+                                                @if (true)// (bValidated)
+                                                {
+                                                    <a href="" id="link-@deal.DealKey">@otherItemAmount.ToString("C", noSymbol)</a>
+                                                    if (deal.AftermarketItems.Count > 0)
+                                                    {
+                                                        <table class="table table-striped table-bordered" id="aftermarket-@deal.DealKey" style="display:none;position:absolute;width:40%;left: 25%; border:4px ridge #ccc">
+                                                            <thead>
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th>Item</th>
+                                                                    <th class="text-center">Profit</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var item in deal.AftermarketItems)
+                                                                {
+                                                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                    {
+                                                                        var profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                        <tr>
+                                                                            <td>@item.AftermarketName</td>
+                                                                            <td>@profit</td>
+                                                                        </tr>
+
+                                                                    }
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    }
+
+                                                    <script type="text/javascript">
+                                                        $('#link-@deal.DealKey').hover(function (ev) {
+                                                            $('#aftermarket-@deal.DealKey').stop(true, true).fadeIn();
+                                                        }, function (ev) {
+                                                            $('#aftermarket-@deal.DealKey').stop(true, true).fadeOut();
+                                                        }).mousemove(function (ev) {
+                                                            $('#aftermarket-@deal.DealKey').css({ left: ev.layerX + 10, top: ev.layerY + 10 });
+                                                        });
+                                                    </script>
+                                                }
+                                            </td>
+                                            <td class="text-center">@NonEligibleDealDollar.ToString("C", noSymbol)</td>
+                                            <td class="text-center">@NonEligibleProductDollar.ToString("C", noSymbol)</td>
+                                            <td class="text-center">@dealMoneyDue.ToString("C", nfi)</td>
+                                            <td class="text-center">
+                                                @if (bppValidated)
+                                                {
+                                                    <i class="fa fa-check" aria-hidden="true"></i>
+                                                }
+                                            </td>
+                                            @**@
+                                        </tr>
+
+                                                        NonEligibleFinanceTotal += deal.FinanceIncomeAmount;
+                                                        NonEligibleServiceTotal += deal.VSCAmount;
+                                                        NonEligibleMaintenanceTotal += deal.MaintenanceAmount;
+                                                        NonEligibleGAPTotal += deal.GAPAmount;
+                                                        NonEligibleZurichTotal += deal.ZurichAmount;
+                                                        NonEligibleOtherTotal += otherItemAmount;
+                                                        NonEligibleMoneyDueTotal += dealMoneyDue;
+                                                    }
+
+                                                }
+
                                             }
+                                        }
+                                    </tbody>
+                                    <tfoot>
+
+                                        @{
+
+                                            decimal NonEligibleDealDollarTotal = 0;
+                                            decimal NonEligibleProductDollarTotal = 0;
+
+                                            decimal NonEligibleDealDollarAverage = 0;
+                                            decimal NonEligibleProductDollarAverage = 0;
+
+
+                                            NonEligibleDealDollarTotal = (NonEligibleFinanceTotal + NonEligibleServiceTotal + NonEligibleMaintenanceTotal + NonEligibleGAPTotal + NonEligibleZurichTotal + NonEligibleOtherTotal);//
+                                            NonEligibleProductDollarTotal = (NonEligibleServiceTotal + NonEligibleMaintenanceTotal + NonEligibleGAPTotal + NonEligibleZurichTotal + NonEligibleOtherTotal); //
+
+                                            NonEligibleDealDollarAverage = NonEligibleDealDollarTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleProductDollarAverage = NonEligibleProductDollarTotal / (TotalDeals - TotalEligibleDeals);
+
+                                            decimal NonEligibleFinanceAverage = 0;
+                                            decimal NonEligibleServiceAverage = 0;
+                                            decimal NonEligibleMaintenanceAverage = 0;
+                                            decimal NonEligibleGAPAverage = 0;
+                                            decimal NonEligibleZurichAverage = 0;
+                                            decimal NonEligibleOtherAverage = 0;
+
+                                            NonEligibleFinanceAverage = NonEligibleFinanceTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleServiceAverage = NonEligibleServiceTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleMaintenanceAverage = NonEligibleMaintenanceTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleGAPAverage = NonEligibleGAPTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleZurichAverage = NonEligibleZurichTotal / (TotalDeals - TotalEligibleDeals);
+                                            NonEligibleOtherAverage = NonEligibleOtherTotal / (TotalDeals - TotalEligibleDeals);
+
+                                            decimal TotalNonEligibleDeals = (TotalDeals - TotalEligibleDeals);
+                                        }
+
+                                        <tr style="background-color:#d9edf7">
+                                            <th></th>
+                                            <th class="text-center">Totals</th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center">@TotalNonEligibleDeals Deals</th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center">@NonEligibleFinanceTotal<br />@NonEligibleFinanceAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleServiceTotal<br />@NonEligibleServiceAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleMaintenanceTotal<br />@NonEligibleMaintenanceAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleGAPTotal<br />@NonEligibleGAPAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleZurichTotal<br />@NonEligibleZurichAverage.ToString("C", nfi)</th>
+                                            <th class="text-center"></th>
+                                            <th class="text-center">@NonEligibleOtherTotal.ToString("C", noSymbol)<br />@NonEligibleOtherAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleDealDollarTotal<br />@NonEligibleDealDollarAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleProductDollarTotal<br />@NonEligibleProductDollarAverage.ToString("C", nfi)</th>
+                                            <th class="text-center">@NonEligibleMoneyDueTotal.ToString("C", nfi)</th>
+                                            <th class="text-center"></th>
+                                            @**@
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                            }
+                        </div>
+                    </div>
+                    <div class="row" style="page-break-after: always;">
+                        <div class="col-md-12">
+                            <hr />
+                        </div>
+                    </div>
+                                            }
+
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h4>@Model.AssociateInformation.AssociateLastName Eligible Deals <a href="@applicationPath/FICommission/ValidateDeals/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary" style="margin-top:0px;margin-bottom:15px;float:right">Validate Deals</a></h4>
+                                                    @if (Model.AftermarketDealDetails != null)// && associate.AssociateDeals.Count > 0)
+                                                    {
+
+                                                        decimal EligibleFinanceTotal = 0;
+                                                        decimal EligibleServiceTotal = 0;
+                                                        decimal EligibleMaintenanceTotal = 0;
+                                                        decimal EligibleGAPTotal = 0;
+                                                        decimal EligibleZurichTotal = 0;
+                                                        decimal EligibleOtherTotal = 0;
+                                                        decimal EligibleMoneyDueTotal = 0;
+                                                        decimal dealIndex = 0;
+
+                                                        <table class="table table-bordered table-striped" style="font-size:11px">
+                                                            <thead>
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">Deal #</th>
+                                                                    <th class="text-center">Val</th>
+                                                                    <th class="text-center">Stk #</th>
+                                                                    <th class="text-center">Cond</th>
+                                                                    <th class="text-center">Year</th>
+                                                                    <th class="text-center">Make</th>
+                                                                    <th class="text-center">Model</th>
+                                                                    <th class="text-center">Miles</th>
+                                                                    <th class="text-center">Bank</th>
+                                                                    <th class="text-center">Term</th>
+                                                                    <th class="text-center">Markup</th>
+                                                                    <th class="text-center">Finance<br />Income</th>
+                                                                    <th class="text-center">Service<br />Contract</th>
+                                                                    <th class="text-center">Maint<br />Contract</th>
+                                                                    <th class="text-center">GAP</th>
+                                                                    <th class="text-center">Zurich</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">Additional Items</th>
+                                                                    <th class="text-center">Total $</th>
+                                                                    <th class="text-center">Product $</th>
+                                                                    <th class="text-center">$ Due</th>
+                                                                    <th class="text-center">BPP</th>
+                                                                    @*<th class="text-center">Title Due</th>
+                                                                    *@
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var deal in Model.AftermarketDealDetails)
+                                                                {
+                                                                    if (deal.ShowroomValidatedBy != null)
+                                                                    {
+                                                                        dealIndex += 1;
+                                                                        var isHandy = "";
+                                                                        var bHandy = false;
+                                                                        if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                                                        {
+                                                                            isHandy = "(H)";
+                                                                            bHandy = true;
+                                                                        }
+
+                                                                        var bValidated = false;
+                                                                        var bppValidated = false;
+                                                                        var validDeal = Model.DealApprovals.Find(x => x.DealKey == deal.DealKey);
+
+                                                                        if (validDeal != null)
+                                                                        {
+                                                                            bValidated = true;
+
+                                                                            if (validDeal.BPPPaid == true)
+                                                                            {
+                                                                                bppValidated = true;
+                                                                            }
+                                                                        }
+
+                                                                        //Check to see if they are 10 years or older, have over 150K miles or just getting credit for Revenue
+                                                                        var currentYear = Model.YearId;
+
+
+                                                                        if (deal.VehicleYear != "")
+                                                                        {
+
+
+                                                                            var vehicleYear = Int32.Parse(deal.VehicleYear);
+                                                                            var vehicleMiles = Int32.Parse(deal.VehicleMiles);
+
+                                                                            if ((currentYear - vehicleYear) < 10 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 100000)
+                                                                            {
+                                                                                decimal otherItemAmount = 0;
+                                                                                if (deal.AftermarketItems.Count > 0)
+                                                                                {
+                                                                                    foreach (var item in deal.AftermarketItems)
+                                                                                    {
+                                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                                        {
+                                                                                            var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                            otherItemAmount += profit;
+                                                                                        }
+                                                                                    }
+
+                                                                                }
+
+                                                                                decimal EligibleDealDollar = 0;
+                                                                                decimal EligibleProductDollar = 0;
+
+                                                                                EligibleDealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);//
+                                                                                EligibleProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); //
+
+                                                                                decimal dealMoneyDue = 0;
+
+                                                                                var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                                                                if (itemMoneyDue != null)
+                                                                                {
+                                                                                    foreach (var money in itemMoneyDue)
+                                                                                    {
+                                                                                        dealMoneyDue += money.ControlBalance;
+                                                                                    }
+                                                                                }
+
+                                                                                var moneyDueBGColor = "";
+                                                                                var moneyDueWarning = deal.DealKey + " Details";
+
+                                                                                if (dealMoneyDue > 0)
+                                                                                {
+                                                                                    moneyDueBGColor = "background-color: #d2070769";
+                                                                                    moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal.";
+                                                                                }
+
+                                                                                var markup = (deal.APR - deal.BuyRate).ToString("0.##");
+
+                                                                                if (deal.VehicleCategory == "L")
+                                                                                {
+                                                                                    markup = "L";
+                                                                                }
+                                                                                <tr>
+                                                                                    <td class="text-center">@dealIndex</td>
+                                                                                    <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
+                                                                                    <td class="text-center">
+                                                                                        @if (bValidated)
+                                                                                        {
+                                                                                            <i class="fa fa-check" aria-hidden="true"></i>
+                                                                                        }
+                                                                                    </td>
+                                                                                    <td class="text-center">@deal.VehicleStockNumber</td>
+                                                                                    <td class="text-center">@deal.VehicleCondition @isHandy</td>
+                                                                                    <td class="text-center">@deal.VehicleYear</td>
+                                                                                    <td class="text-center">@deal.VehicleMake</td>
+                                                                                    <td class="text-center">@deal.VehicleCarline</td>
+                                                                                    <td class="text-center">@deal.VehicleMiles</td>
+                                                                                    <td class="text-center">@deal.VehicleBank</td>
+                                                                                    <td class="text-center">@deal.VehicleTerm</td>
+                                                                                    <td class="text-center">@markup</td>
+                                                                                    <td class="text-center">@deal.FinanceIncomeAmount</td>
+                                                                                    <td class="text-center">@deal.VSCAmount</td>
+                                                                                    <td class="text-center">@deal.MaintenanceAmount</td>
+                                                                                    <td class="text-center">@deal.GAPAmount</td>
+                                                                                    <td class="text-center">@deal.ZurichAmount</td>
+                                                                                    <td class="text-center"></td>
+                                                                                    <td class="text-center">
+                                                                                        @if (true)//(bValidated)
+                                                                                        {
+                                                                                            <a href="" id="link-@deal.DealKey">@otherItemAmount.ToString("C", noSymbol)</a>
+                                                                                            if (deal.AftermarketItems.Count > 0)
+                                                                                            {
+                                                                                                <table class="table table-striped table-bordered" id="aftermarket-@deal.DealKey" style="display:none;position:absolute;width:40%;left: 25%; border:4px ridge #ccc">
+                                                                                                    <thead>
+                                                                                                        <tr style="background-color:#d9edf7">
+                                                                                                            <th>Item</th>
+                                                                                                            <th class="text-center">Profit</th>
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        @foreach (var item in deal.AftermarketItems)
+                                                                                                        {
+                                                                                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                                                            {
+                                                                                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                                                                <tr>
+                                                                                                                    <td>@item.AftermarketName</td>
+                                                                                                                    <td>@profit</td>
+                                                                                                                </tr>
+
+                                                                                                            }
+                                                                                                        }
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            }
+
+                                                                                            <script type="text/javascript">
+                                                                                                $('#link-@deal.DealKey').hover(function (ev) {
+                                                                                                    $('#aftermarket-@deal.DealKey').stop(true, true).fadeIn();
+                                                                                                }, function (ev) {
+                                                                                                    $('#aftermarket-@deal.DealKey').stop(true, true).fadeOut();
+                                                                                                }).mousemove(function (ev) {
+                                                                                                    $('#aftermarket-@deal.DealKey').css({ left: ev.layerX + 10, top: ev.layerY + 10 });
+                                                                                                });
+                                                                                            </script>
+                                                                                        }
+                                                                                    </td>
+
+                                                                                    <td class="text-center">@EligibleDealDollar.ToString("C", noSymbol)</td>
+                                                                                    <td class="text-center">@EligibleProductDollar.ToString("C", noSymbol)</td>
+                                                                                    <td class="text-center">@dealMoneyDue.ToString("C", nfi)</td>
+                                                                                    <td class="text-center">
+                                                                                        @if (bppValidated)
+                                                                                        {
+                                                                                            <i class="fa fa-check" aria-hidden="true"></i>
+                                                                                        }
+                                                                                    </td>
+                                                                                    @*<td class="text-center"></td>
+                                                                                    *@
+                                                                                </tr>
+
+                                                                                EligibleFinanceTotal += deal.FinanceIncomeAmount;
+                                                                                EligibleServiceTotal += deal.VSCAmount;
+                                                                                EligibleMaintenanceTotal += deal.MaintenanceAmount;
+                                                                                EligibleGAPTotal += deal.GAPAmount;
+                                                                                EligibleZurichTotal += deal.ZurichAmount;
+                                                                                if (bValidated)
+                                                                                {
+                                                                                    EligibleOtherTotal += otherItemAmount;
+                                                                                }
+                                                                                EligibleMoneyDueTotal += dealMoneyDue;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </tbody>
+                                                            <tfoot>
+
+                                                                @{
+
+                                                                    decimal EligibleDealDollarTotal = 0;
+                                                                    decimal EligibleProductDollarTotal = 0;
+
+                                                                    decimal EligibleDealDollarAverage = 0;
+                                                                    decimal EligibleProductDollarAverage = 0;
+
+
+                                                                    EligibleDealDollarTotal = (EligibleFinanceTotal + EligibleServiceTotal + EligibleMaintenanceTotal + EligibleGAPTotal + EligibleZurichTotal + EligibleOtherTotal);//
+                                                                    EligibleProductDollarTotal = (EligibleServiceTotal + EligibleMaintenanceTotal + EligibleGAPTotal + EligibleZurichTotal + EligibleOtherTotal); //
+
+                                                                    if (TotalEligibleDeals > 0)
+                                                                    {
+                                                                        EligibleDealDollarAverage = EligibleDealDollarTotal / (TotalEligibleDeals);
+                                                                        EligibleProductDollarAverage = EligibleProductDollarTotal / (TotalEligibleDeals);
+                                                                    }
+
+                                                                    decimal EligibleFinanceAverage = 0;
+                                                                    decimal EligibleServiceAverage = 0;
+                                                                    decimal EligibleMaintenanceAverage = 0;
+                                                                    decimal EligibleGAPAverage = 0;
+                                                                    decimal EligibleZurichAverage = 0;
+                                                                    decimal EligibleOtherAverage = 0;
+
+                                                                    if (TotalEligibleDeals > 0)
+                                                                    {
+                                                                        EligibleFinanceAverage = EligibleFinanceTotal / (TotalEligibleDeals);
+                                                                        EligibleServiceAverage = EligibleServiceTotal / (TotalEligibleDeals);
+                                                                        EligibleMaintenanceAverage = EligibleMaintenanceTotal / (TotalEligibleDeals);
+                                                                        EligibleGAPAverage = EligibleGAPTotal / (TotalEligibleDeals);
+                                                                        EligibleZurichAverage = EligibleZurichTotal / (TotalEligibleDeals);
+                                                                        EligibleOtherAverage = EligibleOtherTotal / (TotalEligibleDeals);
+                                                                    }
+                                                                }
+
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th></th>
+                                                                    <th class="text-center">Totals</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">@TotalEligibleDeals Deals</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">@EligibleFinanceTotal<br />@EligibleFinanceAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleServiceTotal<br />@EligibleServiceAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleMaintenanceTotal<br />@EligibleMaintenanceAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleGAPTotal<br />@EligibleGAPAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleZurichTotal<br />@EligibleZurichAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">@EligibleOtherTotal.ToString("C", noSymbol)<br />@EligibleOtherAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleDealDollarTotal<br />@EligibleDealDollarAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleProductDollarTotal<br />@EligibleProductDollarAverage.ToString("C", nfi)</th>
+                                                                    <th class="text-center">@EligibleMoneyDueTotal.ToString("C", nfi)</th>
+                                                                    <th class="text-center"></th>
+                                                                    @*<th class="text-center"></th>
+                                                                    *@
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="row" style="page-break-after: always;">
+                                                <div class="col-md-12">
+                                                    <hr />
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h4>
+                                                        @Model.AssociateInformation.AssociateLastName Money Due</h4>
+                                                    @{var moneyDueItems = Model.MoneyDue.FindAll(x => x.FIManagerNumber.Trim() == Model.AssociateId.Trim());
+
+                                                        if (moneyDueItems != null)
+                                                        {
+                                                            decimal locationBalance = 0;
+                                                            decimal locationBank = 0;
+                                                            decimal locationCustomer = 0;
+                                                            var locationDays = 0;
+                                                            double locationAvgDays = 0;
+
+                                                            foreach (var moneyDue in moneyDueItems)
+                                                            {
+                                                                locationBalance += moneyDue.ControlBalance;
+
+                                                                if (moneyDue.DueFrom.Contains("106"))
+                                                                {
+                                                                    locationBank += moneyDue.ControlBalance;
+                                                                }
+                                                                else if (moneyDue.DueFrom.Contains("111"))
+                                                                {
+                                                                    locationCustomer += moneyDue.ControlBalance;
+                                                                }
+
+                                                                locationDays += moneyDue.ScheduleDays;
+
+                                                            }
+
+                                                            locationAvgDays = (double)locationDays / (double)moneyDueItems.Count();
+
+                                                            <table id="money-due-@Model.AssociateId" class="table table-bordered table table-striped" style="font-size:11px;">
+                                                                <thead>
+                                                                    <tr style="background-color:#d9edf7">
+                                                                        <th class="text-center">Stock #</th>
+                                                                        <th class="text-center">Deal #</th>
+                                                                        <th class="text-center">Schedule<br />Days</th>
+                                                                        <th class="text-center">Deal Date</th>
+                                                                        <th class="text-center">Due From</th>
+                                                                        <th class="text-center">Customer #</th>
+                                                                        <th class="text-center">Control<br />Balance</th>
+                                                                        <th class="text-center">Customer Name</th>
+                                                                        <th class="text-center">Business<br />Phone</th>
+                                                                        <th class="text-center">Residential<br />Phone</th>
+                                                                        <th class="text-center">Sales Manager</th>
+                                                                        <th class="text-center">FI Manager</th>
+                                                                        <th class="text-center">Bank Name</th>
+                                                                        <th class="text-center">Last Updated</th>
+                                                                        <th class="text-center">Funded/Notes</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var moneyDue in moneyDueItems)
+                                                                    {
+                                                                        var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                        var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                                                        if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                                                        {
+                                                                            currentHistory = moneyDueHistory[0];
+                                                                        }
+
+                                                                        <tr>
+                                                                            <td class="text-center">@moneyDue.StockNumber</td>
+                                                                            <td class="text-center">
+                                                                                @if (moneyDue.DealNumber != "")
+                                                                                {
+                                                                                    <a href="@applicationPath/Sales/DealDetail/@moneyDue.Location@moneyDue.DealNumber" target="_blank">@moneyDue.Location@moneyDue.DealNumber</a>
+                                                                                }
+                                                                            </td>
+                                                                            <td class="text-center">@moneyDue.ScheduleDays</td>
+                                                                            <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                                                            @if (moneyDue.DueFrom.Contains("106"))
+                                                                            {
+                                                                                <td class="text-center">Bank</td>
+                                                                            }
+                                                                            else if (moneyDue.DueFrom.Contains("111"))
+                                                                            {
+                                                                                <td class="text-center">Customer</td>
+                                                                            }
+
+
+                                                                            <td class="text-center">@moneyDue.CustomerNumber</td>
+                                                                            <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                                                            <td class="text-center">@moneyDue.CustomerName</td>
+                                                                            <td class="text-center">@moneyDue.BusinessPhone</td>
+                                                                            <td class="text-center">@moneyDue.ResidencePhone</td>
+                                                                            <td class="text-center">@moneyDue.SalesManager</td>
+                                                                            <td class="text-center">@moneyDue.FIManager</td>
+                                                                            <td class="text-center">@moneyDue.BankName</td>
+                                                                            <td class="text-center">
+                                                                                @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                                                {
+                                                                                    @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                                }
+                                                                                <br />
+                                                                                <a class="editMoneyDueInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@moneyDue.Location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                @currentHistory.FundedStatus<br />
+                                                                                @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                                                {
+                                                                                    @currentHistory.RootCause<br />
+                                                                                }
+                                                                                @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                                                {
+                                                                                    <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                                                        <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                                                    </a>
+                                                                                }
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    }
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr style="background-color:#d9edf7">
+                                                                        <th class="text-center">@moneyDueItems.Count()</th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center">Avg Days:<br />@Math.Round(locationAvgDays)</th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center">@locationBalance</th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                        <th class="text-center"></th>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        }
+                                                    }
+</div>
+                                            </div>
+                                                                        
+
+                                                                    }
 
 @section Scripts
 {
-
+<script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+<script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+<script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
 
     <script type="text/javascript">
 
-    $(document).ready(function () {
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
 
-        $('#select-anchor').change(function () {
-            var targetPosition = $("#" + $(this).val()).offset().top - 50;
-            $('html,body').animate({ scrollTop: targetPosition }, 'slow');
-        });
-
-        var dialogWidth = 0;
-
-        dialogWidth = ($(window).width() * .75);
-
-        if ($(window).width() > 1199) {
-            dialogWidth = 800;
-        }
-
-        $('body').on('click','.editInfo', function (event) {
-
-            var id = $(this).attr('rel');
-            var url = "@applicationPath/Commission/BonusAndDraws/" + id + "/@Model.MonthId/@Model.YearId";
-            var dialogBox = $("<div>");
-
-            $(dialogBox).dialog({
-                resizable: false,
-                height:"auto",
-                width: dialogWidth,
-                position: { my: "center", at: "top+25%", of: window },
-                title: 'Associate Bonus and Advances (Draws)',
-                modal: true,
-                open: function (event, ui) {
-                    $(this).load(url);
-                    //$('#BonusDraws').validate();
-                },
-                buttons: {
-                    "Save": function () {
-                        var $this = this;
-                        var form = $('#BonusDraws', $this);
-                        //if (!$(form).valid()) {
-                        //    return false;
-                        //}
-
-                        $.ajax({
-                            async: false,
-                            type: 'POST',
-                            url: form.attr("action"),
-                            data: $(form).serialize(),
-                            success: $($this).dialog("close").dialog("destroy").remove()
-                        });
-
-                        location.reload();
-                   },
-
-                    "Close": function () {
-                        $(this).dialog("close");
-                        $(this).empty();
+                $('#associate-select').on('change', function () {
+                    var url = $(this).val(); // get selected value
+                    if (url) { // require a URL
+                        window.location = url; // redirect
                     }
-                }
+                    return false;
+                });
+            
+
+            $('#select-anchor').change(function () {
+                var targetPosition = $("#" + $(this).val()).offset().top - 50;
+                $('html,body').animate({ scrollTop: targetPosition }, 'slow');
             });
-            $(dialogBox).dialog('open');
+
+            var dialogWidth = 0;
+
+            dialogWidth = ($(window).width() * .75);
+
+            if ($(window).width() > 1199) {
+                dialogWidth = 1200;
+            }
+
+            $('body').on('click', '.editInfo', function (event) {
+
+                var id = $(this).attr('rel');
+                var url = "@applicationPath/FICommission/BonusAndDraws/@Model.AssociateInformation.AssociateLocation/" + id + "/@Model.MonthId/@Model.YearId";
+                var dialogBox = $("<div>");
+
+                $(dialogBox).dialog({
+                    resizable: false,
+                    height: "auto",
+                    width: dialogWidth,
+                    position: { my: "center", at: "top+25%", of: window },
+                    title: 'FI Associate Bonus and Advances (Draws)',
+                    modal: true,
+                    open: function (event, ui) {
+                        $(this).load(url);
+                        //$('#BonusDraws').validate();
+                    },
+                    buttons: {
+                        "Save": function () {
+                            var $this = this;
+                            var form = $('#BonusDraws', $this);
+                            //if (!$(form).valid()) {
+                            //    return false;
+                            //}
+
+                            $.ajax({
+                                async: false,
+                                type: 'POST',
+                                url: form.attr("action"),
+                                data: $(form).serialize(),
+                                success: $($this).dialog("close").dialog("destroy").remove()
+                            });
+
+                            location.reload();
+                        },
+
+                        "Close": function () {
+                            $(this).dialog("close");
+                            $(this).empty();
+                        }
+                    }
+                });
+                $(dialogBox).dialog('open');
+            });
+
+
+
+
+
+            $('body').on('click', '.editMoneyDueInfo', function (event) {
+                var customer = $(this).attr("data-customer-number");
+                var moneyFrom = $(this).attr("data-due-from");
+                var location = $(this).attr("data-location");
+
+                var url = "@applicationPath/Reports/UpdateMoneyDue/" + customer + "/" + location + "/" + moneyFrom;
+                var dialogBox = $("<div>");
+
+                $(dialogBox).dialog({
+                    resizable: false,
+                    height: "auto",
+                    width: dialogWidth,
+                    position: { my: "center", at: "top+25%", of: window },
+                    title: 'Update Money Due Report',
+                    modal: true,
+                    open: function (event, ui) {
+                        $(this).load(url);
+                        //$('#BonusDraws').validate();
+                    },
+                    buttons: {
+                        "Save": function () {
+                            var $this = this;
+                            var form = $('#UpdateMoneyDue', $this);
+                            //if (!$(form).valid()) {
+                            //    return false;
+                            //}
+
+                            $.ajax({
+                                async: false,
+                                type: 'POST',
+                                url: form.attr("action"),
+                                data: $(form).serialize(),
+                                success: $($this).dialog("close").dialog("destroy").remove()
+                            });
+
+                            location.reload();
+                        },
+
+                        "Close": function () {
+                            $(this).dialog("close");
+                            $(this).empty();
+                        }
+                    }
+                });
+                $(dialogBox).dialog('open');
+            });
         });
 
-
-    });
-
-
+        
     </script>
 }
 

@@ -20,6 +20,12 @@ namespace SalesCommission
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             RouteTable.Routes.MapRoute(
+                "Adjustments",
+                "FICommission/Adjustments/{id}/{monthId}/{yearId}", // URL with parameters
+                new { controller = "FICommission", action = "Adjustments", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+            );
+
+            RouteTable.Routes.MapRoute(
                 "AssociateCommission",
                 "Commission/Associate/{id}/{monthId}/{yearId}", // URL with parameters
                 new { controller = "Commission", action = "Associate", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
@@ -33,14 +39,26 @@ namespace SalesCommission
 
             RouteTable.Routes.MapRoute(
                 "FIAssociateCommission",
-                "FICommission/Associate/{id}/{monthId}/{yearId}", // URL with parameters
+                "FICommission/Associate/{location}/{id}/{monthId}/{yearId}", // URL with parameters
                 new { controller = "FICommission", action = "Associate", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+            );
+
+            RouteTable.Routes.MapRoute(
+                "FIAssociateValidate",
+                "FICommission/ValidateDeals/{location}/{id}/{monthId}/{yearId}", // URL with parameters
+                new { controller = "FICommission", action = "ValidateDeals", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
             );
 
             RouteTable.Routes.MapRoute(
                 "AssociateDrawsAndBonus",
                 "Commission/BonusAndDraws/{id}/{monthId}/{yearId}", // URL with parameters
                 new { controller = "Commission", action = "BonusAndDraws", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+            );
+
+            RouteTable.Routes.MapRoute(
+                "FIAssociateDrawsAndBonus",
+                "FICommission/BonusAndDraws/{location}/{id}/{monthId}/{yearId}", // URL with parameters
+                new { controller = "FICommission", action = "BonusAndDraws", location = UrlParameter.Optional, id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
             );
 
             RouteTable.Routes.MapRoute(
@@ -149,6 +167,12 @@ namespace SalesCommission
                new { controller = "Sales", action = "Chargebacks", storeId = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional}
            );
 
+            RouteTable.Routes.MapRoute(
+               "UpdateMoneyDue",
+               "Reports/UpdateMoneyDue/{Id}/{location}/{dueFrom}", // URL with parameters
+               new { controller = "Reports", action = "UpdateMoneyDue", Id = UrlParameter.Optional,location = UrlParameter.Optional, dueFrom = UrlParameter.Optional }
+           );
+
         }
 
         protected void Session_Start(object sender, EventArgs e)
@@ -230,10 +254,19 @@ namespace SalesCommission
                 if (associateList != null && associateList.Count > 0)
                 {
                     associate = associateList[0];
-
+                    
                     associateId = associate.DMS_Id;
-                    locationId = Business.SqlQueries.GetSalesAssociatesLocationById(associateId);
+                    locationId = associate.Location.Trim();// Business.SqlQueries.GetSalesAssociatesLocationById(associateId);
 
+                    if(userIdFromCookie.Trim().ToLower() == "christianc")
+                    {
+                        locationId = "FOC";
+                    }
+
+                    if(locationId == "LFC")
+                    {
+                        locationId = "LFO";
+                    }
                     VinName = associate.VinName;
                 }
                 Session.Add("userVinName", VinName);
@@ -252,7 +285,7 @@ namespace SalesCommission
             {
                 Session.Add("AssociateId", "007");
                 Session.Add("LocationId", "JJF");
-                Session.Add("UserId", "default");
+                Session.Add("UserId", "statlerc");
                 Session.Add("UserName", "Default User");
                 Session.Add("IsAdmin", true);
                 Session.Add("IsCommissionAdmin", true);

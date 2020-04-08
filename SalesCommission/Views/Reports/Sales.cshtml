@@ -122,6 +122,10 @@
 </div>
 @if (Model.MonthlySalesReportDetails != null)
 {
+    var currentSelectedDate = new DateTime(Model.YearId, Model.MonthId, 1);
+    var grossChangeDate = new DateTime(2020, 1, 31);
+
+
     <div class="row">
         <div class="col-md-12">
             <h3>Sales Log Report for @Model.MonthId/@Model.YearId</h3>
@@ -158,6 +162,7 @@
                     <th class="text-center">VSC</th>
                     <th class="text-center">MC</th>
                     <th class="text-center">GAP</th>
+                    <th class="text-center">BPP/AFT</th>
                     <th class="text-center">Total</th>
                     <th class="text-center">Memo: FTD</th>
                     <th class="text-center">DX Inc</th>
@@ -234,6 +239,10 @@
 
                     double CompanyUsedTotalNextCarCount = 0;
 
+                    double CompanyUsedTotalBackGrossAmount = 0;
+                    double CompanyNewTotalBackGrossAmount = 0;
+                    double CompanyTotalBackGrossAmount = 0;
+
                     var TotalMakeIds = "";
 
                 }
@@ -277,6 +286,7 @@
                         <td class="text-center" style="background-color:#d9edf7">VSC</td>
                         <td class="text-center" style="background-color:#d9edf7">MC</td>
                         <td class="text-center" style="background-color:#d9edf7">GAP</td>
+                        <td class="text-center" style="background-color:#d9edf7">BPP/AFT</td>
                         <td class="text-center" style="background-color:#d9edf7">Total</td>
                         <td class="text-center" style="background-color:#d9edf7">Memo: FTD</td>
                         <td class="text-center" style="background-color:#d9edf7">DX Inc</td>
@@ -310,6 +320,7 @@
                     double TotalBackPVRAmount = 0;
                     double TotalUsedDeals = 0;
                     double TotalValidatedUsedDeals = 0;
+                    double TotalBackGrossItemAmount = 0;
 
                     double TotalNextCarCount = 0;
                     double TotalHandymanCount = 0;
@@ -361,6 +372,7 @@
                         }
 
                         var usedId = 0;
+                        var usedBrand = "";
                         if (detail.AutoMall.ToUpper() == "CLEARWATER")
                         {
                             switch (detail.MakeId)
@@ -377,7 +389,15 @@
                                 case "44": //Subaru
                                     usedId = 95;
                                     break;
-
+                                case "70": //Hyundai
+                                    usedBrand = "HY";
+                                    break;
+                                case "94": //Jeep
+                                    usedBrand = "JE,CH";
+                                    break;
+                                case "95": //Subaru
+                                    usedBrand = "SU";
+                                    break;
                             }
 
                             var usedDealListing = groupDetail.SalesReportDetails.Find(o => o.MakeId == usedId.ToString());
@@ -418,6 +438,33 @@
                             MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
                             //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
                             detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                        }
+
+                        if (brandCode == "Used")
+                        {
+
+                            var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode);
+
+                            foreach (var ftd in usedFTDCash)
+                            {
+                                MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
+                            }
+                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                        }
+                        else if (detail.BrandId == "UU" && locationCode == "CJE")
+                        {
+
+                            var brands = usedBrand.Split(',');
+
+                            foreach (var brand in brands)
+                            {
+                                var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                                if (ftd != null)
+                                {
+                                    MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
+                                    detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                }
+                            }
                         }
 
                         var validatedDeals = detail.DealCount - detail.UnValidatedCount;
@@ -502,18 +549,27 @@
                             <td class="text-center">@detail.VSCAmount.ToString("C", nfi)</td>
                             <td class="text-center">@detail.MCAmount.ToString("C", nfi)</td>
                             <td class="text-center">@detail.GapAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.BackGrossItemAmount.ToString("C", nfi)</td>
                             <td class="text-center">@detail.TotalAmount.ToString("C", nfi)</td>
                             <td class="text-center">@detail.FTDAmount.ToString("C", nfi)</td>
                             <td class="text-center">@detail.DXAmount.ToString("C", nfi)</td>
 
                             @{
-                                var brandFrontPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
-                                var brandBackPVR = Math.Round((detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals);
-                                var brandPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+                                var backGrossAmount = detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; // + BPP + Nitrogen + Zurich + TireWheel + Security + OtherAftermarket
+
+                                if (currentSelectedDate > grossChangeDate)
+                                {
+                                    backGrossAmount += detail.BackGrossItemAmount;
+                                }
+
+                                var brandFrontPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount 
+                                var brandBackPVR = Math.Round((backGrossAmount) / validatedDeals);
+                                var brandPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount + backGrossAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+
                             }
                             <td class="text-center"><a href="#" data-toggle="tooltip" title="Front PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount) over @validatedDeals deals">@brandFrontPVR.ToString("C", nfi)</a></td>
-                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Back PVR = $@(detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandBackPVR.ToString("C", nfi)</a></td>
-                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Total PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandPVR.ToString("C", nfi)</a></td>
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Back PVR = $@(backGrossAmount) over @validatedDeals deals">@brandBackPVR.ToString("C", nfi)</a></td>
+                            <td class="text-center"><a href="#" data-toggle="tooltip" title="Total PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount + backGrossAmount) over @validatedDeals deals">@brandPVR.ToString("C", nfi)</a></td>
                             @*<td class="text-center">@detail.ValuePercentage.ToString("P")</td>
                                 <td class="text-center">@detail.VarianceCount</td>
                                 <td class="text-center">@detail.VariancePercentage.ToString("P")</td>*@
@@ -541,6 +597,8 @@
                                     TotalOtherAmount = TotalOtherAmount + detail.OtherAmount;
                                     TotalTotalAmount = TotalTotalAmount + detail.TotalAmount;
                                     TotalDXAmount = TotalDXAmount + detail.DXAmount;
+
+                                    TotalBackGrossItemAmount = TotalBackGrossItemAmount + detail.BackGrossItemAmount;
 
                                     TotalHoldbackCount = TotalHoldbackCount + detail.HoldbackCount;
                                     TotalValuePercentage = (double)TotalHoldbackCount / (double)TotalDealCount;
@@ -577,6 +635,7 @@
                                         CompanyUsedTotalAmount += detail.TotalAmount;
                                         CompanyUsedTotalFTDAmount += detail.FTDAmount;
                                         CompanyUsedTotalDXAmount += detail.DXAmount;
+                                        CompanyUsedTotalBackGrossAmount += detail.BackGrossItemAmount;
 
                                     }
                                     else
@@ -607,6 +666,7 @@
                                         CompanyNewTotalAmount += detail.TotalAmount;
                                         CompanyNewTotalFTDAmount += detail.FTDAmount;
                                         CompanyNewTotalDXAmount += detail.DXAmount;
+                                        CompanyNewTotalBackGrossAmount += detail.BackGrossItemAmount;
                                     }
 
 
@@ -637,13 +697,23 @@
                                     <th class="text-center">@TotalVSCAmount.ToString("C", nfi)</th>
                                     <th class="text-center">@TotalMCAmount.ToString("C", nfi)</th>
                                     <th class="text-center">@TotalGapAmount.ToString("C", nfi)</th>
+                                    <th class="text-center">@TotalBackGrossItemAmount.ToString("C", nfi)</th>
                                     <th class="text-center">@TotalTotalAmount.ToString("C", nfi)</th>
                                     <th class="text-center">@TotalFTDAmount.ToString("C", nfi)</th>
                                     <th class="text-center">@TotalDXAmount.ToString("C", nfi)</th>
                                     @{
+                                        var totalBackGrossAmount = TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount; // + BPP + Nitrogen + Zurich + TireWheel + Security + OtherAftermarket
+
+                                        if (currentSelectedDate > grossChangeDate)
+                                        {
+                                            totalBackGrossAmount += TotalBackGrossItemAmount;
+                                        }
+
+
                                         TotalFrontPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount+ TotalFTDAmount
-                                        TotalBackPVRAmount = Math.Round((TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount);
-                                        TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
+                                        TotalBackPVRAmount = Math.Round((totalBackGrossAmount) / TotalValidatedDealsCount);
+                                        TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + totalBackGrossAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
+
                                     }
 
                                     <th class="text-center">@TotalFrontPVRAmount.ToString("C", nfi)</th>
@@ -653,6 +723,7 @@
 
                                 </tr>
                                 <tr>
+                                    <td style="border-left:none;border-right:none">&nbsp;</td>
                                     <td style="border-left:none;border-right:none">&nbsp;</td>
                                     <td style="border-left:none;border-right:none">&nbsp;</td>
                                     <td style="border-left:none;border-right:none">&nbsp;</td>
@@ -695,7 +766,7 @@
                                             CompanyTotalAmount += TotalTotalAmount;
                                             CompanyTotalFTDAmount += TotalFTDAmount;
                                             CompanyTotalDXAmount += TotalDXAmount;
-
+                                            CompanyTotalBackGrossAmount += TotalBackGrossItemAmount;
 
                                         }
                 
@@ -715,6 +786,7 @@
                     <td class="text-center" style="background-color:#d9edf7">VSC</td>
                     <td class="text-center" style="background-color:#d9edf7">MC</td>
                     <td class="text-center" style="background-color:#d9edf7">GAP</td>
+                    <td class="text-center" style="background-color:#d9edf7">BPP/AFT</td>
                     <td class="text-center" style="background-color:#d9edf7">Total</td>
                     <td class="text-center" style="background-color:#d9edf7">Memo: FTD</td>
                     <td class="text-center" style="background-color:#d9edf7">DX Inc</td>
@@ -728,9 +800,16 @@
                         var CompanyNewTotalHandyPercent = (CompanyNewTotalHandymanCount / CompanyNewTotalPotentialHandyman).ToString("P", nfi);
                         var CompanyNewTotalCPOPercent = (CompanyNewTotalCPOCount / CompanyNewTotalPotentialCPO).ToString("P", nfi);
 
+                        var companyNewTotalBackGrossAmount = CompanyNewTotalFinIncAmount + CompanyNewTotalVSCAmount + CompanyNewTotalGapAmount + CompanyNewTotalMCAmount;
+
+                        if (currentSelectedDate > grossChangeDate)
+                        {
+                            companyNewTotalBackGrossAmount += CompanyNewTotalBackGrossAmount;
+                        }
+
                         var CompanyNewTotalFrontPVRAmount = Math.Round((CompanyNewTotalDealGrossAmount + CompanyNewTotalMEFTDAmount) / CompanyNewTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
-                        var CompanyNewTotalBackPVRAmount = Math.Round((CompanyNewTotalFinIncAmount + CompanyNewTotalVSCAmount + CompanyNewTotalGapAmount + CompanyNewTotalMCAmount) / CompanyNewTotalValidatedDealsCount);
-                        var CompanyNewTotalPVRAmount = Math.Round((CompanyNewTotalDealGrossAmount + CompanyNewTotalMEFTDAmount + CompanyNewTotalFinIncAmount + CompanyNewTotalVSCAmount + CompanyNewTotalGapAmount + CompanyNewTotalMCAmount) / CompanyNewTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+                        var CompanyNewTotalBackPVRAmount = Math.Round((companyNewTotalBackGrossAmount) / CompanyNewTotalValidatedDealsCount);
+                        var CompanyNewTotalPVRAmount = Math.Round((CompanyNewTotalDealGrossAmount + CompanyNewTotalMEFTDAmount + companyNewTotalBackGrossAmount) / CompanyNewTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
 
                     }
                     <td class="text-center">New Totals</td>
@@ -750,6 +829,7 @@
                     <td class="text-center">@CompanyNewTotalVSCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalMCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyNewTotalBackGrossAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalFTDAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalDXAmount.ToString("C", nfi)</td>
@@ -764,9 +844,15 @@
                         var CompanyUsedTotalCPOPercent = (CompanyNewTotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
                         var CompanyUsedTotalNextCarPercent = (CompanyUsedTotalNextCarCount / CompanyUsedTotalPotentialHandyman).ToString("P", nfi);
 
+                        var companyUsedTotalBackGrossAmount = CompanyUsedTotalFinIncAmount + CompanyUsedTotalVSCAmount + CompanyUsedTotalGapAmount + CompanyUsedTotalMCAmount;
+                        if (currentSelectedDate > grossChangeDate)
+                        {
+                            companyUsedTotalBackGrossAmount += CompanyUsedTotalBackGrossAmount;
+                        }
+
                         var CompanyUsedTotalFrontPVRAmount = Math.Round((CompanyUsedTotalDealGrossAmount + CompanyUsedTotalMEFTDAmount) / CompanyUsedTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
-                        var CompanyUsedTotalBackPVRAmount = Math.Round((CompanyUsedTotalFinIncAmount + CompanyUsedTotalVSCAmount + CompanyUsedTotalGapAmount + CompanyUsedTotalMCAmount) / CompanyUsedTotalValidatedDealsCount);
-                        var CompanyUsedTotalPVRAmount = Math.Round((CompanyUsedTotalDealGrossAmount + CompanyUsedTotalMEFTDAmount + CompanyUsedTotalFinIncAmount + CompanyUsedTotalVSCAmount + CompanyUsedTotalGapAmount + CompanyUsedTotalMCAmount) / CompanyUsedTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+                        var CompanyUsedTotalBackPVRAmount = Math.Round((companyUsedTotalBackGrossAmount) / CompanyUsedTotalValidatedDealsCount);
+                        var CompanyUsedTotalPVRAmount = Math.Round((CompanyUsedTotalDealGrossAmount + CompanyUsedTotalMEFTDAmount + companyUsedTotalBackGrossAmount) / CompanyUsedTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
 
                     }
                     <td class="text-center">Used Totals</td>
@@ -784,6 +870,7 @@
                     <td class="text-center">@CompanyUsedTotalVSCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalMCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyUsedTotalBackGrossAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalFTDAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalDXAmount.ToString("C", nfi)</td>
@@ -797,9 +884,16 @@
                         var CompanyTotalHandyPercent = (CompanyTotalHandymanCount / CompanyTotalPotentialHandyman).ToString("P", nfi);
                         var CompanyTotalCPOPercent = (CompanyTotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
 
+                        var companyTotalBackGrossAmount = CompanyTotalFinIncAmount + CompanyTotalVSCAmount + CompanyTotalGapAmount + CompanyTotalMCAmount;
+
+                        if (currentSelectedDate > grossChangeDate)
+                        {
+                            companyTotalBackGrossAmount += CompanyTotalBackGrossAmount;
+                        }
+
                         var CompanyTotalFrontPVRAmount = Math.Round((CompanyTotalDealGrossAmount + CompanyTotalMEFTDAmount) / CompanyTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
-                        var CompanyTotalBackPVRAmount = Math.Round((CompanyTotalFinIncAmount + CompanyTotalVSCAmount + CompanyTotalGapAmount + CompanyTotalMCAmount) / CompanyTotalValidatedDealsCount);
-                        var CompanyTotalPVRAmount = Math.Round((CompanyTotalDealGrossAmount + CompanyTotalMEFTDAmount + CompanyTotalFinIncAmount + CompanyTotalVSCAmount + CompanyTotalGapAmount + CompanyTotalMCAmount) / CompanyTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+                        var CompanyTotalBackPVRAmount = Math.Round((companyTotalBackGrossAmount) / CompanyTotalValidatedDealsCount);
+                        var CompanyTotalPVRAmount = Math.Round((CompanyTotalDealGrossAmount + CompanyTotalMEFTDAmount + companyTotalBackGrossAmount) / CompanyTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
 
                     }
                     <td class="text-center">Totals</td>
@@ -825,6 +919,7 @@
                     <td class="text-center">@CompanyTotalVSCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyTotalMCAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyTotalBackGrossAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyTotalAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyTotalFTDAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyTotalDXAmount.ToString("C", nfi)</td>

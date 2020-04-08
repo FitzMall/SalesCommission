@@ -1,0 +1,162 @@
+﻿@model SalesCommission.Models.FIManagersModel
+
+@{
+    ViewBag.Title = "F and I Managers";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "$";
+
+
+}
+
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+}
+<style type="text/css">
+    .coloreee {
+        background-color: #eeeeee;
+    }
+
+    .colorddd {
+        background-color: #dddddd;
+    }
+
+    .form-control {
+        margin: 6px 0px;
+        /*font-size: 13px;
+        height: 30px;*/
+    }
+
+    .payscale-label {
+        /*margin-top:10px;*/
+        text-align: right;
+    }
+
+    body {
+        font-size: 13px;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 4px;
+    }
+
+    .less-padding {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    input.smaller, select.smaller {
+        max-width: 150px;
+    }
+        .chosen-container-single .chosen-single {
+        height: 34px;
+        line-height: 34px;
+    }
+
+        .chosen-container-single .chosen-single div {
+            top: 5px;
+        }
+
+        .chosen-container-single .chosen-single abbr {
+            top: 11px;
+        }
+</style>
+
+<div class="jumbotron">
+    <h1>F and I Managers</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select an Associate and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.AssociateId, Model.FIManagers, new { @class = "form-control form-inline chosen-select" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+
+@if (Model.SelectedManager != null)
+{
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Details for @Model.SelectedManager.ManagerFullName (@Model.MonthId/@Model.YearId)</h3>
+        </div>
+    </div>
+    using (Html.BeginForm("FIAssociates", "FICommission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(o => o.AssociateId);
+        @Html.HiddenFor(o => o.MonthId);
+        @Html.HiddenFor(o => o.YearId);
+        @Html.HiddenFor(o => o.SelectedManager.Key);
+        @Html.HiddenFor(o => o.SelectedManager.ManagerSSN);
+        @Html.HiddenFor(o => o.SelectedManager.ManagerEmployeeNumber); 
+        @Html.HiddenFor(o => o.SelectedManager.ManagerEmploymentDate);
+
+        <div class="row">
+            <div class="col-sm-3">
+                <label>Location:</label>
+            </div>
+            <div class="col-sm-3">
+                <label>Salary:</label>
+            </div>
+            <div class="col-sm-3">
+                <label>Payscale:</label>
+            </div>
+        </div>
+
+            <div class="row">
+                <div class="col-sm-3">
+                    @Html.TextBoxFor(x => x.SelectedManager.ManagerLocation, new { @class = "form-control form-inline" })
+                </div>
+                <div class="col-sm-3">
+                    @Html.TextBoxFor(x => x.SelectedManager.ManagerSalary, new { @class = "form-control form-inline" })                    
+                </div>
+                <div class="col-sm-3">
+                    @Html.DropDownListFor(n => n.SelectedManager.ManagerPayscaleID, Model.FIPayscaleSelectList, new { @class = "form-control form-inline" })                    
+                </div>
+                <div class="col-sm-3">
+                    <button class="btn btn-primary" style="margin-top:6px;" type="submit" value="save" name="Save">Save</button>
+                </div>
+            </div>
+        }
+    }
+
+@section Scripts{
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+}

@@ -311,6 +311,13 @@
     <Content Include="Views\FICommission\Associate.cshtml" />
     <Content Include="Views\FICommission\ScorecardDashboard.cshtml" />
     <Content Include="Views\FICommission\Scorecard.cshtml" />
+    <Content Include="Views\Reports\MoneyDue.cshtml" />
+    <Content Include="Views\FICommission\ValidateDeals.cshtml" />
+    <Content Include="Views\FICommission\Adjustments.cshtml" />
+    <Content Include="Views\FICommission\FIAssociates.cshtml" />
+    <Content Include="Views\FICommission\BonusAndDraws.cshtml" />
+    <Content Include="Views\Reports\UpdateMoneyDue.cshtml" />
+    <Content Include="Views\Reports\LeadReportDetails.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

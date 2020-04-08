@@ -35,6 +35,7 @@ namespace SalesCommission.Models
         public string BrandId { get; set; }    
         public string ModelName { get; set; }        
 		public string VehicleCondition { get; set; }
+        public string VehicleCategory { get; set; }
         public string VehicleMake { get; set; }
         public string VehicleYear { get; set; }
         public string VehicleCarline { get; set; }
@@ -42,6 +43,10 @@ namespace SalesCommission.Models
         public string VehicleStockNumber { get; set; }
         public string VehicleVIN { get; set; }
         public string VehicleDaysInStock { get; set; }
+        public int VehicleTerm { get; set; }
+        public decimal APR { get; set; }
+        public decimal BuyRate { get; set; }
+        public string VehicleBank { get; set; }
         public string CertificationLevel { get; set; }
         public string VehicleMiles { get; set; }
         public string DealKey { get; set; }
@@ -62,8 +67,11 @@ namespace SalesCommission.Models
         public string Loaner { get; set; }
         public string BPP { get; set; }
         public string SalesAssociate1 { get; set; }
+        public string SalesAssociateId1 { get; set; }
         public string SalesAssociate2 { get; set; }
         public string FandIManager { get; set; }
+        public string FinanceManagerNumber { get; set; }
+        public string ShowroomValidatedBy { get; set; }
         public List<AftermarketItem> AftermarketItems { get; set; }
     }
 
@@ -74,6 +82,7 @@ namespace SalesCommission.Models
         public string BrandId { get; set; }
         public string ModelName { get; set; }
         public string VehicleCondition { get; set; }
+        public string VehicleCategory { get; set; }
         public string VehicleMake { get; set; }
         public string VehicleYear { get; set; }
         public string VehicleCarline { get; set; }
@@ -81,6 +90,10 @@ namespace SalesCommission.Models
         public string VehicleStockNumber { get; set; }
         public string VehicleVIN { get; set; }
         public string VehicleDaysInStock { get; set; }
+        public int VehicleTerm { get; set; }
+        public decimal APR { get; set; }
+        public decimal BuyRate { get; set; }
+        public string VehicleBank { get; set; }
         public string CertificationLevel { get; set; }
         public string VehicleMiles { get; set; }
         public string AutoMall { get; set; }
@@ -90,6 +103,7 @@ namespace SalesCommission.Models
         public string SalesAssociateFullName { get; set; }
         public string SalesAssociate2 { get; set; }
         public string FandIManager { get; set; }
+        public string FinanceManagerNumber { get; set; }
         public decimal DealGrossAmount { get; set; }
         public decimal BPPAmount { get; set; }
         public decimal NitrogenAmount { get; set; }
@@ -105,6 +119,7 @@ namespace SalesCommission.Models
         public decimal MaintenanceAmount { get; set; }
         public string Loaner { get; set; }
         public string BPP { get; set; }
+        public string ShowroomValidatedBy { get; set; }
         public decimal AFTP1 { get; set; }
 
 	public decimal AFTP2 { get; set; }

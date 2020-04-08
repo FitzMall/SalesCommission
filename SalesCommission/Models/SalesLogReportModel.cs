@@ -55,6 +55,7 @@ namespace SalesCommission.Models
         public double EtchAmount { get; set; }
         public double GapAmount { get; set; }
         public double OtherAmount { get; set; }
+        public double BackGrossItemAmount { get; set; }
         public int VarianceCount { get; set; }
         public double DXAmount { get; set; }
         public int DealGrossCount { get; set; }
@@ -103,6 +104,7 @@ namespace SalesCommission.Models
         public string VarianceReason { get; set; }
         public double GapAmount { get; set; }
         public double OtherAmount { get; set; }
+        public double BackGrossItemAmount { get; set; }
         public string ValueInternet { get; set; }
         public string BPPAmount { get; set; }
         public string CustomerName { get; set; }

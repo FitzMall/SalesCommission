@@ -78,6 +78,15 @@
     breakDowns.Add("Brand");
     breakDownValues.Add("brand");
 
+    breakDowns.Add("Inventory Type");
+    breakDownValues.Add("inventorytype");
+
+    breakDowns.Add("Lead Date");
+    breakDownValues.Add("leaddate");
+
+    breakDowns.Add("Lead Time");
+    breakDownValues.Add("leadtime");
+
     breakDowns.Add("Lead Group");
     breakDownValues.Add("leadgroupname");
 
@@ -104,6 +113,9 @@
 
     breakDowns.Add("Stock Number");
     breakDownValues.Add("stock");
+
+    breakDowns.Add("Zip Code");
+    breakDownValues.Add("zip");
 
 }
 @section CSS
@@ -154,6 +166,10 @@
             display: none;
         }
 
+        .report-parameters{
+            display:none;
+        }
+
         @@page {
             size: landscape;
         }
@@ -190,6 +206,10 @@
 
     .display-none{
         display:none;
+    }
+
+    td >a.lead-detail-link:after {
+        content: '\2023';
     }
 
 </style>
@@ -344,6 +364,24 @@
                 </select>
             </div>
         </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <strong>Lead Type Filters:</strong>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-sm-12">
+                <input type="checkbox" id="chkBadDuplicates" name="chkBadDuplicates" @(Model.ExcludeBadDuplicates == true ? "checked" : "") /> Exclude Bad Duplicates<br/>
+                <input type="checkbox" id="chkShowExcluded" name="chkShowExcluded" @(Model.ShowExcludedGroups == true ? "checked" : "") /> Show Excluded Groups<br />
+                <input type="checkbox" id="chkExcludeAllBad" name="chkExcludeAllBad" @(Model.ExcludeAllBad == true ? "checked" : "") /> Exclude All Bad Leads
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-sm-12">
                 <hr class="hr-divider" />
@@ -662,7 +700,9 @@
                                 }
                             </select>
                         </div>
-
+                        <div class="col-md-2" style="padding-top:10px;">
+                            <input type="button" class="btn btn-primary" value="Print Report" onclick="window.print();return false;" />
+                        </div>
                     </div>
                 </div>
 

@@ -1,0 +1,325 @@
+﻿@model SalesCommission.Models.FIAdjustmentModel
+
+@{
+    ViewBag.Title = "F and I Manager Adjustments";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "$";
+
+    System.Globalization.NumberFormatInfo noSymbol = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    noSymbol.CurrencyDecimalDigits = 0;
+    noSymbol.PercentDecimalDigits = 1;
+    noSymbol.PercentPositivePattern = 1;
+    noSymbol.CurrencySymbol = "";
+    noSymbol.CurrencyGroupSeparator = "";
+
+    System.Globalization.NumberFormatInfo markupFormat = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    noSymbol.CurrencyDecimalDigits = 0;
+    noSymbol.PercentDecimalDigits = 2;
+    noSymbol.PercentPositivePattern = 1;
+    noSymbol.CurrencySymbol = "";
+    noSymbol.CurrencyGroupSeparator = "";
+
+}
+@section CSS
+{ 
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+    <style>
+        .chosen-select-deselect{
+            width: 225px;
+        }
+    </style>
+
+}
+
+<style type="text/css">
+    table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+        padding-right: 20px;
+    }
+
+    table.dataTable thead .sorting:after, table.dataTable thead .sorting_asc:after, table.dataTable thead .sorting_desc:after, table.dataTable thead .sorting_asc_disabled:after, table.dataTable thead .sorting_desc_disabled:after {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        display: block;
+        font-family: 'Glyphicons Halflings';
+        opacity: 0.5;
+    }
+
+    .tooltip-inner {
+        white-space: pre;
+        max-width: none;
+    }
+
+    .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+        padding: 6px;
+    }
+
+    .chosen-container {
+        vertical-align: top;
+        font-size: 14px;
+    }
+
+    .chosen-container-multi .chosen-choices {
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+    }
+
+    .selected-row {
+        background-color: #f7f4e0; /*#f5f5f5;*/
+    }
+
+    .table-bordered > thead > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > thead > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tbody > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > th.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .table-bordered > tfoot > tr > td.extra-right {
+        border-right: 3px solid #dddddd;
+    }
+
+    .chosen-container-single .chosen-single {
+        height: 34px;
+        line-height: 34px;
+    }
+
+        .chosen-container-single .chosen-single div {
+            top: 5px;
+        }
+
+        .chosen-container-single .chosen-single abbr {
+            top: 11px;
+        }
+</style>
+
+<div class="jumbotron">
+    <h1>F and I Manager Adjustments</h1>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>Select an Associate and Date:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.FinanceManagerNumber, Model.FIManagers, new { @class = "form-control form-inline chosen-select-deselect ", required = "" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-2">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+
+@if (Model.FIAdjustments != null)
+{
+    var associateName = Model.FinanceManagerNumber;
+    if (Model.AssociateInformation != null)
+    {
+        associateName = Model.AssociateInformation.AssociateFullName;
+    }
+
+    <h2>Adjustments for @associateName for @Model.MonthId/@Model.YearId</h2>
+    using (Html.BeginForm("Adjustments", "FICommission", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+
+        @Html.HiddenFor(x => x.FinanceManagerNumber)
+        @Html.HiddenFor(x => x.MonthId)
+        @Html.HiddenFor(x => x.YearId)
+
+    <div class="row">
+        <div class="col-sm-12">
+
+            <table class="table table-bordered table-striped">
+                <thead style="background-color:#d9edf7">
+                    <tr>
+                        <th>Adjustment</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Line</th>
+                        <th>Deal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Chargeback
+                            @Html.HiddenFor(n => n.Chargeback1)
+                            @Html.HiddenFor(n => n.Chargeback1Id)
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback1Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Chargeback1Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback1Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback1Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Chargeback
+                            @Html.HiddenFor(n => n.Chargeback2)
+                            @Html.HiddenFor(n => n.Chargeback2Id)
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback2Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Chargeback2Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback2Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback2Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Chargeback
+                            @Html.HiddenFor(n => n.Chargeback3)
+                            @Html.HiddenFor(n => n.Chargeback3Id)
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback3Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Chargeback3Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback3Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback3Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Chargeback
+                            @Html.HiddenFor(n => n.Chargeback4)
+                            @Html.HiddenFor(n => n.Chargeback4Id)
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback4Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Chargeback4Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback4Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Chargeback4Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Setup Differences
+                            @Html.HiddenFor(n => n.Differences1)
+                            @Html.HiddenFor(n => n.Differences1Id)                        
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Differences1Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Differences1Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences1Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences1Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Setup Differences
+                            @Html.HiddenFor(n => n.Differences2)
+                            @Html.HiddenFor(n => n.Differences2Id)                        
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Differences2Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Differences2Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences2Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences2Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Setup Differences
+                            @Html.HiddenFor(n => n.Differences3)
+                            @Html.HiddenFor(n => n.Differences3Id)                        
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Differences3Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Differences3Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences3Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences3Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Setup Differences
+                            @Html.HiddenFor(n => n.Differences4)
+                            @Html.HiddenFor(n => n.Differences4Id)                        
+                        </td>
+                        <td>@Html.DropDownListFor(n => n.Differences4Type, Model.AdjustmentType, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.TextBoxFor(n => n.Differences4Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences4Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Differences4Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Deal Quality Adjustment
+                            @Html.HiddenFor(n => n.Quality1)
+                            @Html.HiddenFor(n => n.Quality1Id)
+                        </td>
+                        <td></td>
+                        <td>@Html.TextBoxFor(n => n.Quality1Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Quality1Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Quality1Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>CSI Adjustment
+                            @Html.HiddenFor(n => n.CSI1)
+                            @Html.HiddenFor(n => n.CSI1Id)                        
+                        </td>
+                        <td></td>
+                        <td>@Html.TextBoxFor(n => n.CSI1Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.CSI1Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.CSI1Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                    <tr>
+                        <td>Other
+                            @Html.HiddenFor(n => n.Other1)
+                            @Html.HiddenFor(n => n.Other1Id)                                                    
+                        </td>
+                        <td>
+                            <p>Enter Comment:</p>
+                            @Html.TextAreaFor(n => n.Other1Comment, new { @class = "form-control form-inline" })
+                        </td>
+                        <td>@Html.TextBoxFor(n => n.Other1Amount, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Other1Line, Model.AdjustmentLine, new { @class = "form-control form-inline" })</td>
+                        <td>@Html.DropDownListFor(n => n.Other1Deal, Model.FIDealNumbers, new { @class = "form-control form-inline chosen-select-deselect " })</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="text-center col-sm-12">
+            <button class="btn btn-primary" type="submit" value="save" name="Save">Save</button>
+        </div>
+    </div>
+    }
+}
+@section scripts
+{
+
+    <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".chosen-select-deselect").chosen({ search_contains: true });
+        });
+    </script>
+
+}
+
+

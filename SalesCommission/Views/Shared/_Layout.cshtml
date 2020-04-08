@@ -151,15 +151,9 @@
         }
         else
         {
-            if (currentLocationId != "FTN")
-            {
-    <li>@Html.ActionLink("My Commission", "Associate", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
-    <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
-            }
-            else
-            {
-        <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
-            }
+            <li>@Html.ActionLink("My Commission", "Associate", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+            <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+
         }
 
         @if ((bool)Session["IsAdmin"] == true)
@@ -182,10 +176,18 @@
                             <b class="caret"></b>
                         </a>
                         <ul class="dropdown-menu">
-                            <li>@Html.ActionLink("Dashboard", "Index", "FICommission")</li>
-                            <li>@Html.ActionLink("Scorecard Dashboard", "ScorecardDashboard", "FICommission")</li>
-                            <li class="divider"></li>
-                            <li>@Html.ActionLink("Payscales", "Payscales", "FICommission")</li>
+                            @if ((bool)Session["IsCommissionAdmin"] == true)
+                            {
+                                <li>@Html.ActionLink("Dashboard", "Index", "FICommission")</li>
+                                <li>@Html.ActionLink("Associates", "FIAssociates", "FICommission")</li>
+                                <li class="divider"></li>
+                                <li>@Html.ActionLink("Payscales", "Payscales", "FICommission")</li>
+                                <li>@Html.ActionLink("Adjustments", "Adjustments", "FICommission")</li>
+                            }
+                            else
+                            {
+                                <li>@Html.ActionLink("My Commission", "Associate", "FICommission", new {location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+                            }
                         </ul>
                     </li>
 @if ((bool)Session["CanSeeReporting"] == true)

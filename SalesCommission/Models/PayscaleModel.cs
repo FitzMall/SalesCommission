@@ -23,8 +23,123 @@ namespace SalesCommission.Models
         public int YearId { get; set; }
         public List<SelectListItem> FIPayscaleSelectList { get; set; }
         public List<FIPayscale> FIPayscales { get; set; }
+        public List<FIPayscaleAftermarket> FIPayscaleAftermarket { get; set; }
+        public decimal GrossPercentagePaid { get; set; }
+        public decimal MentorPercentagePaid { get; set; }
+        public string NewPayscaleName { get; set; }
     }
 
+    public class FIAdjustmentModel
+    {
+        public int MonthId { get; set; }
+        public int YearId { get; set; }
+        public string FinanceManagerNumber { get; set; }
+        public Associate AssociateInformation { get; set; }
+        public List<SelectListItem> FIManagers { get; set; }
+        public List<SelectListItem> AdjustmentType { get; set; }
+        public List<SelectListItem> AdjustmentLine { get; set; }
+        public List<FIAdjustment> FIAdjustments { get; set; }
+        public IEnumerable<SelectListItem> FIDealNumbers { get; set; }
+
+        public int Chargeback1Id { get; set; }
+        public string Chargeback1 { get; set; }
+        public string Chargeback1Type { get; set; }
+        public decimal Chargeback1Amount { get; set; }
+        public string Chargeback1Line { get; set; }
+        public string Chargeback1Deal { get; set; }
+
+        public int Chargeback2Id { get; set; }
+        public string Chargeback2 { get; set; }
+        public string Chargeback2Type { get; set; }
+        public decimal Chargeback2Amount { get; set; }
+        public string Chargeback2Line { get; set; }
+        public string Chargeback2Deal { get; set; }
+
+
+        public int Chargeback3Id { get; set; }
+        public string Chargeback3 { get; set; }
+        public string Chargeback3Type { get; set; }
+        public decimal Chargeback3Amount { get; set; }
+        public string Chargeback3Line { get; set; }
+        public string Chargeback3Deal { get; set; }
+
+
+        public int Chargeback4Id { get; set; }
+        public string Chargeback4 { get; set; }
+        public string Chargeback4Type { get; set; }
+        public decimal Chargeback4Amount { get; set; }
+        public string Chargeback4Line { get; set; }
+        public string Chargeback4Deal { get; set; }
+
+
+        public int Differences1Id { get; set; }
+        public string Differences1 { get; set; }
+        public string Differences1Type { get; set; }
+        public decimal Differences1Amount { get; set; }
+        public string Differences1Line { get; set; }
+        public string Differences1Deal { get; set; }
+
+        public int Differences2Id { get; set; }
+        public string Differences2 { get; set; }
+        public string Differences2Type { get; set; }
+        public decimal Differences2Amount { get; set; }
+        public string Differences2Line { get; set; }
+        public string Differences2Deal { get; set; }
+
+        public int Differences3Id { get; set; }
+        public string Differences3 { get; set; }
+        public string Differences3Type { get; set; }
+        public decimal Differences3Amount { get; set; }
+        public string Differences3Line { get; set; }
+        public string Differences3Deal { get; set; }
+
+        public int Differences4Id { get; set; }
+        public string Differences4 { get; set; }
+        public string Differences4Type { get; set; }
+        public decimal Differences4Amount { get; set; }
+        public string Differences4Line { get; set; }
+        public string Differences4Deal { get; set; }
+
+
+        public int Quality1Id { get; set; }
+        public string Quality1 { get; set; }
+        public string Quality1Type { get; set; }
+        public decimal Quality1Amount { get; set; }
+        public string Quality1Line { get; set; }
+        public string Quality1Deal { get; set; }
+
+        public int CSI1Id { get; set; }
+        public string CSI1 { get; set; }
+        public string CSI1Type { get; set; }
+        public decimal CSI1Amount { get; set; }
+        public string CSI1Line { get; set; }
+        public string CSI1Deal { get; set; }
+
+        public int Other1Id { get; set; }
+        public string Other1 { get; set; }
+        public string Other1Comment { get; set; }
+        public string Other1Type { get; set; }
+        public decimal Other1Amount { get; set; }
+        public string Other1Line { get; set; }
+        public string Other1Deal { get; set; }
+
+    }
+
+    public class FIAdjustment
+    {
+        public int Id { get; set; }
+        public string MonthYear { get; set; }
+        public string AssociateNumber { get; set; }
+        public string Adjustment { get; set; }
+        public string AdjustmentType { get; set; }
+        public decimal AdjustmentAmount { get; set; }
+        public string AdjustmentLine { get; set; }
+        public string DealNumber { get; set; }
+          public string Comments { get; set; }
+          public string UpdateUser { get; set; }
+          public DateTime UpdateDate { get; set; }
+
+    }
 
     public class PayscaleComparisonModel
     {
@@ -126,6 +241,31 @@ namespace SalesCommission.Models
 	    public decimal PayAmount  { get; set; }
 	    public DateTime  UpdateDate  { get; set; }
 	    public string  UpdateUser  { get; set; }
+
+    }
+
+    public class FIPayscaleAftermarket
+    {
+        public int Id { get; set; }
+        public string MonthYear { get; set; }
+        public string PlanCode { get; set; }
+        public string PlanName { get; set; }
+        public int AftermarketOrder { get; set; }
+        public string AftermarketItem { get; set; }
+        public int AftermarketIndex { get; set; }
+        public bool CoreItem { get; set; }
+        public bool PaidItem { get; set; }
+
+    }
+
+    public class FIPayscaleSetup
+    {
+        public int Id { get; set; }
+        public string MonthYear { get; set; }
+        public string PlanCode { get; set; }
+        public string PlanName { get; set; }
+        public decimal GrossPercentagePaid { get; set; }
+        public decimal MentorPercentagePaid { get; set; }
 
     }
 

@@ -1,0 +1,143 @@
+﻿@model SalesCommission.Models.FIAssociateCommissionModel
+
+@{
+    ViewBag.Title = "FI Associate Bonus and Advances (Draws)";
+    Layout = null;
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+}
+
+
+    <div id="interested" class="module clearfloats">
+    <h3>Bonus and Advances (Draw) information for @Model.AssociateInformation.AssociateFullName for @Model.MonthId/@Model.YearId</h3>
+
+    @using (Html.BeginForm("BonusAndDraws", "FICommission", FormMethod.Post, new { id = "BonusDraws" }))
+    {
+        decimal TotalPaidAmount = 0;
+        decimal TotalDrawAmount = 0;
+        decimal MontlySalary = Model.ManagerSalary;
+
+        <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
+        <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+        <input type="hidden" id="hdn-AssociateId" name="hdn-AssociateId" value="@Model.AssociateInformation.AssociateNumber" />
+        <input type="hidden" id="hdn-SSN" name="hdn-SSN" value="@Model.AssociateInformation.AssociateSSN" />
+
+        <h4>Bonus</h4>
+        <table class="table table-bordered table-striped" style="font-size:12px">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th>Date</th>
+                    <th>Comment</th>
+                    <th>Amount</th>
+                    <th>Delete ?</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AssociateInformation.AssociateBonus != null)
+                {
+
+
+
+                    foreach (var bonus in Model.AssociateInformation.AssociateBonus)
+                    {
+                                    <tr>
+                                        <td><input type="hidden" name="@bonus.Id-bonus-id" id="@bonus.Id-bonus-id" value="@bonus.Id" /><input type="text" class="form-control" name="@bonus.Id-bonus-date" id="@bonus.Id-bonus-date" value="@bonus.BonusDate" /></td>
+                                        <td><input type="text" class="form-control" name="@bonus.Id-bonus-comments" id="@bonus.Id-bonus-comments" value="@bonus.BonusComments" /></td>
+                                        <td><input type="text" class="form-control" name="@bonus.Id-bonus-amount" id="@bonus.Id-bonus-amount" value="@bonus.BonusAmount" /></td>
+                                        <td class="text-center"><input type="checkbox"  name="@bonus.Id-bonus-delete" id="@bonus.Id-bonus-delete" /></td>
+                                    </tr>                        
+                    }
+                }
+                <tr>
+                    <td><input type="text" class="form-control" name="new-bonus-date" id="new-bonus-date" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-comments" id="new-bonus-comments" value="" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-amount" id="new-bonus-amount" value="" /></td>
+                    <td></td>
+                </tr>  
+                <tr>
+                    <td><input type="text" class="form-control" name="new-bonus-date2" id="new-bonus-date2" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-comments2" id="new-bonus-comments2" value="" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-amount2" id="new-bonus-amount2" value="" /></td>
+                    <td></td>
+                </tr> 
+                <tr>
+                    <td><input type="text" class="form-control" name="new-bonus-date3" id="new-bonus-date3" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-comments3" id="new-bonus-comments3" value="" /></td>
+                    <td><input type="text" class="form-control" name="new-bonus-amount3" id="new-bonus-amount3" value="" /></td>
+                    <td></td>
+                </tr> 
+            </tbody>
+
+        </table>
+
+
+        <h4>Salary and Draws</h4>
+        <table class="table table-bordered table-striped" style="font-size:12px">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th>Date</th>
+                    <th>Amount Paid</th>
+                    <th>Salary: @Model.ManagerSalary.ToString("C")</th>                    
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AssociateInformation.AssociateDraws != null)
+                {
+                    
+                    foreach (var draw in Model.AssociateInformation.AssociateDraws)
+                    {
+                        TotalPaidAmount += draw.DrawAmount;
+                        <tr>
+                            <td><input type="hidden" name="@draw.Id-draw-id" id="@draw.Id-draw-id" value="@draw.Id" /><input type="text" class="form-control" name="@draw.Id-draw-date" id="@draw.Id-draw-date" value="@draw.DrawDate.ToShortDateString()" /></td>
+                            <td><input type="text" class="form-control" name="@draw.Id-draw-amount" id="@draw.Id-draw-amount" value="@draw.DrawAmount" /></td>
+                            <td class="text-center">Delete ? <input type="checkbox" name="@draw.Id-draw-delete" id="@draw.Id-draw-delete" /></td>
+                        </tr>
+
+                    }
+                }
+                <tr>
+                    <td><input type="text" class="form-control" name="new-draw-date" id="new-draw-date" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-draw-amount" id="new-draw-amount" value="" /></td>
+                    <td></td>
+                </tr>  
+                <tr>
+                    <td><input type="text" class="form-control" name="new-draw-date2" id="new-draw-date2" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-draw-amount2" id="new-draw-amount2" value="" /></td>
+                    <td></td>
+                </tr>  
+                <tr>
+                    <td><input type="text" class="form-control" name="new-draw-date3" id="new-draw-date3" value="@DateTime.Now.ToShortDateString()" /></td>
+                    <td><input type="text" class="form-control" name="new-draw-amount3" id="new-draw-amount3" value="" /></td>
+                    <td></td>
+                </tr>  
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th>@TotalPaidAmount.ToString("C")</th>
+                    <th>
+                        Draw Amount:
+                        @{
+                            TotalDrawAmount = (TotalPaidAmount - MontlySalary) * -1;
+                        }
+                        @if (TotalDrawAmount < 0)
+                        {
+                            <span style="color:red">@TotalDrawAmount.ToString("C")</span>
+                        }
+                        else
+                        {
+                            <span style="">$0.00</span>
+                        }
+                    </th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+                    }
+</div>
+

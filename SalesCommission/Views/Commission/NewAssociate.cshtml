@@ -174,6 +174,21 @@ else
         }
     }
 
+    var ssiMet = "Yes";
+    var associateScorecards = SalesCommission.Business.SqlQueries.GetAssociateScoreCardHistoryByDate(Model.AssociateInformation.AssociateSSN, Model.YearId, Model.MonthId);
+    if (associateScorecards != null && associateScorecards.Count > 0)
+    {
+        var scorecard = associateScorecards[0];
+
+        if (scorecard.MeetsSSIObjective != null && scorecard.MeetsSSIObjective.ToLower() == "true")
+        {
+            ssiMet = "Yes";
+        }
+        else
+        {
+            ssiMet = "No";
+        }
+    }
 
     <div class="row" style="margin-top:15px;">
         <div class="col-md-8">
@@ -218,7 +233,7 @@ else
             {
                 <p><strong>Training End Date:</strong> @Model.AssociateInformation.AssociateGraduationDate.ToShortDateString()</p>
             }            
-            <p><strong>SSI:</strong> @Model.AssociateInformation.AssociateSSI</p>
+            <p><strong>SSI:</strong> @ssiMet</p>
 @if ((bool)Session["IsCommissionAdmin"] == true)
 {
             <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartmentDescription</p>
@@ -367,17 +382,24 @@ else
         hoursPayAmount = Math.Round((hoursWorked * @Model.AssociateInformation.AssociateWage));
     }
 
+    var minimumAmount = 2500;
+
+    if(Model.AssociateInformation.AssociateLocation == "FAM" || Model.AssociateInformation.AssociateLocation == "FTN")
+    {
+        minimumAmount = 2000;
+    }
+
     // Minimum Salary, if person worked 180 hours, then minimum is $2500, less that 180hours then (# hours/180)*2500
     if (hoursWorked >= 180)
     {
-        if (hoursPayAmount < 2500)
+        if (hoursPayAmount < minimumAmount)
         {
-            hoursPayAmount = 2500;
+            hoursPayAmount = minimumAmount;
         }
     }
     else
     {
-        var calculatedSalary = (hoursWorked / 180) * 2500;
+        var calculatedSalary = (hoursWorked / 180) * minimumAmount;
         if (hoursPayAmount < calculatedSalary)
         {
             hoursPayAmount = calculatedSalary;
@@ -479,7 +501,14 @@ else
                                                 }
                                                 else
                                                 {
+                                                    if (Model.AssociateInformation.AssociateLocation == "FTN" && input.AftermarketFieldId == 3)
+                                                    {
+                                                        <td class="text-center">3.00</td>
+                                                    }
+                                                    else
+                                                    {
                                                     <td class="text-center">@input.AftermarketPoints</td>
+                                                    }
                                                 }
                                                 @*<td class="text-center">@input.AftermarketProfitPerPoint</td>*@                                                        
                                             </tr>
@@ -589,6 +618,14 @@ else
                             valueInternet = "I";
                         }
 
+                        if (Model.AssociateInformation.AssociateLocation == "FTN")
+                        {
+                            if (deal.ServiceContractAmount < 500)
+                            {
+                                deal.ServiceContractCount = 0;
+                            }
+                        }
+
                         if (deal.FinanceCount == 0 && deal.VehicleTerm > 1)
                         {
                             deal.FinanceCount = dealValue;
@@ -621,6 +658,19 @@ else
                         {
                             valueInternet = "I";
                         }
+
+                        if (Model.AssociateInformation.AssociateLocation == "FTN")
+                        {
+                            if ((deal.VehicleCondition == "NEW" && deal.BPPAmount >= 495) || (deal.BPPAmount >= 295 && deal.VehicleCategory == "L") || (deal.VehicleCondition == "USED" && deal.BPPAmount >= 295 && deal.VehiclePrice < 10000) || (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice >= 10000))
+                            {
+                                valueInternet = "V";
+                            }
+                            else
+                            {
+                                valueInternet = "I";
+                            }
+                        }
+
 
                         var dealPayscale = Model.AssociateInformation.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
 
@@ -838,6 +888,63 @@ else
                                         }
 
                                     }
+                                    else if (Model.AssociateInformation.AssociateLocation == "FTN")
+                                    {
+
+                                        if (item.AftermarketId >= 16) // FOR CHAMERBERSBURG ONLY, 16-19 are 1 point for every $100 profit, then fractions
+                                        {
+                                            var profitPerPoint = (profit / 100);
+
+                                            var wholePoints = Math.Truncate(profitPerPoint);
+                                            var partialProfit = (profitPerPoint - Math.Truncate(profitPerPoint)) * 100;
+
+                                            decimal partialPoints = 0;
+
+                                            if (partialProfit >= 25 && partialProfit < 50)
+                                            {
+                                                partialPoints = .25m;
+                                            }
+                                            else if (partialProfit >= 50 && partialProfit < 100)
+                                            {
+                                                partialPoints = .5m;
+                                            }
+
+                                            points = wholePoints + partialPoints;
+
+                                        }
+                                        else
+                                        {
+                                            if (item.AftermarketProfitPerPoint == 0)
+                                            {
+                                                item.AftermarketProfitPerPoint = 1;
+                                            }
+
+                                            //FOR CHAMBERSBURG -- ZurichShield is 3 points
+                                            if (item.AftermarketId == 3)
+                                            {
+                                                item.AftermarketPoints = 3;
+                                            }
+
+                                            if (item.AftermarketProfitPerPoint > 0)
+                                            {
+                                                var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                {
+                                                    points = 0;
+                                                }
+                                                else if (profitPerPoint < item.AftermarketPoints)
+                                                {
+                                                    points = Math.Truncate(profitPerPoint);
+                                                }
+                                                else
+                                                {
+                                                    points = item.AftermarketPoints;
+                                                }
+                                            }
+                                        }
+
+                                    }
                                     else
                                     {
                                         if (item.AftermarketProfitPerPoint == 0)
@@ -904,17 +1011,37 @@ else
                             commissionSumTotal += commissionTotal;
                         }
 
+                        decimal dealMoneyDue = 0;
+                        var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.StockNumber.Trim());
+
+                        if (itemMoneyDue != null)
+                        {
+                            foreach (var money in itemMoneyDue)
+                            {
+                                dealMoneyDue += money.ControlBalance;
+                            }
+                        }
+
+                        var moneyDueBGColor = "";
+                        var moneyDueWarning = deal.DealKey + " Details";
+
+                        if (dealMoneyDue > 0)
+                        {
+                            moneyDueBGColor = "background-color: #d2070769";
+                            moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal, notify F and I Manager.";
+                        }
+
                         <tr>
                             @if ((bool)Session["IsCommissionAdmin"] == true)
-                            {
+                                                    {
                                 <td><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@dealIndex</a></td>
-                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank">@deal.DealKey</a></td>
+                                <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
                             }
                             else
                             {
                                 <td>@dealIndex</td>
-                                <td class="text-center">@deal.DealKey</td>
-                            }
+                                <td class="text-center" style="@moneyDueBGColor">@deal.DealKey</td>
+                    }
 
                             <td class="text-center">
                                 @if ((bool)Session["IsCommissionAdmin"] == true)
@@ -1001,6 +1128,63 @@ else
                                                                 if (item.AftermarketProfitPerPoint == 0)
                                                                 {
                                                                     item.AftermarketProfitPerPoint = 1;
+                                                                }
+
+                                                                if (item.AftermarketProfitPerPoint > 0)
+                                                                {
+                                                                    var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                                    if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                                    {
+                                                                        points = 0;
+                                                                    }
+                                                                    else if (profitPerPoint < item.AftermarketPoints)
+                                                                    {
+                                                                        points = Math.Truncate(profitPerPoint);
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        points = item.AftermarketPoints;
+                                                                    }
+                                                                }
+                                                            }
+
+                                                        }
+                                                        else if (Model.AssociateInformation.AssociateLocation == "FTN")
+                                                        {
+
+                                                            if (item.AftermarketId >= 16) // FOR CHAMERBERSBURG ONLY, 16-19 are 1 point for every $100 profit, then fractions
+                                                            {
+                                                                var profitPerPoint = (profit / 100);
+
+                                                                var wholePoints = Math.Truncate(profitPerPoint);
+                                                                var partialProfit = (profitPerPoint - Math.Truncate(profitPerPoint)) * 100;
+
+                                                                decimal partialPoints = 0;
+
+                                                                if (partialProfit >= 25 && partialProfit < 50)
+                                                                {
+                                                                    partialPoints = .25m;
+                                                                }
+                                                                else if (partialProfit >= 50 && partialProfit < 100)
+                                                                {
+                                                                    partialPoints = .5m;
+                                                                }
+
+                                                                points = wholePoints + partialPoints;
+
+                                                            }
+                                                            else
+                                                            {
+                                                                if (item.AftermarketProfitPerPoint == 0)
+                                                                {
+                                                                    item.AftermarketProfitPerPoint = 1;
+                                                                }
+
+                                                                //FOR CHAMBERSBURG -- ZurichShield is 3 points
+                                                                if(item.AftermarketId == 3)
+                                                                {
+                                                                    item.AftermarketPoints = 3;
                                                                 }
 
                                                                 if (item.AftermarketProfitPerPoint > 0)
@@ -1153,16 +1337,30 @@ else
 
 
 
-                    var newPercent = (totalNewCount / dealIndex).ToString("P", nfi);
-                    var usedPercent = (totalUsedCount / dealIndex).ToString("P", nfi);
+                    var newPercent = "0";
+                    var usedPercent = "0";
 
-                    var BPPPercent = (totalBPPCount / dealIndex).ToString("P", nfi);
-                    var TradePercent = (totalTradeCount / dealIndex).ToString("P", nfi);
-                    var FinancePercent = (totalFinanceCount / dealIndex).ToString("P", nfi);
-                    var ServicePercent = (totalServiceCount / dealIndex).ToString("P", nfi);
-                    var MaintenancePercent = (totalMaintenanceCount / dealIndex).ToString("P", nfi);
-                    var GAPPercent = (totalGAPCount / dealIndex).ToString("P", nfi);
-                    var AftermarketPercent = (totalAftermarketItemsCount / dealIndex).ToString("P", nfi);
+                    var BPPPercent = "0";
+                    var TradePercent = "0";
+                    var FinancePercent = "0";
+                    var ServicePercent = "0";
+                    var MaintenancePercent = "0";
+                    var GAPPercent = "0";
+                    var AftermarketPercent = "0";
+
+                    if (dealIndex > 0)
+                    {
+                        newPercent = (totalNewCount / dealIndex).ToString("P", nfi);
+                        usedPercent = (totalUsedCount / dealIndex).ToString("P", nfi);
+
+                        BPPPercent = (totalBPPCount / dealIndex).ToString("P", nfi);
+                        TradePercent = (totalTradeCount / dealIndex).ToString("P", nfi);
+                        FinancePercent = (totalFinanceCount / dealIndex).ToString("P", nfi);
+                        ServicePercent = (totalServiceCount / dealIndex).ToString("P", nfi);
+                        MaintenancePercent = (totalMaintenanceCount / dealIndex).ToString("P", nfi);
+                        GAPPercent = (totalGAPCount / dealIndex).ToString("P", nfi);
+                        AftermarketPercent = (totalAftermarketItemsCount / dealIndex).ToString("P", nfi);
+                    }
 
                     decimal totalTooFewVSC = 0;
 
@@ -1171,8 +1369,10 @@ else
                     //    totalTooFewVSC = totalServiceCount * tooFewVSC;
                     //}
 
+
+
                     decimal SSIDeductionAmount = 0;
-                    if (Model.AssociateInformation.AssociateSSI != null && Model.AssociateInformation.AssociateSSI.ToLower() == "no")
+                    if (ssiMet == "No")
                     {
                         SSIDeductionAmount = 50 * totalNewCount;
                         SSIDeductionAmount = SSIDeductionAmount * -1;
@@ -1277,6 +1477,63 @@ else
                                                             if (item.AftermarketProfitPerPoint == 0)
                                                             {
                                                                 item.AftermarketProfitPerPoint = 1;
+                                                            }
+
+                                                            if (item.AftermarketProfitPerPoint > 0)
+                                                            {
+                                                                var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                                if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                                {
+                                                                    points = 0;
+                                                                }
+                                                                else if (profitPerPoint < item.AftermarketPoints)
+                                                                {
+                                                                    points = Math.Truncate(profitPerPoint);
+                                                                }
+                                                                else
+                                                                {
+                                                                    points = item.AftermarketPoints;
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                    else if (Model.AssociateInformation.AssociateLocation == "FTN")
+                                                    {
+
+                                                        if (item.AftermarketId >= 16) // FOR CHAMERBERSBURG ONLY, 16-19 are 1 point for every $100 profit, then fractions
+                                                        {
+                                                            var profitPerPoint = (profit / 100);
+
+                                                            var wholePoints = Math.Truncate(profitPerPoint);
+                                                            var partialProfit = (profitPerPoint - Math.Truncate(profitPerPoint)) * 100;
+
+                                                            decimal partialPoints = 0;
+
+                                                            if (partialProfit >= 25 && partialProfit < 50)
+                                                            {
+                                                                partialPoints = .25m;
+                                                            }
+                                                            else if (partialProfit >= 50 && partialProfit < 100)
+                                                            {
+                                                                partialPoints = .5m;
+                                                            }
+
+                                                            points = wholePoints + partialPoints;
+
+                                                        }
+                                                        else
+                                                        {
+                                                            if (item.AftermarketProfitPerPoint == 0)
+                                                            {
+                                                                item.AftermarketProfitPerPoint = 1;
+                                                            }
+
+                                                            //FOR CHAMBERSBURG -- ZurichShield is 3 points
+                                                            if (item.AftermarketId == 3)
+                                                            {
+                                                                item.AftermarketPoints = 3;
                                                             }
 
                                                             if (item.AftermarketProfitPerPoint > 0)
@@ -1409,7 +1666,7 @@ else
                     }*@
 @if (bShowValues)
 {
-    if (Model.AssociateInformation.AssociateSSI != null && Model.AssociateInformation.AssociateSSI.ToLower() == "no")
+    if (ssiMet.ToLower() == "no")
     {
         <tr style="background-color:#d9edf7">
             <th class="text-center" colspan="16"></th>

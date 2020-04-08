@@ -16,6 +16,7 @@ namespace SalesCommission.Models
         public List<ManufacturerSpiff> ManufacturerSpiffs { get; set; }
         public List<DealApproval> DealApprovals { get; set; }
         public List<AssociateLead> AssociateLeads { get; set; }
+        public List<MoneyDue> MoneyDue { get; set; }
 
     }
 
@@ -24,10 +25,13 @@ namespace SalesCommission.Models
         public string StoreId { get; set; }
         public int MonthId { get; set; }
         public int YearId { get; set; }
+        public bool IncludeDeals { get; set; }
         public List<Associate> FIManagers { get; set; }
         public List<ObjectivesAndStandards> ObjectivesAndStandards { get; set; }
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
         public List<FIManagerDealDetails> FIManagerDealDetails { get; set; }
+        public List<MoneyDue> MoneyDue { get; set; }
+        public List<FIDealApproval> DealApprovals { get; set; }
 
     }
 
@@ -66,6 +70,7 @@ namespace SalesCommission.Models
         public List<AssociateScoreCard> PreviousAssociateScorecards { get; set; }
         public List<ObjectivesAndStandards> StoreObjectivesStandards { get; set; }
         public List<Associate> AssociateList { get; set; }
+        public List<MoneyDue> MoneyDue { get; set; }
     }
 
     public class FIAssociateCommissionModel
@@ -75,9 +80,16 @@ namespace SalesCommission.Models
         public int YearId { get; set; }
         public Associate AssociateInformation { get; set; }
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
-        public List<DealApproval> DealApprovals { get; set; }
+        public List<FIDealApproval> DealApprovals { get; set; }
         public List<FIPayscale> FIPayscales { get; set; }
-
+        public List<MoneyDue> MoneyDue { get; set; }
+        public List<MoneyDue> MoneyDueHistory { get; set; }
+        public List<FIPayscaleAftermarket> FIPayscaleAftermarket { get; set; }
+        public List<FIAdjustment> FIAdjustments { get; set; }
+        public decimal GrossPercentagePaid { get; set; }
+        public decimal MentorPercentagePaid { get; set; }
+        public decimal ManagerSalary { get; set; }
+        public List<Associate> FIManagerList { get; set;}
     }
 
     public class AssociatePayscaleComparisonModel
@@ -187,6 +199,64 @@ namespace SalesCommission.Models
     public class DealApproval
     {
         public string DealKey { get; set; }
+        public string ApprovalUser { get; set; }
+        public DateTime ApprovalDate { get; set; }
+    }
+
+    public class FIDealApproval
+    {
+        public int ApprovalKey { get; set; }
+        public string DealKey { get; set; }
+        public string  MonthYear { get; set; }
+        public string  FIManagerName { get; set; }
+        public string  FIManagerNumber { get; set; }
+        public bool  FinanceIncomePaid { get; set; }
+        public bool  ServiceContractPaid { get; set; }
+        public bool  MaintenanceContractPaid { get; set; }
+        public bool  GAPPaid { get; set; }
+        public bool  ZurichShieldPaid { get; set; }
+        public bool  NitrogenPaid { get; set; }
+        public bool  SelectProtectionPaid { get; set; }
+        public bool  TireWheelPaid { get; set; }
+        public bool  KeyReplacementPaid { get; set; }
+        public bool  WindshieldProtectionPaid { get; set; }
+        public bool  WearAndTearPaid { get; set; }
+        public bool  SecureGuardPaid { get; set; }
+        public bool  FitzTotalPackagePaid { get; set; }
+        public bool  RustInhibitUnderCoatPaid { get; set; }
+        public bool  RustInhibitorPaid { get; set; }
+        public bool  UndercoatingPaid { get; set; }
+        public bool  DataDotsPaid { get; set; }
+        public bool PaintDentPaid { get; set; }
+        public bool Miscellaneous1Paid { get; set; }
+        public bool Miscellaneous2Paid { get; set; }
+        public bool Miscellaneous3Paid { get; set; }
+        public bool Miscellaneous4Paid { get; set; }
+        public bool BPPPaid { get; set; }
+        public decimal FinanceIncomeAmount { get; set; }
+        public decimal ServiceContractAmount { get; set; }
+        public decimal MaintenanceContractAmount { get; set; }
+        public decimal GAPAmount { get; set; }
+        public decimal ZurichShieldAmount { get; set; }
+        public decimal NitrogenAmount { get; set; }
+        public decimal SelectProtectionAmount { get; set; }
+        public decimal TireWheelAmount { get; set; }
+        public decimal KeyReplacementAmount { get; set; }
+        public decimal WindshieldProtectionAmount { get; set; }
+        public decimal WearAndTearAmount { get; set; }
+        public decimal SecureGuardAmount { get; set; }
+        public decimal FitzTotalPackageAmount { get; set; }
+        public decimal RustInhibitUnderCoatAmount { get; set; }
+        public decimal RustInhibitorAmount { get; set; }
+        public decimal UndercoatingAmount { get; set; }
+        public decimal DataDotsAmount { get; set; }
+        public decimal PaintDentAmount { get; set; }
+        public decimal Miscellaneous1Amount { get; set; }
+        public decimal Miscellaneous2Amount { get; set; }
+        public decimal Miscellaneous3Amount { get; set; }
+        public decimal Miscellaneous4Amount { get; set; }
+        public decimal BPPAmount { get; set; }
+        public string Comments { get; set; }
         public string ApprovalUser { get; set; }
         public DateTime ApprovalDate { get; set; }
     }

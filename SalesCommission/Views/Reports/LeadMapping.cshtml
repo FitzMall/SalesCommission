@@ -33,7 +33,7 @@
                                 {
                                     var leadsources = Model.LeadSourceMappings.FindAll(x => x.LeadGroupId == groups.Id);
 
-                                    <option value="@groups.Id">@groups.LeadGroupName (@leadsources.Count)</option>
+                                    <option value="@groups.Id" @(Model.SelectedLeadGroupId == groups.Id ? "selected" : "")>@groups.LeadGroupName (@leadsources.Count)</option>
                                 }
                             </select>
                         }
@@ -82,6 +82,7 @@
 
             using (Html.BeginForm())
             {
+                @Html.HiddenFor(x => Model.SelectedLeadGroupId)
             <table class="table table-striped table-bordered" id="lead-mapping">
                 <thead>
                     <tr>                        
@@ -126,6 +127,7 @@
             </table>
             <div class="text-center">
                 <input type="hidden" name="hdnIndex" id="hdnIndex" value="@index" />
+                <input type="checkbox" id="chkExcludeFromReporting" name="chkExcludeFromReporting" @(Model.ExcludeFromReporting == true ? "checked" : "") /> Exclude Lead Group and All Lead Sources From Reporting for @Model.SelectedLeadGroupName<br/>
                 <button class="btn btn-primary" type="submit" value="SaveGroup" name="SaveGroup">Save Group</button>
             </div>
                 }

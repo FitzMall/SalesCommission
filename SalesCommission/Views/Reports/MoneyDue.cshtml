@@ -1,0 +1,1484 @@
+﻿@model SalesCommission.Models.MoneyDueModel
+
+@{
+    ViewBag.Title = "Money Due Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 2;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+}
+
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+}
+
+@if (Model.MoneyDue != null)
+{
+    decimal TotalBalance = 0;
+    decimal TotalBank = 0;
+    decimal TotalCustomer = 0;
+    decimal TotalDeals = 0;
+
+    var locations = Model.MoneyDue.OrderBy(x => x.LocationName).Select(x => x.Location).Distinct().ToList();
+
+    <div class="row" style="margin-top:25px;">
+        <div class="col-md-12">
+            <h2>Money Due Report</h2>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr style="background-color:#d9edf7;">
+                        <th>Location</th>
+                        <th class="text-center">Deals</th>
+                        <th class="text-center">Balance</th>
+                        <th class="text-center">Avg Balance per Deal</th>
+                        <th class="text-center">Due from Bank</th>
+                        <th class="text-center">Due from Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var location in locations)
+                    {
+                        var locationMoneyDue = Model.MoneyDue.FindAll(x => x.Location == location).OrderByDescending(x => x.ScheduleDays);
+
+                        var locationName = location;
+
+                        decimal locationBalance = 0;
+                        decimal locationBank = 0;
+                        decimal locationCustomer = 0;
+                        var locationDays = 0;
+                        double locationAvgDays = 0;
+
+                        foreach (var moneyDue in locationMoneyDue)
+                        {
+                            locationName = moneyDue.LocationName;
+
+                            locationBalance += moneyDue.ControlBalance;
+
+                            if (moneyDue.DueFrom.Contains("106"))
+                            {
+                                locationBank += moneyDue.ControlBalance;
+                            }
+                            else if (moneyDue.DueFrom.Contains("111"))
+                            {
+                                locationCustomer += moneyDue.ControlBalance;
+                            }
+
+                            locationDays += moneyDue.ScheduleDays;
+
+                        }
+
+                        locationAvgDays = (double)locationDays / (double)locationMoneyDue.Count();
+                        var avglocationBalance = (double)locationBalance / (double)locationMoneyDue.Count();
+
+                        TotalDeals += locationMoneyDue.Count();
+
+                        <tr>
+                            <td><a data-toggle="collapse" id="@location" style="cursor: pointer;" data-target="#collapse-@location">@locationName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                            <td class="text-center">@locationMoneyDue.Count()</td>
+                            <td class="text-center">@locationBalance.ToString("C", nfi)</td>
+                            <td class="text-center">@avglocationBalance.ToString("C", nfi)</td>
+                            <td class="text-center">@locationBank.ToString("C", nfi)</td>
+                            <td class="text-center">@locationCustomer.ToString("C", nfi)</td>
+                        </tr>
+                        <tr id="collapse-@location" class="collapse out" style="background-color:lightgray">
+                            <td colspan="6">
+                                <h4>Money Due for @location</h4>
+
+                                @{
+                                    var FIManagers = locationMoneyDue.Select(x => x.FIManagerNumber).Distinct().ToList();
+
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr style="background-color:#d9edf7;">
+                                                <th>F and I Manager</th>
+                                                <th class="text-center">Deals</th>
+                                                <th class="text-center">Balance</th>
+                                                <th class="text-center">Avg Balance per Deal</th>
+                                                <th class="text-center">Due from Bank</th>
+                                                <th class="text-center">Due from Customer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                            @foreach (var managerNumber in FIManagers)
+                                            {
+                                                var managerMoneyDue = locationMoneyDue.ToList().FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays);
+
+                                                var managerName = managerNumber;
+                                                var managerFINumber = managerNumber;
+
+                                                decimal managerBalance = 0;
+                                                decimal managerBank = 0;
+                                                decimal managerCustomer = 0;
+                                                var managerDays = 0;
+                                                double managerAvgDays = 0;
+                                                decimal ManagerTotalDeals = 0;
+
+
+                                                foreach (var moneyDue in managerMoneyDue)
+                                                {
+                                                    managerName = moneyDue.FIManager;
+
+                                                    managerBalance += moneyDue.ControlBalance;
+
+                                                    if (moneyDue.DueFrom.Contains("106"))
+                                                    {
+                                                        managerBank += moneyDue.ControlBalance;
+                                                    }
+                                                    else if (moneyDue.DueFrom.Contains("111"))
+                                                    {
+                                                        managerCustomer += moneyDue.ControlBalance;
+                                                    }
+
+                                                    managerDays += moneyDue.ScheduleDays;
+
+                                                }
+
+                                                if (managerName == "")
+                                                {
+                                                    managerName = "NO MANAGER";
+                                                    managerFINumber = "000";
+                                                }
+
+                                                managerAvgDays = (double)managerDays / (double)managerMoneyDue.Count();
+                                                var avgmanagerBalance = (double)managerBalance / (double)managerMoneyDue.Count();
+
+                                                ManagerTotalDeals += managerMoneyDue.Count();
+
+                                                <tr>
+                                                    <td><a data-toggle="collapse" id="@managerFINumber-@location" style="cursor: pointer;" data-target="#collapse-@managerFINumber-@location">@managerName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                                                    <td class="text-center">@managerMoneyDue.Count()</td>
+                                                    <td class="text-center">@managerBalance.ToString("C", nfi)</td>
+                                                    <td class="text-center">@avgmanagerBalance.ToString("C", nfi)</td>
+                                                    <td class="text-center">@managerBank.ToString("C", nfi)</td>
+                                                    <td class="text-center">@managerCustomer.ToString("C", nfi)</td>
+                                                </tr>
+
+                                                <tr id="collapse-@managerFINumber-@location" class="collapse out" style="background-color:lightgray">
+                                                    <td colspan="6">
+                                                        <table id="money-due-@managerFINumber-@location" class="table table-bordered" style="font-size:12px;">
+                                                            <thead>
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th class="text-center">Stock #</th>
+                                                                    <th class="text-center">Deal #</th>
+                                                                    <th class="text-center">Schedule<br />Days</th>
+                                                                    <th class="text-center">Deal Date</th>
+                                                                    <th class="text-center">Due From</th>
+                                                                    <th class="text-center">Customer #</th>
+                                                                    <th class="text-center">Control<br />Balance</th>
+                                                                    <th class="text-center">Customer Name</th>
+                                                                    <th class="text-center">Business<br />Phone</th>
+                                                                    <th class="text-center">Residential<br />Phone</th>
+                                                                    <th class="text-center">Sales Manager</th>
+                                                                    <th class="text-center">FI Manager</th>
+                                                                    <th class="text-center">Bank Name</th>
+                                                                    <th class="text-center">Last Updated</th>
+                                                                    <th class="text-center">Funded/Notes</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var moneyDue in managerMoneyDue)
+                                                                {
+
+                                                                    var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                    var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                                                    if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                                                    {
+                                                                        currentHistory = moneyDueHistory[0];
+                                                                    }
+
+
+                                                                    <tr>
+                                                                        <td class="text-center">@moneyDue.StockNumber</td>
+                                                                        <td class="text-center">
+
+                                                                            @if (moneyDue.DealNumber != "")
+                                                                            {
+                                                                                <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                                                            }
+                                                                        </td>
+                                                                        <td class="text-center">@moneyDue.ScheduleDays</td>
+                                                                        <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                                                        @if (moneyDue.DueFrom.Contains("106"))
+                                                                        {
+                                                                            <td class="text-center">Bank</td>
+                                                                        }
+                                                                        else if (moneyDue.DueFrom.Contains("111"))
+                                                                        {
+                                                                            <td class="text-center">Customer</td>
+                                                                        }
+
+
+                                                                        <td class="text-center">@moneyDue.CustomerNumber</td>
+                                                                        <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                                                        <td class="text-center">@moneyDue.CustomerName</td>
+                                                                        <td class="text-center">@moneyDue.BusinessPhone</td>
+                                                                        <td class="text-center">@moneyDue.ResidencePhone</td>
+                                                                        <td class="text-center">@moneyDue.SalesManager</td>
+                                                                        <td class="text-center">@moneyDue.FIManager</td>
+                                                                        <td class="text-center">@moneyDue.BankName</td>
+                                                                        <td class="text-center">
+                                                                            @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                                            {
+                                                                                @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                                                            <br />
+                                                                            <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            @currentHistory.FundedStatus<br />
+                                                                            @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                                            {
+                                                                                @currentHistory.RootCause<br />
+                                                                            }
+                                                                            @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                                            {
+                                                                                <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                                                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                                                </a>
+                                                                            }
+                                                                        </td>
+                                                                    </tr>
+
+                                                                }
+
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr style="background-color:#d9edf7">
+                                                                    <th class="text-center">@managerMoneyDue.Count()</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">Avg Days:<br />@Math.Round(managerAvgDays)</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center">@managerBalance</th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                    <th class="text-center"></th>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+
+                                                        <script type="text/javascript">
+                                                            $('#money-due-@managerFINumber-@location').DataTable({
+                                                                searching: true,
+                                                                dom: 'Bfrti',
+                                                                pageLength: -1,
+                                                                order: [[2, "desc"]],
+                                                                columnDefs: [
+                                                                    { type: 'any-number', targets: [2, 5, 6] },
+                                                                    { type: 'date-us', targets: [3] },
+                                                                    {
+                                                                        targets: [0],
+                                                                        orderData: [0, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [1],
+                                                                        orderData: [1, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [2],
+                                                                        orderData: [2, 1]
+                                                                    },
+                                                                    {
+                                                                        targets: [3],
+                                                                        orderData: [3, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [4],
+                                                                        orderData: [4, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [5],
+                                                                        orderData: [5, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [6],
+                                                                        orderData: [6, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [7],
+                                                                        orderData: [7, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [8],
+                                                                        orderData: [8, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [9],
+                                                                        orderData: [9, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [10],
+                                                                        orderData: [10, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [11],
+                                                                        orderData: [11, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [12],
+                                                                        orderData: [12, 2]
+                                                                    },
+                                                                ],
+                                                                buttons: [
+                                                                    {
+                                                                        extend: 'copyHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'excelHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'pdfHtml5', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    },
+                                                                    {
+                                                                        extend: 'print', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    }
+                                                                ],
+                                                                retrieve: true
+                                                            });
+                                                        </script>
+
+                                                    </td>
+                                                </tr>
+
+                                            }
+
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="background-color:#d9edf7;">
+                                                <th><a data-toggle="collapse" id="AllManagers-@location" style="cursor: pointer;" data-target="#collapse-AllManagers-@location">All Managers <i class="fa fa-caret-down" aria-hidden="true"></a></th>
+                                                <th class="text-center">@locationMoneyDue.Count()</th>
+                                                <th class="text-center">@locationBalance.ToString("C", nfi)</th>
+                                                <th class="text-center">@avglocationBalance.ToString("C", nfi)</th>
+                                                <th class="text-center">@locationBank.ToString("C", nfi)</th>
+                                                <th class="text-center">@locationCustomer.ToString("C", nfi)</th>
+                                            </tr>
+
+                                            <tr id="collapse-AllManagers-@location" class="collapse out" style="background-color:lightgray">
+                                                <td colspan="6">
+                                                    <table id="money-due-AllManagers-@location" class="table table-bordered" style="font-size:12px;">
+                                                        <thead>
+                                                            <tr style="background-color:#d9edf7">
+                                                                <th class="text-center">Stock #</th>
+                                                                <th class="text-center">Deal #</th>
+                                                                <th class="text-center">Schedule<br />Days</th>
+                                                                <th class="text-center">Deal Date</th>
+                                                                <th class="text-center">Due From</th>
+                                                                <th class="text-center">Customer #</th>
+                                                                <th class="text-center">Control<br />Balance</th>
+                                                                <th class="text-center">Customer Name</th>
+                                                                <th class="text-center">Business<br />Phone</th>
+                                                                <th class="text-center">Residential<br />Phone</th>
+                                                                <th class="text-center">Sales Manager</th>
+                                                                <th class="text-center">FI Manager</th>
+                                                                <th class="text-center">Bank Name</th>
+                                                                <th class="text-center">Last Updated</th>
+                                                                <th class="text-center">Funded/Notes</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var moneyDue in locationMoneyDue)
+                                                            {
+
+                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                                                if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                                                {
+                                                                    currentHistory = moneyDueHistory[0];
+                                                                }
+
+                                                                <tr>
+                                                                    <td class="text-center">@moneyDue.StockNumber</td>
+                                                                    <td class="text-center">
+                                                                        @if (moneyDue.DealNumber != "")
+                                                                        {
+                                                                            <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                                                        }
+                                                                    </td>
+                                                                    <td class="text-center">@moneyDue.ScheduleDays</td>
+                                                                    <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                                                    @if (moneyDue.DueFrom.Contains("106"))
+                                                                    {
+                                                                        <td class="text-center">Bank</td>
+                                                                    }
+                                                                    else if (moneyDue.DueFrom.Contains("111"))
+                                                                    {
+                                                                        <td class="text-center">Customer</td>
+                                                                    }
+
+
+                                                                    <td class="text-center">@moneyDue.CustomerNumber</td>
+                                                                    <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                                                    <td class="text-center">@moneyDue.CustomerName</td>
+                                                                    <td class="text-center">@moneyDue.BusinessPhone</td>
+                                                                    <td class="text-center">@moneyDue.ResidencePhone</td>
+                                                                    <td class="text-center">@moneyDue.SalesManager</td>
+                                                                    <td class="text-center">@moneyDue.FIManager</td>
+                                                                    <td class="text-center">@moneyDue.BankName</td>
+                                                                    <td class="text-center">
+                                                                        @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                                        {
+                                                                            @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                                                        <br />
+                                                                        <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        @currentHistory.FundedStatus<br />
+                                                                        @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                                        {
+                                                                            @currentHistory.RootCause<br />
+                                                                        }
+                                                                        @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                                        {
+                                                                            <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                                                <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                                            </a>
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+
+                                                            }
+
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr style="background-color:#d9edf7">
+                                                                <th class="text-center">@locationMoneyDue.Count()</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center">Avg Days:<br />@Math.Round(locationAvgDays)</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center">@locationBalance</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+
+                                                    <script type="text/javascript">
+                                                        $('#money-due-AllManagers-@location').DataTable({
+                                                            searching: true,
+                                                            dom: 'Bfrti',
+                                                            pageLength: -1,
+                                                            order: [[2, "desc"]],
+                                                            columnDefs: [
+                                                                { type: 'any-number', targets: [2, 5, 6] },
+                                                                { type: 'date-us', targets: [3] },
+                                                                {
+                                                                    targets: [0],
+                                                                    orderData: [0, 2]
+                                                                },
+                                                                {
+                                                                    targets: [1],
+                                                                    orderData: [1, 2]
+                                                                },
+                                                                {
+                                                                    targets: [2],
+                                                                    orderData: [2, 1]
+                                                                },
+                                                                {
+                                                                    targets: [3],
+                                                                    orderData: [3, 2]
+                                                                },
+                                                                {
+                                                                    targets: [4],
+                                                                    orderData: [4, 2]
+                                                                },
+                                                                {
+                                                                    targets: [5],
+                                                                    orderData: [5, 2]
+                                                                },
+                                                                {
+                                                                    targets: [6],
+                                                                    orderData: [6, 2]
+                                                                },
+                                                                {
+                                                                    targets: [7],
+                                                                    orderData: [7, 2]
+                                                                },
+                                                                {
+                                                                    targets: [8],
+                                                                    orderData: [8, 2]
+                                                                },
+                                                                {
+                                                                    targets: [9],
+                                                                    orderData: [9, 2]
+                                                                },
+                                                                {
+                                                                    targets: [10],
+                                                                    orderData: [10, 2]
+                                                                },
+                                                                {
+                                                                    targets: [11],
+                                                                    orderData: [11, 2]
+                                                                },
+                                                                {
+                                                                    targets: [12],
+                                                                    orderData: [12, 2]
+                                                                },
+                                                            ],
+                                                            buttons: [
+                                                                {
+                                                                    extend: 'copyHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'excelHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'pdfHtml5', footer: true,
+                                                                    orientation: 'landscape'
+                                                                },
+                                                                {
+                                                                    extend: 'print', footer: true,
+                                                                    orientation: 'landscape'
+                                                                }
+                                                            ],
+                                                            retrieve: true
+                                                        });
+                                                    </script>
+
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+
+                                }
+
+
+
+                            </td>
+                        </tr>
+
+                                        TotalBalance += locationBalance;
+                                        TotalBank += locationBank;
+                                        TotalCustomer += locationCustomer;
+
+                                    }
+
+
+
+                </tbody>
+                <tfoot>
+                    @{
+                        var TotalAverageBalance = (double)TotalBalance / (double)TotalDeals;
+                    }
+                    <tr>
+                        <th><a data-toggle="collapse" id="AllStores" style="cursor: pointer;" data-target="#collapse-AllStores">Totals <i class="fa fa-caret-down" aria-hidden="true"></a></th>
+                        <th class="text-center">@TotalDeals</th>
+                        <th class="text-center">@TotalBalance.ToString("C", nfi)</th>
+                        <th class="text-center">@TotalAverageBalance.ToString("C", nfi)</th>
+                        <th class="text-center">@TotalBank.ToString("C", nfi)</th>
+                        <th class="text-center">@TotalCustomer.ToString("C", nfi)</th>
+                    </tr>
+                    <tr id="collapse-AllStores" class="collapse out" style="background-color:lightgray">
+                        <td colspan="6">
+                            <h4>Money Due for All Locations</h4>
+
+                            @{
+                                var AllFIManagers = Model.MoneyDue.Select(x => x.FIManagerNumber).Distinct().ToList();
+
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr style="background-color:#d9edf7;">
+                                            <th>F and I Manager</th>
+                                            <th class="text-center">Deals</th>
+                                            <th class="text-center">Balance</th>
+                                            <th class="text-center">Avg Balance per Deal</th>
+                                            <th class="text-center">Due from Bank</th>
+                                            <th class="text-center">Due from Customer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @foreach (var managerNumber in AllFIManagers)
+                                        {
+                                            var managerMoneyDue = Model.MoneyDue.ToList().FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays);
+
+                                            var managerName = managerNumber;
+                                            var managerFINumber = managerNumber;
+
+                                            decimal managerBalance = 0;
+                                            decimal managerBank = 0;
+                                            decimal managerCustomer = 0;
+                                            var managerDays = 0;
+                                            double managerAvgDays = 0;
+                                            decimal ManagerTotalDeals = 0;
+
+                                            var location = "";
+                                            foreach (var moneyDue in managerMoneyDue)
+                                            {
+
+                                                location = moneyDue.Location;
+                                                managerName = moneyDue.FIManager;
+
+                                                managerBalance += moneyDue.ControlBalance;
+
+                                                if (moneyDue.DueFrom.Contains("106"))
+                                                {
+                                                    managerBank += moneyDue.ControlBalance;
+                                                }
+                                                else if (moneyDue.DueFrom.Contains("111"))
+                                                {
+                                                    managerCustomer += moneyDue.ControlBalance;
+                                                }
+
+                                                managerDays += moneyDue.ScheduleDays;
+
+                                            }
+
+                                            if (managerName == "")
+                                            {
+                                                managerName = "NO MANAGER";
+                                                managerFINumber = "000";
+                                            }
+
+                                            managerAvgDays = (double)managerDays / (double)managerMoneyDue.Count();
+                                            var avgmanagerBalance = (double)managerBalance / (double)managerMoneyDue.Count();
+
+                                            ManagerTotalDeals += managerMoneyDue.Count();
+
+                                            <tr>
+                                                <td><a data-toggle="collapse" id="@managerFINumber" style="cursor: pointer;" data-target="#collapse-@managerFINumber">@managerName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                                                <td class="text-center">@managerMoneyDue.Count()</td>
+                                                <td class="text-center">@managerBalance.ToString("C", nfi)</td>
+                                                <td class="text-center">@avgmanagerBalance.ToString("C", nfi)</td>
+                                                <td class="text-center">@managerBank.ToString("C", nfi)</td>
+                                                <td class="text-center">@managerCustomer.ToString("C", nfi)</td>
+                                            </tr>
+
+                                            <tr id="collapse-@managerFINumber" class="collapse out" style="background-color:lightgray">
+                                                <td colspan="6">
+                                                    <table id="money-due-@managerFINumber" class="table table-bordered" style="font-size:12px;">
+                                                        <thead>
+                                                            <tr style="background-color:#d9edf7">
+                                                                <th class="text-center">Stock #</th>
+                                                                <th class="text-center">Deal #</th>
+                                                                <th class="text-center">Schedule<br />Days</th>
+                                                                <th class="text-center">Deal Date</th>
+                                                                <th class="text-center">Due From</th>
+                                                                <th class="text-center">Customer #</th>
+                                                                <th class="text-center">Control<br />Balance</th>
+                                                                <th class="text-center">Customer Name</th>
+                                                                <th class="text-center">Business<br />Phone</th>
+                                                                <th class="text-center">Residential<br />Phone</th>
+                                                                <th class="text-center">Sales Manager</th>
+                                                                <th class="text-center">FI Manager</th>
+                                                                <th class="text-center">Bank Name</th>
+                                                                <th class="text-center">Last Updated</th>
+                                                                <th class="text-center">Funded/Notes</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var moneyDue in managerMoneyDue)
+                                                            {
+
+                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                                                if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                                                {
+                                                                    currentHistory = moneyDueHistory[0];
+                                                                }
+
+
+                                                            <tr>
+                                                                <td class="text-center">@moneyDue.StockNumber</td>
+                                                                <td class="text-center">
+
+                                                                    @if (moneyDue.DealNumber != "")
+                                                                    {
+                                                                        <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                                                    }
+                                                                </td>
+                                                                <td class="text-center">@moneyDue.ScheduleDays</td>
+                                                                <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                                                @if (moneyDue.DueFrom.Contains("106"))
+                                                                {
+                                                                    <td class="text-center">Bank</td>
+                                                                }
+                                                                else if (moneyDue.DueFrom.Contains("111"))
+                                                                {
+                                                                    <td class="text-center">Customer</td>
+                                                                }
+
+
+                                                                <td class="text-center">@moneyDue.CustomerNumber</td>
+                                                                <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                                                <td class="text-center">@moneyDue.CustomerName</td>
+                                                                <td class="text-center">@moneyDue.BusinessPhone</td>
+                                                                <td class="text-center">@moneyDue.ResidencePhone</td>
+                                                                <td class="text-center">@moneyDue.SalesManager</td>
+                                                                <td class="text-center">@moneyDue.FIManager</td>
+                                                                <td class="text-center">@moneyDue.BankName</td>
+                                                                <td class="text-center">
+                                                                    @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                                    {
+                                                                        @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                                                    <br />
+                                                                    <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @currentHistory.FundedStatus<br />
+                                                                    @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                                    {
+                                                                        @currentHistory.RootCause<br />
+                                                                    }
+                                                                    @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                                    {
+                                                                        <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                                            <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                                        </a>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+
+                                                            }
+
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr style="background-color:#d9edf7">
+                                                                <th class="text-center">@managerMoneyDue.Count()</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center">Avg Days:<br />@Math.Round(managerAvgDays)</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center">@managerBalance</th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                                <th class="text-center"></th>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+
+                                                    <script type="text/javascript">
+                            $('#money-due-@managerFINumber-@location').DataTable({
+                                searching: true,
+                                dom: 'Bfrti',
+                                pageLength: -1,
+                                order: [[2, "desc"]],
+                                columnDefs: [
+                                    { type: 'any-number', targets: [2, 5, 6] },
+                                    { type: 'date-us', targets: [3] },
+                                    {
+                                        targets: [0],
+                                        orderData: [0, 2]
+                                    },
+                                    {
+                                        targets: [1],
+                                        orderData: [1, 2]
+                                    },
+                                    {
+                                        targets: [2],
+                                        orderData: [2, 1]
+                                    },
+                                    {
+                                        targets: [3],
+                                        orderData: [3, 2]
+                                    },
+                                    {
+                                        targets: [4],
+                                        orderData: [4, 2]
+                                    },
+                                    {
+                                        targets: [5],
+                                        orderData: [5, 2]
+                                    },
+                                    {
+                                        targets: [6],
+                                        orderData: [6, 2]
+                                    },
+                                    {
+                                        targets: [7],
+                                        orderData: [7, 2]
+                                    },
+                                    {
+                                        targets: [8],
+                                        orderData: [8, 2]
+                                    },
+                                    {
+                                        targets: [9],
+                                        orderData: [9, 2]
+                                    },
+                                    {
+                                        targets: [10],
+                                        orderData: [10, 2]
+                                    },
+                                    {
+                                        targets: [11],
+                                        orderData: [11, 2]
+                                    },
+                                    {
+                                        targets: [12],
+                                        orderData: [12, 2]
+                                    },
+                                ],
+                                buttons: [
+                                    {
+                                        extend: 'copyHtml5', footer: true,
+                                    },
+                                    {
+                                        extend: 'excelHtml5', footer: true,
+                                    },
+                                    {
+                                        extend: 'pdfHtml5', footer: true,
+                                        orientation: 'landscape'
+                                    },
+                                    {
+                                        extend: 'print', footer: true,
+                                        orientation: 'landscape'
+                                    }
+                                ],
+                                retrieve: true
+                            });
+                                                    </script>
+
+                                                </td>
+                                            </tr>
+
+                                        }
+
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background-color:#d9edf7;">
+                                            <th>All Managers</th>
+                                            <th class="text-center">@TotalDeals</th>
+                                            <th class="text-center">@TotalBalance.ToString("C", nfi)</th>
+                                            <th class="text-center">@TotalAverageBalance.ToString("C", nfi)</th>
+                                            <th class="text-center">@TotalBank.ToString("C", nfi)</th>
+                                            <th class="text-center">@TotalCustomer.ToString("C", nfi)</th>
+                                        </tr>
+
+
+                                    </tfoot>
+                                </table>
+
+                            }
+
+
+
+                        </td>
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+    </div>
+
+                                var banks = Model.MoneyDue.OrderBy(x => x.BankName).Select(x => x.BankName).Distinct().ToList();
+
+    <div class="row" style="margin-top:25px;">
+        <div class="col-md-12">
+            <h2>Money Due Report By Bank</h2>
+            <table class="table table-bordered table-striped" id="bank-money-due">
+                <thead>
+                    <tr style="background-color:#d9edf7;">
+                        <th>Bank</th>
+                        <th class="text-center">Deals</th>
+                        <th class="text-center">Avg Balance per Deal</th>
+                        <th class="text-center">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+    @{
+        var bankIndex = 0;
+        var BankTotalDeals = 0;
+        decimal BankTotalBalance = 0;
+    }
+    @foreach (var bank in banks)
+    {
+        if (bank != "")
+        {
+            var bankMoneyDue = Model.MoneyDue.FindAll(x => x.BankName == bank && x.DueFrom.Contains("106")).OrderByDescending(x => x.ScheduleDays);
+            var bankName = "";
+
+
+            decimal bankBalance = 0;
+
+            var bankDays = 0;
+            double bankAvgDays = 0;
+
+            foreach (var moneyDue in bankMoneyDue)
+            {
+                bankName = moneyDue.BankName;
+
+                if (moneyDue.DueFrom.Contains("106"))
+                {
+                    bankBalance += moneyDue.ControlBalance;
+                }
+
+                bankDays += moneyDue.ScheduleDays;
+
+            }
+
+            bankAvgDays = (double)bankDays / (double)bankMoneyDue.Count();
+            var avgBankBalance = (double)bankBalance / (double)bankMoneyDue.Count();
+
+            if (bankBalance > 0)
+            {
+                BankTotalDeals += bankMoneyDue.Count();
+                BankTotalBalance += bankBalance;
+
+
+                <tr>
+                    <td><a data-toggle="collapse" id="bank-@bankIndex" style="cursor: pointer;" data-target="#collapse-bank-@bankIndex">@bankName <i class="fa fa-caret-down" aria-hidden="true"/></a></td>
+                    <td class="text-center">@bankMoneyDue.Count()</td>
+                    <td class="text-center">@avgBankBalance.ToString("C", nfi)</td>
+                    <td class="text-center">@bankBalance.ToString("C", nfi)</td>
+                </tr>
+
+                <tr id="collapse-bank-@bankIndex" class="collapse out" style="background-color:lightgray">
+                    <td colspan="6">
+                        <table id="money-due-bank-@bankIndex" class="table table-bordered" style="font-size:12px;">
+                            <thead>
+                                <tr style="background-color:#d9edf7">
+                                    <th class="text-center">Stock #</th>
+                                    <th class="text-center">Deal #</th>
+                                    <th class="text-center">Schedule<br />Days</th>
+                                    <th class="text-center">Deal Date</th>
+                                    <th class="text-center">Due From</th>
+                                    <th class="text-center">Customer #</th>
+                                    <th class="text-center">Control<br />Balance</th>
+                                    <th class="text-center">Customer Name</th>
+                                    <th class="text-center">Business<br />Phone</th>
+                                    <th class="text-center">Residential<br />Phone</th>
+                                    <th class="text-center">Sales Manager</th>
+                                    <th class="text-center">FI Manager</th>
+                                    <th class="text-center">Bank Name</th>
+                                    <th class="text-center">Last Updated</th>
+                                    <th class="text-center">Funded/Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var moneyDue in bankMoneyDue)
+                                {
+                                    var location = moneyDue.Location;
+
+                                    var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                    var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                    if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                    {
+                                        currentHistory = moneyDueHistory[0];
+                                    }
+
+
+                                    <tr>
+                                        <td class="text-center">@moneyDue.StockNumber</td>
+                                        <td class="text-center">
+
+                                            @if (moneyDue.DealNumber != "")
+                                            {
+                                                <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                            }
+                                        </td>
+                                        <td class="text-center">@moneyDue.ScheduleDays</td>
+                                        <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                        @if (moneyDue.DueFrom.Contains("106"))
+                                        {
+                                            <td class="text-center">Bank</td>
+                                        }
+                                        else if (moneyDue.DueFrom.Contains("111"))
+                                        {
+                                            <td class="text-center">Customer</td>
+                                        }
+
+
+                                        <td class="text-center">@moneyDue.CustomerNumber</td>
+                                        <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                        <td class="text-center">@moneyDue.CustomerName</td>
+                                        <td class="text-center">@moneyDue.BusinessPhone</td>
+                                        <td class="text-center">@moneyDue.ResidencePhone</td>
+                                        <td class="text-center">@moneyDue.SalesManager</td>
+                                        <td class="text-center">@moneyDue.FIManager</td>
+                                        <td class="text-center">@moneyDue.BankName</td>
+                                        <td class="text-center">
+                                            @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                            {
+                                                @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                            <br />
+                                            <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                        </td>
+                                        <td class="text-center">
+                                            @currentHistory.FundedStatus<br />
+                                            @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                            {
+                                                @currentHistory.RootCause<br />
+                                            }
+                                            @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                            {
+                                                <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+
+                                }
+
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color:#d9edf7">
+                                    <th class="text-center">@bankMoneyDue.Count()</th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center">Avg Days:<br />@Math.Round(avgBankBalance)</th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center">@bankBalance</th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                    <th class="text-center"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <script type="text/javascript">
+                                                            $('#money-due-bank-@bankIndex').DataTable({
+                                                                searching: true,
+                                                                dom: 'Bfrti',
+                                                                pageLength: -1,
+                                                                order: [[2, "desc"]],
+                                                                columnDefs: [
+                                                                    { type: 'any-number', targets: [2, 5, 6] },
+                                                                    { type: 'date-us', targets: [3] },
+                                                                    {
+                                                                        targets: [0],
+                                                                        orderData: [0, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [1],
+                                                                        orderData: [1, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [2],
+                                                                        orderData: [2, 1]
+                                                                    },
+                                                                    {
+                                                                        targets: [3],
+                                                                        orderData: [3, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [4],
+                                                                        orderData: [4, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [5],
+                                                                        orderData: [5, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [6],
+                                                                        orderData: [6, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [7],
+                                                                        orderData: [7, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [8],
+                                                                        orderData: [8, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [9],
+                                                                        orderData: [9, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [10],
+                                                                        orderData: [10, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [11],
+                                                                        orderData: [11, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [12],
+                                                                        orderData: [12, 2]
+                                                                    },
+                                                                ],
+                                                                buttons: [
+                                                                    {
+                                                                        extend: 'copyHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'excelHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'pdfHtml5', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    },
+                                                                    {
+                                                                        extend: 'print', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    }
+                                                                ],
+                                                                retrieve: true
+                                                            });
+                        </script>
+
+                    </td>
+                </tr>
+
+
+        }
+        bankIndex += 1;
+    }
+}
+                    </tbody>
+                <tfoot>
+                    @{ 
+                        var avgTotalBankBalance = (double)BankTotalBalance / (double)BankTotalDeals;
+                     }
+                    <tr>
+                        <th><a data-toggle="collapse" id="AllBanks" style="cursor: pointer;" data-target="#collapse-AllBanks">All Banks <i class="fa fa-caret-down" aria-hidden="true"/></a></th>
+                        <th class="text-center">@BankTotalDeals</th>
+                        <th class="text-center">@avgTotalBankBalance.ToString("C", nfi)</th>
+                        <th class="text-center">@BankTotalBalance.ToString("C", nfi)</th>
+                    </tr>
+                    <tr id="collapse-AllBanks" class="collapse out" style="background-color:lightgray">
+                        <td colspan="6">
+                            <table id="money-due-AllBanks" class="table table-bordered" style="font-size:12px;">
+                                <thead>
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center">Stock #</th>
+                                        <th class="text-center">Deal #</th>
+                                        <th class="text-center">Schedule<br />Days</th>
+                                        <th class="text-center">Deal Date</th>
+                                        <th class="text-center">Due From</th>
+                                        <th class="text-center">Customer #</th>
+                                        <th class="text-center">Control<br />Balance</th>
+                                        <th class="text-center">Customer Name</th>
+                                        <th class="text-center">Business<br />Phone</th>
+                                        <th class="text-center">Residential<br />Phone</th>
+                                        <th class="text-center">Sales Manager</th>
+                                        <th class="text-center">FI Manager</th>
+                                        <th class="text-center">Bank Name</th>
+                                        <th class="text-center">Last Updated</th>
+                                        <th class="text-center">Funded/Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @{
+                                        var allBanksMoneyDue = Model.MoneyDue.FindAll(x => x.DueFrom.Contains("106"));
+                                    }
+                                    @foreach (var moneyDue in allBanksMoneyDue)
+                                    {
+                                        var location = moneyDue.Location;
+
+                                        var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                        var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                        if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                        {
+                                            currentHistory = moneyDueHistory[0];
+                                        }
+
+                                        <tr>
+                                            <td class="text-center">@moneyDue.StockNumber</td>
+                                            <td class="text-center">
+                                                @if (moneyDue.DealNumber != "")
+                                                {
+                                                    <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                                }
+                                            </td>
+                                            <td class="text-center">@moneyDue.ScheduleDays</td>
+                                            <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                            @if (moneyDue.DueFrom.Contains("106"))
+                                            {
+                                                <td class="text-center">Bank</td>
+                                            }
+                                            else if (moneyDue.DueFrom.Contains("111"))
+                                            {
+                                                <td class="text-center">Customer</td>
+                                            }
+
+
+                                            <td class="text-center">@moneyDue.CustomerNumber</td>
+                                            <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                            <td class="text-center">@moneyDue.CustomerName</td>
+                                            <td class="text-center">@moneyDue.BusinessPhone</td>
+                                            <td class="text-center">@moneyDue.ResidencePhone</td>
+                                            <td class="text-center">@moneyDue.SalesManager</td>
+                                            <td class="text-center">@moneyDue.FIManager</td>
+                                            <td class="text-center">@moneyDue.BankName</td>
+                                            <td class="text-center">
+                                                @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                {
+                                                    @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                                <br />
+                                                <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                            </td>
+                                            <td class="text-center">
+                                                @currentHistory.FundedStatus<br />
+                                                @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                {
+                                                    @currentHistory.RootCause<br />
+                                                }
+                                                @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                {
+                                                    <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                        <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                    </a>
+                                                }
+                                            </td>
+                                        </tr>
+
+                                    }
+
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center">@allBanksMoneyDue.Count()</th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <script type="text/javascript">
+                                                        $('#money-due-AllBanks').DataTable({
+                                                            searching: true,
+                                                            dom: 'Bfrti',
+                                                            pageLength: -1,                                                            
+                                                            columnDefs: [
+                                                                { type: 'any-number', targets: [2, 5, 6] },
+                                                                { type: 'date-us', targets: [3] },
+                                                                {
+                                                                    targets: [0],
+                                                                    orderData: [0, 2]
+                                                                },
+                                                                {
+                                                                    targets: [1],
+                                                                    orderData: [1, 2]
+                                                                },
+                                                                {
+                                                                    targets: [2],
+                                                                    orderData: [2, 1]
+                                                                },
+                                                                {
+                                                                    targets: [3],
+                                                                    orderData: [3, 2]
+                                                                },
+                                                                {
+                                                                    targets: [4],
+                                                                    orderData: [4, 2]
+                                                                },
+                                                                {
+                                                                    targets: [5],
+                                                                    orderData: [5, 2]
+                                                                },
+                                                                {
+                                                                    targets: [6],
+                                                                    orderData: [6, 2]
+                                                                },
+                                                                {
+                                                                    targets: [7],
+                                                                    orderData: [7, 2]
+                                                                },
+                                                                {
+                                                                    targets: [8],
+                                                                    orderData: [8, 2]
+                                                                },
+                                                                {
+                                                                    targets: [9],
+                                                                    orderData: [9, 2]
+                                                                },
+                                                                {
+                                                                    targets: [10],
+                                                                    orderData: [10, 2]
+                                                                },
+                                                                {
+                                                                    targets: [11],
+                                                                    orderData: [11, 2]
+                                                                },
+                                                                {
+                                                                    targets: [12],
+                                                                    orderData: [12, 2]
+                                                                },
+                                                            ],
+                                                            order: [[2, "desc"]],
+                                                            buttons: [
+                                                                {
+                                                                    extend: 'copyHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'excelHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'pdfHtml5', footer: true,
+                                                                    orientation: 'landscape'
+                                                                },
+                                                                {
+                                                                    extend: 'print', footer: true,
+                                                                    orientation: 'landscape'
+                                                                }
+                                                            ],
+                                                            retrieve: true
+                                                        });
+                            </script>
+
+                        </td>
+                    </tr>
+
+
+
+
+
+                </tfoot>
+                </table>
+        </div>
+    </div>
+    <script type="text/javascript">
+                                                        //$('#bank-money-due').DataTable({
+                                                        //    searching: true,
+                                                        //    dom: 'Bfrti',
+                                                        //    pageLength: -1,
+                                                        //    order: [[1, "desc"]],
+                                                        //    buttons: [
+                                                        //        {
+                                                        //            extend: 'copyHtml5', footer: true,
+                                                        //        },
+                                                        //        {
+                                                        //            extend: 'excelHtml5', footer: true,
+                                                        //        },
+                                                        //        {
+                                                        //            extend: 'pdfHtml5', footer: true,
+                                                        //            orientation: 'landscape'
+                                                        //        },
+                                                        //        {
+                                                        //            extend: 'print', footer: true,
+                                                        //            orientation: 'landscape'
+                                                        //        }
+                                                        //    ],
+                                                        //    retrieve: true
+                                                        //});
+    </script>
+                        }
+                                                @section scripts
+{
+                                                    <script type="text/javascript">
+
+                                                        $(document).ready(function () {
+
+                                                            $('[data-toggle="tooltip"]').tooltip();
+
+                                                            var dialogWidth = 0;
+
+                                                            dialogWidth = ($(window).width() * .75);
+
+                                                            if ($(window).width() > 1199) {
+                                                                dialogWidth = 1200;
+                                                            }
+
+                                                            $('body').on('click', '.editInfo', function (event) {
+                                                                var customer = $(this).attr("data-customer-number");
+                                                                var moneyFrom = $(this).attr("data-due-from");
+                                                                var location = $(this).attr("data-location");
+
+                                                                var url = "@applicationPath/Reports/UpdateMoneyDue/" + customer + "/" + location + "/" + moneyFrom;
+                                                                var dialogBox = $("<div>");
+
+                                                                $(dialogBox).dialog({
+                                                                    resizable: false,
+                                                                    height: "auto",
+                                                                    width: dialogWidth,
+                                                                    position: { my: "center", at: "top+25%", of: window },
+                                                                    title: 'Update Money Due Report',
+                                                                    modal: true,
+                                                                    open: function (event, ui) {
+                                                                        $(this).load(url);
+                                                                        //$('#BonusDraws').validate();
+                                                                    },
+                                                                    buttons: {
+                                                                        "Save": function () {
+                                                                            var $this = this;
+                                                                            var form = $('#UpdateMoneyDue', $this);
+                                                                            //if (!$(form).valid()) {
+                                                                            //    return false;
+                                                                            //}
+
+                                                                            $.ajax({
+                                                                                async: false,
+                                                                                type: 'POST',
+                                                                                url: form.attr("action"),
+                                                                                data: $(form).serialize(),
+                                                                                success: $($this).dialog("close").dialog("destroy").remove()
+                                                                            });
+
+                                                                            location.reload();
+                                                                        },
+
+                                                                        "Close": function () {
+                                                                            $(this).dialog("close");
+                                                                            $(this).empty();
+                                                                        }
+                                                                    }
+                                                                });
+                                                                $(dialogBox).dialog('open');
+                                                            });
+
+
+                                                        });
+
+
+                                                    </script>
+                                                }

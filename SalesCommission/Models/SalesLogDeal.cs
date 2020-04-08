@@ -167,6 +167,11 @@ namespace SalesCommission.Models
         public string sl_VehicleCategory { get; set; }
         public DateTime sl_VehicleDealDate { get; set; }
         public string sl_VehicleSalesManager { get; set; }
+        public int sl_VehicleMiles { get; set; }
+        public string sl_BankName { get; set; }
+        public string sl_TradeVIN { get; set; }
+        public string sl_TradeVIN2 { get; set; }
+        public string sl_FinanceManagerNumber { get; set; }
         public List<IndividualDealDetails> DealHistory { get; set; }
         public IndividualDealDetails PreviousSavedValues { get; set; }
         public List<AftermarketItem> AftermarketItems { get; set; }
@@ -280,6 +285,11 @@ namespace SalesCommission.Models
         public string sl_VehicleCategory { get; set; }
         public DateTime sl_VehicleDealDate { get; set; }
         public string sl_VehicleSalesManager { get; set; }
+        public int sl_VehicleMiles { get; set; }
+        public string sl_BankName { get; set; }
+        public string sl_TradeVIN { get; set; }
+        public string sl_TradeVIN2 { get; set; }
+        public string sl_FinanceManagerNumber { get; set; }
     }
     public class DealComments
     {

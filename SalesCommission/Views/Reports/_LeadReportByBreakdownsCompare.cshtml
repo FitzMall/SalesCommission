@@ -382,6 +382,23 @@
                             breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                             break;
 
+                        case "zip":
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "inventorytype":
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "leaddate":
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "leadtime":
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+
                         default:
                             // breakdownLevel1Values = Model.AssociateLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                             break;
@@ -451,6 +468,29 @@
 
                             case "stock":
                                 BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_StockNumber == breakdown1);
+                                break;
+
+
+                            case "zip":
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.PostalCode == breakdown1);
+                                break;
+
+                            case "inventorytype":
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_InventoryType == breakdown1);
+                                break;
+
+                            case "leaddate":
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == breakdown1);
+                                break;
+
+                            case "leadtime":
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == breakdown1);
+
+                                TimeSpan result = TimeSpan.FromHours(Int32.Parse(breakdown1));
+                                string fromTimeString = result.ToString("hh':'mm");
+
+                                label1 = fromTimeString;
+
                                 break;
 
                             default:
@@ -722,6 +762,22 @@
                                 breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                 break;
 
+                            case "zip":
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "inventorytype":
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "leaddate":
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                break;
+
+                            case "leadtime":
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                break;
+
                             default:
                                 //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                 break;
@@ -790,6 +846,28 @@
 
                                 case "stock":
                                     BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_StockNumber == breakdown2);
+                                    break;
+
+                                case "zip":
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.PostalCode == breakdown2);
+                                    break;
+
+                                case "inventorytype":
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_InventoryType == breakdown2);
+                                    break;
+
+                                case "leaddate":
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == breakdown2);
+                                    break;
+
+                                case "leadtime":
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == breakdown2);
+
+                                    TimeSpan result = TimeSpan.FromHours(Int32.Parse(breakdown2));
+                                    string fromTimeString = result.ToString("hh':'mm");
+
+                                    label2 = fromTimeString;
+
                                     break;
 
                                 default:
@@ -1058,6 +1136,22 @@
                                     breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                     break;
 
+                                case "zip":
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "inventorytype":
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "leaddate":
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
+                                case "leadtime":
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                    break;
+
                                 default:
                                     //breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                     break;
@@ -1125,6 +1219,28 @@
                                         BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_StockNumber == BreakDown3);
                                         break;
 
+
+                                    case "zip":
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.PostalCode == BreakDown3);
+                                        break;
+
+                                    case "inventorytype":
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_InventoryType == BreakDown3);
+                                        break;
+
+                                    case "leaddate":
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == BreakDown3);
+                                        break;
+
+                                    case "leadtime":
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == BreakDown3);
+
+                                        TimeSpan result = TimeSpan.FromHours(Int32.Parse(BreakDown3));
+                                        string fromTimeString = result.ToString("hh':'mm");
+
+                                        label3 = fromTimeString;
+
+                                        break;
 
                                     default:
                                         BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DealerId.ToString() == BreakDown3);
@@ -1393,6 +1509,22 @@
                                         breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_StockNumber).Distinct().OrderBy(x => x).ToList();
                                         break;
 
+                                    case "zip":
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.PostalCode).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "inventorytype":
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_InventoryType).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "leaddate":
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadCreatedEastTime.ToShortDateString()).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
+                                    case "leadtime":
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadCreatedEastTime.Hour.ToString()).Distinct().OrderBy(x => x).ToList();
+                                        break;
+
                                     default:
                                         //breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                                         break;
@@ -1460,6 +1592,27 @@
                                             BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_StockNumber == BreakDown4);
                                             break;
 
+                                        case "zip":
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.PostalCode == BreakDown4);
+                                            break;
+
+                                        case "inventorytype":
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_InventoryType == BreakDown4);
+                                            break;
+
+                                        case "leaddate":
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToShortDateString() == BreakDown4);
+                                            break;
+
+                                        case "leadtime":
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.Hour.ToString() == BreakDown4);
+
+                                            TimeSpan result = TimeSpan.FromHours(Int32.Parse(BreakDown4));
+                                            string fromTimeString = result.ToString("hh':'mm");
+
+                                            label4 = fromTimeString;
+
+                                            break;
 
                                         default:
                                             BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.DealerId.ToString() == BreakDown4);

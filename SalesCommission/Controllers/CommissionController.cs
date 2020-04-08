@@ -41,6 +41,8 @@ namespace SalesCommission.Controllers
             commissionModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(commissionModel.YearId, commissionModel.MonthId);
             commissionModel.DealApprovals = SqlQueries.GetDealApprovalsByDate(commissionModel.YearId, commissionModel.MonthId);
 
+            commissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
             
             if (commissionModel.YearId < 2019)
@@ -86,7 +88,7 @@ namespace SalesCommission.Controllers
 
             var dealMonth = new DateTime(commissionModel.YearId, commissionModel.MonthId, 1);
 
-            commissionModel.AssociateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = dealMonth.AddMonths(-3), EndDate = dealMonth.AddMonths(1) }, "ReynoldsData");
+            commissionModel.AssociateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = dealMonth, EndDate = dealMonth.AddMonths(1) }, "ReynoldsData");
             commissionModel.DealApprovals = SqlQueries.GetDealApprovalsByDate(commissionModel.YearId, commissionModel.MonthId);
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
@@ -1821,7 +1823,7 @@ namespace SalesCommission.Controllers
 
             var dealMonth = new DateTime(commissionModel.YearId, commissionModel.MonthId, 1);
 
-            commissionModel.AssociateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = dealMonth.AddMonths(-3), EndDate = dealMonth.AddMonths(1) }, "ReynoldsData");
+            commissionModel.AssociateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_CommissionGetAssociateLeadsByDate", new { StartDate = dealMonth, EndDate = dealMonth.AddMonths(1) }, "ReynoldsData");
             commissionModel.DealApprovals = SqlQueries.GetDealApprovalsByDate(commissionModel.YearId, commissionModel.MonthId);
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
@@ -1930,6 +1932,8 @@ namespace SalesCommission.Controllers
                 associateCommissionModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(associateCommissionModel.YearId, associateCommissionModel.MonthId);
                 associateCommissionModel.DealApprovals = SqlQueries.GetDealApprovalsByDate(associateCommissionModel.YearId, associateCommissionModel.MonthId);
             }
+
+            associateCommissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
 

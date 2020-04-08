@@ -47,8 +47,12 @@
     {
         padding:6px;
     }
-}
 
+    @@media (min-width: 1200px) {
+        .container {
+            max-width: 80%;
+        }
+    }
 </style>
 
 <div class="jumbotron">
@@ -115,9 +119,11 @@
 
 }
 @if (Model.SalesReportDetails != null)
-{
-    using (Html.BeginForm())
-    {
+            {
+
+
+                using (Html.BeginForm())
+                {
     <div class="row">
         <div class="col-sm-12">
             <h4 class="ftd-toggle">Month End Factory To Dealer Cash <i class="fa fa-chevron-down" aria-hidden="true"></i></h4>    
@@ -143,30 +149,30 @@
                     <th class="text-center">Comments/Program Codes</th>
                 </tr>
                 @{
-                        var index = 1;
-                        var locationCode = "";
-                    }
+            var index = 1;
+            var locationCode = "";
+        }
                 @foreach (var detail in Model.SalesReportDetails)
+        {
+
+            var brandCode = detail.BrandId;
+
+            if (brandCode != "UU")
+            {
+                foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
+                {
+                    if (mapping.StoreId == Model.StoreId)
                     {
+                        locationCode = mapping.LocationId;
+                        break;
+                    }
+                }
+                var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
 
-                        var brandCode = detail.BrandId;
-
-                        if (brandCode != "UU")
-                        {
-                            foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
-                            {
-                                if (mapping.StoreId == Model.StoreId)
-                                {
-                                    locationCode = mapping.LocationId;
-                                    break;
-                                }
-                            }
-                            var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
-
-                            if (factoryToDealerCash == null)
-                            {
-                                factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
-                            }
+                if (factoryToDealerCash == null)
+                {
+                    factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
+                }
 
                         <tr>
                             <td class="text-center" style="vertical-align:middle">
@@ -186,11 +192,11 @@
 
                         index += 1;
                     }
-                }
+}
 
                 @if (Model.FactoryToDealerCash != null && Model.FactoryToDealerCash.Count > 0)
-                {
-                    var ftd = Model.FactoryToDealerCash[0];
+{
+    var ftd = Model.FactoryToDealerCash[0];
 
                     <tr class="text-center">
                         <td colspan="4">
@@ -217,6 +223,7 @@
 
 @if (Model.SalesReportDetails != null)
 {
+
     using (Html.BeginForm())
     {
         var locationCode = "";
@@ -315,7 +322,10 @@
 
     </div>
 @if (Model.SalesReportDetails != null)
-            {
+{
+    var currentSelectedDate = new DateTime(Model.YearId, Model.MonthId, 1);
+    var grossChangeDate = new DateTime(2020, 1, 31);
+
     <div class="row">
         <div class="col-md-12">
             <h3>Sales Log Report</h3>
@@ -350,6 +360,7 @@
                     <th class="text-center">VSC</th>
                     <th class="text-center">MC</th>
                     <th class="text-center">GAP</th>
+                    <th class="text-center">BPP/AFT</th>
                     <th class="text-center">Total</th>
                     <th class="text-center">Memo: FTD</th>
                     <th class="text-center">DX Inc</th>
@@ -365,7 +376,7 @@
                     <th  class="text-center"style="padding:2px; font-size:10px">OUV</th>
                     <th colspan="4" class="text-center" style="padding:2px; font-size:10px"></th>
                     <th colspan="2" class="text-center" style="padding:2px; font-size:10px">Front</th>
-                    <th colspan="4" class="text-center" style="padding:2px; font-size:10px">Back</th>
+                    <th colspan="5" class="text-center" style="padding:2px; font-size:10px">Back</th>
                     <th colspan="6" style="padding:2px; font-size:10px"></th>
                 </tr>
             </thead>
@@ -394,6 +405,7 @@
                     double TotalBackPVRAmount = 0;
                     double TotalUsedDeals = 0;
                     double TotalValidatedUsedDeals = 0;
+                    double TotalBackGrossItemAmount = 0;
 
                     double TotalNextCarCount = 0;
                     double TotalHandymanCount = 0;
@@ -608,22 +620,31 @@
 
                         <td class="text-center">@MonthEndFTDAmount.ToString("C", nfi)</td>
                         @*<td class="text-center">@detail.OtherAmount.ToString("C", nfi)</td>*@
-                        <td class="text-center">@detail.FinIncAmount.ToString("C", nfi)</td>
+                         <td class="text-center">@detail.FinIncAmount.ToString("C", nfi)</td>
                         <td class="text-center">@detail.VSCAmount.ToString("C", nfi)</td>
                          <td class="text-center">@detail.MCAmount.ToString("C", nfi)</td>
                         <td class="text-center">@detail.GapAmount.ToString("C", nfi)</td>
-                        <td class="text-center">@detail.TotalAmount.ToString("C", nfi)</td>
+                         <td class="text-center">@detail.BackGrossItemAmount.ToString("C", nfi)</td>
+                            <td class="text-center">@detail.TotalAmount.ToString("C", nfi)</td>
                          <td class="text-center">@detail.FTDAmount.ToString("C", nfi)</td>
                         <td class="text-center">@detail.DXAmount.ToString("C", nfi)</td>
 
                         @{ 
+
+                            var backGrossAmount = detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; // + BPP + Nitrogen + Zurich + TireWheel + Security + OtherAftermarket
+
+                            if (currentSelectedDate > grossChangeDate)
+                            {
+                                backGrossAmount += detail.BackGrossItemAmount;
+                            }
+
                             var brandFrontPVR = Math.Round((detail.DealGrossAmount + MonthEndFTDAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount 
-                            var brandBackPVR = Math.Round((detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals);
-                            var brandPVR = Math.Round((detail.DealGrossAmount  + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
+                            var brandBackPVR = Math.Round((backGrossAmount) / validatedDeals);
+                            var brandPVR = Math.Round((detail.DealGrossAmount  + MonthEndFTDAmount + backGrossAmount) / validatedDeals); //+ detail.OtherAmount+ detail.FTDAmount
                         }
                         <td class="text-center"><a href="#" data-toggle="tooltip" title="Front PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount) over @validatedDeals deals">@brandFrontPVR.ToString("C", nfi)</a></td>                        
-                        <td class="text-center"><a href="#" data-toggle="tooltip" title="Back PVR = $@(detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandBackPVR.ToString("C", nfi)</a></td>                        
-                        <td class="text-center"><a href="#" data-toggle="tooltip" title="Total PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount) over @validatedDeals deals">@brandPVR.ToString("C", nfi)</a></td>
+                        <td class="text-center"><a href="#" data-toggle="tooltip" title="Back PVR = $@(backGrossAmount) over @validatedDeals deals">@brandBackPVR.ToString("C", nfi)</a></td>                        
+                        <td class="text-center"><a href="#" data-toggle="tooltip" title="Total PVR = $@(detail.DealGrossAmount + MonthEndFTDAmount + backGrossAmount) over @validatedDeals deals">@brandPVR.ToString("C", nfi)</a></td>
                         @*<td class="text-center">@detail.ValuePercentage.ToString("P")</td>
                         <td class="text-center">@detail.VarianceCount</td>
                         <td class="text-center">@detail.VariancePercentage.ToString("P")</td>*@
@@ -631,7 +652,7 @@
 
 
                     <tr id="collapse-@index" class="collapse out" style="background-color:#f5f5f5">
-                        <td colspan="21">
+                        <td colspan="22">
                             <h4>@detail.MakeName Deals</h4>
                             <h5><a href="@applicationPath/Sales/OfficeValidateDeals/@detail.MakeId/@Model.MonthId/@Model.YearId">Office To Be Validated</a></h5>
                             <table class="table table-bordered table-striped" style="font-size:12px" id="table-@detail.MakeId">
@@ -641,6 +662,7 @@
                                         <th class="text-center">Deal</th>
                                         <th class="text-center">Customer</th>
                                         <th class="text-center">Deal Date</th>
+                                        <th class="text-center">Days in Stk</th>
                                         <th class="text-center">Stk</th>
                                         <th class="text-center">Model</th>
                                         @*<th class="text-center">V/I</th>*@
@@ -666,7 +688,7 @@
                                 </thead>
                                 <tbody id="tbodyMake-@detail.MakeId">
                                     <tr>
-                                        <td id="loadingRow-@detail.MakeId" colspan="21" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
+                                        <td id="loadingRow-@detail.MakeId" colspan="24" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
                                     </tr>
                                     <script type="text/javascript">
                                         $('#@detail.MakeName.Replace(" ","")').bind('click', function () {
@@ -702,6 +724,8 @@
                                 TotalTotalAmount = TotalTotalAmount + detail.TotalAmount;
                                 TotalDXAmount = TotalDXAmount + detail.DXAmount;
 
+                                TotalBackGrossItemAmount = TotalBackGrossItemAmount + detail.BackGrossItemAmount;
+
                                 TotalHoldbackCount = TotalHoldbackCount + detail.HoldbackCount;
                                 TotalValuePercentage = (double)TotalHoldbackCount / (double)TotalDealCount;
                                 index += 1;
@@ -731,13 +755,21 @@
         <th class="text-center">@TotalVSCAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalMCAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalGapAmount.ToString("C", nfi)</th>
+        <th class="text-center">@TotalBackGrossItemAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalTotalAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalFTDAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalDXAmount.ToString("C", nfi)</th>
         @{
+            var totalBackGrossAmount = TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount ; // + BPP + Nitrogen + Zurich + TireWheel + Security + OtherAftermarket
+
+            if(currentSelectedDate > grossChangeDate)
+            {
+                totalBackGrossAmount += TotalBackGrossItemAmount;
+            }
+
             TotalFrontPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount+ TotalFTDAmount
-            TotalBackPVRAmount = Math.Round((TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount);
-            TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
+            TotalBackPVRAmount = Math.Round((totalBackGrossAmount) / TotalValidatedDealsCount);
+            TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + totalBackGrossAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
         }
 
         <th class="text-center">@TotalFrontPVRAmount.ToString("C", nfi)</th>
@@ -749,7 +781,7 @@
             <th class="text-center">@TotalVariancePercentage.ToString("P")</th>*@
     </tr>
     <tr id="collapse-total" class="collapse out" style="background-color:#f5f5f5">
-        <td colspan="21">
+        <td colspan="23">
             <h4>All Deals</h4>
             <h5><a href="@applicationPath/Sales/OfficeValidateDeals?makeId=@AllMakeIds.TrimEnd(',')&yearId=@Model.YearId&monthId=@Model.MonthId">Office Validate Deals</a></h5>
             <table class="table table-bordered table-striped" style="font-size:12px" id="TotalDeals">
@@ -759,6 +791,7 @@
                         <th class="text-center">Deal</th>
                         <th class="text-center">Customer</th>
                         <th class="text-center">Deal Date</th>
+                        <th class="text-center">Days in Stk</th>
                         <th class="text-center">Stk</th>
                         <th class="text-center">Model</th>
                         @*<th class="text-center">V/I</th>*@
@@ -784,7 +817,7 @@
                 </thead>
                 <tbody id="tbodyMake-total">
                     <tr>
-                        <td id="loadingRow-total" colspan="21" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
+                        <td id="loadingRow-total" colspan="24" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
                     </tr>
                     <script type="text/javascript">
                         $('#Totals').bind('click', function () {
@@ -858,19 +891,19 @@
                             <th class="text-center"></th>
                         </tr>
 
-                        
-                            TotalDealGrossAmount += (double) grossAmountTotal;
-                            TotalMEFTDAmount += (double) otherAmountTotal;
-                            TotalFinIncAmount += (double) financeAmountTotal;
-                            TotalVSCAmount += (double) serviceContractAmountTotal;
 
-                            TotalGapAmount += (double) gapAmountTotal;
-                            TotalTotalAmount += (double) chargebackTotal;
+            TotalDealGrossAmount += (double) grossAmountTotal;
+            TotalMEFTDAmount += (double) otherAmountTotal;
+            TotalFinIncAmount += (double) financeAmountTotal;
+            TotalVSCAmount += (double) serviceContractAmountTotal;
 
-                            TotalFrontPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount+ TotalFTDAmount
-                            TotalBackPVRAmount = Math.Round((TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount);
-                            TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + TotalFinIncAmount + TotalVSCAmount + TotalGapAmount + TotalMCAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
-                        
+            TotalGapAmount += (double) gapAmountTotal;
+            TotalTotalAmount += (double) chargebackTotal;
+            
+            TotalFrontPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount+ TotalFTDAmount
+            TotalBackPVRAmount = Math.Round((totalBackGrossAmount) / TotalValidatedDealsCount);
+            TotalPVRAmount = Math.Round((TotalDealGrossAmount + TotalMEFTDAmount + totalBackGrossAmount) / TotalValidatedDealsCount); //+ TotalOtherAmount + TotalFTDAmount
+
                         <tr style="background-color:#d9edf7">
                             <th class="text-center">Totals</th>
                             <th class="text-center"></th>
@@ -1482,6 +1515,7 @@
                         outputHTML += '<td class="text-center">' + obj.BuyerLastName + ', ' + obj.CustomerName.replace(obj.BuyerLastName, "") + '</td>';
                         var myDate = new Date(parseInt(obj.DealDate.substr(6)));                        
                         outputHTML += '<td class="text-center">' + (myDate.getMonth() + 1) + "/" + myDate.getDate() + "/" + myDate.getFullYear(); + '</td>';
+                        outputHTML += '<td class="text-center">' + obj.DaysInStock + '</td>';
                         outputHTML += '<td class="text-center">' + obj.StockNumber + '</td>';
                         outputHTML += '<td class="text-center">' + obj.Carline + '</td>';
                         //outputHTML += '<td class="text-center">' + obj.ValueInternet + '</td>';
@@ -1495,6 +1529,13 @@
                         outputHTML += '<td class="text-center">';
 
                         var totalAmount = obj.DealGrossAmount + obj.FinIncAmount + obj.VSCAmount + obj.MaintenanceContractAmount + obj.GapAmount + obj.BankFee;//+ obj.FTDAmount + obj.OtherAmount;
+
+                        var selectedDate = new Date("@Model.YearId-@Model.MonthId-1");
+                        var startDate = new Date("2019-1-31");
+
+                        if (selectedDate > startDate) {
+                            totalAmount = totalAmount + obj.BackGrossItemAmount;
+                        }
 
                         outputHTML += totalAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)");
                         outputHTML += '</td>';
