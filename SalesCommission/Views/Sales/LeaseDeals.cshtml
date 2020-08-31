@@ -53,6 +53,16 @@
     var grossChangeDate = new DateTime(2020, 1, 31);
 }
 
+@section CSS
+{
+    <style type="text/css">
+        .container {
+            max-width: 100%;
+        }
+    </style>
+}
+
+
 
 
 <h2>@makeName Lease Deals for @reportMonth @reportYear <a href="@applicationPath/Sales/?locationId=@locationCode&monthId=@monthId&yearId=@reportYear" class="btn btn-primary" style="float:right">Return to Dashboard</a></h2>
@@ -66,6 +76,10 @@
                     <th class="text-center">Customer</th>
                     <th class="text-center">Deal Date</th>
                     <th class="text-center">Stk #</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">Days</th>
                     <th class="text-center">Deal Gross</th>
                     <th class="text-center">Fin Inc</th>
                     <th class="text-center">Bank Fee</th>
@@ -114,6 +128,10 @@
                         <td class="text-center">@deal.CustomerName</td>
                         <td class="text-center">@deal.DealDate.ToShortDateString()</td>
                         <td class="text-center">@deal.StockNumber</td>
+                        <td class="text-center">@deal.Year</td>
+                        <td class="text-center">@deal.CarMake</td>
+                        <td class="text-center">@deal.Carline</td>
+                        <td class="text-center">@deal.DaysInStock</td>
                         <td class="text-center">@deal.DealGrossAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.FinIncAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.BankFee.ToString("C", nfi)</td>
@@ -163,6 +181,10 @@
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center">@TotalDealGross.ToString("C", nfi)</th>
                     <th class="text-center">@TotalFinInc.ToString("C", nfi)</th>
                     <th class="text-center">@TotalVSC.ToString("C", nfi)</th>
@@ -194,6 +216,10 @@
                 <tr style="background-color:#d9edf7">
                     <th></th>
                     <th class="text-center">Averages</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
@@ -242,7 +268,7 @@
                   }
               ],
               columnDefs: [
-                { type: 'any-number', targets: [5, 6, 7, 8, 9, 10, 11, 12, 13] },
+                { type: 'any-number', targets: [9, 10, 11, 12, 13, 14, 15, 16, 17] },
                 { type: 'date-us', targets: [3] }
               ]
 

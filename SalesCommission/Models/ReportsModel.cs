@@ -398,4 +398,61 @@ namespace SalesCommission.Models
 
     }
 
+    public class TitleDueStatusModel
+    {
+        public TitleDue TitleDue { get; set; }
+        public List<TitleDue> TitleDueHistory { get; set; }
+
+    }
+
+    public class TitleDueModel
+    {
+        public List<TitleDue> TitleDue { get; set; }
+        public List<TitleDue> TitleDueHistory { get; set; }
+        public string loc { get; set; }
+        public string status { get; set; }
+
+    }
+
+    public class TitleDue
+    {
+        public int Id { get; set; }
+	    public int DealId { get; set; }
+        public string DealKey { get; set; }
+        public DateTime DealDate { get; set; }
+        public string Location { get; set; }
+        public string LocationName { get; set; }
+        public string BuyerName { get; set; }
+        public string BuyerLastName { get; set; }
+        public string SalesAssociate1 { get; set; }
+        public string SalesAssociate2 { get; set; }
+        public string FinanceManager { get; set; }
+        public string SalesManager { get; set; }
+        public string SalesAssociate1Name { get; set; }
+        public string SalesAssociate2Name { get; set; }
+        public string FinanceManagerName { get; set; }
+        public string SalesManagerName { get; set; }
+        public string VIN { get; set; }
+        public bool ClearTitle { get; set; }
+        public bool TitleDueBank { get; set; }
+        public bool TitleDueCustomer { get; set; }
+        public bool LienDueCustomer { get; set; }
+        public bool TitleDueInterco { get; set; }
+        public bool TitleDueAuction { get; set; }
+        public bool LienDueBank { get; set; }
+        public bool OdomDueCustomer { get; set; }
+        public bool POADueCust { get; set; }
+        public bool PayoffDueCust { get; set; }
+        public bool WaitingOutSTTitle { get; set; }
+        public bool DuplicateTitleAppliedFor { get; set; }
+        public bool Other { get; set; }
+	    public string Notes { get; set; }
+        public DateTime UpdateDate { get; set; }
+        public string UpdateUser { get; set; }
+        public string StockNumber { get; set; }
+        public int Year { get; set; }
+        public string Make { get; set; }
+        public string Model { get; set; }
+    }
+
 }

@@ -108,6 +108,8 @@ namespace SalesCommission.Models
         public string ValueInternet { get; set; }
         public string BPPAmount { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerState { get; set; }
+        public string MSI { get; set; }
         public string BuyerName { get; set; }
         public string BuyerLastName { get; set; }
         public string SalesAssociate1 { get; set; }

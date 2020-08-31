@@ -28,6 +28,148 @@ namespace SalesCommission.Controllers
             return View(moneyDueModel);
         }
 
+        public ActionResult TitleDue()
+        {
+            var titleDueModel = new TitleDueModel();
+
+            titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
+            //titleDueModel.TitleDueHistory = SqlQueries.GetAllTitlesDueHistory();
+
+            return View(titleDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult TitleDue(string loc, string status)
+        {
+            var titleDueModel = new TitleDueModel();
+            titleDueModel.status = status;
+            titleDueModel.loc = loc;
+
+            titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
+
+            var filteredTitleDue = new List<TitleDue>();
+
+            if(loc != null && loc != "" && loc != "ALL")
+            {
+                var locTitleDue = titleDueModel.TitleDue.FindAll(x => x.Location == loc);
+
+                if(status != null && status != "" && status != "ALL")
+                {
+
+                    switch(status)
+                    {
+                        case "0":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.ClearTitle == true);
+                            break;
+                        case "2":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueBank == true);
+                            break;
+                        case "3":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueCustomer == true);
+                            break;
+                        case "4":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.LienDueCustomer == true);
+                            break;
+                        case "5":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueInterco == true);
+                            break;
+                        case "6":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueAuction == true);
+                            break;
+                        case "7":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.LienDueBank == true);
+                            break;
+                        case "8":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.OdomDueCustomer == true);
+                            break;
+                        case "9":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.POADueCust == true);
+                            break;
+                        case "10":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.PayoffDueCust == true);
+                            break;
+                        case "11":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.WaitingOutSTTitle == true);
+                            break;
+                        case "12":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.Other == true);
+                            break;
+                        case "13":
+                            filteredTitleDue = locTitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
+                            break;
+                            
+                    }
+
+
+                    
+                }
+                else
+                {
+                    filteredTitleDue = locTitleDue;
+                }
+
+
+                titleDueModel.TitleDue = filteredTitleDue;
+
+            }
+            else if (status != null && status != "" && status != "ALL")
+            {
+
+                switch (status)
+                {
+                    case "0":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.ClearTitle == true);
+                        break;
+                    case "2":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueBank == true);
+                        break;
+                    case "3":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueCustomer == true);
+                        break;
+                    case "4":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueCustomer == true);
+                        break;
+                    case "5":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueInterco == true);
+                        break;
+                    case "6":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueAuction == true);
+                        break;
+                    case "7":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueBank == true);
+                        break;
+                    case "8":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.OdomDueCustomer == true);
+                        break;
+                    case "9":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.POADueCust == true);
+                        break;
+                    case "10":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.PayoffDueCust == true);
+                        break;
+                    case "11":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.WaitingOutSTTitle == true);
+                        break;
+                    case "12":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.Other == true);
+                        break;
+                    case "13":
+                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
+                        break;
+
+                }
+
+
+
+                titleDueModel.TitleDue = filteredTitleDue;
+
+            }
+
+
+
+
+            return View(titleDueModel);
+        }
 
         public ActionResult ObjectivesAndStandards()
         {
@@ -396,7 +538,7 @@ namespace SalesCommission.Controllers
 
             if (!aftermarketReportModel.SelectedStores.Contains("ALL"))
             {
-                var storeDetailsRemoved = aftermarketReportModel.AftermarketDealGroups.RemoveAll(o => !(aftermarketReportModel.SelectedStores.Contains(o.AutoMall)));
+                var storeDetailsRemoved = aftermarketReportModel.AftermarketDealGroups.RemoveAll(o => !(aftermarketReportModel.SelectedStores.Contains(o.AutoMall.ToLower())));
             }
 
             if (aftermarketReportModel.ConditionId != "ALL")
@@ -1960,6 +2102,28 @@ namespace SalesCommission.Controllers
 
             return View(leadSourceReportModel);
         }
+
+        public ActionResult UpdateTitleStatus(string vin = "", string stock = "", string deal = "")
+        {
+            var titleDueModel = new TitleDueModel();
+
+            titleDueModel.TitleDue = SqlQueries.GetTitleStatus(vin, stock,deal);
+            //titleDueModel.TitleDueHistory = SqlQueries.GetTitleStatusHistory(vin, stock, deal);
+
+            return View(titleDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult UpdateTitleStatus()
+        {
+            var titleDueModel = new TitleDueModel();
+
+            //titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
+            //titleDueModel.TitleDueHistory = SqlQueries.GetAllTitlesDueHistory();
+
+            return View(titleDueModel);
+        }
+
 
         public ActionResult UpdateMoneyDue(string id, string location, string dueFrom)
         {

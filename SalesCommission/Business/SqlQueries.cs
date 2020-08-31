@@ -747,6 +747,207 @@ namespace SalesCommission.Business
             return moneyDue;
 
         }
+        public static List<TitleDue> GetAllTitlesDue()
+        {
+            var titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDue", null, "SalesCommission");
+            var allAssociates = SqlQueries.GetSalesAssociates();
+
+            foreach (var deal in titlesDue)
+            {
+
+                //if (deal.FinanceManager != null && deal.FinanceManager != "")
+                //{
+                //    var finManager = allAssociates.Find(x => x.Value.Trim() == deal.FinanceManager.Trim());
+                //    if (finManager != null)
+                //    {
+                //        deal.FinanceManagerName = finManager.Text;
+                //    }
+                //}
+
+                //if (deal.SalesManager != null && deal.SalesManager != "")
+                //{
+                //    var salesManager = allAssociates.Find(x => x.Value.Trim() == deal.SalesManager.Trim());
+                //    if (salesManager != null)
+                //    {
+                //        deal.SalesManagerName = salesManager.Text;
+                //    }
+                //}
+
+                if (deal.SalesAssociate1 != null && deal.SalesAssociate1 != "")
+                {
+                    var associate1 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate1.Trim());
+                    if (associate1 != null)
+                    {
+                        deal.SalesAssociate1Name = associate1.Text;
+                    }
+                }
+
+                if (deal.SalesAssociate2 != null && deal.SalesAssociate2 != "")
+                {
+                    var associate2 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate2.Trim());
+                    if (associate2 != null)
+                    {
+                        deal.SalesAssociate2Name = associate2.Text;
+                    }
+                }
+
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Buick Subaru";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+                    case "FHG":
+                        locationName = "Hagerstown GM";
+                        break;
+                    case "FHT":
+                        locationName = "Hagerstown Chrysler";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+            return titlesDue;
+        }
+
+        public static List<TitleDue> GetTitleStatus(string vin, string stock, string dealNumber)
+        {
+
+
+            var titlesDue = new List<TitleDue>();
+
+            if (vin != null && vin != "")
+            {
+                titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDueByVin", new { VIN = vin }, "SalesCommission");
+            }
+            else if (stock != null && stock != "")
+            {
+                titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDueByStock", new {StockNumber = stock} , "SalesCommission");
+            }
+            else if (dealNumber != null && dealNumber != "")
+            {
+                titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDueByDeal", new {DealNumber = dealNumber }, "SalesCommission");
+            }
+
+            var allAssociates = SqlQueries.GetSalesAssociates();
+
+            foreach (var deal in titlesDue)
+            {
+
+                //if (deal.FinanceManager != null && deal.FinanceManager != "")
+                //{
+                //    var finManager = allAssociates.Find(x => x.Value.Trim() == deal.FinanceManager.Trim());
+                //    if (finManager != null)
+                //    {
+                //        deal.FinanceManagerName = finManager.Text;
+                //    }
+                //}
+
+                //if (deal.SalesManager != null && deal.SalesManager != "")
+                //{
+                //    var salesManager = allAssociates.Find(x => x.Value.Trim() == deal.SalesManager.Trim());
+                //    if (salesManager != null)
+                //    {
+                //        deal.SalesManagerName = salesManager.Text;
+                //    }
+                //}
+
+                if (deal.SalesAssociate1 != null && deal.SalesAssociate1 != "")
+                {
+                    var associate1 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate1.Trim());
+                    if (associate1 != null)
+                    {
+                        deal.SalesAssociate1Name = associate1.Text;
+                    }
+                }
+
+                if (deal.SalesAssociate2 != null && deal.SalesAssociate2 != "")
+                {
+                    var associate2 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate2.Trim());
+                    if (associate2 != null)
+                    {
+                        deal.SalesAssociate2Name = associate2.Text;
+                    }
+                }
+
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Buick Subaru";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+                    case "FHG":
+                        locationName = "Hagerstown GM";
+                        break;
+                    case "FHT":
+                        locationName = "Hagerstown Chrysler";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+            return titlesDue;
+        }
+
+
 
         public static List<MoneyDue> GetAllMoneyDue()
         {
@@ -4214,7 +4415,7 @@ namespace SalesCommission.Business
 
         public static List<SelectListItem> GetSalesAssociates()
         {
-            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' order by emp_lname";
+            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos='Sales Associate' or emp_pos='Finance Manager' order by emp_lname";
             var salesAssociates = SqlMapperUtil.SqlWithParams<SalesAssociate>(sqlGet, null, "JJFServer");
 
             var items = new List<SelectListItem>();
@@ -4243,7 +4444,7 @@ namespace SalesCommission.Business
         public static List<Associate> GetSalesAssociateList()
         {
 
-            var sqlGet = "Select distinct emp_pkey, emp_empnumber as AssociateNumber, emp_lname, emp_loc as AssociateLocation, (emp_fname + ' ' + emp_Lname) as AssociateFullName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' order by emp_lname";
+            var sqlGet = "Select distinct emp_pkey, emp_empnumber as AssociateNumber, emp_lname, emp_loc as AssociateLocation, (emp_fname + ' ' + emp_Lname) as AssociateFullName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos='Sales Associate' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos = 'Finance Manager' order by emp_lname";
             var associates = SqlMapperUtil.SqlWithParams<Associate>(sqlGet, null, "JJFServer");
 
             return associates;
@@ -4251,7 +4452,7 @@ namespace SalesCommission.Business
 
         public static List<SelectListItem> GetSalesAssociatesByStore(string locationCode)
         {
-            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where (emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR') and emp_loc = '" + locationCode + "' order by emp_lname";
+            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where (emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR'  or emp_pos='Sales Associate'  or emp_pos='Sales Associate' or emp_pos='Finance Manager') and emp_loc = '" + locationCode + "' order by emp_lname";
             var salesAssociates = SqlMapperUtil.SqlWithParams<SalesAssociate>(sqlGet, null, "JJFServer");
 
             var items = new List<SelectListItem>();
@@ -4915,13 +5116,20 @@ namespace SalesCommission.Business
             var reportDate = new DateTime(Int32.Parse(yearId), Int32.Parse(monthId), 1);
             var dealDetails = new List<DealDetail>();
 
+            var storedProcName = "sp_SalesLogDealsByDateAndStore";
+            if (certLevel == "HDM")
+            {
+                storedProcName = "sp_SalesLogDealsByDateAndStore_Handy";
+            }
+
+
             //If there is a comma, we are getting multiple makes...
             if (makeId.Contains(","))
             {
                 var makeIds = makeId.Split(',');
                 foreach (var make in makeIds)
                 {
-                    var tempDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_SalesLogDealsByDateAndStore", new { AutoMallID = make, ReportDate = reportDate }, "SalesCommission");
+                    var tempDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>(storedProcName, new { AutoMallID = make, ReportDate = reportDate }, "SalesCommission");
                     foreach (var detail in tempDetails)
                     {
                         dealDetails.Add(detail);
@@ -4931,7 +5139,7 @@ namespace SalesCommission.Business
             }
             else
             {
-                dealDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_SalesLogDealsByDateAndStore", new { AutoMallID = makeId, ReportDate = reportDate }, "SalesCommission");
+                dealDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>(storedProcName, new { AutoMallID = makeId, ReportDate = reportDate }, "SalesCommission");
             }
 
             //var otherDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_AllDealDetailsByDate", new { ReportDate = reportDate }, "ReynoldsData");
@@ -4941,6 +5149,7 @@ namespace SalesCommission.Business
             foreach (var deal in dealDetails)
             {
                 //var otherDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_DealDetailsByLocDeal", new { LocDeal = deal.DealKey }, "SalesCommission");
+
 
                     //var otherDeal = otherDetails[0];
                 if (deal.CertificationLevel != null && deal.CertificationLevel != "" && certLevel.Contains(deal.CertificationLevel))
@@ -5122,6 +5331,15 @@ namespace SalesCommission.Business
                         {
                             listODeals.Add(deal);
                         }
+                        break;
+                    case "Validated":
+                        if (deal.ShowroomValidatedBy != null && deal.ShowroomValidatedBy != "")
+                        {
+                            listODeals.Add(deal);
+                        }
+                        break;
+                    case "All":
+                        listODeals.Add(deal);
                         break;
                 }
 

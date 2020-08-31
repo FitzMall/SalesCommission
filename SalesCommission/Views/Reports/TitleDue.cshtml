@@ -1,0 +1,1047 @@
+﻿@model SalesCommission.Models.TitleDueModel
+
+@{
+    ViewBag.Title = "Title Due Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 2;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+}
+
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+
+    <style type="text/css">
+        .container{
+            max-width:100%;
+        }
+
+        .report-parameters{
+            background-color:#eee;
+        }
+        .hr-divider{
+            border-color:#999; margin-top:10px; margin-bottom:10px;
+        }
+        .hr-separator{
+            border-color:#999; border-style:dashed; margin-top:10px; margin-bottom:5px;
+        }
+        .input-row{
+            margin: 5px 15px;
+        }
+    </style>
+}
+
+<div class="row" style="margin-top:25px;">
+    <div class="col-sm-12">
+        <h2>Title Due Report</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-2">
+        <div class="row report-parameters">
+            <div class="col-sm-12">
+                <h4>Quick Lookup</h4>
+                <hr class="hr-divider" />
+                <div class="row input-row">
+                    <strong>By VIN (last 6)</strong><br />
+                    <input type="text" id="vin" name="vin" class="form-control" />
+                </div>
+                <div class="row input-row">
+                    <strong>By Stock #</strong><br />
+                    <input type="text" id="stock" name="stock" class="form-control" />
+                </div>
+                <div class="row input-row">
+                    <strong>By Deal</strong><br />
+                    <input type="text" id="deal" name="deal" class="form-control" />
+                </div>
+                <div class="row input-row">
+                    <input type="submit" value="Search" class="btn btn-primary editInfoSearch"/>
+                </div>
+            </div>
+        </div>
+        <div class="row report-parameters">
+            <div class="col-sm-12">
+                <h4>Filters</h4>
+                <hr class="hr-divider" />
+                @using (Html.BeginForm())
+                {
+                <div class="row input-row">
+                    <strong>Status</strong><br />
+                    <select class="form-control" id="status" name="status">
+                        <option value="ALL">All Status</option>
+                        <option value="0" @(Model.status == "0" ? "selected" : "")>No Status </option>
+                        @*<option value="1">Clear Title</option>*@
+                        <option value="2" @(Model.status == "2" ? "selected" : "")>Title Due From Bank</option>
+                        <option value="3" @(Model.status == "3" ? "selected" : "")>Title Due From Customer</option>
+                        <option value="5" @(Model.status == "5" ? "selected" : "")>Title Due From InterCo</option>
+                        <option value="6" @(Model.status == "6" ? "selected" : "")>Title Due From Auction</option>
+                        <option value="4" @(Model.status == "4" ? "selected" : "")>Lien Due From Customer</option>
+                        <option value="7" @(Model.status == "7" ? "selected" : "")>Lien Due From Bank</option>
+                        <option value="8" @(Model.status == "8" ? "selected" : "")>Odometer Due From Customer</option>
+                        <option value="9" @(Model.status == "9" ? "selected" : "")>POA Due From Customer</option>
+                        <option value="10" @(Model.status == "10" ? "selected" : "")>Payoff Auth Due Customer</option>
+                        <option value="11" @(Model.status == "11" ? "selected" : "")>Waiting Out/ST Title</option>
+                        <option value="12" @(Model.status == "12" ? "selected" : "")>Other</option>
+                        <option value="13" @(Model.status == "13" ? "selected" : "")>Duplicate Title Applied For</option>
+                    </select>
+
+                </div>
+                <div class="row input-row">
+                    <strong>Location</strong><br />
+                    <select class="form-control" id="loc" name="loc">
+                        <option value="ALL">All Locations</option>
+                        <option value="FOC" @(Model.loc == "FOC" ? "selected" : "")>Annapolis</option>
+                        <option value="FTN" @(Model.loc == "FTN" ? "selected" : "")>Chambersburg</option>
+                        <option value="CJE" @(Model.loc == "CJE" ? "selected" : "")>Clearwater</option>
+                        <option value="FAM" @(Model.loc == "FAM" ? "selected" : "")>Frederick</option>
+                        <option value="LFO" @(Model.loc == "LFO" ? "selected" : "")>Gaitherburg Hyundai/Subaru</option>
+                        <option value="LFT" @(Model.loc == "LFT" ? "selected" : "")>Gaitherburg Toyota/Middlebrook</option>
+                        <option value="FHT" @(Model.loc == "FHT" ? "selected" : "")>Hagerstown Chrysler</option>
+                        <option value="FHG" @(Model.loc == "FHG" ? "selected" : "")>Hagerstown GM</option>
+                        <option value="FLP" @(Model.loc == "FLP" ? "selected" : "")>Lexington Park</option>
+                        <option value="FBS" @(Model.loc == "FBS" ? "selected" : "")>Rockville Buick/Subaru</option>
+                        <option value="CDO" @(Model.loc == "CDO" ? "selected" : "")>Rockville Hyundai</option>
+                        <option value="WDC" @(Model.loc == "WDC" ? "selected" : "")>Wheaton</option>
+                      
+                    </select>
+                </div>
+                    <div class="row input-row">
+                        <input type="submit" value="Filter" class="btn btn-primary" />
+                    </div>
+                }   
+             </div>
+                
+        </div>
+    </div>
+
+    @if (Model.TitleDue != null)
+    {
+        var TotalDeals = 0;
+        var TotalNoStatusCount = 0;
+
+        var TotalTitleDueBankCount = 0;
+        var TotalTitleDueCustomerCount = 0;
+        var TotalTitleDueInterCoCount = 0;
+        var TotalTitleDueAuctionCount = 0;
+
+        var TotalLienDueBankCount = 0;
+        var TotalLienDueCustomerCount = 0;
+
+        var TotalOdomDueCustomerCount = 0;
+        var TotalPOADueCustomerCount = 0;
+        var TotalPayoffAuthCount = 0;
+        var TotalWaitingOutCount = 0;
+        var TotalDuplicateTitleCount = 0;
+        var TotalOtherCount = 0;
+
+        var locations = Model.TitleDue.OrderBy(x => x.LocationName).Select(x => x.Location).Distinct().ToList();
+
+
+        <div class="col-md-10">
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr style="background-color:#d9edf7;">
+                        <th>Location</th>
+                        <th class="text-center">Deals</th>
+                        <th class="text-center">No Status</th>
+                        <th class="text-center">Title Due From Bank</th>
+                        <th class="text-center">Title Due From Customer</th>
+                        <th class="text-center">Title Due From InterCo</th>
+                        <th class="text-center">Title Due From Auction</th>
+                        <th class="text-center">Lien Due From Bank</th>
+                        <th class="text-center">Lien Due From Customer</th>
+                        <th class="text-center">Odom Due From Customer</th>
+                        <th class="text-center">POA Due From Customer</th>
+                        <th class="text-center">Payoff Auth From Customer</th>
+                        <th class="text-center">Waiting Out / ST Title</th>
+                        <th class="text-center">Duplicate Title Applied for</th>
+                        <th class="text-center">Other</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var location in locations)
+    {
+        var locationTitleDue = Model.TitleDue.FindAll(x => x.Location == location);
+
+        var locationName = location;
+
+        var NoStatusCount = 0;
+
+        var TitleDueBankCount = 0;
+        var TitleDueCustomerCount = 0;
+        var TitleDueInterCoCount = 0;
+        var TitleDueAuctionCount = 0;
+
+        var LienDueBankCount = 0;
+        var LienDueCustomerCount = 0;
+
+        var OdomDueCustomerCount = 0;
+        var POADueCustomerCount = 0;
+        var PayoffAuthCount = 0;
+        var WaitingOutCount = 0;
+        var DuplicateTitleCount = 0;
+        var OtherCount = 0;
+
+        foreach (var titleDue in locationTitleDue)
+        {
+            locationName = titleDue.LocationName;
+
+            var NoStatus = true;
+
+            if (titleDue.TitleDueBank)
+            {
+                TitleDueBankCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.TitleDueCustomer)
+            {
+                TitleDueCustomerCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.TitleDueInterco)
+            {
+                TitleDueInterCoCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.TitleDueAuction)
+            {
+                TitleDueAuctionCount += 1;
+                NoStatus = false;
+            }
+
+            if (titleDue.LienDueBank)
+            {
+                LienDueBankCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.LienDueCustomer)
+            {
+                LienDueCustomerCount += 1;
+                NoStatus = false;
+            }
+
+            if (titleDue.OdomDueCustomer)
+            {
+                OdomDueCustomerCount += 1;
+                NoStatus = false;
+            }
+
+            if (titleDue.POADueCust)
+            {
+                POADueCustomerCount = 1;
+                NoStatus = false;
+            }
+            if (titleDue.PayoffDueCust)
+            {
+                PayoffAuthCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.WaitingOutSTTitle)
+            {
+                WaitingOutCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.DuplicateTitleAppliedFor)
+            {
+                DuplicateTitleCount += 1;
+                NoStatus = false;
+            }
+            if (titleDue.Other)
+            {
+                OtherCount += 1;
+                NoStatus = false;
+            }
+
+            if(NoStatus && !titleDue.ClearTitle)
+            {
+                NoStatusCount += 1;
+            }
+
+
+        }
+
+        TotalDeals += locationTitleDue.Count();
+        TotalNoStatusCount += NoStatusCount;
+
+        TotalTitleDueBankCount += TitleDueBankCount;
+        TotalTitleDueCustomerCount += TitleDueCustomerCount;
+        TotalTitleDueInterCoCount += TitleDueInterCoCount;
+        TotalTitleDueAuctionCount += TitleDueAuctionCount;
+
+        TotalLienDueBankCount += LienDueBankCount;
+        TotalLienDueCustomerCount += LienDueCustomerCount;
+
+        TotalOdomDueCustomerCount += OdomDueCustomerCount;
+        TotalPOADueCustomerCount += POADueCustomerCount;
+        TotalPayoffAuthCount += PayoffAuthCount;
+        TotalWaitingOutCount += WaitingOutCount; ;
+        TotalDuplicateTitleCount += DuplicateTitleCount;
+        TotalOtherCount += OtherCount;
+
+
+
+
+
+                    <tr>
+                        <td><a data-toggle="collapse" id="@location" style="cursor: pointer;" data-target="#collapse-@location">@locationName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                        <td class="text-center">@locationTitleDue.Count()</td>
+                        <td class="text-center">@NoStatusCount</td>
+                        <td class="text-center">@TitleDueBankCount</td>
+                        <td class="text-center">@TitleDueCustomerCount</td>
+                        <td class="text-center">@TitleDueInterCoCount</td>
+                        <td class="text-center">@TitleDueAuctionCount</td>
+                        <td class="text-center">@LienDueBankCount</td>
+                        <td class="text-center">@LienDueCustomerCount</td>
+                        <td class="text-center">@OdomDueCustomerCount</td>
+                        <td class="text-center">@POADueCustomerCount</td>
+                        <td class="text-center">@PayoffAuthCount</td>
+                        <td class="text-center">@WaitingOutCount</td>
+                        <td class="text-center">@DuplicateTitleCount</td>
+                        <td class="text-center">@OtherCount</td>
+                    </tr>
+                    <tr id="collapse-@location" class="collapse out" style="background-color:lightgray">
+                        <td colspan="15">
+                            <h4>Title Due for @location</h4>
+
+                            @{
+                                    var FIManagers = locationTitleDue.Select(x => x.FinanceManager).Distinct().ToList();
+
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr style="background-color:#d9edf7;">
+                                        <th>F and I Manager</th>
+                                        <th class="text-center">Deals</th>
+                                        <th class="text-center">No Status</th>
+                                        <th class="text-center">Title Due From Bank</th>
+                                        <th class="text-center">Title Due From Customer</th>
+                                        <th class="text-center">Title Due From InterCo</th>
+                                        <th class="text-center">Title Due From Auction</th>
+                                        <th class="text-center">Lien Due From Bank</th>
+                                        <th class="text-center">Lien Due From Customer</th>
+                                        <th class="text-center">Odom Due From Customer</th>
+                                        <th class="text-center">POA Due From Customer</th>
+                                        <th class="text-center">Payoff Auth From Customer</th>
+                                        <th class="text-center">Waiting Out / ST Title</th>
+                                        <th class="text-center">Duplicate Title Applied for</th>
+                                        <th class="text-center">Other</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @foreach (var manager in FIManagers)
+                                            {
+                                                var managerTitleDue = locationTitleDue.ToList().FindAll(x => x.FinanceManager == manager);
+
+                                                var managerName = manager;
+                                                var managerFINumber = "";
+
+                                                var ManagerNoStatusCount = 0;
+
+                                                var ManagerTitleDueBankCount = 0;
+                                                var ManagerTitleDueCustomerCount = 0;
+                                                var ManagerTitleDueInterCoCount = 0;
+                                                var ManagerTitleDueAuctionCount = 0;
+
+                                                var ManagerLienDueBankCount = 0;
+                                                var ManagerLienDueCustomerCount = 0;
+
+                                                var ManagerOdomDueCustomerCount = 0;
+                                                var ManagerPOADueCustomerCount = 0;
+                                                var ManagerPayoffAuthCount = 0;
+                                                var ManagerWaitingOutCount = 0;
+                                                var ManagerDuplicateTitleCount = 0;
+                                                var ManagerOtherCount = 0;
+
+                                                foreach (var titleDue in managerTitleDue)
+                                                {
+                                                    managerName = titleDue.FinanceManager;
+                                                    managerFINumber = titleDue.FinanceManager.Replace(" ","").Replace("-", "").Replace(".","");
+
+                                                    var ManagerNoStatus = true;
+
+
+                                                    if (titleDue.TitleDueBank)
+                                                    {
+                                                        ManagerTitleDueBankCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.TitleDueCustomer)
+                                                    {
+                                                        ManagerTitleDueCustomerCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.TitleDueInterco)
+                                                    {
+                                                        ManagerTitleDueInterCoCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.TitleDueAuction)
+                                                    {
+                                                        ManagerTitleDueAuctionCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+
+                                                    if (titleDue.LienDueBank)
+                                                    {
+                                                        ManagerLienDueBankCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.LienDueCustomer)
+                                                    {
+                                                        ManagerLienDueCustomerCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+
+                                                    if (titleDue.OdomDueCustomer)
+                                                    {
+                                                        ManagerOdomDueCustomerCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+
+                                                    if (titleDue.POADueCust)
+                                                    {
+                                                        ManagerPOADueCustomerCount = 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.PayoffDueCust)
+                                                    {
+                                                        ManagerPayoffAuthCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.WaitingOutSTTitle)
+                                                    {
+                                                        ManagerWaitingOutCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.DuplicateTitleAppliedFor)
+                                                    {
+                                                        ManagerDuplicateTitleCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+                                                    if (titleDue.Other)
+                                                    {
+                                                        ManagerOtherCount += 1;
+                                                        ManagerNoStatus = false;
+                                                    }
+
+                                                    if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                    {
+                                                        ManagerNoStatusCount += 1;
+                                                    }
+
+                                                }
+
+                                        <tr>
+                                            <td><a data-toggle="collapse" id="@managerFINumber-@location" style="cursor: pointer;" data-target="#collapse-@managerFINumber-@location">@managerName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                                            <td class="text-center">@managerTitleDue.Count()</td>
+                                            <td class="text-center">@ManagerNoStatusCount</td>
+                                            <td class="text-center">@ManagerTitleDueBankCount</td>
+                                            <td class="text-center">@ManagerTitleDueCustomerCount</td>
+                                            <td class="text-center">@ManagerTitleDueInterCoCount</td>
+                                            <td class="text-center">@ManagerTitleDueAuctionCount</td>
+                                            <td class="text-center">@ManagerLienDueBankCount</td>
+                                            <td class="text-center">@ManagerLienDueCustomerCount</td>
+                                            <td class="text-center">@ManagerOdomDueCustomerCount</td>
+                                            <td class="text-center">@ManagerPOADueCustomerCount</td>
+                                            <td class="text-center">@ManagerPayoffAuthCount</td>
+                                            <td class="text-center">@ManagerWaitingOutCount</td>
+                                            <td class="text-center">@ManagerDuplicateTitleCount</td>
+                                            <td class="text-center">@ManagerOtherCount</td>
+                                        </tr>
+
+                                        <tr id="collapse-@managerFINumber-@location" class="collapse out" style="background-color:lightgray">
+                                            <td colspan="15">
+                                                <table id="money-due-@managerFINumber-@location" class="table table-bordered" style="font-size:12px;">
+                                                    <thead>
+                                                        <tr style="background-color:#d9edf7">
+                                                            <th class="text-center">VIN</th>
+                                                            <th class="text-center">Stock #</th>
+                                                            <th class="text-center">Year</th>
+                                                            <th class="text-center">Make</th>
+                                                            <th class="text-center">Model</th>
+                                                            <th class="text-center">From</th>
+                                                            <th class="text-center">Status</th>
+                                                            <th class="text-center">Customer</th>
+                                                            <th class="text-center">Sales Associate</th>
+                                                            <th class="text-center">Sales Associate</th>
+                                                            <th class="text-center">Sales Manager</th>
+                                                            <th class="text-center">Finance Manager</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var titleDue in managerTitleDue)
+                                                        {
+                                                            var ManagerNoStatus = true;
+
+                                                            var status = "";
+                                                            if (titleDue.TitleDueBank)
+                                                            {
+                                                                status += "Title Bank, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.TitleDueCustomer)
+                                                            {
+                                                                status += "Title Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.TitleDueInterco)
+                                                            {
+                                                                status += "Title Interco, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.TitleDueAuction)
+                                                            {
+                                                                status += "Title Auction, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (titleDue.LienDueBank)
+                                                            {
+                                                                status += "Lien Bank, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.LienDueCustomer)
+                                                            {
+                                                                status += "Lien Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (titleDue.OdomDueCustomer)
+                                                            {
+                                                                status += "Odom Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (titleDue.POADueCust)
+                                                            {
+                                                                status += "POA Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.PayoffDueCust)
+                                                            {
+                                                                status += "Payoff Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.WaitingOutSTTitle)
+                                                            {
+                                                                status += "Waiting Out, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.DuplicateTitleAppliedFor)
+                                                            {
+                                                                status += "Dup Title, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.Other)
+                                                            {
+                                                                status += "Other, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                            {
+                                                                status = "No Status";
+                                                            }
+
+                                                            status = status.TrimEnd(' ').TrimEnd(',');
+
+
+                                                            <tr>
+                                                                <td class="text-center"><a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)">@titleDue.VIN</a></td>
+                                                                <td class="text-center">@titleDue.StockNumber</td>
+                                                                <td class="text-center">@titleDue.Year</td>
+                                                                <td class="text-center">@titleDue.Make</td>
+                                                                <td class="text-center">@titleDue.Model</td>
+                                                                <td class="text-center">@titleDue.DealKey</td>
+                                                                <td class="text-center">@status</td>
+                                                                <td class="text-center">@titleDue.BuyerName</td>
+                                                                <td class="text-center">@titleDue.SalesAssociate1Name</td>
+                                                                <td class="text-center">@titleDue.SalesAssociate2Name</td>
+                                                                <td class="text-center">@titleDue.SalesManager</td>
+                                                                <td class="text-center">@titleDue.FinanceManager</td>
+                                                            </tr>
+
+                                                                }
+
+                                                    </tbody>
+                                                </table>
+
+
+                                            </td>
+                                        </tr>
+
+}
+                                    <tr>
+                                        <td><a data-toggle="collapse" id="AllManagers-@location" style="cursor: pointer;" data-target="#collapse-AllManagers-@location">All Managers <i class="fa fa-caret-down" aria-hidden="true"></a></td>
+                                        <td class="text-center">@locationTitleDue.Count()</td>
+                                        <td class="text-center">@NoStatusCount</td>
+                                        <td class="text-center">@TitleDueBankCount</td>
+                                        <td class="text-center">@TitleDueCustomerCount</td>
+                                        <td class="text-center">@TitleDueInterCoCount</td>
+                                        <td class="text-center">@TitleDueAuctionCount</td>
+                                        <td class="text-center">@LienDueBankCount</td>
+                                        <td class="text-center">@LienDueCustomerCount</td>
+                                        <td class="text-center">@OdomDueCustomerCount</td>
+                                        <td class="text-center">@POADueCustomerCount</td>
+                                        <td class="text-center">@PayoffAuthCount</td>
+                                        <td class="text-center">@WaitingOutCount</td>
+                                        <td class="text-center">@DuplicateTitleCount</td>
+                                        <td class="text-center">@OtherCount</td>
+                                    </tr>
+
+                                    <tr id="collapse-AllManagers-@location" class="collapse out" style="background-color:lightgray">
+                                        <td colspan="15">
+                                            <table id="money-due-AllManagers-@location" class="table table-bordered" style="font-size:12px;">
+                                                <thead>
+                                                    <tr style="background-color:#d9edf7">
+                                                        <th class="text-center">VIN</th>
+                                                        <th class="text-center">Stock #</th>
+                                                        <th class="text-center">Year</th>
+                                                        <th class="text-center">Make</th>
+                                                        <th class="text-center">Model</th>
+                                                        <th class="text-center">From</th>
+                                                        <th class="text-center">Status</th>
+                                                        <th class="text-center">Customer</th>
+                                                        <th class="text-center">Sales Associate</th>
+                                                        <th class="text-center">Sales Associate</th>
+                                                        <th class="text-center">Sales Manager</th>
+                                                        <th class="text-center">Finance Manager</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var titleDue in locationTitleDue)
+                                                    {
+                                                        var ManagerNoStatus = true;
+
+                                                        var status = "";
+                                                        if (titleDue.TitleDueBank)
+                                                        {
+                                                            status += "Title Bank, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.TitleDueCustomer)
+                                                        {
+                                                            status += "Title Customer, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.TitleDueInterco)
+                                                        {
+                                                            status += "Title Interco, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.TitleDueAuction)
+                                                        {
+                                                            status += "Title Auction, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+
+                                                        if (titleDue.LienDueBank)
+                                                        {
+                                                            status += "Lien Bank, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.LienDueCustomer)
+                                                        {
+                                                            status += "Lien Customer, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+
+                                                        if (titleDue.OdomDueCustomer)
+                                                        {
+                                                            status += "Odom Customer, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+
+                                                        if (titleDue.POADueCust)
+                                                        {
+                                                            status += "POA Due, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.PayoffDueCust)
+                                                        {
+                                                            status += "Payoff Due, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.WaitingOutSTTitle)
+                                                        {
+                                                            status += "Waiting Out, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.DuplicateTitleAppliedFor)
+                                                        {
+                                                            status += "Dup Title, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+                                                        if (titleDue.Other)
+                                                        {
+                                                            status += "Other, ";
+                                                            ManagerNoStatus = false;
+                                                        }
+
+                                                        if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                        {
+                                                            status = "No Status";
+                                                        }
+
+                                                        status = status.TrimEnd(' ').TrimEnd(',');
+
+
+                                                        <tr>
+                                                            <td class="text-center"><a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)">@titleDue.VIN</a></td>
+                                                            <td class="text-center">@titleDue.StockNumber</td>
+                                                            <td class="text-center">@titleDue.Year</td>
+                                                            <td class="text-center">@titleDue.Make</td>
+                                                            <td class="text-center">@titleDue.Model</td>
+                                                            <td class="text-center">@titleDue.DealKey</td>
+                                                            <td class="text-center">@status</td>
+                                                            <td class="text-center">@titleDue.BuyerName</td>
+                                                            <td class="text-center">@titleDue.SalesAssociate1Name</td>
+                                                            <td class="text-center">@titleDue.SalesAssociate2Name</td>
+                                                            <td class="text-center">@titleDue.SalesManager</td>
+                                                            <td class="text-center">@titleDue.FinanceManager</td>
+                                                        </tr>
+
+                                                    }
+
+                                                </tbody>
+                                            </table>
+
+
+                                        </td>
+                                    </tr>
+
+
+
+                                </tbody>
+                            </table>
+
+                            }
+
+
+
+                        </td>
+                    </tr>
+
+
+                                    }
+
+
+
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th><a data-toggle="collapse" id="AllStores" style="cursor: pointer;" data-target="#collapse-AllStores">Totals <i class="fa fa-caret-down" aria-hidden="true"></a></th>
+                        <th class="text-center">@TotalDeals</th>
+                        <th class="text-center">@TotalNoStatusCount</th>
+                        <th class="text-center">@TotalTitleDueBankCount</th>
+                        <th class="text-center">@TotalTitleDueCustomerCount</th>
+                        <th class="text-center">@TotalTitleDueInterCoCount</th>
+                        <th class="text-center">@TotalTitleDueAuctionCount</th>
+                        <th class="text-center">@TotalLienDueBankCount</th>
+                        <th class="text-center">@TotalLienDueCustomerCount</th>
+                        <th class="text-center">@TotalOdomDueCustomerCount</th>
+                        <th class="text-center">@TotalPOADueCustomerCount</th>
+                        <th class="text-center">@TotalPayoffAuthCount</th>
+                        <th class="text-center">@TotalWaitingOutCount</th>
+                        <th class="text-center">@TotalDuplicateTitleCount</th>
+                        <th class="text-center">@TotalOtherCount</th>
+
+                    </tr>
+
+                    <tr id="collapse-AllStores" class="collapse out" style="background-color:lightgray">
+                        <td colspan="15">
+                            <table id="money-due-AllStores" class="table table-bordered" style="font-size:12px;">
+                                <thead>
+                                    <tr style="background-color:#d9edf7">
+                                        <th class="text-center">VIN</th>
+                                        <th class="text-center">Stock #</th>
+                                        <th class="text-center">Year</th>
+                                        <th class="text-center">Make</th>
+                                        <th class="text-center">Model</th>
+                                        <th class="text-center">From</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Customer</th>
+                                        <th class="text-center">Sales Associate</th>
+                                        <th class="text-center">Sales Associate</th>
+                                        <th class="text-center">Sales Manager</th>
+                                        <th class="text-center">Finance Manager</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var titleDue in Model.TitleDue)
+                                    {
+                                        var ManagerNoStatus = true;
+
+                                        var status = "";
+                                        if (titleDue.TitleDueBank)
+                                        {
+                                            status += "Title Bank, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.TitleDueCustomer)
+                                        {
+                                            status += "Title Customer, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.TitleDueInterco)
+                                        {
+                                            status += "Title Interco, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.TitleDueAuction)
+                                        {
+                                            status += "Title Auction, ";
+                                            ManagerNoStatus = false;
+                                        }
+
+                                        if (titleDue.LienDueBank)
+                                        {
+                                            status += "Lien Bank, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.LienDueCustomer)
+                                        {
+                                            status += "Lien Customer, ";
+                                            ManagerNoStatus = false;
+                                        }
+
+                                        if (titleDue.OdomDueCustomer)
+                                        {
+                                            status += "Odom Customer, ";
+                                            ManagerNoStatus = false;
+                                        }
+
+                                        if (titleDue.POADueCust)
+                                        {
+                                            status += "POA Due, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.PayoffDueCust)
+                                        {
+                                            status += "Payoff Due, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.WaitingOutSTTitle)
+                                        {
+                                            status += "Waiting Out, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.DuplicateTitleAppliedFor)
+                                        {
+                                            status += "Dup Title, ";
+                                            ManagerNoStatus = false;
+                                        }
+                                        if (titleDue.Other)
+                                        {
+                                            status += "Other, ";
+                                            ManagerNoStatus = false;
+                                        }
+
+                                        if (ManagerNoStatus && !titleDue.ClearTitle)
+                                        {
+                                            status = "No Status";
+                                        }
+
+                                        status = status.TrimEnd(' ').TrimEnd(',');
+
+
+                                        <tr>
+                                            <td class="text-center"><a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)">@titleDue.VIN</a></td>
+                                            <td class="text-center">@titleDue.StockNumber</td>
+                                            <td class="text-center">@titleDue.Year</td>
+                                            <td class="text-center">@titleDue.Make</td>
+                                            <td class="text-center">@titleDue.Model</td>
+                                            <td class="text-center">@titleDue.DealKey</td>
+                                            <td class="text-center">@status</td>
+                                            <td class="text-center">@titleDue.BuyerName</td>
+                                            <td class="text-center">@titleDue.SalesAssociate1Name</td>
+                                            <td class="text-center">@titleDue.SalesAssociate2Name</td>
+                                            <td class="text-center">@titleDue.SalesManager</td>
+                                            <td class="text-center">@titleDue.FinanceManager</td>
+                                        </tr>
+
+                                    }
+
+                                </tbody>
+                            </table>
+
+
+                        </td>
+                    </tr>
+
+                </tfoot>
+
+            </table>
+        </div>
+
+
+                                }
+</div>
+@section scripts
+{
+    <script type="text/javascript">
+
+        $("#deal").keypress(function (event) {
+            $("#vin").val('')
+            $("#stock").val('');
+        });
+        $("#stock").keypress(function (event) {
+            $("#deal").val('');
+            $("#vin").val('');
+        });
+        $("#vin").keypress(function (event) {
+            $("#deal").val('');
+            $("#stock").val('');
+        });
+
+                                                        $(document).ready(function () {
+
+                                                            $('[data-toggle="tooltip"]').tooltip();
+
+                                                            var dialogWidth = 0;
+
+                                                            dialogWidth = ($(window).width() * .75);
+
+                                                            if ($(window).width() > 1199) {
+                                                                dialogWidth = 1200;
+                                                            }
+
+                                                            $('body').on('click', '.editInfo', function (event) {
+                                                                var vin = $(this).attr("data-vin");
+
+                                                                var url = "@applicationPath/Reports/UpdateTitleStatus/?vin=" + vin;
+                                                                var dialogBox = $("<div>");
+
+                                                                $(dialogBox).dialog({
+                                                                    resizable: false,
+                                                                    height: "auto",
+                                                                    width: dialogWidth,
+                                                                    position: { my: "center", at: "top+25%", of: window },
+                                                                    title: 'Update Title Status',
+                                                                    modal: true,
+                                                                    open: function (event, ui) {
+                                                                        $(this).load(url);
+                                                                        //$('#BonusDraws').validate();
+                                                                    },
+                                                                    buttons: {
+                                                                        "Save": function () {
+                                                                            var $this = this;
+                                                                            var form = $('#UpdateTitleStatus', $this);
+                                                                            //if (!$(form).valid()) {
+                                                                            //    return false;
+                                                                            //}
+
+                                                                            $.ajax({
+                                                                                async: false,
+                                                                                type: 'POST',
+                                                                                url: form.attr("action"),
+                                                                                data: $(form).serialize(),
+                                                                                success: $($this).dialog("close").dialog("destroy").remove()
+                                                                            });
+
+                                                                            location.reload();
+                                                                        },
+
+                                                                        "Close": function () {
+                                                                            $(this).dialog("close");
+                                                                            $(this).empty();
+                                                                        }
+                                                                    }
+                                                                });
+                                                                $(dialogBox).dialog('open');
+                                                            });
+
+
+                                                        });
+
+        $(document).ready(function () {
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            var dialogWidth = 0;
+
+            dialogWidth = ($(window).width() * .75);
+
+            if ($(window).width() > 1199) {
+                dialogWidth = 1200;
+            }
+
+            $('body').on('click', '.editInfoSearch', function (event) {
+                var vin = $("#vin").val();
+                var stock = $("#stock").val();
+                var deal = $("#deal").val();
+
+                var url = "@applicationPath/Reports/UpdateTitleStatus/";
+
+                if (vin != null && vin != "")
+                {
+                    url = url + "?vin=" + vin
+                }
+
+                if (stock != null && stock != "") {
+                    url = url + "?stock=" + stock
+                }
+
+                if (deal != null && deal != "") {
+                    url = url + "?deal=" + deal
+                }
+
+                var dialogBox = $("<div>");
+
+                $(dialogBox).dialog({
+                    resizable: false,
+                    height: "auto",
+                    width: dialogWidth,
+                    position: { my: "center", at: "top+25%", of: window },
+                    title: 'Update Title Status',
+                    modal: true,
+                    open: function (event, ui) {
+                        $(this).load(url);
+                        //$('#BonusDraws').validate();
+                    },
+                    buttons: {
+                        "Save": function () {
+                            var $this = this;
+                            var form = $('#UpdateTitleStatus', $this);
+                            //if (!$(form).valid()) {
+                            //    return false;
+                            //}
+
+                            $.ajax({
+                                async: false,
+                                type: 'POST',
+                                url: form.attr("action"),
+                                data: $(form).serialize(),
+                                success: $($this).dialog("close").dialog("destroy").remove()
+                            });
+
+                            location.reload();
+                        },
+
+                        "Close": function () {
+                            $(this).dialog("close");
+                            $(this).empty();
+                        }
+                    }
+                });
+                $(dialogBox).dialog('open');
+            });
+
+
+        });
+
+    </script>
+}

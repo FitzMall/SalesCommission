@@ -177,6 +177,8 @@ namespace SalesCommission.Models
         public List<AftermarketItem> AftermarketItems { get; set; }
         public DealComments DealComments { get; set; }
         public bool DealFound { get; set; } = false;
+        public bool ClearTitle1 { get; set; }
+        public bool ClearTitle2 { get; set; }
     }
 
 
@@ -290,6 +292,8 @@ namespace SalesCommission.Models
         public string sl_TradeVIN { get; set; }
         public string sl_TradeVIN2 { get; set; }
         public string sl_FinanceManagerNumber { get; set; }
+        public bool ClearTitle1 { get; set; }
+        public bool ClearTitle2 { get; set; }
     }
     public class DealComments
     {

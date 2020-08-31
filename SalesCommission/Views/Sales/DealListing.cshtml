@@ -49,11 +49,27 @@
     double TotalBankFee = 0;
     double TotalBackGrossItemAmount = 0;
 
+    var TotalSVDays = 0;
+    var TotalOVDays = 0;
+
+    var TotalShowroomValidated = 0;
+    var TotalOfficeValidated = 0;
+
     var currentSelectedDate = new DateTime(Int32.Parse(Model.YearId), Int32.Parse(Model.MonthId), 1);
     var grossChangeDate = new DateTime(2020, 1, 31);
 
 
 }
+
+@section CSS
+{
+    <style type="text/css">
+        .container {
+            max-width: 100%;
+        }
+    </style>
+}
+
 
 
 
@@ -68,6 +84,11 @@
                     <th class="text-center">Customer</th>
                     <th class="text-center">Deal Date</th>
                     <th class="text-center">Stk #</th>
+                    <th class="text-center">Deal Type</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">Days</th>
                     <th class="text-center">Deal Gross</th>
                     <th class="text-center">Fin Inc</th>
                     <th class="text-center">Bank Fee</th>
@@ -81,6 +102,8 @@
                     <th class="text-center">Associates</th>                    
                     <th class="text-center">Fin Src</th>
                     <th class="text-center">Fin Mgr</th>
+                    <th class="text-center">SV Days</th>
+                    <th class="text-center">OV Days</th>
                     <th class="text-center">Variance</th>
                 </tr>
             </thead>
@@ -109,12 +132,46 @@
                     {
                         bgStyle = "style=background-color:#f2dede;";
                     }
+
+                    var svDays = "";
+                    var ovDays = "";
+
+                    if (deal.ShowroomValidatedBy != "" && deal.ShowroomValidatedBy != null)
+                    {
+                        TotalShowroomValidated += 1;
+
+                        TimeSpan duration = deal.ShowroomValidatedDate - deal.DealDate;
+
+                        svDays = duration.Days.ToString();
+                        TotalSVDays += duration.Days;
+
+                    }
+
+                    if (deal.OfficeValidatedBy != "" && deal.OfficeValidatedBy != null)
+                    {
+                        TotalOfficeValidated += 1;
+
+                        TimeSpan duration = deal.OfficeValidatedDate - deal.ShowroomValidatedDate;
+
+                        ovDays = duration.Days.ToString();
+                        TotalOVDays += duration.Days;
+                    }
+
+
+
+
+
                     <tr>
                         <td>@dealIndex.</td>
                         <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey">@deal.DealKey</a></td>
                         <td class="text-center">@deal.CustomerName</td>
                         <td class="text-center">@deal.DealDate.ToShortDateString()</td>
                         <td class="text-center">@deal.StockNumber</td>
+                        <td class="text-center">@deal.MakeName</td>
+                        <td class="text-center">@deal.Year</td>
+                        <td class="text-center">@deal.CarMake</td>
+                        <td class="text-center">@deal.Carline</td>
+                        <td class="text-center">@deal.DaysInStock</td>
                         <td class="text-center">@deal.DealGrossAmount.ToString("C", nfi)</td>
                         <td class="text-center" @(ViewBag.ListType == "Finance" ? "style=background-color:#FFFFCC" : "")>@deal.FinIncAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.BankFee.ToString("C", nfi)</td>
@@ -142,6 +199,8 @@
                         <td class="text-center">@deal.SalesAssociate1<br/>@deal.SalesAssociate2</td>
                         <td class="text-center">@deal.FinInstCode</td>
                         <td class="text-center">@deal.FinanceManager</td>
+                        <td class="text-center">@svDays</td>
+                        <td class="text-center">@ovDays</td>
                         <td class="text-center" @bgStyle>@deal.VarianceAmount.ToString("C", nfi)</td>
 
                     </tr>
@@ -152,6 +211,11 @@
     <tr style="background-color:#d9edf7">
         <th></th>
         <th class="text-center">Totals</th>
+        <th class="text-center"></th>
+        <th class="text-center"></th>
+        <th class="text-center"></th>
+        <th class="text-center"></th>
+        <th class="text-center"></th>
         <th class="text-center"></th>
         <th class="text-center"></th>
         <th class="text-center"></th>
@@ -169,6 +233,8 @@
         <th class="text-center"></th>
         <th class="text-center"></th>
         <th class="text-center"></th>
+        <th class="text-center"></th>
+        <th class="text-center"></th>
     </tr>
     @{
         var AvgGross= (TotalDealGross / dealIndex);
@@ -181,10 +247,19 @@
         var AvgMaintenance = (TotalMaintenance / dealIndex);
         var AvgBankFee = (TotalBankFee / dealIndex);
         var AvgBack = (TotalBackGrossItemAmount / dealIndex);
+
+        var AvgSVDays = (TotalSVDays / TotalShowroomValidated);
+        var AvgOVDays = (TotalOVDays / TotalOfficeValidated);
+
     }
                 <tr style="background-color:#d9edf7">
                     <th></th>
                     <th class="text-center">Averages</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
@@ -201,6 +276,8 @@
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
+                    <th class="text-center">@AvgSVDays.ToString("C", nfi)</th>
+                    <th class="text-center">@AvgOVDays.ToString("C", nfi)</th>
                     <th class="text-center"></th>
 
                 </tr>
@@ -237,7 +314,7 @@
                   }
               ],
               columnDefs: [
-                { type: 'any-number', targets: [5, 6, 7, 8, 9, 10, 11, 12, 13] },
+                { type: 'any-number', targets: [9, 10, 11, 12, 13, 14, 15, 16, 17] },
                 { type: 'date-us', targets: [3]}
               ]
 

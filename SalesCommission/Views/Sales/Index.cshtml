@@ -672,7 +672,7 @@
                                         <th class="text-center">VSC</th>
                                         <th class="text-center">MC</th>
                                         <th class="text-center">GAP</th>
-                                        @*<th class="text-center">Other</th>*@
+                                        <th class="text-center">BPP/AFT</th>
                                         <th class="text-center">Total</th>
                                         <th class="text-center">Memo: FTD</th>
                                         <th class="text-center">Associates</th>
@@ -681,8 +681,8 @@
                                         <th class="text-center">Sales Mgr</th>
                                         <th class="text-center">Rate Spread</th>
                                         <th class="text-center">Var</th>
-                                        <th class="text-center">SV</th>
-                                        <th class="text-center">OV</th>
+                                        <th class="text-center">SV Days</th>
+                                        <th class="text-center">OV Days</th>
                                         <th class="text-center">Deal Var</th>
                                     </tr>
                                 </thead>
@@ -742,8 +742,9 @@
         <th class="text-center"><a data-toggle="collapse" id="Totals" style="cursor: pointer;" data-target="#collapse-total">Totals <i class="fa fa-caret-down" aria-hidden="true"></i></a> </th>
         <th class="text-center">@TotalDealCount</th>
         <th class="text-center">@TotalValidatedDealsCount</th>
-        <th class="text-center">@TotalUnValidatedCount</th>
-        <th class="text-center">@(TotalValidatedDealsCount - TotalOfficeValidatedCount)</th>
+
+        <th class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@TotalUnValidatedCount</a></th>
+        <th class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@(TotalValidatedDealsCount - TotalOfficeValidatedCount)</a></th>
         <th class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @TotalLeaseCount / @TotalPotentialLease Deals">@TotalLeaseCount<br />@totalLeasePercent</a></th>
         <th class="text-center"><a href="@applicationPath/Sales/CPODeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @TotalCPOCount / @TotalPotentialCPO Deals">@TotalCPOCount<br />@totalCPOPercent</a></th>
         <th class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handyman % = @TotalHandymanCount / @TotalPotentialHandyman Deals">@TotalHandymanCount<br />@totalHandyPercent</a></th>
@@ -801,7 +802,7 @@
                         <th class="text-center">VSC</th>
                         <th class="text-center">MC</th>
                         <th class="text-center">GAP</th>
-                        @*<th class="text-center">Other</th>*@
+                        <th class="text-center">BPP/AFT</th>
                         <th class="text-center">Total</th>
                         <th class="text-center">Memo: FTD</th>
                         <th class="text-center">Associates</th>
@@ -810,8 +811,8 @@
                         <th class="text-center">Sales Mgr</th>
                         <th class="text-center">Rate Spread</th>
                         <th class="text-center">Var</th>
-                        <th class="text-center">SV</th>
-                        <th class="text-center">OV</th>
+                        <th class="text-center">SV Days</th>
+                        <th class="text-center">OV Days</th>
                         <th class="text-center">Deal Var</th>
                     </tr>
                 </thead>
@@ -1525,7 +1526,7 @@
                         outputHTML += '<td class="text-center">' + obj.VSCAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         outputHTML += '<td class="text-center">' + obj.MaintenanceContractAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';                        
                         outputHTML += '<td class="text-center">' + obj.GapAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
-                        //outputHTML += '<td class="text-center">' + obj.OtherAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
+                        outputHTML += '<td class="text-center">' + obj.BackGrossItemAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         outputHTML += '<td class="text-center">';
 
                         var totalAmount = obj.DealGrossAmount + obj.FinIncAmount + obj.VSCAmount + obj.MaintenanceContractAmount + obj.GapAmount + obj.BankFee;//+ obj.FTDAmount + obj.OtherAmount;
@@ -1566,15 +1567,38 @@
                         
                         var check = '<i class="fa fa-check" aria-hidden="true"></i>';
 
+
+
                         if (obj.ShowroomValidatedBy != "" && obj.ShowroomValidatedBy != null) {
-                            outputHTML += '<td class="text-center">' + check + '</td>';
+
+                            
+                            var date1 = new Date(parseInt(obj.DealDate.substr(6)));
+                            var date2 = new Date(parseInt(obj.ShowroomValidatedDate.substr(6)));
+
+                            // To calculate the time difference of two dates 
+                            var Difference_In_Time = date2.getTime() - date1.getTime();
+
+                            // To calculate the no. of days between two dates 
+                            var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                            outputHTML += '<td class="text-center">' + parseInt(Difference_In_Days) + '</td>';
+                            //outputHTML += '<td class="text-center">' + check + '</td>';
                         }
                         else {
                             outputHTML += '<td class="text-center"></td>';
                         }
 
                         if (obj.OfficeValidatedBy != "" && obj.OfficeValidatedBy != null) {
-                            outputHTML += '<td class="text-center">' + check + '</td>';
+
+                            var date1 = new Date(parseInt(obj.ShowroomValidatedDate.substr(6)));
+                            var date2 = new Date(parseInt(obj.OfficeValidatedDate.substr(6)));
+
+                            // To calculate the time difference of two dates 
+                            var Difference_In_Time = date2.getTime() - date1.getTime();
+
+                            // To calculate the no. of days between two dates 
+                            var Difference_In_Days = Difference_In_Time / (1000 * 3600 * 24);
+                            outputHTML += '<td class="text-center">' + parseInt(Difference_In_Days) + '</td>';
+                            //outputHTML += '<td class="text-center">' + check + '</td>';
                         }
                         else {
                             outputHTML += '<td class="text-center"></td>';

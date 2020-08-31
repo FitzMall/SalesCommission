@@ -570,6 +570,32 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                     </div>
                 </div>
                 <div class="form-group">
+                    <div class="col-sm-12">
+                        <label>Title Status</label>
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Clear Title<br/>
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Bank<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due INTERCO<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Auction<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Odom Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Dup Title Applied For<br />
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Lien Due Bank<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Lien Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) POA Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Payoff Auth Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Waiting Out/ST Title<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Other <br />
+                    </div>
+                </div>
+                <hr/>
+                <label class="col-sm-6">Desc Of Trade</label>
+                <label class="col-sm-3">ACV</label>
+                <label class="col-sm-3">Allowance</label>
+                <div class="form-group">
                     <div class="col-sm-6">
                         @Html.TextBoxFor(n => n.sl_descOftrade2, new { @class = "form-control", placeholder = "" })
                         @foreach (var deal in Model.DealHistory)
@@ -618,15 +644,26 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         }*@
                     </div>
                 </div>
-                <hr />
-                <h4>Comments</h4>
                 <div class="form-group">
                     <div class="col-sm-12">
-                        <textarea id="dealComments" name="dealComments" style="width:100%; height:300px; ">@Model.DealComments.Comment</textarea>
-                        @if (Model.DealComments.Comment != null)
-                        {
-                            <label>Last updated @Model.DealComments.CommentDate.ToShortDateString() by @Model.DealComments.CommentUser</label>
-                        }                      
+                        <label>Title Status</label>
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Clear Title<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Bank<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due INTERCO<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Auction<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Odom Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Dup Title Applied For<br />
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Lien Due Bank<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Lien Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) POA Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Payoff Auth Due Customer<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Waiting Out/ST Title<br />
+                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Other <br />
                     </div>
                 </div>
             </div>
@@ -1472,6 +1509,22 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr />
+            <h4>Comments</h4>
+            <div class="form-group">
+                @*<div class="col-sm-12">*@
+                    <textarea id="dealComments" name="dealComments" style="-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;max-width:none;width: 100%;height:100px; ">@Model.DealComments.Comment</textarea>
+                    @if (Model.DealComments.Comment != null)
+                    {
+                        <label>Last updated @Model.DealComments.CommentDate.ToShortDateString() by @Model.DealComments.CommentUser</label>
+                    }
+                @*</div>*@
+            </div>
+
         </div>
     </div>
                 var bLockDown = false;

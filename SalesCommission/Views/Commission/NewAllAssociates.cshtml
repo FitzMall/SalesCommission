@@ -443,7 +443,7 @@ else
                                     deal.FinanceCount = dealValue;
                                 }
 
-                                if (deal.VehicleCondition == "USED" && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
+                                if ((deal.VehicleCondition == "USED" || deal.VehicleCondition == "HANDY") && deal.BPPAmount >= 495 && deal.VehiclePrice < 10000)
                                 {
                                     valueInternet = "V";
                                 }

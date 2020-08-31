@@ -367,7 +367,20 @@ namespace SalesCommission.Controllers
             var dealListing = new DealListing();
             dealListing.Deals = SqlQueries.GetSalesLogDealLists(listType, makeId, monthId, yearId);
 
-            dealListing.LocationCode = SqlQueries.GetLocationCodeByMakeId(makeId);
+            var locationCode = "";
+            if (makeId.Contains(","))
+            {
+                var makeIds = makeId.Split(',');
+                locationCode = SqlQueries.GetLocationCodeByMakeId(makeIds[0]);
+            }
+            else
+            {
+                locationCode = SqlQueries.GetLocationCodeByMakeId(makeId);
+            }
+
+            dealListing.LocationCode = locationCode;
+
+            //dealListing.LocationCode = SqlQueries.GetLocationCodeByMakeId(makeId);
             dealListing.MonthId = monthId;
             dealListing.YearId = yearId;
 

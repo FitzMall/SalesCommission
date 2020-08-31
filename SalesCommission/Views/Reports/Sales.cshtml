@@ -244,6 +244,8 @@
                     double CompanyTotalBackGrossAmount = 0;
 
                     var TotalMakeIds = "";
+                    var UsedMakeIds = "";
+                    var NewMakeIds = "";
 
                 }
 
@@ -331,7 +333,9 @@
                     double TotalPotentialLease = 0;
 
                     var UsedMakeId = "";
+
                     var AllMakeIds = "";
+
                     var index = 0;
 
                     groupDetail.SalesReportDetails = groupDetail.SalesReportDetails.OrderBy(o => o.MakeName).ToList();
@@ -476,8 +480,8 @@
                                 <a data-toggle="collapse" id="@detail.MakeName" style="cursor: pointer;" data-target="#collapse-@index">@detail.MakeName</a>
                             </td>
 
-                            <td class="text-center">@detail.DealCount</td>
-                            <td class="text-center">@validatedDeals</td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@detail.MakeId/@Model.MonthId/@Model.YearId/">@detail.DealCount</a></td>
+                            <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@detail.MakeId/@Model.MonthId/@Model.YearId/">@validatedDeals</a></td>
                             <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@detail.MakeId/@Model.MonthId/@Model.YearId/">@detail.UnValidatedCount</a></td>
                             <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@detail.MakeId/@Model.MonthId/@Model.YearId">@(validatedDeals - detail.OfficeValidatedCount)</a></td>
 
@@ -579,11 +583,22 @@
                                     AllMakeIds = AllMakeIds + detail.MakeId + ",";
                                     TotalMakeIds = TotalMakeIds + detail.MakeId + ",";
 
+
+
                                     if (detail.BrandId != "AA")
                                     {
                                         TotalValidatedDealsCount = TotalValidatedDealsCount + validatedDeals;
                                         TotalUnValidatedCount = TotalUnValidatedCount + detail.UnValidatedCount;
                                         TotalOfficeValidatedCount = TotalOfficeValidatedCount + detail.OfficeValidatedCount;
+
+                                        if (detail.BrandId.Contains("UU"))
+                                        {
+                                            UsedMakeIds = UsedMakeIds + detail.MakeId + ',';
+                                        }
+                                        else
+                                        {
+                                            NewMakeIds = NewMakeIds + detail.MakeId + ',';
+                                        }
                                     }
 
 
@@ -682,8 +697,8 @@
                                         var totalNextCarPercent = (TotalNextCarCount / TotalPotentialHandyman).ToString("P", nfi);
                                     }
                                     <th class="text-center"><a data-toggle="collapse" id="Totals" style="cursor: pointer;" data-target="#collapse-total">Totals</a></th>
-                                    <th class="text-center">@TotalDealCount</th>
-                                    <th class="text-center">@TotalValidatedDealsCount</th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/DealListing/All/@AllMakeIds/@Model.MonthId/@Model.YearId/">@TotalDealCount</a></th>
+                                    <th class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@AllMakeIds/@Model.MonthId/@Model.YearId/">@TotalValidatedDealsCount</a></th>
                                     <th class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@TotalUnValidatedCount</a></th>
                                     <th class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@AllMakeIds/@Model.MonthId/@Model.YearId">@(TotalValidatedDealsCount - TotalOfficeValidatedCount)</a></th>
                                     <th class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @TotalLeaseCount / @TotalPotentialLease Deals">@TotalLeaseCount <br />@totalLeasePercent</a></th>
@@ -813,14 +828,20 @@
 
                     }
                     <td class="text-center">New Totals</td>
-                    <td class="text-center">@CompanyNewTotalDealCount</td>
+                    
+                    @*<td class="text-center">@CompanyNewTotalDealCount</td>
                     <td class="text-center">@CompanyNewTotalValidatedDealsCount</td>
-
-
                     <td class="text-center">@CompanyNewTotalUnValidatedCount</td>
-                    <td class="text-center">@(CompanyNewTotalValidatedDealsCount - CompanyNewTotalOfficeValidatedCount)</td>
+                    <td class="text-center">@(CompanyNewTotalValidatedDealsCount - CompanyNewTotalOfficeValidatedCount)</td>*@
+
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@NewMakeIds/@Model.MonthId/@Model.YearId/">@CompanyNewTotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@NewMakeIds/@Model.MonthId/@Model.YearId/">@CompanyNewTotalValidatedDealsCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@NewMakeIds/@Model.MonthId/@Model.YearId">@CompanyNewTotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@NewMakeIds/@Model.MonthId/@Model.YearId">@(CompanyNewTotalValidatedDealsCount - CompanyNewTotalOfficeValidatedCount)</a></td>
+
                     <td class="text-center">@CompanyNewTotalLeaseCount<br />@CompanyNewTotalLeasePercent</td>
-                    <td class="text-center">-</td>
+
+                     <td class="text-center">-</td>
                     <td class="text-center">-</td>
                     <td class="text-center">-</td>
                     <td class="text-center">@CompanyNewTotalDealGrossAmount.ToString("C", nfi)</td>
@@ -856,10 +877,16 @@
 
                     }
                     <td class="text-center">Used Totals</td>
-                    <td class="text-center">@CompanyUsedTotalDealCount</td>
+                    @*<td class="text-center">@CompanyUsedTotalDealCount</td>
                     <td class="text-center">@CompanyUsedTotalValidatedDealsCount</td>
                     <td class="text-center">@CompanyUsedTotalUnValidatedCount</td>
-                    <td class="text-center">@(CompanyUsedTotalValidatedDealsCount - CompanyUsedTotalOfficeValidatedCount)</td>
+                    <td class="text-center">@(CompanyUsedTotalValidatedDealsCount - CompanyUsedTotalOfficeValidatedCount)</td>*@
+
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@UsedMakeIds/@Model.MonthId/@Model.YearId/">@CompanyUsedTotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@UsedMakeIds/@Model.MonthId/@Model.YearId/">@CompanyUsedTotalValidatedDealsCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@UsedMakeIds/@Model.MonthId/@Model.YearId">@CompanyUsedTotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@UsedMakeIds/@Model.MonthId/@Model.YearId">@(CompanyUsedTotalValidatedDealsCount - CompanyUsedTotalOfficeValidatedCount)</a></td>
+
                     <td class="text-center">-</td>
                     <td class="text-center">@CompanyNewTotalCPOCount<br />@CompanyUsedTotalCPOPercent</td>
                     <td class="text-center">@CompanyUsedTotalHandymanCount<br />@CompanyUsedTotalHandyPercent</td>
@@ -897,9 +924,8 @@
 
                     }
                     <td class="text-center">Totals</td>
-                    <td class="text-center">@CompanyTotalDealCount</td>
-                    <td class="text-center">@CompanyTotalValidatedDealsCount</td>
-                    
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@TotalMakeIds/@Model.MonthId/@Model.YearId/">@CompanyTotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@TotalMakeIds/@Model.MonthId/@Model.YearId/">@CompanyTotalValidatedDealsCount</a></td>
                     <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@CompanyTotalUnValidatedCount</a></td>
                     <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@(CompanyTotalValidatedDealsCount - CompanyTotalOfficeValidatedCount)</a></td>
                     <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @CompanyTotalLeaseCount / @CompanyTotalPotentialLease Deals">@CompanyTotalLeaseCount<br />@CompanyTotalLeasePercent</a></td>

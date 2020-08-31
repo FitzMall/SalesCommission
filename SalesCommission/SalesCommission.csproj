@@ -318,6 +318,9 @@
     <Content Include="Views\FICommission\BonusAndDraws.cshtml" />
     <Content Include="Views\Reports\UpdateMoneyDue.cshtml" />
     <Content Include="Views\Reports\LeadReportDetails.cshtml" />
+    <Content Include="Views\Reports\TitleDue.cshtml" />
+    <Content Include="Views\Reports\CustomReports.cshtml" />
+    <Content Include="Views\Reports\UpdateTitleStatus.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
