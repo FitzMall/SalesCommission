@@ -747,9 +747,10 @@ namespace SalesCommission.Business
             return moneyDue;
 
         }
-        public static List<TitleDue> GetAllTitlesDue()
+
+        public static List<TitleDue> GetAllTitlesDueHistory()
         {
-            var titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDue", null, "SalesCommission");
+            var titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDue_History", null, "SalesCommission");
             var allAssociates = SqlQueries.GetSalesAssociates();
 
             foreach (var deal in titlesDue)
@@ -838,6 +839,214 @@ namespace SalesCommission.Business
             }
             return titlesDue;
         }
+
+        public static List<TitleDue> GetAllTitlesDue()
+        {
+            var titlesDue = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDue", null, "SalesCommission");
+            var allAssociates = SqlQueries.GetSalesAssociates();
+
+            foreach (var deal in titlesDue)
+            {
+
+                //if (deal.FinanceManager != null && deal.FinanceManager != "")
+                //{
+                //    var finManager = allAssociates.Find(x => x.Value.Trim() == deal.FinanceManager.Trim());
+                //    if (finManager != null)
+                //    {
+                //        deal.FinanceManagerName = finManager.Text;
+                //    }
+                //}
+
+                //if (deal.SalesManager != null && deal.SalesManager != "")
+                //{
+                //    var salesManager = allAssociates.Find(x => x.Value.Trim() == deal.SalesManager.Trim());
+                //    if (salesManager != null)
+                //    {
+                //        deal.SalesManagerName = salesManager.Text;
+                //    }
+                //}
+
+
+                if(deal.VIN == null)
+                {
+                    deal.VIN = "";
+                }
+
+                if (deal.SalesAssociate1 != null && deal.SalesAssociate1 != "")
+                {
+                    var associate1 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate1.Trim());
+                    if (associate1 != null)
+                    {
+                        deal.SalesAssociate1Name = associate1.Text;
+                    }
+                }
+
+                if (deal.SalesAssociate2 != null && deal.SalesAssociate2 != "")
+                {
+                    var associate2 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate2.Trim());
+                    if (associate2 != null)
+                    {
+                        deal.SalesAssociate2Name = associate2.Text;
+                    }
+                }
+
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Buick Subaru";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+                    case "FHG":
+                        locationName = "Hagerstown GM";
+                        break;
+                    case "FHT":
+                        locationName = "Hagerstown Chrysler";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+            return titlesDue;
+        }
+        public static List<TitleDue> GetTitleStatusHistory(int Id)
+        {
+            var titleDueHistory = new List<TitleDue>();
+
+            titleDueHistory = SqlMapperUtil.StoredProcWithParams<TitleDue>("sp_SalesLogReportGetTitleDue_History", new { ID = Id }, "SalesCommission");
+
+            var allAssociates = SqlQueries.GetSalesAssociates();
+
+            foreach (var deal in titleDueHistory)
+            {
+
+                //if (deal.FinanceManager != null && deal.FinanceManager != "")
+                //{
+                //    var finManager = allAssociates.Find(x => x.Value.Trim() == deal.FinanceManager.Trim());
+                //    if (finManager != null)
+                //    {
+                //        deal.FinanceManagerName = finManager.Text;
+                //    }
+                //}
+
+                //if (deal.SalesManager != null && deal.SalesManager != "")
+                //{
+                //    var salesManager = allAssociates.Find(x => x.Value.Trim() == deal.SalesManager.Trim());
+                //    if (salesManager != null)
+                //    {
+                //        deal.SalesManagerName = salesManager.Text;
+                //    }
+                //}
+
+                if (deal.SalesAssociate1 != null && deal.SalesAssociate1 != "")
+                {
+                    var associate1 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate1.Trim());
+                    if (associate1 != null)
+                    {
+                        deal.SalesAssociate1Name = associate1.Text;
+                    }
+                }
+
+                if (deal.SalesAssociate2 != null && deal.SalesAssociate2 != "")
+                {
+                    var associate2 = allAssociates.Find(x => x.Value.Trim() == deal.SalesAssociate2.Trim());
+                    if (associate2 != null)
+                    {
+                        deal.SalesAssociate2Name = associate2.Text;
+                    }
+                }
+
+                var locationName = deal.Location;
+
+                switch (deal.Location)
+                {
+                    case "FLP":
+                        locationName = "Lexington Park";
+                        break;
+                    case "LFO":
+                        locationName = "Gaithersburg Hyundai/Subaru";
+                        break;
+                    case "LFT":
+                        locationName = "Gaithersburg Toyota/Middlebrook";
+                        break;
+                    case "FOC":
+                        locationName = "Annapolis";
+                        break;
+                    case "FAM":
+                        locationName = "Frederick";
+                        break;
+                    case "WDC":
+                        locationName = "Wheaton";
+                        break;
+                    case "CDO":
+                        locationName = "Rockville Hyundai";
+                        break;
+                    case "FBS":
+                        locationName = "Rockville Buick Subaru";
+                        break;
+                    case "FTN":
+                        locationName = "Chambersburg";
+                        break;
+                    case "CJE":
+                        locationName = "Clearwater";
+                        break;
+                    case "FHG":
+                        locationName = "Hagerstown GM";
+                        break;
+                    case "FHT":
+                        locationName = "Hagerstown Chrysler";
+                        break;
+
+                }
+
+                deal.LocationName = locationName;
+            }
+
+            return titleDueHistory;
+        }
+
+        public static TitleDue GetTitleDueByVIN(string vin)
+        {
+            var titleDue = new TitleDue();
+
+            var titlesDue = SqlMapperUtil.SqlWithParams<TitleDue>("Select * from TitleDue where VIN = @VIN", new { VIN = vin }, "SalesCommission");
+
+            if(titlesDue != null && titlesDue.Count > 0)
+            {
+                titleDue = titlesDue[0];
+            }
+
+            return titleDue;
+        }
+
 
         public static List<TitleDue> GetTitleStatus(string vin, string stock, string dealNumber)
         {
@@ -1570,6 +1779,24 @@ namespace SalesCommission.Business
                     aftermarketDealDetail.BPP = aftermarketRecord.BPP;
 
 
+                    if(aftermarketRecord.Trade1VIN != null)
+                    { 
+                        aftermarketDealDetail.Trade1VIN = aftermarketRecord.Trade1VIN;
+                    }
+                    else
+                    {
+                        aftermarketDealDetail.Trade1VIN = "";
+                    }
+
+                    if (aftermarketRecord.Trade2VIN != null)
+                    {
+                        aftermarketDealDetail.Trade2VIN = aftermarketRecord.Trade2VIN;
+                    }
+                    else
+                    {
+                        aftermarketDealDetail.Trade2VIN = "";
+                    }
+
                     aftermarketDealDetail.SalesAssociateId1 = aftermarketRecord.SalesAssociate1;
                     aftermarketDealDetail.SalesAssociate1 = aftermarketRecord.SalesAssociate1;
 
@@ -2178,6 +2405,23 @@ namespace SalesCommission.Business
                     aftermarketDealDetail.Loaner = aftermarketRecord.Loaner;
                     aftermarketDealDetail.BPP = aftermarketRecord.BPP;
 
+                    if (aftermarketRecord.Trade1VIN != null)
+                    {
+                        aftermarketDealDetail.Trade1VIN = aftermarketRecord.Trade1VIN;
+                    }
+                    else
+                    {
+                        aftermarketDealDetail.Trade1VIN = "";
+                    }
+
+                    if (aftermarketRecord.Trade2VIN != null)
+                    {
+                        aftermarketDealDetail.Trade2VIN = aftermarketRecord.Trade2VIN;
+                    }
+                    else
+                    {
+                        aftermarketDealDetail.Trade2VIN = "";
+                    }
 
                     aftermarketDealDetail.SalesAssociate1 = aftermarketRecord.SalesAssociate1;
                     aftermarketDealDetail.SalesAssociate2 = aftermarketRecord.SalesAssociate2;
@@ -4890,6 +5134,27 @@ namespace SalesCommission.Business
             return saveInputs;
         }
 
+        public static int UpdateTitleStatusById(TitleDue titleDue)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionReportsUpdateTitleDueById", titleDue, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
+        public static int UpdateTitleStatusByIdDealDetail(TitleDue titleDue)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionReportsUpdateTitleDueByIdDealDetail", titleDue, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
 
         public static List<DealDetail> GetDealsByLocationAndCustomerName(string locationCode, string monthId, string yearId, string customerName)
         {
@@ -5827,6 +6092,7 @@ namespace SalesCommission.Business
             int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIAssociateApprovals", dealApproval, "SalesCommission");
             return saveObjStn;
         }
+        
 
         public static Associate GetFIAssociateInformationDrawsAndBonus(string location, string associateId, int yearId, int monthId)
         {
@@ -7354,6 +7620,14 @@ namespace SalesCommission.Business
             return users;
         }
 
+        public static List<JJFUser> GetJJFEmailUsers()
+        {
+            var sqlGet = "  select Distinct Email, Lastname, firstname, DMS_ID from [FITZDB].[dbo].[users] where import = 'Y' and email is not null and email <> '' order by lastname, firstname";
+            var users = SqlMapperUtil.SqlWithParams<JJFUser>(sqlGet, null, "JJFServer");
+
+            return users;
+        }
+
         public static List<JJFUser> GetJJFSalesAssociates()
         {
             var sqlGet = "SELECT ID, Email, UserId, LastName, FirstName, LastName + ', ' + FirstName + ' (' + UserId + ')' as DisplayName, Location, Mall,Showroom,VinUser,VinName,VinStore,VinUserKey, DMS_Id FROM [FITZDB].[dbo].[users] where import = 'Y' order by lastname, firstname";
@@ -7390,7 +7664,35 @@ namespace SalesCommission.Business
             return locationId;
         }
 
+        public static VehicleData GetVehicleDataByVIN(string vin)
+        {
+            var vehicleData = new VehicleData();
 
+            var stored = "sp_SalesLogReportsLookupVehicleByVIN";
+            var vehicleDataList = SqlMapperUtil.StoredProcWithParams<VehicleData>(stored, new { VIN = vin }, "SalesCommission");
+
+            if(vehicleDataList != null && vehicleDataList.Count > 0)
+            {
+                vehicleData = vehicleDataList[0];
+            }
+
+            return vehicleData;
+        }
+
+        public static TradeInformation GetTradeInfoByVIN(string vin)
+        {
+            var tradeInfo = new TradeInformation();
+
+            var stored = "sp_SalesLogReportsLookupTradeByVIN";
+            var tradeInfoList = SqlMapperUtil.StoredProcWithParams<TradeInformation>(stored, new { VIN = vin }, "SalesCommission");
+            
+            if (tradeInfoList != null && tradeInfoList.Count > 0)
+            {
+                tradeInfo = tradeInfoList[0];
+            }
+
+            return tradeInfo;
+        }
     }
 
 }

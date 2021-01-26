@@ -424,6 +424,13 @@
                     nfi.PercentPositivePattern = 1;
                     nfi.CurrencySymbol = "";
                     //nfi.PercentSymbol = "";
+
+                    var newDetails = Model.SalesReportDetails.FindAll(x => x.BrandId != "UU").OrderBy(x => x.MakeName).ToList(); ;
+                    var usedDetails = Model.SalesReportDetails.FindAll(x => x.BrandId == "UU").OrderBy(x => x.MakeName).ToList(); ;
+
+                    newDetails.AddRange(usedDetails);
+
+                    Model.SalesReportDetails = newDetails;
                 }
 
                 @foreach (var detail in Model.SalesReportDetails)
@@ -440,6 +447,7 @@
 
                     }
                 }
+                
 
                 @foreach (var detail in Model.SalesReportDetails)
                 {
@@ -1636,7 +1644,7 @@
                                 }
                             ],
                             columnDefs: [
-                              { type: 'any-number', targets: [6, 7, 8, 9, 10, 11, 12, 13, 18] },
+                              { type: 'any-number', targets: [7, 8, 9, 10, 11, 12, 13, 14, 15, 20] },
                               { type: 'date-us', targets: [3] }
                             ],
                             retrieve: true
@@ -1664,7 +1672,7 @@
                                 }
                             ],
                             columnDefs: [
-                              { type: 'any-number', targets: [6, 7, 8, 9, 10, 11, 12, 13, 18] },
+                              { type: 'any-number', targets: [7, 8, 9, 10, 11, 12, 13, 14, 15, 20] },
                               { type: 'date-us', targets: [3] }
                             ],
                             retrieve: true
@@ -1698,7 +1706,7 @@
                                     }
                                 ],
                                 columnDefs: [
-                                  { type: 'any-number', targets: [6, 7, 8, 9, 10, 11, 12, 13, 18] },
+                                  { type: 'any-number', targets: [7, 8, 9, 10, 11, 12, 13, 14, 15, 20] },
                                   { type: 'date-us', targets: [3] }
                                 ],
                                 retrieve: true
@@ -1730,7 +1738,7 @@
                                     }
                                 ],
                                 columnDefs: [
-                                  { type: 'any-number', targets: [6, 7, 8, 9, 10, 11, 12, 13, 18] },
+                                  { type: 'any-number', targets: [7, 8, 9, 10, 11, 12, 13, 14, 15, 20] },
                                   { type: 'date-us', targets: [3] }
                                 ],
                                 retrieve: true

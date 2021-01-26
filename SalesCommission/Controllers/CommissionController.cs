@@ -42,6 +42,7 @@ namespace SalesCommission.Controllers
             commissionModel.DealApprovals = SqlQueries.GetDealApprovalsByDate(commissionModel.YearId, commissionModel.MonthId);
 
             commissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            commissionModel.TitleDue = SqlQueries.GetAllTitlesDue();
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
             
@@ -1934,6 +1935,7 @@ namespace SalesCommission.Controllers
             }
 
             associateCommissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            associateCommissionModel.TitleDue = SqlQueries.GetAllTitlesDue();
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
 

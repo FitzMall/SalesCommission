@@ -433,25 +433,147 @@ else
                                     }
 
                                     decimal otherItemAmount = 0;
+
                                     if (deal.AftermarketItems.Count > 0)
                                     {
-                                        foreach (var item in deal.AftermarketItems)
-                                        {
-                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
-                                            {
-                                                var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                otherItemAmount += profit;
-                                            }
 
-                                            if (item.AftermarketId == 8)
+                                        var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+
+                                        if (dealValidation.Count > 0)
+                                        {
+                                            var validation = dealValidation[0];
+                                            foreach (var item in deal.AftermarketItems)
                                             {
-                                                LeaseWandTCount += 1;
-                                                var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                TotalLeaseWandT += profit;
+                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                                {
+
+                                                    decimal profit = 0;
+                                                    switch (item.AftermarketId)
+                                                    {
+                                                        case 2:
+                                                            if (validation.NitrogenPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 4:
+                                                            if (validation.SelectProtectionPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 5:
+                                                            if (validation.TireWheelPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 6:
+                                                            if (validation.KeyReplacementPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 7:
+                                                            if (validation.WindshieldProtectionPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 8:
+                                                            if (validation.WearAndTearPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 9:
+                                                            if (validation.SecureGuardPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 10:
+                                                            if (validation.FitzTotalPackagePaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 11:
+                                                            if (validation.RustInhibitUnderCoatPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 12:
+                                                            if (validation.UndercoatingPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 13:
+                                                            if (validation.RustInhibitorPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 14:
+                                                            if (validation.DataDotsPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 15:
+                                                            if (validation.PaintDentPaid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 16:
+                                                            if (validation.Miscellaneous1Paid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 17:
+                                                            if (validation.Miscellaneous2Paid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 18:
+                                                            if (validation.Miscellaneous3Paid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+                                                        case 19:
+                                                            if (validation.Miscellaneous4Paid)
+                                                            {
+                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                            break;
+
+                                                    }
+
+
+
+                                                    otherItemAmount += profit;
+                                                }
+
+                                                if (item.AftermarketId == 8)
+                                                {
+                                                    LeaseWandTCount += 1;
+                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    TotalLeaseWandT += profit;
+                                                }
                                             }
                                         }
-
                                     }
+
+
+
+
+
 
                                     TotalOther += otherItemAmount;
 
@@ -885,7 +1007,10 @@ else
                 decimal TotalGAPPay = FinalCommissionGross * (GAPPercentPay / 100);
 
                 decimal TotalPay = 0;
-                TotalPay = TotalDollarPerCarPay + TotalProductDollarPerCarPay + TotalVSCPay + TotalGAPPay + TotalSalaryDrawAmount + TotalBonusAmount;
+                TotalPay = TotalDollarPerCarPay + TotalProductDollarPerCarPay + TotalVSCPay + TotalGAPPay;// + TotalSalaryDrawAmount + TotalBonusAmount;
+
+                var TotalPay1 = TotalPay + TotalCommissionAdjustments + TotalBonusAmount;
+                var FinalPay = TotalPay1 + TotalSalaryDrawAmount;
 
             }
             <table class="table table-bordered" style="font-size:12px;">
@@ -917,16 +1042,7 @@ else
                         <td class="text-right">@GrossPercent.ToString("P",rev)</td>
                         <td class="text-right">@TotalCommissionGross.ToString("C", rev)</td>
                     </tr>
-                    <tr>
-                        <td><strong>Commission Adjustments</strong></td>
-                        <td></td>
-                        <td class="text-right">@TotalCommissionAdjustments.ToString("C", rev)</td>
-                    </tr>
-                    <tr style="border-bottom: 3px double">
-                        <td><strong>Final Commission Gross</strong></td>
-                        <td class="text-right"></td>
-                        <td class="text-right">@FinalCommissionGross.ToString("C", rev)</td>
-                    </tr>
+
                     @if (bShowPay)
                     {
                         <tr>
@@ -949,33 +1065,47 @@ else
                             <td class="text-right">@GAPPercentPay%</td>
                             <td class="text-right">@TotalGAPPay.ToString("C", rev)</td>
                         </tr>
-                        if (TotalBonusAmount > 0)
-                        {
-                            <tr style="border-bottom: 3px double">
-                                <td><strong>Bonus Amount</strong></td>
-                                <td class="text-right"></td>
-                                <td class="text-right">@TotalBonusAmount.ToString("C", rev)</td>
-                            </tr>
-                        }
+                        <tr>
+                            <th>Sub Total</th>
+                            <th class="text-right">@TotalPercentPay%</th>
+                            <th class="text-right">@TotalPay.ToString("C", rev)</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Commission Adjustments</strong></td>
+                            <td></td>
+                            <td class="text-right">@TotalCommissionAdjustments.ToString("C", rev)</td>
+                        </tr>
+                        <tr style="border-bottom: 3px double">
+                            <td><strong>Bonus Amount</strong></td>
+                            <td class="text-right"></td>
+                            <td class="text-right">@TotalBonusAmount.ToString("C", rev)</td>
+                        </tr>
+                       
+                        <tr>
+                            <th>Total Commission</th>
+                            <th class="text-right"></th>
+                            <th class="text-right">@TotalPay1.ToString("C", rev)</th>
+                        </tr>
+                        <tr style="border-bottom: 3px double">
+                            <td><strong>Salary Draws</strong></td>
+                            <td class="text-right"></td>
+                            <td class="text-right">@TotalSalaryDrawAmount.ToString("C", rev)</td>
+                        </tr>
+                       
+                        <tr>
+                            <th>Total Commission</th>
+                            <th class="text-right"></th>
+                            <th class="text-right">@FinalPay.ToString("C", rev)</th>
+                        </tr>
 
-                        if (TotalSalaryDrawAmount < 0)
-                        {
-                            <tr style="border-bottom: 3px double">
-                                <td><strong>Salary Draw</strong></td>
-                                <td class="text-right"></td>
-                                <td class="text-right">@TotalSalaryDrawAmount.ToString("C", rev)</td>
-                            </tr>
-                        }
+           
+
                     }
                 </tbody>
                 @if (bShowPay)
                 {
                     <tfoot>
-                        <tr style="background-color:#d9edf7">
-                            <th>Total</th>
-                            <th class="text-right">@TotalPercentPay%</th>
-                            <th class="text-right">@TotalPay.ToString("C", rev)</th>
-                        </tr>
+                        
                     </tfoot>
                 }
             </table>
@@ -1070,24 +1200,139 @@ else
 
                                                     var vehicleYear = Int32.Parse(deal.VehicleYear);
                                                     var vehicleMiles = Int32.Parse(deal.VehicleMiles);
-                                                    
+
                                                     if ((currentYear - vehicleYear) >= 10 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 100000)
                                                     {
 
                                                         decimal otherItemAmount = 0;
                                                         if (deal.AftermarketItems.Count > 0)
                                                         {
-                                                            foreach (var item in deal.AftermarketItems)
+
+                                                            var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+
+                                                            if (dealValidation.Count > 0)
                                                             {
-                                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                var validation = dealValidation[0];
+                                                                foreach (var item in deal.AftermarketItems)
                                                                 {
-                                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                    otherItemAmount += profit;
+                                                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                    {
+
+                                                                        decimal profit = 0;
+                                                                        switch (item.AftermarketId)
+                                                                        {
+                                                                            case 2:
+                                                                                if (validation.NitrogenPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 4:
+                                                                                if (validation.SelectProtectionPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 5:
+                                                                                if (validation.TireWheelPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 6:
+                                                                                if (validation.KeyReplacementPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 7:
+                                                                                if (validation.WindshieldProtectionPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 8:
+                                                                                if (validation.WearAndTearPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 9:
+                                                                                if (validation.SecureGuardPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 10:
+                                                                                if (validation.FitzTotalPackagePaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 11:
+                                                                                if (validation.RustInhibitUnderCoatPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 12:
+                                                                                if (validation.UndercoatingPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 13:
+                                                                                if (validation.RustInhibitorPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 14:
+                                                                                if (validation.DataDotsPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 15:
+                                                                                if (validation.PaintDentPaid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 16:
+                                                                                if (validation.Miscellaneous1Paid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 17:
+                                                                                if (validation.Miscellaneous2Paid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 18:
+                                                                                if (validation.Miscellaneous3Paid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+                                                                            case 19:
+                                                                                if (validation.Miscellaneous4Paid)
+                                                                                {
+                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                }
+                                                                                break;
+
+                                                                        }
+
+
+
+                                                                        otherItemAmount += profit;
+                                                                    }
                                                                 }
                                                             }
-
                                                         }
-
                                                         decimal NonEligibleDealDollar = 0;
                                                         decimal NonEligibleProductDollar = 0;
 
@@ -1114,7 +1359,99 @@ else
                                                             moneyDueBGColor = "background-color: #d2070769";
                                                             moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal";
                                                         }
+                                                        else
+                                                        {
+                                                            moneyDueWarning = "";
+                                                        }
 
+                                                        var titleStatus = "";
+                                                        var itemTitleDue = Model.TitleDue.FindAll(x => x.VIN.Trim() == deal.Trade1VIN.Trim() || x.VIN.Trim() == deal.Trade2VIN.Trim());
+
+                                                        if (itemTitleDue != null && itemTitleDue.Count > 0)
+                                                        {
+                                                            var titleDue = itemTitleDue[0];
+                                                            var ManagerNoStatus = true;
+
+                                                            //if (titleDue.TitleDueBank)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Bank, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.TitleDueCustomer == true)
+                                                            {
+                                                                titleStatus += "Title Due from Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.TitleDueInterco)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Interco, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            //if (titleDue.TitleDueAuction)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Auction, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+
+                                                            //if (titleDue.LienDueBank)
+                                                            //{
+                                                            //    titleStatus += "Lien Due from Bank, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.LienDueCustomer)
+                                                            {
+                                                                titleStatus += "Lien Due from Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (titleDue.OdomDueCustomer)
+                                                            {
+                                                                titleStatus += "Odom Due from Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+
+                                                            if (titleDue.POADueCust)
+                                                            {
+                                                                titleStatus += "POA Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.PayoffDueCust)
+                                                            {
+                                                                titleStatus += "Payoff Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.WaitingOutSTTitle)
+                                                            //{
+                                                            //    titleStatus += "Waiting Out/ST Title, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.DuplicateTitleAppliedFor)
+                                                            {
+                                                                titleStatus += "Dup Title Applied For, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.Other)
+                                                            //{
+                                                            //    titleStatus += "Other, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+
+                                                            if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                            {
+                                                                titleStatus = "No Status";
+                                                            }
+
+                                                            titleStatus = titleStatus.TrimEnd(' ').TrimEnd(',');
+                                                        }
+
+                                                        var titleDueBGColor = "";
+                                                        var titleDueWarning = deal.DealKey + " Details";
+
+                                                        if (titleStatus != "")
+                                                        {
+                                                            titleDueBGColor = "background-color: #d26e0769";
+                                                            titleDueWarning = "There is a " + titleStatus + " on this deal, notify F and I Manager.";
+                                                        }
                                                         var markup = (deal.APR - deal.BuyRate).ToString("0.##");
 
                                                         if (deal.VehicleCategory == "L")
@@ -1123,7 +1460,7 @@ else
                                                         }
                                         <tr>
                                             <td class="text-center">@dealIndex</td>
-                                            <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
+                                            <td class="text-center" style="@moneyDueBGColor @titleDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning @titleDueWarning">@deal.DealKey</a></td>
                                             <td class="text-center">
                                                 @if (bValidated)
                                                 {
@@ -1374,15 +1711,131 @@ else
                                                                                 decimal otherItemAmount = 0;
                                                                                 if (deal.AftermarketItems.Count > 0)
                                                                                 {
-                                                                                    foreach (var item in deal.AftermarketItems)
+
+                                                                                    var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+
+                                                                                    if (dealValidation.Count > 0)
                                                                                     {
-                                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                                        var validation = dealValidation[0];
+                                                                                        foreach (var item in deal.AftermarketItems)
                                                                                         {
-                                                                                            var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                            otherItemAmount += profit;
+                                                                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                                            {
+
+                                                                                                decimal profit = 0;
+                                                                                                switch (item.AftermarketId)
+                                                                                                {
+                                                                                                    case 2:
+                                                                                                        if (validation.NitrogenPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 4:
+                                                                                                        if (validation.SelectProtectionPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 5:
+                                                                                                        if (validation.TireWheelPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 6:
+                                                                                                        if (validation.KeyReplacementPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 7:
+                                                                                                        if (validation.WindshieldProtectionPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 8:
+                                                                                                        if (validation.WearAndTearPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 9:
+                                                                                                        if (validation.SecureGuardPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 10:
+                                                                                                        if (validation.FitzTotalPackagePaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 11:
+                                                                                                        if (validation.RustInhibitUnderCoatPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 12:
+                                                                                                        if (validation.UndercoatingPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 13:
+                                                                                                        if (validation.RustInhibitorPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 14:
+                                                                                                        if (validation.DataDotsPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 15:
+                                                                                                        if (validation.PaintDentPaid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 16:
+                                                                                                        if (validation.Miscellaneous1Paid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 17:
+                                                                                                        if (validation.Miscellaneous2Paid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 18:
+                                                                                                        if (validation.Miscellaneous3Paid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+                                                                                                    case 19:
+                                                                                                        if (validation.Miscellaneous4Paid)
+                                                                                                        {
+                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                        }
+                                                                                                        break;
+
+                                                                                                }
+
+
+
+                                                                                                otherItemAmount += profit;
+                                                                                            }
                                                                                         }
                                                                                     }
-
                                                                                 }
 
                                                                                 decimal EligibleDealDollar = 0;
@@ -1411,7 +1864,99 @@ else
                                                                                     moneyDueBGColor = "background-color: #d2070769";
                                                                                     moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal.";
                                                                                 }
+                                                                                else
+                                                                                {
+                                                                                    moneyDueWarning = "";
+                                                                                }
 
+                                                                                var titleStatus = "";
+                                                                                var itemTitleDue = Model.TitleDue.FindAll(x => x.VIN.Trim() == deal.Trade1VIN.Trim() || x.VIN.Trim() == deal.Trade2VIN.Trim());
+
+                                                                                if (itemTitleDue != null && itemTitleDue.Count > 0)
+                                                                                {
+                                                                                    var titleDue = itemTitleDue[0];
+                                                                                    var ManagerNoStatus = true;
+
+                                                                                    //if (titleDue.TitleDueBank)
+                                                                                    //{
+                                                                                    //    titleStatus += "Title Due from Bank, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+                                                                                    if (titleDue.TitleDueCustomer == true)
+                                                                                    {
+                                                                                        titleStatus += "Title Due from Customer, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+                                                                                    //if (titleDue.TitleDueInterco)
+                                                                                    //{
+                                                                                    //    titleStatus += "Title Due from Interco, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+                                                                                    //if (titleDue.TitleDueAuction)
+                                                                                    //{
+                                                                                    //    titleStatus += "Title Due from Auction, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+
+                                                                                    //if (titleDue.LienDueBank)
+                                                                                    //{
+                                                                                    //    titleStatus += "Lien Due from Bank, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+                                                                                    if (titleDue.LienDueCustomer)
+                                                                                    {
+                                                                                        titleStatus += "Lien Due from Customer, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+
+                                                                                    if (titleDue.OdomDueCustomer)
+                                                                                    {
+                                                                                        titleStatus += "Odom Due from Customer, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+
+                                                                                    if (titleDue.POADueCust)
+                                                                                    {
+                                                                                        titleStatus += "POA Due, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+                                                                                    if (titleDue.PayoffDueCust)
+                                                                                    {
+                                                                                        titleStatus += "Payoff Due, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+                                                                                    //if (titleDue.WaitingOutSTTitle)
+                                                                                    //{
+                                                                                    //    titleStatus += "Waiting Out/ST Title, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+                                                                                    if (titleDue.DuplicateTitleAppliedFor)
+                                                                                    {
+                                                                                        titleStatus += "Dup Title Applied For, ";
+                                                                                        ManagerNoStatus = false;
+                                                                                    }
+                                                                                    //if (titleDue.Other)
+                                                                                    //{
+                                                                                    //    titleStatus += "Other, ";
+                                                                                    //    ManagerNoStatus = false;
+                                                                                    //}
+
+                                                                                    if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                                                    {
+                                                                                        titleStatus = "No Status";
+                                                                                    }
+
+                                                                                    titleStatus = titleStatus.TrimEnd(' ').TrimEnd(',');
+                                                                                }
+
+                                                                                var titleDueBGColor = "";
+                                                                                var titleDueWarning = deal.DealKey + " Details";
+
+                                                                                if (titleStatus != "")
+                                                                                {
+                                                                                    titleDueBGColor = "background-color: #d26e0769";
+                                                                                    titleDueWarning = "There is a " + titleStatus + " on this deal, notify F and I Manager.";
+                                                                                }
                                                                                 var markup = (deal.APR - deal.BuyRate).ToString("0.##");
 
                                                                                 if (deal.VehicleCategory == "L")
@@ -1420,10 +1965,10 @@ else
                                                                                 }
                                                                                 <tr>
                                                                                     <td class="text-center">@dealIndex</td>
-                                                                                    <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
+                                                                                    <td class="text-center" style="@moneyDueBGColor @titleDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning @titleDueWarning">@deal.DealKey</a></td>
                                                                                     <td class="text-center">
                                                                                         @if (bValidated)
-                                                                                        {
+                                                                        {
                                                                                             <i class="fa fa-check" aria-hidden="true"></i>
                                                                                         }
                                                                                     </td>
@@ -1444,10 +1989,10 @@ else
                                                                                     <td class="text-center"></td>
                                                                                     <td class="text-center">
                                                                                         @if (true)//(bValidated)
-                                                                                        {
+                                                                    {
                                                                                             <a href="" id="link-@deal.DealKey">@otherItemAmount.ToString("C", noSymbol)</a>
                                                                                             if (deal.AftermarketItems.Count > 0)
-                                                                                            {
+                                                                        {
                                                                                                 <table class="table table-striped table-bordered" id="aftermarket-@deal.DealKey" style="display:none;position:absolute;width:40%;left: 25%; border:4px ridge #ccc">
                                                                                                     <thead>
                                                                                                         <tr style="background-color:#d9edf7">
@@ -1457,10 +2002,10 @@ else
                                                                                                     </thead>
                                                                                                     <tbody>
                                                                                                         @foreach (var item in deal.AftermarketItems)
-                                                                                                        {
-                                                                                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
-                                                                                                            {
-                                                                                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                    {
+                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+                                                                        {
+                                                                            var profit = item.AftermarketPrice - item.AftermarketCost;
 
                                                                                                                 <tr>
                                                                                                                     <td>@item.AftermarketName</td>
@@ -1468,7 +2013,7 @@ else
                                                                                                                 </tr>
 
                                                                                                             }
-                                                                                                        }
+                                                                    }
                                                                                                     </tbody>
                                                                                                 </table>
                                                                                             }
@@ -1476,11 +2021,11 @@ else
                                                                                             <script type="text/javascript">
                                                                                                 $('#link-@deal.DealKey').hover(function (ev) {
                                                                                                     $('#aftermarket-@deal.DealKey').stop(true, true).fadeIn();
-                                                                                                }, function (ev) {
+                                                                }, function (ev) {
                                                                                                     $('#aftermarket-@deal.DealKey').stop(true, true).fadeOut();
-                                                                                                }).mousemove(function (ev) {
+                                                                }).mousemove(function (ev) {
                                                                                                     $('#aftermarket-@deal.DealKey').css({ left: ev.layerX + 10, top: ev.layerY + 10 });
-                                                                                                });
+                                                                });
                                                                                             </script>
                                                                                         }
                                                                                     </td>

@@ -245,6 +245,16 @@ namespace SalesCommission.Controllers
                     dealInfo.Makes = SqlQueries.GetMakes(dealInfo.sl_mall_id.ToString());
                     dealInfo.DealComments = SqlQueries.GetSalesLogDealComments(dealInfo.sl_pkey, dealInfo.sl_dealkey);
 
+                    if(dealInfo.sl_TradeVIN != null && dealInfo.sl_TradeVIN != "")
+                    {
+                        dealInfo.TitleDueTrade = SqlQueries.GetTitleDueByVIN(dealInfo.sl_TradeVIN);
+                    }
+
+                    if (dealInfo.sl_TradeVIN2 != null && dealInfo.sl_TradeVIN2 != "")
+                    {
+                        dealInfo.TitleDueTrade2 = SqlQueries.GetTitleDueByVIN(dealInfo.sl_TradeVIN2);
+                    }
+
                     GetUserDealPermissions(dealInfo.LocationCode);
                     
                     dealInfo.DealFound = true;
@@ -562,7 +572,7 @@ namespace SalesCommission.Controllers
         //            makeArray.Add(new { Value = make.Value, Display = make.Text });
         //        }
 
-        //        return makeArray;                
+        //        return makeArray;                 n
         //    }            
         //    else
         //    {
@@ -575,6 +585,9 @@ namespace SalesCommission.Controllers
         public ActionResult DealDetail(IndividualDeal individualDeal)
         {
             //            SetUserInformation();
+
+            var titleDue1 = new TitleDue();
+            var titleDue2 = new TitleDue();
 
             if (Request.Form != null && Request.Form["btnDelete"] != null)
             {
@@ -678,6 +691,559 @@ namespace SalesCommission.Controllers
                     individualDeal.Validation = "";
                     individualDeal.UpdateUser = "Save by " + Session["UserName"].ToString();
                     SqlQueries.UpdateSalesLogDeal(individualDeal, includedTotalPre);
+
+                    // Now if there are VINs and Trades, update or add Title Status...
+                    
+                    if (individualDeal.sl_TradeVIN != null && individualDeal.sl_TradeVIN != "")
+                    {
+                        titleDue1.VIN = individualDeal.sl_TradeVIN;
+                        titleDue1.SalesAssociate1 = individualDeal.sl_SalesAssociate1;
+                        titleDue1.SalesAssociate2 = individualDeal.sl_SalesAssociate2;
+                        titleDue1.SalesManager = individualDeal.sl_VehicleSalesManager;
+                        titleDue1.FinanceManager = individualDeal.sl_FinMgr;
+                        titleDue1.DealKey = individualDeal.sl_dealkey;
+                        titleDue1.UpdateDate = DateTime.Now;
+                        titleDue1.DealDate = individualDeal.sl_VehicleDealDate;
+                        titleDue1.UpdateUser = Session["UserName"].ToString();
+                        titleDue1.DealId = Int32.Parse(individualDeal.sl_pkey);
+                        titleDue1.BuyerName = individualDeal.sl_VehicleCustomer;
+                        titleDue1.Location = individualDeal.sl_VehicleLoc;
+                        titleDue1.BankName = individualDeal.sl_TradeBankName;
+                        titleDue1.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
+                        titleDue1.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+
+                        if (Request.Form["TitleDueTrade.Id"] != null)
+                        {
+                            titleDue1.Id = Int32.Parse(Request.Form["TitleDueTrade.Id"]);
+                        }
+
+                        if (Request.Form["TitleDueTrade.ClearTitle"] != null)
+                        {
+                            var clearTitle = Request.Form["TitleDueTrade.ClearTitle"];
+                            if (clearTitle.Contains(","))
+                            {
+                                clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                            }
+                            titleDue1.ClearTitle = bool.Parse(clearTitle);
+
+                        }
+                        else
+                        {
+                            titleDue1.ClearTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.TitleDueBank"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.TitleDueBank"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.TitleDueBank = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.TitleDueBank = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.TitleDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.TitleDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.TitleDueCustomer = bool.Parse(titleOption);
+                        }
+                        else
+                        {
+                            titleDue1.TitleDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.TitleDueInterco"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.TitleDueInterco"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.TitleDueInterco = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.TitleDueInterco = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.TitleDueAuction"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.TitleDueAuction"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.TitleDueAuction = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.TitleDueAuction = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.OdomDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.OdomDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.OdomDueCustomer = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.OdomDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.DuplicateTitleAppliedFor"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.DuplicateTitleAppliedFor"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.DuplicateTitleAppliedFor = bool.Parse(titleOption);
+                        }
+                        else
+                        {
+                            titleDue1.DuplicateTitleAppliedFor = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.LienDueBank"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.LienDueBank"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.LienDueBank = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.LienDueBank = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.LienDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.LienDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.LienDueCustomer = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.LienDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.POADueCust"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.POADueCust"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.POADueCust = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.POADueCust = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.PayoffDueCust"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.PayoffDueCust"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.PayoffDueCust = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.PayoffDueCust = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.WaitingOutSTTitle"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.WaitingOutSTTitle"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.WaitingOutSTTitle = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.WaitingOutSTTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.Other"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.Other"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.Other = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.Other = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.ElectronicTitle"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.ElectronicTitle"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.ElectronicTitle = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.ElectronicTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade.NoTitleDispose"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade.NoTitleDispose"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue1.NoTitleDispose = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue1.NoTitleDispose = false;
+                        }
+                        var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue1.VIN);
+
+
+                        if (VehicleData != null)
+                        {
+                            titleDue1.Make = VehicleData.Make;
+                            titleDue1.Model = VehicleData.Model;
+                            if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                            {
+                                titleDue1.Year = Int32.Parse(VehicleData.ModelYear);
+                            }
+
+                            titleDue1.Location = VehicleData.Location;
+                            titleDue1.StockNumber = VehicleData.StockNumber;
+                            titleDue1.VIN = VehicleData.VIN;
+                            titleDue1.InventoryStatus = VehicleData.InventoryStatus;
+
+                            if (titleDue1.DealDate < new DateTime(2000, 1, 1))
+                            {
+                                titleDue1.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                            }
+                        }
+
+
+                        var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue1);
+
+                        
+
+                    }
+
+                    if (individualDeal.sl_TradeVIN2 != null && individualDeal.sl_TradeVIN2 != "")
+                    {
+
+                        titleDue2.VIN = individualDeal.sl_TradeVIN2;
+                        titleDue2.SalesAssociate1 = individualDeal.sl_SalesAssociate1;
+                        titleDue2.SalesAssociate2 = individualDeal.sl_SalesAssociate2;
+                        titleDue2.SalesManager = individualDeal.sl_VehicleSalesManager;
+                        titleDue2.FinanceManager = individualDeal.sl_FinMgr;
+                        titleDue2.DealKey = individualDeal.sl_dealkey;
+                        titleDue2.UpdateDate = DateTime.Now;
+                        titleDue2.DealDate = individualDeal.sl_VehicleDealDate;
+                        titleDue2.UpdateUser = Session["UserName"].ToString();                        
+                        titleDue2.DealId = Int32.Parse(individualDeal.sl_pkey);
+                        titleDue2.BuyerName = individualDeal.sl_VehicleCustomer;
+                        titleDue2.Location = individualDeal.sl_VehicleLoc;
+                        titleDue2.BankName = individualDeal.sl_Trade2BankName;
+                        titleDue2.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
+                        titleDue2.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+
+                        if (Request.Form["TitleDueTrade2.Id"] != null)
+                        {
+                            titleDue2.Id = Int32.Parse(Request.Form["TitleDueTrade2.Id"]);
+                        }
+                        
+
+                        if (Request.Form["TitleDueTrade2.ClearTitle"] != null)
+                        {
+                            var clearTitle = Request.Form["TitleDueTrade2.ClearTitle"];
+                            if (clearTitle.Contains(","))
+                            {
+                                clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                            }
+                            titleDue2.ClearTitle = bool.Parse(clearTitle);
+
+                        }
+                        else
+                        {
+                            titleDue2.ClearTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.TitleDueBank"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.TitleDueBank"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.TitleDueBank = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.TitleDueBank = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.TitleDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.TitleDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.TitleDueCustomer = bool.Parse(titleOption);
+                        }
+                        else
+                        {
+                            titleDue2.TitleDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.TitleDueInterco"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.TitleDueInterco"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.TitleDueInterco = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.TitleDueInterco = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.TitleDueAuction"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.TitleDueAuction"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.TitleDueAuction = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.TitleDueAuction = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.OdomDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.OdomDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.OdomDueCustomer = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.OdomDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.DuplicateTitleAppliedFor"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.DuplicateTitleAppliedFor"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.DuplicateTitleAppliedFor = bool.Parse(titleOption);
+                        }
+                        else
+                        {
+                            titleDue2.DuplicateTitleAppliedFor = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.LienDueBank"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.LienDueBank"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.LienDueBank = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.LienDueBank = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.LienDueCustomer"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.LienDueCustomer"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.LienDueCustomer = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.LienDueCustomer = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.POADueCust"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.POADueCust"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.POADueCust = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.POADueCust = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.PayoffDueCust"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.PayoffDueCust"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.PayoffDueCust = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.PayoffDueCust = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.WaitingOutSTTitle"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.WaitingOutSTTitle"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.WaitingOutSTTitle = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.WaitingOutSTTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.Other"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.Other"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.Other = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.Other = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.ElectronicTitle"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.ElectronicTitle"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.ElectronicTitle = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.ElectronicTitle = false;
+                        }
+
+                        if (Request.Form["TitleDueTrade2.NoTitleDispose"] != null)
+                        {
+                            var titleOption = Request.Form["TitleDueTrade2.NoTitleDispose"];
+                            if (titleOption.Contains(","))
+                            {
+                                titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                            }
+                            titleDue2.NoTitleDispose = bool.Parse(titleOption);
+
+                        }
+                        else
+                        {
+                            titleDue2.NoTitleDispose = false;
+                        }
+
+                        var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue2.VIN);
+
+
+                        if (VehicleData != null)
+                        {
+                            titleDue2.Make = VehicleData.Make;
+                            titleDue2.Model = VehicleData.Model;
+                            if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                            {
+                                titleDue2.Year = Int32.Parse(VehicleData.ModelYear);
+                            }
+
+                            titleDue2.Location = VehicleData.Location;
+                            titleDue2.StockNumber = VehicleData.StockNumber;
+                            titleDue2.VIN = VehicleData.VIN;
+                            titleDue2.InventoryStatus = VehicleData.InventoryStatus;
+
+                            if (titleDue2.DealDate < new DateTime(2000, 1, 1))
+                            {
+                                titleDue2.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                            }
+                        }
+
+
+                        var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue2);
+                    }
+
                 }
 
                 return RedirectToAction("DealDetail", "Sales", new { id = individualDeal.sl_dealkey });
@@ -749,6 +1315,503 @@ namespace SalesCommission.Controllers
                     //}
                     SqlQueries.UpdateSalesLogDeal(individualDeal,includedTotalPre);
 
+                // Now if there are VINs and Trades, update or add Title Status...
+
+                if (individualDeal.sl_TradeVIN != null && individualDeal.sl_TradeVIN != "")
+                {
+                    titleDue1.VIN = individualDeal.sl_TradeVIN;
+                    titleDue1.SalesAssociate1 = individualDeal.sl_SalesAssociate1;
+                    titleDue1.SalesAssociate2 = individualDeal.sl_SalesAssociate2;
+                    titleDue1.SalesManager = individualDeal.sl_VehicleSalesManager;
+                    titleDue1.FinanceManager = individualDeal.sl_FinMgr;
+                    titleDue1.DealKey = individualDeal.sl_dealkey;
+                    titleDue1.UpdateDate = DateTime.Now;
+                    titleDue1.DealDate = individualDeal.sl_VehicleDealDate;
+                    titleDue1.UpdateUser = Session["UserName"].ToString();
+                    titleDue1.DealId = Int32.Parse(individualDeal.sl_pkey);
+                    titleDue1.BuyerName = individualDeal.sl_VehicleBuyerName;
+                    titleDue1.Location = individualDeal.sl_VehicleLoc;
+
+                    if (Request.Form["TitleDueTrade.Id"] != null)
+                    {
+                        titleDue1.Id = Int32.Parse(Request.Form["TitleDueTrade.Id"]);
+                    }
+
+                    if (Request.Form["TitleDueTrade.ClearTitle"] != null)
+                    {
+                        var clearTitle = Request.Form["TitleDueTrade.ClearTitle"];
+                        if (clearTitle.Contains(","))
+                        {
+                            clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                        }
+                        titleDue1.ClearTitle = bool.Parse(clearTitle);
+
+                    }
+                    else
+                    {
+                        titleDue1.ClearTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.TitleDueBank"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.TitleDueBank"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.TitleDueBank = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.TitleDueBank = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.TitleDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.TitleDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.TitleDueCustomer = bool.Parse(titleOption);
+                    }
+                    else
+                    {
+                        titleDue1.TitleDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.TitleDueInterco"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.TitleDueInterco"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.TitleDueInterco = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.TitleDueInterco = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.TitleDueAuction"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.TitleDueAuction"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.TitleDueAuction = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.TitleDueAuction = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.OdomDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.OdomDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.OdomDueCustomer = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.OdomDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.DuplicateTitleAppliedFor"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.DuplicateTitleAppliedFor"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.DuplicateTitleAppliedFor = bool.Parse(titleOption);
+                    }
+                    else
+                    {
+                        titleDue1.DuplicateTitleAppliedFor = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.LienDueBank"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.LienDueBank"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.LienDueBank = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.LienDueBank = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.LienDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.LienDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.LienDueCustomer = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.LienDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.POADueCust"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.POADueCust"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.POADueCust = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.POADueCust = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.PayoffDueCust"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.PayoffDueCust"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.PayoffDueCust = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.PayoffDueCust = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.WaitingOutSTTitle"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.WaitingOutSTTitle"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.WaitingOutSTTitle = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.WaitingOutSTTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.Other"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.Other"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.Other = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.Other = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.ElectronicTitle"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.ElectronicTitle"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.ElectronicTitle = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.ElectronicTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade.NoTitleDispose"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade.NoTitleDispose"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue1.NoTitleDispose = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue1.NoTitleDispose = false;
+                    }
+
+                    var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue1);
+
+                }
+
+                if (individualDeal.sl_TradeVIN2 != null && individualDeal.sl_TradeVIN2 != "")
+                {
+
+                    titleDue2.VIN = individualDeal.sl_TradeVIN2;
+                    titleDue2.SalesAssociate1 = individualDeal.sl_SalesAssociate1;
+                    titleDue2.SalesAssociate2 = individualDeal.sl_SalesAssociate2;
+                    titleDue2.SalesManager = individualDeal.sl_VehicleSalesManager;
+                    titleDue2.FinanceManager = individualDeal.sl_FinMgr;
+                    titleDue2.DealKey = individualDeal.sl_dealkey;
+                    titleDue2.UpdateDate = DateTime.Now;
+                    titleDue2.DealDate = individualDeal.sl_VehicleDealDate;
+                    titleDue2.UpdateUser = Session["UserName"].ToString();
+                    titleDue2.DealId = Int32.Parse(individualDeal.sl_pkey);
+                    titleDue2.BuyerName = individualDeal.sl_VehicleBuyerName;
+                    titleDue2.Location = individualDeal.sl_VehicleLoc;
+
+                    if (Request.Form["TitleDueTrade2.Id"] != null)
+                    {
+                        titleDue2.Id = Int32.Parse(Request.Form["TitleDueTrade2.Id"]);
+                    }
+
+
+                    if (Request.Form["TitleDueTrade2.ClearTitle"] != null)
+                    {
+                        var clearTitle = Request.Form["TitleDueTrade2.ClearTitle"];
+                        if (clearTitle.Contains(","))
+                        {
+                            clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                        }
+                        titleDue2.ClearTitle = bool.Parse(clearTitle);
+
+                    }
+                    else
+                    {
+                        titleDue2.ClearTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.TitleDueBank"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.TitleDueBank"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.TitleDueBank = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.TitleDueBank = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.TitleDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.TitleDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.TitleDueCustomer = bool.Parse(titleOption);
+                    }
+                    else
+                    {
+                        titleDue2.TitleDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.TitleDueInterco"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.TitleDueInterco"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.TitleDueInterco = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.TitleDueInterco = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.TitleDueAuction"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.TitleDueAuction"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.TitleDueAuction = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.TitleDueAuction = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.OdomDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.OdomDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.OdomDueCustomer = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.OdomDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.DuplicateTitleAppliedFor"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.DuplicateTitleAppliedFor"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.DuplicateTitleAppliedFor = bool.Parse(titleOption);
+                    }
+                    else
+                    {
+                        titleDue2.DuplicateTitleAppliedFor = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.LienDueBank"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.LienDueBank"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.LienDueBank = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.LienDueBank = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.LienDueCustomer"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.LienDueCustomer"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.LienDueCustomer = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.LienDueCustomer = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.POADueCust"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.POADueCust"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.POADueCust = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.POADueCust = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.PayoffDueCust"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.PayoffDueCust"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.PayoffDueCust = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.PayoffDueCust = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.WaitingOutSTTitle"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.WaitingOutSTTitle"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.WaitingOutSTTitle = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.WaitingOutSTTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.Other"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.Other"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.Other = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.Other = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.ElectronicTitle"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.ElectronicTitle"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.ElectronicTitle = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.ElectronicTitle = false;
+                    }
+
+                    if (Request.Form["TitleDueTrade2.NoTitleDispose"] != null)
+                    {
+                        var titleOption = Request.Form["TitleDueTrade2.NoTitleDispose"];
+                        if (titleOption.Contains(","))
+                        {
+                            titleOption = titleOption.Substring(0, titleOption.IndexOf(","));
+                        }
+                        titleDue2.NoTitleDispose = bool.Parse(titleOption);
+
+                    }
+                    else
+                    {
+                        titleDue2.NoTitleDispose = false;
+                    }
+
+                    var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue2);
+                }
+
                 if (individualDeal.Validation == "Showroom Validate")
                 {
                     //Got the StoreID, need to get location Code...                
@@ -798,6 +1861,17 @@ namespace SalesCommission.Controllers
             dealInfo.Makes = SqlQueries.GetMakes(dealInfo.sl_mall_id.ToString());
             dealInfo.Malls = SqlQueries.GetMalls();
             dealInfo.DealComments = SqlQueries.GetSalesLogDealComments(dealInfo.sl_pkey, dealInfo.sl_dealkey);
+
+            if (dealInfo.sl_TradeVIN != null && dealInfo.sl_TradeVIN != "")
+            {
+                dealInfo.TitleDueTrade = SqlQueries.GetTitleDueByVIN(dealInfo.sl_TradeVIN);
+            }
+
+            if (dealInfo.sl_TradeVIN2 != null && dealInfo.sl_TradeVIN2 != "")
+            {
+                dealInfo.TitleDueTrade2 = SqlQueries.GetTitleDueByVIN(dealInfo.sl_TradeVIN2);
+            }
+
             GetUserDealPermissions(dealInfo.LocationCode);
 
             dealInfo.DealFound = true;

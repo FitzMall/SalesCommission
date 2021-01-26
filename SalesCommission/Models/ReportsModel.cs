@@ -366,6 +366,8 @@ namespace SalesCommission.Models
         public List<MoneyDue> MoneyDueHistory { get; set; }
         public IEnumerable<SelectListItem> FIManagers { get; set; }
         public string FIManagerNumber { get; set; }
+        public string ReportFilter { get; set; }
+        public List<JJFUser> JJFUsers { get; set; }
     }
 
     public class MoneyDue { 
@@ -398,6 +400,30 @@ namespace SalesCommission.Models
 
     }
 
+
+    public class VehicleData
+    {
+        public string StockNumber { get; set;}
+        public string Location  { get; set;}
+        public string ModelYear  { get; set;}
+        public string Make  { get; set;}
+        public string Model  { get; set;}
+        public string VIN  { get; set;}
+        public int  DaysInStock  { get; set;}
+        public int InventoryStatus  { get; set;}
+    }
+
+    public class TradeInformation
+    {
+        public string Dealkey { get; set; }
+        public string FinanceManager { get; set; }
+        public string SalesAssociate1 { get; set; }
+        public string SalesAssociate2 { get; set; }
+        public DateTime DealDate { get; set; }
+        public string BuyerName { get; set; }
+        public string SalesManager { get; set; }
+    }
+
     public class TitleDueStatusModel
     {
         public TitleDue TitleDue { get; set; }
@@ -409,9 +435,10 @@ namespace SalesCommission.Models
     {
         public List<TitleDue> TitleDue { get; set; }
         public List<TitleDue> TitleDueHistory { get; set; }
+        public List<JJFUser> JJFUsers { get; set; }
         public string loc { get; set; }
-        public string status { get; set; }
-
+        public string[] status { get; set; }
+        public string[] invstatus { get; set; }
     }
 
     public class TitleDue
@@ -435,7 +462,7 @@ namespace SalesCommission.Models
         public string VIN { get; set; }
         public bool ClearTitle { get; set; }
         public bool TitleDueBank { get; set; }
-        public bool TitleDueCustomer { get; set; }
+        public bool? TitleDueCustomer { get; set; }
         public bool LienDueCustomer { get; set; }
         public bool TitleDueInterco { get; set; }
         public bool TitleDueAuction { get; set; }
@@ -453,6 +480,15 @@ namespace SalesCommission.Models
         public int Year { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
+        public string Comments { get; set; }
+        public int InventoryStatus { get; set; }
+        public string BankName { get; set; }
+        public string BuyerPhone { get; set; }
+        public string BuyerEmail { get; set; }
+        public bool NoTitleDispose { get; set; }
+        public bool ElectronicTitle { get; set; }
+        public string FinanceManagerId { get; set; }
+        public string SalesManagerId { get; set; }
     }
 
 }

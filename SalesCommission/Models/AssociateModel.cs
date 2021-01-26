@@ -168,6 +168,8 @@ namespace SalesCommission.Models
         public decimal GAPAmount { get; set; }
         public decimal Trade1Amount { get; set; }
         public decimal Trade2Amount { get; set; }
+        public string Trade1VIN { get; set; }
+        public string Trade2VIN { get; set; }
         public decimal OtherAftermarketAmount { get; set; }
         public string VehicleCondition { get; set; }
         public string VehicleCategory { get; set; }

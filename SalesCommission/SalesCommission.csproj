@@ -321,6 +321,9 @@
     <Content Include="Views\Reports\TitleDue.cshtml" />
     <Content Include="Views\Reports\CustomReports.cshtml" />
     <Content Include="Views\Reports\UpdateTitleStatus.cshtml" />
+    <Content Include="Views\Reports\AddTitleDue.cshtml" />
+    <Content Include="Views\Reports\UpdateTitleDue.cshtml" />
+    <Content Include="Views\Reports\UpdateMoneyDueStatus.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -72,6 +72,8 @@ namespace SalesCommission.Models
         public string FandIManager { get; set; }
         public string FinanceManagerNumber { get; set; }
         public string ShowroomValidatedBy { get; set; }
+        public string Trade1VIN { get; set; }
+        public string Trade2VIN { get; set; }
         public List<AftermarketItem> AftermarketItems { get; set; }
     }
 
@@ -120,6 +122,8 @@ namespace SalesCommission.Models
         public string Loaner { get; set; }
         public string BPP { get; set; }
         public string ShowroomValidatedBy { get; set; }
+        public string Trade1VIN { get; set; }
+        public string Trade2VIN { get; set; }
         public decimal AFTP1 { get; set; }
 
 	public decimal AFTP2 { get; set; }

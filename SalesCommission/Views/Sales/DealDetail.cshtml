@@ -12,6 +12,7 @@
     }
 
     var MoneyDue = SalesCommission.Business.SqlQueries.GetAllMoneyDue();
+    var TitleDue = SalesCommission.Business.SqlQueries.GetAllTitlesDue();
 
     var bMoneyDue = false;
     decimal MoneyDueAmount = 0;
@@ -19,13 +20,25 @@
     var MoneyDueFrom = "";
 
 
-    if(Model.StockNumer != null)
+
+
+    var bShowTitleInformation = true;
+    var titleShown = "";
+    if ((Model.sl_showroomValidatedBy != null && Model.sl_showroomValidatedBy != "") && (ViewBag.CanOfficeValidate == false))
+    {
+        //DO NOT ALLOW THE VALUES OF CHECKBOXES TO BE CHANGED
+        bShowTitleInformation = false;
+        titleShown = "display:none";
+    }
+
+
+    if (Model.StockNumer != null)
     {
         var dealMoneyDue = MoneyDue.FindAll(x => x.StockNumber.Trim() == Model.StockNumer.Trim());
-        if(dealMoneyDue != null)
+        if (dealMoneyDue != null)
         {
 
-            foreach(var item in dealMoneyDue)
+            foreach (var item in dealMoneyDue)
             {
                 MoneyDueAmount += item.ControlBalance;
                 MoneyDueDays = item.ScheduleDays;
@@ -41,13 +54,118 @@
 
             }
 
-            if(MoneyDueAmount > 0)
+            if (MoneyDueAmount > 0)
             {
                 bMoneyDue = true;
             }
 
         }
     }
+
+    var titleStatus = "";
+    var bTitleDue = false;
+
+    if (Model.sl_TradeVIN != null && Model.sl_TradeVIN != "")
+    {
+
+        var itemTitleDue = TitleDue.FindAll(x => x.VIN.Trim() == Model.sl_TradeVIN.Trim() || x.VIN.Trim() == Model.sl_TradeVIN2.Trim());
+
+        if (itemTitleDue != null && itemTitleDue.Count > 0)
+        {
+            var titleDue = itemTitleDue[0];
+            var ManagerNoStatus = true;
+
+            if (titleDue.TitleDueBank)
+            {
+                titleStatus += "Title Due from Bank, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.TitleDueCustomer == true)
+            {
+                titleStatus += "Title Due from Customer, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.TitleDueInterco)
+            {
+                titleStatus += "Title Due from Interco, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.TitleDueAuction)
+            {
+                titleStatus += "Title Due from Auction, ";
+                ManagerNoStatus = false;
+            }
+
+            if (titleDue.LienDueBank)
+            {
+                titleStatus += "Lien Due from Bank, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.LienDueCustomer)
+            {
+                titleStatus += "Lien Due from Customer, ";
+                ManagerNoStatus = false;
+            }
+
+            if (titleDue.OdomDueCustomer)
+            {
+                titleStatus += "Odom Due from Customer, ";
+                ManagerNoStatus = false;
+            }
+
+            if (titleDue.POADueCust)
+            {
+                titleStatus += "POA Due, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.PayoffDueCust)
+            {
+                titleStatus += "Payoff Due, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.WaitingOutSTTitle)
+            {
+                titleStatus += "Waiting Out/ST Title, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.DuplicateTitleAppliedFor)
+            {
+                titleStatus += "Dup Title Applied For, ";
+                ManagerNoStatus = false;
+            }
+            if (titleDue.Other)
+            {
+                titleStatus += "Other, ";
+                ManagerNoStatus = false;
+            }
+
+            if (titleDue.NoTitleDispose)
+            {
+                titleStatus += "No Title Dispose, ";
+                ManagerNoStatus = false;
+            }
+
+            if (titleDue.ElectronicTitle)
+            {
+                titleStatus += "E-Title, ";
+                ManagerNoStatus = false;
+            }
+
+
+            if (ManagerNoStatus && !titleDue.ClearTitle)
+            {
+                titleStatus = "No Status";
+            }
+
+            titleStatus = titleStatus.TrimEnd(' ').TrimEnd(',');
+        }
+
+        if (titleStatus != "")
+        {
+            bTitleDue = true;
+        }
+    }
+
     System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
     nfi.CurrencyDecimalDigits = 0;
 
@@ -98,6 +216,14 @@
         <div class="row" style="margin:5px 0px; background-color:#d2070769">
             <div class="col-md-12 text-center">
                 <h3 style="padding-top:10px;">There is @MoneyDueAmount.ToString("C",nfi) due from the @MoneyDueFrom over @MoneyDueDays days on this deal!</h3>
+            </div>
+        </div>
+    }
+    if (bTitleDue)
+    {
+        <div class="row" style="margin:5px 0px; background-color:#d26e0769">
+            <div class="col-md-12 text-center">
+                <h3 style="padding-top:10px;">There is @titleStatus on this deal!</h3>
             </div>
         </div>
     }
@@ -205,9 +331,11 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
             @Html.HiddenFor(n => n.sl_VehicleCategory)
             @Html.HiddenFor(n => n.sl_VehicleDealDate)
             @Html.HiddenFor(n => n.sl_VehicleSalesManager)
+        @Html.HiddenFor(n => n.sl_SalesManagerNumber)
         @Html.HiddenFor(n => n.sl_dxHoldback)
         @Html.HiddenFor(n => n.sl_certificationLevel)
-
+        @Html.HiddenFor(n => n.sl_BuyerEmail)
+        @Html.HiddenFor(n => n.sl_BuyerPhone)
         //var includedTotalPre = Convert.ToDecimal(Model.sl_BPP) + Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + Model.sl_Adjustments + Model.sl_CertFee + Model.sl_otheram;
 
         var includedTotalPre = Model.sl_Adjustments + Model.sl_CertFee;
@@ -390,14 +518,14 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             @Html.DropDownListFor(n => n.sl_FinanceManagerNumber, Model.FinanceManagers, new { @class = "form-control form-inline chosen-select-deselect ", required = "" })
                         }
                        
-                        @if(Model.PreviousSavedValues != null && Model.sl_FinanceManagerNumber != Model.PreviousSavedValues.sl_FinanceManagerNumber && Model.PreviousSavedValues.sl_FinanceManagerNumber != null)
+                        @if (Model.PreviousSavedValues != null && Model.sl_FinanceManagerNumber != Model.PreviousSavedValues.sl_FinanceManagerNumber && Model.PreviousSavedValues.sl_FinanceManagerNumber != null)
                         {
                             var selected = new SelectListItem();
                             try
                             {
                                 selected = Model.FinanceManagers.First(o => o.Value == Model.PreviousSavedValues.sl_FinanceManagerNumber);
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
                                 selected.Text = "";
                             }
@@ -509,7 +637,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                                 var selected = Model.SalesAssociates2.First(o => o.Value == Model.PreviousSavedValues.sl_SalesAssociate2);
                                 <label style="background-color:#fcf8e3;margin-left:13px"> @selected.Text </label>
                             }
-                            catch(Exception ex)
+                            catch (Exception ex)
                             {
 
                             }
@@ -521,6 +649,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                 <label class="col-sm-6">Desc Of Trade</label>
                 <label class="col-sm-3">ACV</label>
                 <label class="col-sm-3">Allowance</label>
+
                 <div class="form-group">
                     <div class="col-sm-6">
                         @Html.TextBoxFor(n => n.sl_descOftrade, new { @class = "form-control", placeholder = "" })
@@ -569,29 +698,76 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         }*@
                     </div>
                 </div>
-                <div class="form-group">
+
+                @if (Model.sl_TradeVIN != null && Model.sl_TradeVIN != "")
+                {
+
+                    <div class="form-group" style="@titleShown">
+                        <label class="col-sm-6 control-label">
+                            Bank To Payoff
+                        </label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(n => n.sl_TradeBankName, new { @class = "form-control" })
+                            <br />
+
+                            @if(Model.sl_TradeBankName != null && Model.sl_TradeBankName != "")
+                            {
+                                Model.TitleDueTrade.LienDueBank = true;
+                            }
+
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.LienDueBank, new { @class = "" }) Lien Due Bank<br />
+
+                        </div>
+                    </div>
+                    <div class="form-group"  style="@titleShown">
+                        <div class="col-sm-12">
+                            <label>Title Received from Customer?</label>
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.RadioButtonFor(x => x.TitleDueTrade.TitleDueCustomer, "false", new { required = ""} ) Yes
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.RadioButtonFor(x => x.TitleDueTrade.TitleDueCustomer, "true", new { required = "" }) No
+                        </div>
+                    </div>
+                <div class="form-group" style="@titleShown">
                     <div class="col-sm-12">
-                        <label>Title Status</label>
+                        <label>Title Status (Select all that apply)</label>
                     </div>
-                    <div class="col-sm-6">
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Clear Title<br/>
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Bank<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due INTERCO<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Title Due Auction<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Odom Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Dup Title Applied For<br />
+                    <div class="row" style="margin-bottom:15px;">
+                        <div class="col-sm-12">
+                            @Html.HiddenFor(x => x.sl_TradeVIN)
+                            @Html.HiddenFor(x => x.TitleDueTrade.Id)
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.ClearTitle, new { @class = "" }) Clear Title<br />
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Lien Due Bank<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Lien Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) POA Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Payoff Auth Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Waiting Out/ST Title<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle1, new { @class = "" }) Other <br />
+                    <div class="row" style="margin-bottom:15px;">
+                        <div class="col-sm-6">
+                            @*@Html.CheckBoxFor(x => x.TitleDueTrade.TitleDueCustomer, new { @class = "" }) Title Due Customer<br />*@
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.TitleDueBank, new { @class = "" }) Title Due Bank<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
+                        </div>
+                        @*<div class="col-sm-6">
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.WaitingOutSTTitle, new { @class = "" }) Waiting Out Of State Title<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.POADueCust, new { @class = "" }) POA Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
+
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.TitleDueAuction, new { @class = "" }) Title Due Auction<br />
+
+                        </div>*@
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.Other, new { @class = "" }) Other (Enter in Comments)<br />
+                        </div>
                     </div>
                 </div>
                 <hr/>
+                }
                 <label class="col-sm-6">Desc Of Trade</label>
                 <label class="col-sm-3">ACV</label>
                 <label class="col-sm-3">Allowance</label>
@@ -644,28 +820,74 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         }*@
                     </div>
                 </div>
-                <div class="form-group">
+
+@if (Model.sl_TradeVIN2 != null && Model.sl_TradeVIN2 != "")
+{
+    <div class="form-group" style="@titleShown">
+        <label class="col-sm-6 control-label">
+            Bank To Payoff
+        </label>
+        <div class="col-sm-6">
+            @Html.TextBoxFor(n => n.sl_Trade2BankName, new { @class = "form-control" })
+            <br />
+            @if (Model.sl_Trade2BankName != null && Model.sl_Trade2BankName != "")
+            {
+                Model.TitleDueTrade2.LienDueBank = true;
+            }
+
+
+            @Html.CheckBoxFor(x => x.TitleDueTrade2.LienDueBank, new { @class = "" }) Lien Due Bank<br />
+        </div>
+    </div>
+    <div class="form-group" style="@titleShown">
+        <div class="col-sm-12">
+            <label>Title Received from Customer?</label>
+        </div>
+        <div class="col-sm-6">
+            @Html.RadioButtonFor(x => x.TitleDueTrade2.TitleDueCustomer, "false", new { required = "" }) Yes
+        </div>
+        <div class="col-sm-6">
+            @Html.RadioButtonFor(x => x.TitleDueTrade2.TitleDueCustomer, "true", new { required = "" }) No
+        </div>
+    </div>
+                <div class="form-group" style="@titleShown">
                     <div class="col-sm-12">
-                        <label>Title Status</label>
+                        <label>Title Status (Select all that apply)</label>
                     </div>
-                    <div class="col-sm-6">
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Clear Title<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Bank<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due INTERCO<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Title Due Auction<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Odom Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Dup Title Applied For<br />
+                    <div class="row" style="margin-bottom:15px;">
+                        <div class="col-sm-12">
+                            @Html.HiddenFor(x => x.sl_TradeVIN2)
+                            @Html.HiddenFor(x => x.TitleDueTrade2.Id)
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.ClearTitle, new { @class = "" }) Clear Title<br />
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Lien Due Bank<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Lien Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) POA Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Payoff Auth Due Customer<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Waiting Out/ST Title<br />
-                        @Html.CheckBoxFor(x => x.ClearTitle2, new { @class = "" }) Other <br />
+                    <div class="row" style="margin-bottom:15px;">
+                        <div class="col-sm-6">
+                            @*@Html.CheckBoxFor(x => x.TitleDueTrade2.TitleDueCustomer, new { @class = "" }) Title Due Customer<br />*@
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.TitleDueBank, new { @class = "" }) Title Due Bank<br />
+
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
+                        </div>
+                        @*<div class="col-sm-6">
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.WaitingOutSTTitle, new { @class = "" }) Waiting Out Of State Title<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.POADueCust, new { @class = "" }) POA Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
+
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.TitleDueAuction, new { @class = "" }) Title Due Auction<br />
+
+                        </div>*@
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            @Html.CheckBoxFor(x => x.TitleDueTrade2.Other, new { @class = "" }) Other (Enter in Comments)<br />
+                        </div>
                     </div>
                 </div>
+}
             </div>
         </div>
         <div class="col-md-3 col-md-offset-1">
@@ -1698,5 +1920,140 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
     <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
     <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
 
+@if (bShowTitleInformation)
+{
+
+    <script type="text/javascript">
+
+
+
+            $(document).ready(function () {
+                $('#btnSubmit').click(function () {
+
+            var location = "";
+            location = $("#sl_mall_id").val();
+
+            if (location != "9") {
+                var titleDueCustomer = $("#TitleDueTrade_TitleDueCustomer").val();
+
+                if (titleDueCustomer == "false") {
+                    var checked = false;
+                    if ($("#TitleDueTrade_LienDueCustomer").prop('checked')
+                            || $("#TitleDueTrade_TitleDueBank").prop('checked')
+                            || $("#TitleDueTrade_DuplicateTitleAppliedFor").prop('checked')
+                            || $("#TitleDueTrade_ClearTitle").prop('checked')
+                            || $("#TitleDueTrade_LienDueBank").prop('checked')
+                            || $("#TitleDueTrade_Other").prop('checked')
+                            || $("#TitleDueTrade_ElectronicTitle").prop('checked')
+                                ) {
+                    checked = true;
+                    }
+
+
+                    if (!checked) {
+                        alert("You must select at least one Title Status.");
+                        return false;
+                    }
+                }
+
+
+                var titleDueCustomer2 = $("#TitleDueTrade2_TitleDueCustomer").val();
+
+                if (titleDueCustomer2 == "false") {
+                    var checked = false;
+                    if ($("#TitleDueTrade2_LienDueCustomer").prop('checked')
+                            || $("#TitleDueTrade2_TitleDueBank").prop('checked')
+                            || $("#TitleDueTrade2_DuplicateTitleAppliedFor").prop('checked')
+                            || $("#TitleDueTrade2_ClearTitle").prop('checked')
+                            || $("#TitleDueTrade2_LienDueBank").prop('checked')
+                            || $("#TitleDueTrade2_Other").prop('checked')
+                            || $("#TitleDueTrade2_ElectronicTitle").prop('checked')
+                                ) {
+                        checked = true;
+                        }
+
+
+                        if (!checked) {
+                            alert("You must select at least one Title Status.");
+                            return false;
+                        }
+                    }
+                    }
+                });
+
+                $('#TitleDueTrade2_ClearTitle').click(function () {
+                    $('#TitleDueTrade2_LienDueCustomer').removeAttr('checked');
+                    $('#TitleDueTrade2_TitleDueBank').removeAttr('checked');
+                    $('#TitleDueTrade2_DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDueTrade2_LienDueBank').removeAttr('checked');
+                    $('#TitleDueTrade2_Other').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_ClearTitle').click(function () {
+                    $('#TitleDueTrade_LienDueCustomer').removeAttr('checked');
+                    $('#TitleDueTrade_TitleDueBank').removeAttr('checked');
+                    $('#TitleDueTrade_DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDueTrade_LienDueBank').removeAttr('checked');
+                    $('#TitleDueTrade_Other').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_LienDueCustomer').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_TitleDueBank').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_DuplicateTitleAppliedFor').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_LienDueBank').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_Other').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade_ElectronicTitle').click(function () {
+                    $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                });
+
+
+                $('#TitleDueTrade2_LienDueCustomer').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade2_TitleDueBank').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade2_DuplicateTitleAppliedFor').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade2_LienDueBank').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade2_Other').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDueTrade2_ElectronicTitle').click(function () {
+                    $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                });
+
+
+            });
+
+    </script>
+}
+
 
 }
+

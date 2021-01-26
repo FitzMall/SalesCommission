@@ -92,6 +92,7 @@ namespace SalesCommission.Models
     {
         public string MakeId { get; set; }
         public string MakeName { get; set; }
+        public string MallName { get; set; }
         public string DealKey { get; set; }
         public double DealGrossAmount { get; set; }
         public double FinIncAmount { get; set; }

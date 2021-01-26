@@ -36,11 +36,25 @@
     <div class="row" style="margin-top:25px;">
         <div class="col-md-12">
             <h2>Money Due Report</h2>
+                @using (Html.BeginForm())
+                {
+                    <div class="row" style="margin: 15px 0px; padding:10px 0px; background-color: #eee;">
+                        <div class="col-sm-3" style="padding-top:5px;">
+                            <input type="radio" name="filter" value="all" @(Model.ReportFilter == "all" ? "checked" : "") /> All
+                            <input type="radio" name="filter" value="funded" @(Model.ReportFilter == "funded" ? "checked" : "") style="margin-left:20px"/> Funded
+                            <input type="radio" name="filter" value="notfunded" @(Model.ReportFilter == "notfunded" ? "checked" : "") style="margin-left:20px"/> Not Funded
+                        </div>
+                        <div class="col-sm-1">
+                            <input type="submit" value="Filter" class="btn btn-primary"/>
+                        </div>
+                    </div>
+                }
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr style="background-color:#d9edf7;">
                         <th>Location</th>
                         <th class="text-center">Deals</th>
+                        <th class="text-center">Median Days</th>
                         <th class="text-center">Balance</th>
                         <th class="text-center">Avg Balance per Deal</th>
                         <th class="text-center">Due from Bank</th>
@@ -84,16 +98,25 @@
 
                         TotalDeals += locationMoneyDue.Count();
 
+                        var locationMedianDays = 0;
+
+                        var locationhighDays = locationMoneyDue.Max(x => x.ScheduleDays);
+                        var locationlowDays = locationMoneyDue.Min(x => x.ScheduleDays);
+
+                        var locationdiffDays = (locationhighDays - locationlowDays) / 2;
+                        locationMedianDays = locationlowDays + locationdiffDays;
+
                         <tr>
                             <td><a data-toggle="collapse" id="@location" style="cursor: pointer;" data-target="#collapse-@location">@locationName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
                             <td class="text-center">@locationMoneyDue.Count()</td>
+                            <td class="text-center">@locationMedianDays</td>
                             <td class="text-center">@locationBalance.ToString("C", nfi)</td>
                             <td class="text-center">@avglocationBalance.ToString("C", nfi)</td>
                             <td class="text-center">@locationBank.ToString("C", nfi)</td>
                             <td class="text-center">@locationCustomer.ToString("C", nfi)</td>
                         </tr>
                         <tr id="collapse-@location" class="collapse out" style="background-color:lightgray">
-                            <td colspan="6">
+                            <td colspan="7">
                                 <h4>Money Due for @location</h4>
 
                                 @{
@@ -104,6 +127,7 @@
                                             <tr style="background-color:#d9edf7;">
                                                 <th>F and I Manager</th>
                                                 <th class="text-center">Deals</th>
+                                                <th class="text-center">Median Days</th>
                                                 <th class="text-center">Balance</th>
                                                 <th class="text-center">Avg Balance per Deal</th>
                                                 <th class="text-center">Due from Bank</th>
@@ -157,9 +181,18 @@
 
                                                 ManagerTotalDeals += managerMoneyDue.Count();
 
+                                                var medianDays = 0;
+
+                                                var MGRhighDays = managerMoneyDue.Max(x => x.ScheduleDays);
+                                                var MGRlowDays = managerMoneyDue.Min(x => x.ScheduleDays);
+
+                                                var MGRdiffDays = (MGRhighDays - MGRlowDays) / 2;
+                                                medianDays = MGRlowDays + MGRdiffDays;
+
                                                 <tr>
                                                     <td><a data-toggle="collapse" id="@managerFINumber-@location" style="cursor: pointer;" data-target="#collapse-@managerFINumber-@location">@managerName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
                                                     <td class="text-center">@managerMoneyDue.Count()</td>
+                                                    <td class="text-center">@medianDays</td>
                                                     <td class="text-center">@managerBalance.ToString("C", nfi)</td>
                                                     <td class="text-center">@avgmanagerBalance.ToString("C", nfi)</td>
                                                     <td class="text-center">@managerBank.ToString("C", nfi)</td>
@@ -167,7 +200,7 @@
                                                 </tr>
 
                                                 <tr id="collapse-@managerFINumber-@location" class="collapse out" style="background-color:lightgray">
-                                                    <td colspan="6">
+                                                    <td colspan="7">
                                                         <table id="money-due-@managerFINumber-@location" class="table table-bordered" style="font-size:12px;">
                                                             <thead>
                                                                 <tr style="background-color:#d9edf7">
@@ -367,9 +400,21 @@
 
                                         </tbody>
                                         <tfoot>
+                                            @{ 
+                                                var medianDaysLocation = 0;
+
+                                                var lochighDays = locationMoneyDue.Max(x => x.ScheduleDays);
+                                                var loclowDays = locationMoneyDue.Min(x => x.ScheduleDays);
+
+                                                var locdiffDays = (lochighDays - loclowDays) / 2;
+                                                medianDaysLocation = loclowDays + locdiffDays;
+
+
+                                            }
                                             <tr style="background-color:#d9edf7;">
                                                 <th><a data-toggle="collapse" id="AllManagers-@location" style="cursor: pointer;" data-target="#collapse-AllManagers-@location">All Managers <i class="fa fa-caret-down" aria-hidden="true"></a></th>
                                                 <th class="text-center">@locationMoneyDue.Count()</th>
+                                                <th class="text-center">@medianDaysLocation</th>
                                                 <th class="text-center">@locationBalance.ToString("C", nfi)</th>
                                                 <th class="text-center">@avglocationBalance.ToString("C", nfi)</th>
                                                 <th class="text-center">@locationBank.ToString("C", nfi)</th>
@@ -377,7 +422,7 @@
                                             </tr>
 
                                             <tr id="collapse-AllManagers-@location" class="collapse out" style="background-color:lightgray">
-                                                <td colspan="6">
+                                                <td colspan="7">
                                                     <table id="money-due-AllManagers-@location" class="table table-bordered" style="font-size:12px;">
                                                         <thead>
                                                             <tr style="background-color:#d9edf7">
@@ -592,17 +637,26 @@
                 <tfoot>
                     @{
                         var TotalAverageBalance = (double)TotalBalance / (double)TotalDeals;
+
+                        var TotalMedianDays = 0;
+                        var TotalhighDays = Model.MoneyDue.Max(x => x.ScheduleDays);
+                        var TotallowDays = Model.MoneyDue.Min(x => x.ScheduleDays);
+
+                        var TotaldiffDays = (TotalhighDays - TotallowDays) / 2;
+                        TotalMedianDays = TotallowDays + TotaldiffDays;
+
                     }
                     <tr>
                         <th><a data-toggle="collapse" id="AllStores" style="cursor: pointer;" data-target="#collapse-AllStores">Totals <i class="fa fa-caret-down" aria-hidden="true"></a></th>
                         <th class="text-center">@TotalDeals</th>
+                        <th class="text-center">@TotalMedianDays</th>
                         <th class="text-center">@TotalBalance.ToString("C", nfi)</th>
                         <th class="text-center">@TotalAverageBalance.ToString("C", nfi)</th>
                         <th class="text-center">@TotalBank.ToString("C", nfi)</th>
                         <th class="text-center">@TotalCustomer.ToString("C", nfi)</th>
                     </tr>
                     <tr id="collapse-AllStores" class="collapse out" style="background-color:lightgray">
-                        <td colspan="6">
+                        <td colspan="7">
                             <h4>Money Due for All Locations</h4>
 
                             @{
@@ -613,6 +667,7 @@
                                         <tr style="background-color:#d9edf7;">
                                             <th>F and I Manager</th>
                                             <th class="text-center">Deals</th>
+                                            <th class="text-center">Median Days</th>
                                             <th class="text-center">Balance</th>
                                             <th class="text-center">Avg Balance per Deal</th>
                                             <th class="text-center">Due from Bank</th>
@@ -668,9 +723,19 @@
 
                                             ManagerTotalDeals += managerMoneyDue.Count();
 
+                                            var medianDays = 0;
+
+
+                                            var lochighDays = managerMoneyDue.Max(x => x.ScheduleDays);
+                                            var loclowDays = managerMoneyDue.Min(x => x.ScheduleDays);
+
+                                            var locdiffDays = (lochighDays - loclowDays) / 2;
+                                            medianDays = loclowDays + locdiffDays;
+
                                             <tr>
                                                 <td><a data-toggle="collapse" id="@managerFINumber" style="cursor: pointer;" data-target="#collapse-@managerFINumber">@managerName <i class="fa fa-caret-down" aria-hidden="true"></a></td>
                                                 <td class="text-center">@managerMoneyDue.Count()</td>
+                                                <td class="text-center">@medianDays</td>
                                                 <td class="text-center">@managerBalance.ToString("C", nfi)</td>
                                                 <td class="text-center">@avgmanagerBalance.ToString("C", nfi)</td>
                                                 <td class="text-center">@managerBank.ToString("C", nfi)</td>
@@ -678,7 +743,7 @@
                                             </tr>
 
                                             <tr id="collapse-@managerFINumber" class="collapse out" style="background-color:lightgray">
-                                                <td colspan="6">
+                                                <td colspan="7">
                                                     <table id="money-due-@managerFINumber" class="table table-bordered" style="font-size:12px;">
                                                         <thead>
                                                             <tr style="background-color:#d9edf7">
@@ -878,15 +943,223 @@
 
                                     </tbody>
                                     <tfoot>
+                                        @{ 
+                                            var TotalMgrMedianDays = 0;
+
+                                            var TotalMGRhighDays = Model.MoneyDue.Max(x => x.ScheduleDays);
+                                            var TotalMGRlowDays = Model.MoneyDue.Min(x => x.ScheduleDays);
+
+                                            var TotalMGRdiffDays = (TotalMGRhighDays - TotalMGRlowDays) / 2;
+                                            TotalMgrMedianDays = TotalMGRlowDays + TotalMGRdiffDays;
+
+                                            var TotalDays = 0;
+                                        }
                                         <tr style="background-color:#d9edf7;">
-                                            <th>All Managers</th>
+                                            <th><a data-toggle="collapse" id="all-managers" style="cursor: pointer;" data-target="#collapse-all-managers">All Managers <i class="fa fa-caret-down" aria-hidden="true"/></a></th>
                                             <th class="text-center">@TotalDeals</th>
+                                            <th class="text-center">@TotalMgrMedianDays</th>
                                             <th class="text-center">@TotalBalance.ToString("C", nfi)</th>
                                             <th class="text-center">@TotalAverageBalance.ToString("C", nfi)</th>
                                             <th class="text-center">@TotalBank.ToString("C", nfi)</th>
                                             <th class="text-center">@TotalCustomer.ToString("C", nfi)</th>
                                         </tr>
 
+                                        <tr id="collapse-all-managers" class="collapse out" style="background-color:lightgray">
+                                            <td colspan="7">
+                                                <table id="money-due-all-managers" class="table table-bordered" style="font-size:12px;">
+                                                    <thead>
+                                                        <tr style="background-color:#d9edf7">
+                                                            <th class="text-center">Stock #</th>
+                                                            <th class="text-center">Deal #</th>
+                                                            <th class="text-center">Schedule<br />Days</th>
+                                                            <th class="text-center">Deal Date</th>
+                                                            <th class="text-center">Due From</th>
+                                                            <th class="text-center">Customer #</th>
+                                                            <th class="text-center">Control<br />Balance</th>
+                                                            <th class="text-center">Customer Name</th>
+                                                            <th class="text-center">Business<br />Phone</th>
+                                                            <th class="text-center">Residential<br />Phone</th>
+                                                            <th class="text-center">Sales Manager</th>
+                                                            <th class="text-center">FI Manager</th>
+                                                            <th class="text-center">Bank Name</th>
+                                                            <th class="text-center">Last Updated</th>
+                                                            <th class="text-center">Funded/Notes</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var moneyDue in Model.MoneyDue)
+                                                        {
+
+                                                            var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                            var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                                                            if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                                                            {
+                                                                currentHistory = moneyDueHistory[0];
+                                                            }
+
+                                                            TotalDays += moneyDue.ScheduleDays;
+
+                                                            <tr>
+                                                                <td class="text-center">@moneyDue.StockNumber</td>
+                                                                <td class="text-center">
+                                                                    @if (moneyDue.DealNumber != "")
+                                                                    {
+                                                                        <a href="@applicationPath/Sales/DealDetail/@moneyDue.Location@moneyDue.DealNumber" target="_blank">@moneyDue.Location@moneyDue.DealNumber</a>
+                                                                    }
+                                                                </td>
+                                                                <td class="text-center">@moneyDue.ScheduleDays</td>
+                                                                <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                                                                @if (moneyDue.DueFrom.Contains("106"))
+                                                                {
+                                                                    <td class="text-center">Bank</td>
+                                                                }
+                                                                else if (moneyDue.DueFrom.Contains("111"))
+                                                                {
+                                                                    <td class="text-center">Customer</td>
+                                                                }
+
+
+                                                                <td class="text-center">@moneyDue.CustomerNumber</td>
+                                                                <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                                                                <td class="text-center">@moneyDue.CustomerName</td>
+                                                                <td class="text-center">@moneyDue.BusinessPhone</td>
+                                                                <td class="text-center">@moneyDue.ResidencePhone</td>
+                                                                <td class="text-center">@moneyDue.SalesManager</td>
+                                                                <td class="text-center">@moneyDue.FIManager</td>
+                                                                <td class="text-center">@moneyDue.BankName</td>
+                                                                <td class="text-center">
+                                                                    @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                                                                    {
+                                                                        @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                                                                    <br />
+                                                                    <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@moneyDue.Location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    @currentHistory.FundedStatus<br />
+                                                                    @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                                                                    {
+                                                                        @currentHistory.RootCause<br />
+                                                                    }
+                                                                    @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                                                                    {
+                                                                        <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                                                            <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                                                        </a>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+
+                                                        }
+
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr style="background-color:#d9edf7">
+                                                            <th class="text-center">@Model.MoneyDue.Count()</th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center">Avg Days:<br />@Math.Round((decimal)(TotalDays / Model.MoneyDue.Count))</th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center">@TotalBalance</th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                            <th class="text-center"></th>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+
+                                                <script type="text/javascript">
+                                                    $('#money-due-all-managers').DataTable({
+                                                            searching: true,
+                                                            dom: 'Bfrti',
+                                                            pageLength: -1,
+                                                            order: [[2, "desc"]],
+                                                            columnDefs: [
+                                                                { type: 'any-number', targets: [2, 5, 6] },
+                                                                { type: 'date-us', targets: [3] },
+                                                                {
+                                                                    targets: [0],
+                                                                    orderData: [0, 2]
+                                                                },
+                                                                {
+                                                                    targets: [1],
+                                                                    orderData: [1, 2]
+                                                                },
+                                                                {
+                                                                    targets: [2],
+                                                                    orderData: [2, 1]
+                                                                },
+                                                                {
+                                                                    targets: [3],
+                                                                    orderData: [3, 2]
+                                                                },
+                                                                {
+                                                                    targets: [4],
+                                                                    orderData: [4, 2]
+                                                                },
+                                                                {
+                                                                    targets: [5],
+                                                                    orderData: [5, 2]
+                                                                },
+                                                                {
+                                                                    targets: [6],
+                                                                    orderData: [6, 2]
+                                                                },
+                                                                {
+                                                                    targets: [7],
+                                                                    orderData: [7, 2]
+                                                                },
+                                                                {
+                                                                    targets: [8],
+                                                                    orderData: [8, 2]
+                                                                },
+                                                                {
+                                                                    targets: [9],
+                                                                    orderData: [9, 2]
+                                                                },
+                                                                {
+                                                                    targets: [10],
+                                                                    orderData: [10, 2]
+                                                                },
+                                                                {
+                                                                    targets: [11],
+                                                                    orderData: [11, 2]
+                                                                },
+                                                                {
+                                                                    targets: [12],
+                                                                    orderData: [12, 2]
+                                                                },
+                                                            ],
+                                                            buttons: [
+                                                                {
+                                                                    extend: 'copyHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'excelHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'pdfHtml5', footer: true,
+                                                                    orientation: 'landscape'
+                                                                },
+                                                                {
+                                                                    extend: 'print', footer: true,
+                                                                    orientation: 'landscape'
+                                                                }
+                                                            ],
+                                                            retrieve: true
+                                                        });
+                                                </script>
+
+                                            </td>
+                                        </tr>
 
                                     </tfoot>
                                 </table>
@@ -913,6 +1186,7 @@
                     <tr style="background-color:#d9edf7;">
                         <th>Bank</th>
                         <th class="text-center">Deals</th>
+                        <th class="text-center">Median Days</th>
                         <th class="text-center">Avg Balance per Deal</th>
                         <th class="text-center">Balance</th>
                     </tr>
@@ -952,15 +1226,27 @@
             bankAvgDays = (double)bankDays / (double)bankMoneyDue.Count();
             var avgBankBalance = (double)bankBalance / (double)bankMoneyDue.Count();
 
+            var medianDays = 0;
+
+
+
+
             if (bankBalance > 0)
             {
                 BankTotalDeals += bankMoneyDue.Count();
                 BankTotalBalance += bankBalance;
 
+                var bankhighDays = bankMoneyDue.Max(x => x.ScheduleDays);
+                var banklowDays = bankMoneyDue.Min(x => x.ScheduleDays);
+
+                var bankdiffDays = (bankhighDays - banklowDays) / 2;
+                medianDays = banklowDays + bankdiffDays;
+
 
                 <tr>
                     <td><a data-toggle="collapse" id="bank-@bankIndex" style="cursor: pointer;" data-target="#collapse-bank-@bankIndex">@bankName <i class="fa fa-caret-down" aria-hidden="true"/></a></td>
                     <td class="text-center">@bankMoneyDue.Count()</td>
+                    <td class="text-center">@medianDays</td>
                     <td class="text-center">@avgBankBalance.ToString("C", nfi)</td>
                     <td class="text-center">@bankBalance.ToString("C", nfi)</td>
                 </tr>
@@ -989,16 +1275,16 @@
                             </thead>
                             <tbody>
                                 @foreach (var moneyDue in bankMoneyDue)
-                                {
-                                    var location = moneyDue.Location;
+            {
+                var location = moneyDue.Location;
 
-                                    var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
-                                    var currentHistory = new SalesCommission.Models.MoneyDue();
+                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                var currentHistory = new SalesCommission.Models.MoneyDue();
 
-                                    if (moneyDueHistory != null && moneyDueHistory.Count > 0)
-                                    {
-                                        currentHistory = moneyDueHistory[0];
-                                    }
+                if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                {
+                    currentHistory = moneyDueHistory[0];
+                }
 
 
                                     <tr>
@@ -1006,7 +1292,7 @@
                                         <td class="text-center">
 
                                             @if (moneyDue.DealNumber != "")
-                                            {
+            {
                                                 <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
                                             }
                                         </td>
@@ -1016,11 +1302,11 @@
                                         @if (moneyDue.DueFrom.Contains("106"))
                                         {
                                             <td class="text-center">Bank</td>
-                                        }
+        }
                                         else if (moneyDue.DueFrom.Contains("111"))
                                         {
                                             <td class="text-center">Customer</td>
-                                        }
+    }
 
 
                                         <td class="text-center">@moneyDue.CustomerNumber</td>
@@ -1033,7 +1319,7 @@
                                         <td class="text-center">@moneyDue.BankName</td>
                                         <td class="text-center">
                                             @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
-                                            {
+    {
                                                 @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
                                                                         }
                                             <br />
@@ -1061,11 +1347,11 @@
                                 <tr style="background-color:#d9edf7">
                                     <th class="text-center">@bankMoneyDue.Count()</th>
                                     <th class="text-center"></th>
-                                    <th class="text-center">Avg Days:<br />@Math.Round(avgBankBalance)</th>
+                                    <th class="text-center">Avg Days:<br />@Math.Round(bankAvgDays)</th>
                                     <th class="text-center"></th>
                                     <th class="text-center"></th>
                                     <th class="text-center"></th>
-                                    <th class="text-center">@bankBalance</th>
+                                    <th class="text-center">@bankBalance.ToString("C")</th>
                                     <th class="text-center"></th>
                                     <th class="text-center"></th>
                                     <th class="text-center"></th>
@@ -1172,10 +1458,20 @@
                 <tfoot>
                     @{ 
                         var avgTotalBankBalance = (double)BankTotalBalance / (double)BankTotalDeals;
+                        var BankMedianDays = 0;
+
+                        var highDays = Model.MoneyDue.Where(x => x.DueFrom.Contains("106")).Max(x => x.ScheduleDays);
+                        var lowDays = Model.MoneyDue.Where(x => x.DueFrom.Contains("106")).Min(x => x.ScheduleDays);
+
+                        var diffDays = (highDays - lowDays) / 2;
+                        BankMedianDays = lowDays + diffDays;
+
+
                      }
                     <tr>
                         <th><a data-toggle="collapse" id="AllBanks" style="cursor: pointer;" data-target="#collapse-AllBanks">All Banks <i class="fa fa-caret-down" aria-hidden="true"/></a></th>
                         <th class="text-center">@BankTotalDeals</th>
+                        <th class="text-center">@BankMedianDays</th>
                         <th class="text-center">@avgTotalBankBalance.ToString("C", nfi)</th>
                         <th class="text-center">@BankTotalBalance.ToString("C", nfi)</th>
                     </tr>

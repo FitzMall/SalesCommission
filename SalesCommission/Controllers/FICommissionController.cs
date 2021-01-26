@@ -58,6 +58,7 @@ namespace SalesCommission.Controllers
 
             FICommissionModel.FIManagerDealDetails = MapFIManagerDeals(FICommissionModel);
             FICommissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            FICommissionModel.TitleDue = SqlQueries.GetAllTitlesDue();
 
             FICommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(objectivesStandardsModel.YearId, objectivesStandardsModel.MonthId);
 
@@ -1184,6 +1185,7 @@ namespace SalesCommission.Controllers
             }
 
             associateCommissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            associateCommissionModel.TitleDue = SqlQueries.GetAllTitlesDue();
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
 
@@ -1259,7 +1261,10 @@ namespace SalesCommission.Controllers
             }
 
             associateCommissionModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+            associateCommissionModel.TitleDue = SqlQueries.GetAllTitlesDue();
             associateCommissionModel.MoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+
+            associateCommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(Int32.Parse(yearId), Int32.Parse(monthId), id);
 
             associateCommissionModel.FIAdjustments = SqlQueries.GetFIManagerAdjustments(id, Int32.Parse(yearId), Int32.Parse(monthId));
 

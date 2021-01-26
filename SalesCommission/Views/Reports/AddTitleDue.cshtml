@@ -1,0 +1,470 @@
+﻿@model SalesCommission.Models.TitleDue  
+
+@{
+    ViewBag.Title = "Add/Edit Title Due";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 2;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+    var JJFUsers = SalesCommission.Business.SqlQueries.GetJJFEmailUsers();
+
+}
+
+@section CSS
+{
+<link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+
+    <style type="text/css">
+        /*.container{
+            max-width:100%;
+        }*/
+
+        .report-parameters{
+            background-color:#eee;
+            padding-bottom:15px;
+        }
+        .hr-divider{
+            border-color:#999; margin-top:10px; margin-bottom:10px;
+        }
+        .hr-separator{
+            border-color:#999; border-style:dashed; margin-top:10px; margin-bottom:5px;
+        }
+        .input-row{
+            margin: 0px 15px;
+            padding: 10px 0px;
+        }
+        .title-row{
+            margin: 10px 0px;
+        }
+        .chosen-container-single .chosen-single {
+            height: 34px;
+            line-height: 34px;
+        }
+
+        .chosen-container-single .chosen-single div {
+            top: 5px;
+        }
+
+        .chosen-container-single .chosen-single abbr {
+            top: 11px;
+        }
+    </style>
+}
+
+<div class="row" style="margin-top:25px;">
+    <div class="col-sm-12">
+        <h2>Add/Edit Title Due</h2>
+    </div>
+</div>
+    @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "addtitleDueForm" }))
+    {
+
+        if (ViewBag.Status != null && ViewBag.Status != "")
+        {
+            <div class="row">
+                <div class="col-sm-12" style="background-color:lemonchiffon">
+                    <h2>@ViewBag.Status</h2>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-sm-12 report-parameters">
+                <div class="row input-row">
+                    <div class="col-sm-6">
+                        <strong>Lookup By VIN (last 6): </strong><input type="text" id="vinlookup" name="vinlookup" class="form-control" style="display:inline-block" />
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="submit" value="Lookup" name="btnLookup" id="btnLookup" class="btn btn-primary" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Location:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <select class="form-control" id="location" name="location">
+                            <option value=""></option>
+                            <option value="FOC" @(Model.Location == "FOC" ? "selected" : "")>Annapolis</option>
+                            <option value="FTN" @(Model.Location == "FTN" ? "selected" : "")>Chambersburg</option>
+                            <option value="CJE" @(Model.Location == "CJE" ? "selected" : "")>Clearwater</option>
+                            <option value="FAM" @(Model.Location == "FAM" ? "selected" : "")>Frederick</option>
+                            <option value="LFO" @(Model.Location == "LFO" ? "selected" : "")>Gaitherburg Hyundai/Subaru</option>
+                            <option value="LFT" @(Model.Location == "LFT" ? "selected" : "")>Gaitherburg Toyota/Middlebrook</option>
+                            <option value="FHT" @(Model.Location == "FHT" ? "selected" : "")>Hagerstown Chrysler</option>
+                            <option value="FHG" @(Model.Location == "FHG" ? "selected" : "")>Hagerstown GM</option>
+                            <option value="FLP" @(Model.Location == "FLP" ? "selected" : "")>Lexington Park</option>
+                            <option value="FBS" @(Model.Location == "FBS" ? "selected" : "")>Rockville Buick/Subaru</option>
+                            <option value="CDO" @(Model.Location == "CDO" ? "selected" : "")>Rockville Hyundai</option>
+                            <option value="WDC" @(Model.Location == "WDC" ? "selected" : "")>Wheaton</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right; margin-top:5px;">
+                        <strong>VIN:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.VIN, new { @class = "form-control" })
+                        @Html.HiddenFor(x => x.Id)
+                    </div>
+                    
+                </div>
+                <div class="row title-row"">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Stock #:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.StockNumber, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="row title-row"">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Year:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.Year, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="row title-row"">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Make:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.Make, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Model:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.Model, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>From:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.DealKey, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Date Received:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.DealDate, new { @class = "form-control" })
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-sm-4">
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Customer:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.TextBoxFor(x => x.BuyerName, new { @class = "form-control" })
+                        @*<input type="text" class="form-control" id="customer" name="customer" />*@
+                    </div>
+                </div>
+                <div class="row title-row"">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Associate:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        
+                        <select class="form-control chosen-select" id="salesassociate1" name="salesassociate1">  
+                            <option value=""></option>                          
+                            @foreach (var user in JJFUsers)
+                            {
+                                var selected = "";
+
+                                if (Model.SalesAssociate1 != null)
+                                {
+                                    if (user.DMS_Id == Model.SalesAssociate1)
+                                    {
+                                        selected = "selected";
+                                    }
+                                }
+                                if (user.LastName != null || user.FirstName != null)
+                                {
+                                    <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
+                                }
+                            }                            
+                        </select>
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Associate:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <select class="form-control chosen-select" id="salesassociate2" name="salesassociate2">
+                            <option value=""></option>
+                            @foreach (var user in JJFUsers)
+                            {
+                                var selected = "";
+                                if (Model.SalesAssociate2 != null)
+                                {
+                                    if (user.DMS_Id == Model.SalesAssociate2)
+                                    {
+                                        selected = "selected";
+                                    }
+                                }
+                                if (user.LastName != null || user.FirstName != null)
+                                {
+                                    <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
+                                }
+                            }                        
+                        </select>
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Finance Mgr:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <select class="form-control chosen-select" id="financemanager" name="financemanager">
+                            <option value=""></option>
+                            @foreach (var user in JJFUsers)
+                            {
+                                var selected = "";
+
+                                if (Model.FinanceManager != null)
+                                {
+                                    if (user.DMS_Id == Model.FinanceManager)
+                                    {
+                                        selected = "selected";
+                                    }
+                                }
+                                if (user.LastName != null || user.FirstName != null)
+                                {
+                                    <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
+                                }
+                            }
+         
+                        </select>
+                    </div>
+                </div>
+                <div class="row title-row">
+                    <div class="col-sm-4" style="text-align:right;margin-top:5px;">
+                        <strong>Sales Mgr:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <select class="form-control chosen-select" id="salesmanager" name="salesmanager">
+                            <option value=""></option>
+                            @foreach (var user in JJFUsers)
+                            {
+                                var selected = "";
+
+                                if (Model.SalesManager != null)
+                                {
+                                    if (user.DMS_Id == Model.SalesManager)
+                                    {
+                                        selected = "selected";
+                                    }
+                                }
+
+                                if (user.LastName != null || user.FirstName != null)
+                                {
+                                    <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
+                                }
+                            }
+
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="row title-row">
+                    <strong>Title Status</strong>
+                </div>
+                <div class="row" style="margin-bottom:15px;">
+                    <div class="col-sm-12">
+                        @Html.CheckBoxFor(x => x.ClearTitle, new { @class = "" }) Clear Title<br />
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom:15px;">
+                    <div class="col-sm-12">
+                        @{
+                            var TitleDueCustomer = false;
+
+                            if (Model.TitleDueCustomer == null)
+                            {
+                                TitleDueCustomer = false;
+                            }
+                            else
+                            {
+                                TitleDueCustomer = (bool) Model.TitleDueCustomer;
+                            }
+                        }
+                        @Html.CheckBoxFor(x => TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
+                        @Html.CheckBoxFor(x => x.LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                        @Html.CheckBoxFor(x => x.TitleDueBank, new { @class = "" }) Title Due Bank<br />
+                        @Html.CheckBoxFor(x => x.LienDueBank, new { @class = "" }) Lien Due Bank<br />
+                        @Html.CheckBoxFor(x => x.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+                        @Html.CheckBoxFor(x => x.WaitingOutSTTitle, new { @class = "" }) Waiting Out of State Title<br />
+                        @Html.CheckBoxFor(x => x.PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
+                        @Html.CheckBoxFor(x => x.POADueCust, new { @class = "" }) POA Due Customer<br />
+                        @Html.CheckBoxFor(x => x.OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
+                        @Html.CheckBoxFor(x => x.TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                        @Html.CheckBoxFor(x => x.TitleDueAuction, new { @class = "" }) Title Due Auction<br />
+                        @Html.CheckBoxFor(x => x.ElectronicTitle, new { @class = "" }) E-Title<br />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        @Html.CheckBoxFor(x => x.Other, new { @class = "" }) Other<br />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        @Html.CheckBoxFor(x => x.NoTitleDispose, new { @class = "" }) No Title - Dispose of Vehicle<br />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row" style="margin-top:25px;">
+            <div class="col-sm-12">
+                <strong>Comments</strong><br/>
+                @Html.TextAreaFor(x => x.Comments, new { style = "-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;max-width:none;width: 100%;height:100px; " })
+            </div>
+        </div>
+         
+        <div class="row" style="margin-top:25px;">
+            <div class="col-sm-12" style="text-align:center">
+                <input type="submit" class="btn btn-primary" value="Add Title Due" name="btnAdd" id="btnAdd" />
+            </div>
+        </div>
+
+
+    }
+@section scripts
+{
+<script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+<script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+<script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+    <script type="text/javascript">
+
+        $('#ClearTitle').click(function () {
+            $('#TitleDueCustomer').removeAttr('checked');
+            $('#LienDueCustomer').removeAttr('checked');
+            $('#TitleDueBank').removeAttr('checked');
+            $('#LienDueBank').removeAttr('checked');
+            $('#DuplicateTitleAppliedFor').removeAttr('checked');
+            $('#WaitingOutSTTitle').removeAttr('checked');
+            $('#PayoffDueCust').removeAttr('checked');
+            $('#POADueCust').removeAttr('checked');
+            $('#OdomDueCustomer').removeAttr('checked');
+            $('#TitleDueInterco').removeAttr('checked');
+            $('#TitleDueAuction').removeAttr('checked');
+            $('#Other').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#NoTitleDispose').click(function () {
+            $('#TitleDueCustomer').removeAttr('checked');
+            $('#LienDueCustomer').removeAttr('checked');
+            $('#TitleDueBank').removeAttr('checked');
+            $('#LienDueBank').removeAttr('checked');
+            $('#DuplicateTitleAppliedFor').removeAttr('checked');
+            $('#WaitingOutSTTitle').removeAttr('checked');
+            $('#PayoffDueCust').removeAttr('checked');
+            $('#POADueCust').removeAttr('checked');
+            $('#OdomDueCustomer').removeAttr('checked');
+            $('#TitleDueInterco').removeAttr('checked');
+            $('#TitleDueAuction').removeAttr('checked');
+            $('#Other').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
+            $('#ClearTitle').removeAttr('checked');
+        });
+
+        $('#TitleDueCustomer').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#LienDueCustomer').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#TitleDueBank').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#LienDueBank').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#DuplicateTitleAppliedFor').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#WaitingOutSTTitle').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#PayoffDueCust').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#POADueCust').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#OdomDueCustomer').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#TitleDueInterco').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#TitleDueAuction').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#ElectronicTitle').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
+        $('#Other').click(function () {
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+    </script>
+}

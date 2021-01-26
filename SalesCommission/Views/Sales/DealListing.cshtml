@@ -248,8 +248,17 @@
         var AvgBankFee = (TotalBankFee / dealIndex);
         var AvgBack = (TotalBackGrossItemAmount / dealIndex);
 
-        var AvgSVDays = (TotalSVDays / TotalShowroomValidated);
-        var AvgOVDays = (TotalOVDays / TotalOfficeValidated);
+        var AvgSVDays = 0;
+        if (TotalShowroomValidated > 0)
+        {
+            AvgSVDays = (TotalSVDays / TotalShowroomValidated);
+        }
+
+        var AvgOVDays = 0;
+        if (TotalOfficeValidated > 0)
+        {
+            AvgOVDays = (TotalOVDays / TotalOfficeValidated);
+        }
 
     }
                 <tr style="background-color:#d9edf7">

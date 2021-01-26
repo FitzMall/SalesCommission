@@ -518,11 +518,11 @@ namespace SalesCommission.Business
                 Name = "Frederick Baughmans Lane"
             },
             new Store {
-                StoreId = "Hagerstown(CDJR)",
+                StoreId = "hagerstown(cdjr)",
                 Name = "Hagerstown Chrysler"
             },
             new Store {
-                StoreId = "Hagerstown(GM)",
+                StoreId = "hagerstown(gm)",
                 Name = "Hagerstown GM"
             },
             new Store {

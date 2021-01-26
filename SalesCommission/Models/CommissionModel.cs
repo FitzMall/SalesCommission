@@ -17,7 +17,7 @@ namespace SalesCommission.Models
         public List<DealApproval> DealApprovals { get; set; }
         public List<AssociateLead> AssociateLeads { get; set; }
         public List<MoneyDue> MoneyDue { get; set; }
-
+        public List<TitleDue> TitleDue { get; set; }
     }
 
     public class FICommissionModel
@@ -31,6 +31,7 @@ namespace SalesCommission.Models
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
         public List<FIManagerDealDetails> FIManagerDealDetails { get; set; }
         public List<MoneyDue> MoneyDue { get; set; }
+        public List<TitleDue> TitleDue { get; set; }
         public List<FIDealApproval> DealApprovals { get; set; }
 
     }
@@ -71,6 +72,7 @@ namespace SalesCommission.Models
         public List<ObjectivesAndStandards> StoreObjectivesStandards { get; set; }
         public List<Associate> AssociateList { get; set; }
         public List<MoneyDue> MoneyDue { get; set; }
+        public List<TitleDue> TitleDue { get; set; }
     }
 
     public class FIAssociateCommissionModel
@@ -83,6 +85,7 @@ namespace SalesCommission.Models
         public List<FIDealApproval> DealApprovals { get; set; }
         public List<FIPayscale> FIPayscales { get; set; }
         public List<MoneyDue> MoneyDue { get; set; }
+        public List<TitleDue> TitleDue { get; set; }
         public List<MoneyDue> MoneyDueHistory { get; set; }
         public List<FIPayscaleAftermarket> FIPayscaleAftermarket { get; set; }
         public List<FIAdjustment> FIAdjustments { get; set; }

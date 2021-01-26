@@ -41,6 +41,10 @@
 
     @using (Html.BeginForm("UpdateTitleStatus", "Reports", FormMethod.Post, new { id = "UpdateTitleStatus" }))
     {
+        @Html.HiddenFor(x => x.TitleDue[0].Id)
+
+        if (Model.TitleDue != null && Model.TitleDue.Count > 0)
+        {
         <div class="row">
             <div class="col-sm-12">
                 <table class="table table-bordered table-striped" style="font-size:12px">
@@ -48,28 +52,59 @@
                         <tr style="background-color:#d9edf7">
                             <th class="text-center">Loc</th>
                             <th class="text-center">VIN</th>
-                            <th class="text-center">Year</th>
-                            <th class="text-center">Make</th>
-                            <th class="text-center">Model</th>
+                            <th class="text-center">Customer</th>
+                            <th class="text-center">Sales Associate</th>
+                            <th class="text-center">Finance Manager</th>
+                            <th class="text-center">Sales Manager</th>
                             <th class="text-center">From</th>
-                            <th class="text-center">Stock #</th>
                             <th class="text-center">Days</th>
                             <th class="text-center">Received</th>
-                            <th class="text-center">Sold</th>
+                            <th class="text-center">Inv Status</th>
                         </tr>
                     </thead>
+                    @{ 
+                        TimeSpan span = DateTime.Now.Subtract(Model.TitleDue[0].DealDate);
+
+                        var daysDifference = (int)span.TotalDays;
+
+                        var inventoryStatusLabel = Model.TitleDue[0].InventoryStatus.ToString();
+                        switch (Model.TitleDue[0].InventoryStatus)
+                        {
+                            case 1:
+                                inventoryStatusLabel = "In Stock";
+                                break;
+                            case 2:
+                                inventoryStatusLabel = "Deal Pending";
+                                break;
+                            case 3:
+                                inventoryStatusLabel = "Demo";
+                                break;
+                            case 5:
+                                inventoryStatusLabel = "SOLD (Not Delivered)";
+                                break;
+                            case 8:
+                                inventoryStatusLabel = "Wholesale";
+                                break;
+                            case 9:
+                                inventoryStatusLabel = "Wholesale (At Auction)";
+                                break;
+                            case 99:
+                                inventoryStatusLabel = "SOLD";
+                                break;
+                        }
+                    }
                     <tbody>
                         <tr>
                             <td class="text-center">@Model.TitleDue[0].LocationName</td>
                             <td class="text-center">@Model.TitleDue[0].VIN</td>
-                            <td class="text-center">@Model.TitleDue[0].Year</td>
-                            <td class="text-center">@Model.TitleDue[0].Make</td>
-                            <td class="text-center">@Model.TitleDue[0].Model</td>
+                            <td class="text-center">@Model.TitleDue[0].BuyerName</td>
+                            <td class="text-center">@Model.TitleDue[0].SalesAssociate1Name</td>
+                            <td class="text-center">@Model.TitleDue[0].FinanceManager</td>
+                            <td class="text-center">@Model.TitleDue[0].SalesManager</td>
                             <td class="text-center">@Model.TitleDue[0].DealKey</td>
-                            <td class="text-center">@Model.TitleDue[0].StockNumber</td>
-                            <td class="text-center">-</td>
-                            <td class="text-center">-</td>
-                            <td class="text-center">-</td>
+                            <td class="text-center">@daysDifference</td>
+                            <td class="text-center">@Model.TitleDue[0].DealDate.ToShortDateString()</td>
+                            <td class="text-center">@inventoryStatusLabel</td>
                         </tr>
                     </tbody>
                 </table>
@@ -77,72 +112,492 @@
         </div>
         <div class="row">
             <div class="col-md-3">
-                <strong>Customer:</strong><br />@Model.TitleDue[0].BuyerName
+                <strong>Stock Number</strong><br />@Html.TextBoxFor(x => x.TitleDue[0].StockNumber, new {@class="form-control" })
             </div>
             <div class="col-md-3">
-                <strong>Sales Associate:</strong><br />@Model.TitleDue[0].SalesAssociate1Name
+                <strong>Year:</strong><br />@Html.TextBoxFor(x => x.TitleDue[0].Year, new { @class = "form-control" })
             </div>
             <div class="col-md-3">
-                <strong>F and I Manager:</strong><br />@Model.TitleDue[0].FinanceManager
+                <strong>Make:</strong><br />@Html.TextBoxFor(x => x.TitleDue[0].Make, new { @class = "form-control" })
             </div>
             <div class="col-md-3">
-                <strong>Sales Manager:</strong><br/>@Model.TitleDue[0].SalesManager
+                <strong>Model:</strong><br/>@Html.TextBoxFor(x => x.TitleDue[0].Model, new { @class = "form-control" })
             </div>
         </div>
         <hr/>
                 <div class="row">
                     <div class="col-md-6">
                         <h4>Title Status</h4>
-                        <div class="row">
-                            <div class="col-sm-6">
+                        <div class="row" style="margin-bottom:15px;">
+                            <div class="col-sm-12">
                                 @Html.CheckBoxFor(x => x.TitleDue[0].ClearTitle, new { @class = "" }) Clear Title<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueBank, new { @class = "" }) Title Due Bank<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueAuction, new { @class = "" }) Title Due Auction<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].DuplicateTitleAppliedFor, new { @class = "" }) Dup Title Applied For<br />
-                            </div>
-                            <div class="col-sm-6">
-                                @Html.CheckBoxFor(x => x.TitleDue[0].LienDueBank, new { @class = "" }) Lien Due Bank<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].POADueCust, new { @class = "" }) POA Due Customer<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].WaitingOutSTTitle, new { @class = "" }) Waiting Out/ST Title<br />
-                                @Html.CheckBoxFor(x => x.TitleDue[0].Other, new { @class = "" }) Other <br />
                             </div>
                         </div>
-                        @*<div class="row text-center" style="margin-top:15px;">
-                            <div class="col-sm-12">
-                                <input type="submit" value="Update" class="btn btn-primary" />
+                        <div class="row" style="margin-bottom:15px;">
+                            <div class="col-sm-6">
+                                @{ 
+                                    var TitleDueCustomer = false;
+
+                                    if (Model.TitleDue[0].TitleDueCustomer == null)
+                                    {
+                                        TitleDueCustomer = false;
+                                    }
+                                    else
+                                    {
+                                        TitleDueCustomer = (bool) Model.TitleDue[0].TitleDueCustomer;
+                                    }
+                                }
+                                @Html.CheckBoxFor(x => TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueBank, new { @class = "" }) Title Due Bank<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].LienDueBank, new { @class = "" }) Lien Due Bank<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+
+                                
                             </div>
-                        </div>*@
+                            <div class="col-sm-6">
+                                @Html.CheckBoxFor(x => x.TitleDue[0].WaitingOutSTTitle, new { @class = "" }) Waiting Out of State Title<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].POADueCust, new { @class = "" }) POA Due Customer<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                                @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueAuction, new { @class = "" }) Title Due Auction<br />
+                                
+                                @Html.CheckBoxFor(x => x.TitleDue[0].ElectronicTitle, new { @class = "" }) E-Title<br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                @Html.CheckBoxFor(x => x.TitleDue[0].Other, new { @class = "" }) Other<br />
+                            </div>
+                            <div class="col-sm-6">
+                                @Html.CheckBoxFor(x => x.TitleDue[0].NoTitleDispose, new { @class = "" }) No Title - Dispose of Vehicle<br />
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <h4>Comments</h4>
                         <div class="row">
                            <div class="col-sm-12">
-                                - OLD COMMENT 1<br />
-                                - OLD COMMENT 2<br />
+                               @if(Model.TitleDueHistory != null)
+                               {
+                                   foreach(var history in Model.TitleDueHistory)
+                                   {
+                                       var statusUpdates = "";
+                                       if(history.ClearTitle == true)
+                                       {
+                                           statusUpdates += "Clear Title Checked,";
+                                       }
+
+                                       var histTitleDueCustomer = false;
+
+                                       if (history.TitleDueCustomer == null)
+                                       {
+                                           histTitleDueCustomer = false;
+                                       }
+                                       else
+                                       {
+                                           histTitleDueCustomer = (bool)history.TitleDueCustomer;
+                                       }
+
+                                       if(histTitleDueCustomer == true)
+                                       {
+                                           statusUpdates += "Title Due Customer Checked,";
+                                       }
+
+                                       if (history.LienDueCustomer == true)
+                                       {
+                                           statusUpdates += "Lien Due Customer Checked,";
+                                       }
+                                       if (history.TitleDueBank == true)
+                                       {
+                                           statusUpdates += "Title Due Bank Checked,";
+                                       }
+                                       if (history.LienDueBank == true)
+                                       {
+                                           statusUpdates += "Lien Due Bank Checked,";
+                                       }
+                                       if (history.DuplicateTitleAppliedFor == true)
+                                       {
+                                           statusUpdates += "Duplicate Title Checked,";
+                                       }
+                                       if (history.WaitingOutSTTitle == true)
+                                       {
+                                           statusUpdates += "Out of State Title Checked,";
+                                       }
+                                       if (history.PayoffDueCust == true)
+                                       {
+                                           statusUpdates += "Payoff Due Checked,";
+                                       }
+                                       if (history.POADueCust == true)
+                                       {
+                                           statusUpdates += "POA Due Checked,";
+                                       }
+                                       if (history.OdomDueCustomer == true)
+                                       {
+                                           statusUpdates += "Odometer Due Checked,";
+                                       }
+
+                                       if (history.TitleDueInterco == true)
+                                       {
+                                           statusUpdates += "Title Due Interco Checked,";
+                                       }
+                                       if (history.TitleDueAuction == true)
+                                       {
+                                           statusUpdates += "Title Due Auction Checked,";
+                                       }
+                                       if (history.Other == true)
+                                       {
+                                           statusUpdates += "Other Checked,";
+                                       }
+                                       if (history.ElectronicTitle == true)
+                                       {
+                                           statusUpdates += "Electronic Title Checked,";
+                                       }
+                                       if (history.NoTitleDispose == true)
+                                       {
+                                           statusUpdates += "No Title Dispose Checked,";
+                                       }
+
+                                       statusUpdates = statusUpdates.TrimEnd(',');
+
+                                       @: @history.UpdateDate (@history.UpdateUser) - @history.Notes (@statusUpdates)<br/>
+                                   }
+                               }
+
+                               @{ 
+                                   var currentStatusUpdates = "";
+                                   if (Model.TitleDue[0].ClearTitle == true)
+                                   {
+                                       currentStatusUpdates += "Clear Title Checked,";
+                                   }
+
+                                   if (TitleDueCustomer == true)
+                                   {
+                                       currentStatusUpdates += "Title Due Customer Checked,";
+                                   }
+
+                                   if (Model.TitleDue[0].LienDueCustomer == true)
+                                   {
+                                       currentStatusUpdates += "Lien Due Customer Checked,";
+                                   }
+                                   if (Model.TitleDue[0].TitleDueBank == true)
+                                   {
+                                       currentStatusUpdates += "Title Due Bank Checked,";
+                                   }
+                                   if (Model.TitleDue[0].LienDueBank == true)
+                                   {
+                                       currentStatusUpdates += "Lien Due Bank Checked,";
+                                   }
+                                   if (Model.TitleDue[0].DuplicateTitleAppliedFor == true)
+                                   {
+                                       currentStatusUpdates += "Duplicate Title Checked,";
+                                   }
+                                   if (Model.TitleDue[0].WaitingOutSTTitle == true)
+                                   {
+                                       currentStatusUpdates += "Out of State Title Checked,";
+                                   }
+                                   if (Model.TitleDue[0].PayoffDueCust == true)
+                                   {
+                                       currentStatusUpdates += "Payoff Due Checked,";
+                                   }
+                                   if (Model.TitleDue[0].POADueCust == true)
+                                   {
+                                       currentStatusUpdates += "POA Due Checked,";
+                                   }
+                                   if (Model.TitleDue[0].OdomDueCustomer == true)
+                                   {
+                                       currentStatusUpdates += "Odometer Due Checked,";
+                                   }
+
+                                   if (Model.TitleDue[0].TitleDueInterco == true)
+                                   {
+                                       currentStatusUpdates += "Title Due Interco Checked,";
+                                   }
+                                   if (Model.TitleDue[0].TitleDueAuction == true)
+                                   {
+                                       currentStatusUpdates += "Title Due Auction Checked,";
+                                   }
+                                   if (Model.TitleDue[0].Other == true)
+                                   {
+                                       currentStatusUpdates += "Other Checked,";
+                                   }
+                                   if (Model.TitleDue[0].ElectronicTitle == true)
+                                   {
+                                       currentStatusUpdates += "Electronic Title Checked,";
+                                   }
+                                   if (Model.TitleDue[0].NoTitleDispose == true)
+                                   {
+                                       currentStatusUpdates += "No Title Dispose Checked,";
+                                   }
+
+                                   currentStatusUpdates = currentStatusUpdates.TrimEnd(',');
+                               }
+
+                               @Model.TitleDue[0].UpdateDate (@Model.TitleDue[0].UpdateUser) - @Model.TitleDue[0].Notes (@currentStatusUpdates)<br />
                            </div>
                         </div>
                         <div class="row">
                             <div class="col-sm-12">
-                                <textarea style="-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;max-width:none;width: 100%;height:100px; "></textarea>
+                                @Html.TextAreaFor(x => x.TitleDue[0].Comments, new { style = "-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;max-width:none;width: 100%;height:100px; " })
                             </div>
                         </div>
-                        @*<div class="row text-center" style="margin-top:15px;">
-                            <div class="col-sm-12">
-                                <input type="submit" value="Add Comment" class="btn btn-primary" />
-                            </div>
-                        </div>*@
                     </div>                    
                 </div>
+                <hr />
+                        <div class="row" style="margin-bottom:100px;">
+                    <div class="col-sm-12">
+                        <span style="font-size:24px;">
+                            <input type="checkbox" style="width: 24px; height:24px;" name="chkSendNotification" id="chkSendNotification" checked /> Send Notifications to users?
+                        </span>
+                        <div class="row notification-row">
+                            <div class="col-sm-6">
+                                <h4>Select Users:</h4>
+                                <select id="selectUsers" name="selectUsers" class="form-control chosen-select">
+                                    <option value=""></option>
+                                    @foreach(var user in Model.JJFUsers)
+                                    {
+                                        if (user.LastName != null || user.FirstName != null)
+                                        {
+                                            <option value="@user.Email">@user.LastName, @user.FirstName</option>
+                                        }
+                                    }
+                                </select>
+                                <input type="button" id="AddUser" name="AddUser" value="Add User" />
+                                
+                                <h4>Enter Email:</h4>
+                                <input type="text" class="form-control" id="enter-email" name="enter-email"/>
+                                <input type="button" id="AddEmail" name="AddEmail" value="Add Email" />
+                                
+                            </div>
+                            <div class="col-sm-6">
+                                <h4>Notify Users:</h4>
+                                <select id="notifyUsers" name="notifyUsers" class="form-control" multiple  style="display:inline-block">
+                                    @{
+                                        if (Model.TitleDue[0].SalesAssociate1 != null && Model.TitleDue[0].SalesAssociate1 != "")
+                                        {
+                                            var sales1 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate1);
+                                            if (sales1 != null)
+                                            {
+                                                @:<option selected value="@sales1.Email">@sales1.LastName, @sales1.FirstName</option>
+                                            }
+                                        }
+                                        if (Model.TitleDue[0].SalesAssociate2 != null && Model.TitleDue[0].SalesAssociate2 != "")
+                                        {
+                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate2);
+                                            if (sales2 != null)
+                                            {
+                                                @:<option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                            }
+                                        }
+                                        if (Model.TitleDue[0].FinanceManagerId != null && Model.TitleDue[0].FinanceManagerId != "")
+                                        {
+                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].FinanceManagerId);
+                                            if (sales2 != null)
+                                            {
+                                                @:
+                                                <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                            }
+                                        }
+                                        if (Model.TitleDue[0].SalesManagerId != null && Model.TitleDue[0].SalesManagerId != "")
+                                        {
+                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesManagerId);
+                                            if (sales2 != null)
+                                            {
+                                                @:
+                                                <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+        }
+    }
+                                        @*if (Model.TitleDue[0].FinanceManager != null && Model.TitleDue[0].FinanceManager != "")
+                                        {
+                                            var firstspace = Model.TitleDue[0].FinanceManager.IndexOf(" ");
+                                            var lastspace = Model.TitleDue[0].FinanceManager.LastIndexOf(" ");
+                                            var length = Model.TitleDue[0].FinanceManager.Length;
 
-                }
+                                            var firstName = Model.TitleDue[0].FinanceManager.Substring(0,firstspace).Trim();
+                                            var lastName = Model.TitleDue[0].FinanceManager.Substring(lastspace,length-lastspace).Trim();
+
+                                            var finance = Model.JJFUsers.Find(x => x.LastName == lastName && x.FirstName == firstName);
+                                            if (finance != null)
+                                            {
+                                                @:<option selected value="@finance.Email">@finance.LastName, @finance.FirstName</option>
+                                            }
+                                        }
+                                        if (Model.TitleDue[0].SalesManager != null && Model.TitleDue[0].SalesManager != "")
+                                        {
+                                            var space = Model.TitleDue[0].SalesManager.IndexOf(" ");
+                                            var lastspace = Model.TitleDue[0].SalesManager.LastIndexOf(" ");
+                                            var length = Model.TitleDue[0].SalesManager.Length;
+
+                                            var firstName = Model.TitleDue[0].SalesManager.Substring(0, space).Trim();
+                                            var lastName = Model.TitleDue[0].SalesManager.Substring(lastspace, length - lastspace).Trim();
+
+                                            var sales = Model.JJFUsers.Find(x => x.LastName == lastName && x.FirstName == firstName);
+                                            if (sales != null)
+                                            {
+                                                @:<option selected value="@sales.Email">@sales.LastName, @sales.FirstName</option>
+                                            }
+                                        }*@
+
+}
+                                </select>
+
+
+
+
+                                <input type="button" id="RemoveUser" name="RemoveUser" value="Remove User" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                                            }
+                                        }
             </div>
 
 
             <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
             <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
             <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+            $(document).ready(function() {
+                $('#chkSendNotification').click(function () {
+                    $(".notification-row").toggle();
+                });
+
+                $('#TitleDue_0__ClearTitle').click(function () {
+                    $('#TitleDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__LienDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueBank').removeAttr('checked');
+                    $('#TitleDue_0__LienDueBank').removeAttr('checked');
+                    $('#TitleDue_0__DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDue_0__WaitingOutSTTitle').removeAttr('checked');
+                    $('#TitleDue_0__PayoffDueCust').removeAttr('checked');
+                    $('#TitleDue_0__POADueCust').removeAttr('checked');
+                    $('#TitleDue_0__OdomDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueInterco').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueAuction').removeAttr('checked');
+                    $('#TitleDue_0__Other').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+
+                });
+
+                $('#TitleDue_0__NoTitleDispose').click(function () {
+                    $('#TitleDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__LienDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueBank').removeAttr('checked');
+                    $('#TitleDue_0__LienDueBank').removeAttr('checked');
+                    $('#TitleDue_0__DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDue_0__WaitingOutSTTitle').removeAttr('checked');
+                    $('#TitleDue_0__PayoffDueCust').removeAttr('checked');
+                    $('#TitleDue_0__POADueCust').removeAttr('checked');
+                    $('#TitleDue_0__OdomDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueInterco').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueAuction').removeAttr('checked');
+                    $('#TitleDue_0__Other').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+
+                });
+
+                $('#TitleDueCustomer').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__LienDueCustomer').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__TitleDueBank').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__LienDueBank').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__DuplicateTitleAppliedFor').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__WaitingOutSTTitle').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__PayoffDueCust').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__POADueCust').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__OdomDueCustomer').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__TitleDueInterco').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__TitleDueAuction').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__Other').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#TitleDue_0__ElectronicTitle').click(function () {
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
+                $('#AddUser').on('click', function () {
+
+                    optionText = $("#selectUsers option:selected").text();
+                    optionValue = $('#selectUsers').val();
+
+                    $('#notifyUsers').append(`<option value="${optionValue}">
+                                       ${optionText}
+                                  </option>`);
+
+                    $('#notifyUsers option').prop('selected', true);
+
+                });
+
+                $('#AddEmail').on('click', function () {
+
+                    optionText = $('#enter-email').val();
+                    optionValue = $('#enter-email').val();
+
+                    $('#notifyUsers').append(`<option value="${optionValue}">
+                                       ${optionText}
+                                  </option>`);
+
+                    $('#notifyUsers option').prop('selected', true);
+
+                });
+
+                $('#RemoveUser').on('click', function () {
+                    optionValue = $('#notifyUsers').val();
+                    $("#notifyUsers option[value='" + optionValue + "']").remove();
+                    $('#notifyUsers option').prop('selected', true);
+                });
+
+            });
+</script>

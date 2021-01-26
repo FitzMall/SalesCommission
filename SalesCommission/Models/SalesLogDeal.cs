@@ -172,13 +172,20 @@ namespace SalesCommission.Models
         public string sl_TradeVIN { get; set; }
         public string sl_TradeVIN2 { get; set; }
         public string sl_FinanceManagerNumber { get; set; }
+        public string sl_SalesManagerNumber { get; set; }
+        public string sl_TradeBankName { get; set; }
+        public string sl_Trade2BankName { get; set; }
+        public string sl_BuyerEmail { get; set; }
+        public string sl_BuyerPhone { get; set; }
         public List<IndividualDealDetails> DealHistory { get; set; }
         public IndividualDealDetails PreviousSavedValues { get; set; }
         public List<AftermarketItem> AftermarketItems { get; set; }
+        public TitleDue TitleDueTrade { get; set; }
+        public TitleDue TitleDueTrade2 { get; set; }
         public DealComments DealComments { get; set; }
         public bool DealFound { get; set; } = false;
-        public bool ClearTitle1 { get; set; }
-        public bool ClearTitle2 { get; set; }
+        //public bool ClearTitle1 { get; set; }
+        //public bool ClearTitle2 { get; set; }
     }
 
 
@@ -292,8 +299,15 @@ namespace SalesCommission.Models
         public string sl_TradeVIN { get; set; }
         public string sl_TradeVIN2 { get; set; }
         public string sl_FinanceManagerNumber { get; set; }
-        public bool ClearTitle1 { get; set; }
-        public bool ClearTitle2 { get; set; }
+
+        public string sl_SalesManagerNumber { get; set; }
+        public string sl_TradeBankName { get; set; }
+        public string sl_Trade2BankName { get; set; }
+        public string sl_BuyerEmail { get; set; }
+        public string sl_BuyerPhone { get; set; }
+
+        //public bool ClearTitle1 { get; set; }
+        //public bool ClearTitle2 { get; set; }
     }
     public class DealComments
     {

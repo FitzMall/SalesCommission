@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using SalesCommission.Models;
 using SalesCommission.Business;
+using System.Net.Mail;
 
 namespace SalesCommission.Controllers
 {
@@ -24,149 +25,516 @@ namespace SalesCommission.Controllers
 
             moneyDueModel.MoneyDue = SqlQueries.GetAllMoneyDue();
             moneyDueModel.MoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+            moneyDueModel.ReportFilter = "all";
+            return View(moneyDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult MoneyDue(string filter)
+        {
+            var moneyDueModel = new MoneyDueModel();
+
+            moneyDueModel.MoneyDue = SqlQueries.GetAllMoneyDue();
+
+            moneyDueModel.MoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+
+            if (filter != null)
+            {
+                if(filter == "funded")
+                {
+                    var filteredMoneyDue = new List<MoneyDue>();
+
+                    foreach (var moneyDue in moneyDueModel.MoneyDue)
+                    {
+                        var moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                        if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                        {
+                            currentHistory = moneyDueHistory[0];
+
+                            if (currentHistory.FundedStatus == "FUNDED")
+                            {
+                                filteredMoneyDue.Add(moneyDue);
+                            }
+                        }
+
+                    }
+                    moneyDueModel.MoneyDue = filteredMoneyDue;
+
+
+                }
+                else if (filter == "notfunded")
+                {
+                    var filteredMoneyDue = new List<MoneyDue>();
+
+                    foreach (var moneyDue in moneyDueModel.MoneyDue)
+                    {
+                        var moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                        if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                        {
+                            currentHistory = moneyDueHistory[0];
+
+                            if (currentHistory.FundedStatus != "FUNDED")
+                            {
+                                filteredMoneyDue.Add(moneyDue);
+                            }
+                        }
+                        else
+                        {
+                            filteredMoneyDue.Add(moneyDue);
+
+                        }
+
+                    }
+                    moneyDueModel.MoneyDue = filteredMoneyDue;
+                }
+
+
+                moneyDueModel.ReportFilter = filter;
+            }
 
             return View(moneyDueModel);
+        }
+        
+        public ActionResult AddTitleDue(string vin = "")
+        {
+            var titleDue = new TitleDue();
+            
+            if(vin != null && vin != "")
+            {
+                var oldtitleStatus = SqlQueries.GetTitleStatus(vin, null, null);
+
+                if (oldtitleStatus != null && oldtitleStatus.Count > 0)
+                {
+                    titleDue = oldtitleStatus[0];
+                }
+                else
+                {
+                    var VehicleData = SqlQueries.GetVehicleDataByVIN(vin);
+                    var TradeInfo = SqlQueries.GetTradeInfoByVIN(vin);
+
+                    if (TradeInfo != null)
+                    {
+                        titleDue.DealDate = TradeInfo.DealDate;
+                        titleDue.DealKey = TradeInfo.Dealkey;
+                        titleDue.BuyerName = TradeInfo.BuyerName;
+                        titleDue.FinanceManager = TradeInfo.FinanceManager;
+                        titleDue.SalesAssociate1 = TradeInfo.SalesAssociate1;
+                        titleDue.SalesAssociate2 = TradeInfo.SalesAssociate2;
+                        titleDue.SalesManager = TradeInfo.SalesManager;
+
+                    }
+
+                    if (VehicleData != null)
+                    {
+                        titleDue.Make = VehicleData.Make;
+                        titleDue.Model = VehicleData.Model;
+                        if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                        {
+                            titleDue.Year = Int32.Parse(VehicleData.ModelYear);
+                        }
+
+                        titleDue.Location = VehicleData.Location;
+                        titleDue.StockNumber = VehicleData.StockNumber;
+                        titleDue.VIN = VehicleData.VIN;
+                        titleDue.InventoryStatus = VehicleData.InventoryStatus;
+
+                        if (titleDue.DealDate < new DateTime(2000, 1, 1))
+                        {
+                            titleDue.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                        }
+                    }
+
+                }
+            }
+
+            return View(titleDue);
+        }
+
+        [HttpPost]
+        public ActionResult AddTitleDue(TitleDue titleDue)
+        {
+            if(Request.Form != null && Request.Form["btnLookup"] != null)
+            {
+                if (Request.Form["vinlookup"] != null && Request.Form["vinlookup"] != "")
+                {
+                    var vinLookup = Request.Form["vinlookup"];
+
+                    // Lookup the VIN in AllInventory and the Sales Log to determine information...
+
+                    //First check to see if the VIN is in TitleDue
+
+                    var oldtitleStatus = SqlQueries.GetTitleStatus(vinLookup,null,null);
+
+                    if (oldtitleStatus != null && oldtitleStatus.Count > 0)
+                    {
+                        titleDue = oldtitleStatus[0];
+                    }
+                    else
+                    {
+                        var VehicleData = SqlQueries.GetVehicleDataByVIN(vinLookup);
+                        var TradeInfo = SqlQueries.GetTradeInfoByVIN(vinLookup);
+
+                        if (TradeInfo != null)
+                        {
+                            titleDue.DealDate = TradeInfo.DealDate;
+                            titleDue.DealKey = TradeInfo.Dealkey;
+                            titleDue.BuyerName = TradeInfo.BuyerName;
+                            titleDue.FinanceManager = TradeInfo.FinanceManager;
+                            titleDue.SalesAssociate1 = TradeInfo.SalesAssociate1;
+                            titleDue.SalesAssociate2 = TradeInfo.SalesAssociate2;
+                            titleDue.SalesManager = TradeInfo.SalesManager;
+
+                        }
+
+                        if (VehicleData != null)
+                        {
+                            titleDue.Make = VehicleData.Make;
+                            titleDue.Model = VehicleData.Model;
+                            if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                            {
+                                titleDue.Year = Int32.Parse(VehicleData.ModelYear);
+                            }
+
+                            titleDue.Location = VehicleData.Location;
+                            titleDue.StockNumber = VehicleData.StockNumber;
+                            titleDue.VIN = VehicleData.VIN;
+                            titleDue.InventoryStatus = VehicleData.InventoryStatus;
+
+                            if (titleDue.DealDate < new DateTime(2000,1,1))
+                            {
+                                titleDue.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                            }
+                        }
+
+                    }
+                    
+                }
+            }
+
+            if (Request.Form != null && Request.Form["btnAdd"] != null)
+            {
+                //Add the new titleDue
+                titleDue.UpdateDate = DateTime.Now;
+                titleDue.UpdateUser = Session["UserName"].ToString();
+
+                if(titleDue.FinanceManager == null)
+                {
+                    titleDue.FinanceManager = "Not Set";
+                }
+                var saved = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue);
+                
+                ViewBag.Status = "New Title Status Added for " + titleDue.VIN;
+
+                titleDue = new TitleDue();
+
+            }
+
+            ModelState.Clear();
+            return View(titleDue);
         }
 
         public ActionResult TitleDue()
         {
             var titleDueModel = new TitleDueModel();
 
+            string[] status = new string[1];
+            string[] invstatus = new string[1];
+
+            titleDueModel.status = status;
+            titleDueModel.loc = "";
+            titleDueModel.invstatus = invstatus;
+
             titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
-            //titleDueModel.TitleDueHistory = SqlQueries.GetAllTitlesDueHistory();
+           // titleDueModel.TitleDueHistory = SqlQueries.GetAllTitlesDueHistory();
 
             return View(titleDueModel);
         }
 
         [HttpPost]
-        public ActionResult TitleDue(string loc, string status)
+        public ActionResult TitleDue(string loc, string[] status, string[] invstatus)
         {
             var titleDueModel = new TitleDueModel();
-            titleDueModel.status = status;
+
+            if (status == null)
+            {
+                titleDueModel.status = new string[1];
+            }
+            else
+            {
+                titleDueModel.status = status;
+            }
+
             titleDueModel.loc = loc;
+
+            if (invstatus == null)
+            {
+                titleDueModel.invstatus = new string[1];
+            }
+            else
+            {
+                titleDueModel.invstatus = invstatus;
+            }
+            
 
             titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
 
             var filteredTitleDue = new List<TitleDue>();
+            var finalTitleDue = new List<TitleDue>();
 
-            if(loc != null && loc != "" && loc != "ALL")
+            if (loc != null && loc != "" && loc != "ALL")
             {
                 var locTitleDue = titleDueModel.TitleDue.FindAll(x => x.Location == loc);
 
-                if(status != null && status != "" && status != "ALL")
+                if (status != null && status.Length > 0)
                 {
 
-                    switch(status)
+                    foreach (var stat in status)
                     {
-                        case "0":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.ClearTitle == true);
+                        if (stat != "" && stat != "ALL")
+                        {
+                            var statTitleDue = new List<TitleDue>();
+                            switch (stat)
+                            {
+                                case "0":
+                                    //no status
+                                    statTitleDue = locTitleDue.FindAll(x => x.ClearTitle == false && x.TitleDueBank == false && (x.TitleDueCustomer == false || x.TitleDueCustomer == null) && x.LienDueCustomer == false && x.TitleDueInterco == false && x.TitleDueAuction == false && x.LienDueBank == false && x.OdomDueCustomer == false && x.POADueCust == false && x.PayoffDueCust == false && x.WaitingOutSTTitle == false && x.Other == false && x.DuplicateTitleAppliedFor == false);
+                                    break;
+                                case "2":
+                                    statTitleDue = locTitleDue.FindAll(x => x.TitleDueBank == true);
+                                    break;
+                                case "3":
+                                    statTitleDue = locTitleDue.FindAll(x => x.TitleDueCustomer == true);
+                                    break;
+                                case "4":
+                                    statTitleDue = locTitleDue.FindAll(x => x.LienDueCustomer == true);
+                                    break;
+                                case "5":
+                                    statTitleDue = locTitleDue.FindAll(x => x.TitleDueInterco == true);
+                                    break;
+                                case "6":
+                                    statTitleDue = locTitleDue.FindAll(x => x.TitleDueAuction == true);
+                                    break;
+                                case "7":
+                                    statTitleDue = locTitleDue.FindAll(x => x.LienDueBank == true);
+                                    break;
+                                case "8":
+                                    statTitleDue = locTitleDue.FindAll(x => x.OdomDueCustomer == true);
+                                    break;
+                                case "9":
+                                    statTitleDue = locTitleDue.FindAll(x => x.POADueCust == true);
+                                    break;
+                                case "10":
+                                    statTitleDue = locTitleDue.FindAll(x => x.PayoffDueCust == true);
+                                    break;
+                                case "11":
+                                    statTitleDue = locTitleDue.FindAll(x => x.WaitingOutSTTitle == true);
+                                    break;
+                                case "12":
+                                    statTitleDue = locTitleDue.FindAll(x => x.Other == true);
+                                    break;
+                                case "13":
+                                    statTitleDue = locTitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
+                                    break;
+                                case "14":
+                                    statTitleDue = locTitleDue.FindAll(x => x.NoTitleDispose == true);
+                                    break;
+
+                                case "15":
+                                    statTitleDue = locTitleDue.FindAll(x => x.ElectronicTitle == true);
+                                    break;
+
+
+                            }
+                            filteredTitleDue.AddRange(statTitleDue);
+                        }
+                        else
+                        {
+                            filteredTitleDue = locTitleDue;
                             break;
-                        case "2":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueBank == true);
+                        }
+                        
+
+                    }
+
+                    if (invstatus != null && invstatus.Length > 0)
+                    {
+                        foreach (var stat in invstatus)
+                        {
+                            if (stat != "" && stat != "ALL")
+                            {
+                                var statTitleDue = new List<TitleDue>();
+
+                                statTitleDue = filteredTitleDue.FindAll(x => x.InventoryStatus == Int32.Parse(stat));
+                                finalTitleDue.AddRange(statTitleDue);
+                            }
+                            else
+                            {
+                                finalTitleDue = filteredTitleDue;
+                                break;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        finalTitleDue = filteredTitleDue;
+                    }
+
+                }
+                else if (invstatus != null && invstatus.Length > 0)
+                {
+                    foreach (var stat in invstatus)
+                    {
+                        if (stat != "" && stat != "ALL")
+                        {
+                            var statTitleDue = new List<TitleDue>();
+
+                            statTitleDue = locTitleDue.FindAll(x => x.InventoryStatus == Int32.Parse(stat));
+                            finalTitleDue.AddRange(statTitleDue);
+                        }
+                        else
+                        {
+                            finalTitleDue = filteredTitleDue;
                             break;
-                        case "3":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueCustomer == true);
-                            break;
-                        case "4":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.LienDueCustomer == true);
-                            break;
-                        case "5":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueInterco == true);
-                            break;
-                        case "6":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.TitleDueAuction == true);
-                            break;
-                        case "7":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.LienDueBank == true);
-                            break;
-                        case "8":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.OdomDueCustomer == true);
-                            break;
-                        case "9":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.POADueCust == true);
-                            break;
-                        case "10":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.PayoffDueCust == true);
-                            break;
-                        case "11":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.WaitingOutSTTitle == true);
-                            break;
-                        case "12":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.Other == true);
-                            break;
-                        case "13":
-                            filteredTitleDue = locTitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
-                            break;
-                            
+                        }
                     }
 
 
-                    
                 }
                 else
                 {
-                    filteredTitleDue = locTitleDue;
+                    finalTitleDue = locTitleDue;
                 }
 
-
-                titleDueModel.TitleDue = filteredTitleDue;
+                titleDueModel.TitleDue = finalTitleDue;
 
             }
-            else if (status != null && status != "" && status != "ALL")
+            else if (status != null && status.Length > 0)
             {
 
-                switch (status)
+                foreach (var stat in status)
                 {
-                    case "0":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.ClearTitle == true);
-                        break;
-                    case "2":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueBank == true);
-                        break;
-                    case "3":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueCustomer == true);
-                        break;
-                    case "4":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueCustomer == true);
-                        break;
-                    case "5":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueInterco == true);
-                        break;
-                    case "6":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueAuction == true);
-                        break;
-                    case "7":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueBank == true);
-                        break;
-                    case "8":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.OdomDueCustomer == true);
-                        break;
-                    case "9":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.POADueCust == true);
-                        break;
-                    case "10":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.PayoffDueCust == true);
-                        break;
-                    case "11":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.WaitingOutSTTitle == true);
-                        break;
-                    case "12":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.Other == true);
-                        break;
-                    case "13":
-                        filteredTitleDue = titleDueModel.TitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
-                        break;
+                    if (stat != "" && stat != "ALL")
+                    {
+                        var statTitleDue = new List<TitleDue>();
+                        switch (stat)
+                        {
+                            case "0":
+                                //no status
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.ClearTitle == false && x.TitleDueBank == false && (x.TitleDueCustomer == false || x.TitleDueCustomer == null) && x.LienDueCustomer == false && x.TitleDueInterco == false && x.TitleDueAuction == false && x.LienDueBank == false && x.OdomDueCustomer == false && x.POADueCust == false && x.PayoffDueCust == false && x.WaitingOutSTTitle == false && x.Other == false && x.DuplicateTitleAppliedFor == false);
+                                break;
+                            case "2":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueBank == true);
+                                break;
+                            case "3":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueCustomer == true);
+                                break;
+                            case "4":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueCustomer == true);
+                                break;
+                            case "5":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueInterco == true);
+                                break;
+                            case "6":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.TitleDueAuction == true);
+                                break;
+                            case "7":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.LienDueBank == true);
+                                break;
+                            case "8":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.OdomDueCustomer == true);
+                                break;
+                            case "9":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.POADueCust == true);
+                                break;
+                            case "10":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.PayoffDueCust == true);
+                                break;
+                            case "11":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.WaitingOutSTTitle == true);
+                                break;
+                            case "12":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.Other == true);
+                                break;
+                            case "13":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.DuplicateTitleAppliedFor == true);
+                                break;
+                            case "14":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.NoTitleDispose == true);
+                                break;
 
+                            case "15":
+                                statTitleDue = titleDueModel.TitleDue.FindAll(x => x.ElectronicTitle == true);
+                                break;
+
+                        }
+
+                        filteredTitleDue.AddRange(statTitleDue);
+                    }
+                    else
+                    {
+                        filteredTitleDue = titleDueModel.TitleDue;
+                        break;
+                    }
                 }
 
 
 
-                titleDueModel.TitleDue = filteredTitleDue;
+                if (invstatus != null && invstatus.Length > 0)
+                {
+                    foreach (var stat in invstatus)
+                    {
+                        if (stat != "" && stat != "ALL")
+                        {
+                            var statTitleDue = new List<TitleDue>();
+
+                            statTitleDue = filteredTitleDue.FindAll(x => x.InventoryStatus == Int32.Parse(stat));
+                            finalTitleDue.AddRange(statTitleDue);
+                        }
+                        else
+                        {
+                            finalTitleDue = filteredTitleDue;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    finalTitleDue = filteredTitleDue;
+                }
+
+
+                titleDueModel.TitleDue = finalTitleDue;
 
             }
+            else if (invstatus != null && invstatus.Length > 0)
+            {
+                foreach (var stat in invstatus)
+                {
+                    if (stat != "" && stat != "ALL")
+                    {
+                        var statTitleDue = new List<TitleDue>();
 
+                        statTitleDue = titleDueModel.TitleDue.FindAll(x => x.InventoryStatus == Int32.Parse(stat));
+                        finalTitleDue.AddRange(statTitleDue);
+                    }
+                    else
+                    {
+                        finalTitleDue = titleDueModel.TitleDue;
+                        break;
+                    }
+                }
 
-
+                titleDueModel.TitleDue = finalTitleDue;
+            }
+            
+            
+            var removeDups   = titleDueModel.TitleDue.Distinct().ToList();
+            titleDueModel.TitleDue = removeDups;
 
             return View(titleDueModel);
         }
@@ -2108,7 +2476,13 @@ namespace SalesCommission.Controllers
             var titleDueModel = new TitleDueModel();
 
             titleDueModel.TitleDue = SqlQueries.GetTitleStatus(vin, stock,deal);
-            //titleDueModel.TitleDueHistory = SqlQueries.GetTitleStatusHistory(vin, stock, deal);
+
+            if (titleDueModel.TitleDue != null && titleDueModel.TitleDue.Count > 0)
+            {
+                titleDueModel.TitleDueHistory = SqlQueries.GetTitleStatusHistory(titleDueModel.TitleDue[0].Id);
+            }
+
+            titleDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
 
             return View(titleDueModel);
         }
@@ -2117,18 +2491,881 @@ namespace SalesCommission.Controllers
         public ActionResult UpdateTitleStatus()
         {
             var titleDueModel = new TitleDueModel();
+            titleDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
 
-            //titleDueModel.TitleDue = SqlQueries.GetAllTitlesDue();
-            //titleDueModel.TitleDueHistory = SqlQueries.GetAllTitlesDueHistory();
+            if (Request.Form != null)
+            {
+                var updateTitleDue = new TitleDue();
+
+                var id = Request.Form["TitleDue[0].Id"];
+                var stockNumber = Request.Form["TitleDue[0].StockNumber"];
+                var year = Request.Form["TitleDue[0].Year"];
+                var make = Request.Form["TitleDue[0].Make"];
+                var model = Request.Form["TitleDue[0].Model"];
+
+                var clearTitle = Request.Form["TitleDue[0].ClearTitle"];
+                var titleDueBank = Request.Form["TitleDue[0].TitleDueBank"];
+                var titleDueCustomer = Request.Form["TitleDueCustomer"];
+                var titleDueInterco = Request.Form["TitleDue[0].TitleDueInterco"];
+                var titleDueAuction = Request.Form["TitleDue[0].TitleDueAuction"];
+                var odomDueCustomer = Request.Form["TitleDue[0].OdomDueCustomer"];
+                var duplicateTitle = Request.Form["TitleDue[0].DuplicateTitleAppliedFor"];
+                var LienDueBank = Request.Form["TitleDue[0].LienDueBank"];
+                var lienDueCustomer = Request.Form["TitleDue[0].LienDueCustomer"];
+                var POADue = Request.Form["TitleDue[0].POADueCust"];
+                var payoffDue = Request.Form["TitleDue[0].PayoffDueCust"];
+                var waitingOUT = Request.Form["TitleDue[0].WaitingOutSTTitle"];
+                var other = Request.Form["TitleDue[0].Other"];
+
+                var noTitleDispose = Request.Form["TitleDue[0].NoTitleDispose"];
+                var eTitle = Request.Form["TitleDue[0].ElectronicTitle"];
+
+                var comments = Request.Form["TitleDue[0].Comments"];
+
+                updateTitleDue.Id = Int32.Parse(id);
+                updateTitleDue.StockNumber = stockNumber;
+                updateTitleDue.Year = Int32.Parse(year);
+                updateTitleDue.Make = make;
+                updateTitleDue.Model = model;
+
+                updateTitleDue.UpdateDate = DateTime.Now;
+                updateTitleDue.DealDate = DateTime.Now;
+
+                if (clearTitle.Contains(","))
+                {
+                    clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                }
+
+                if (titleDueBank.Contains(","))
+                {
+                    titleDueBank = titleDueBank.Substring(0, titleDueBank.IndexOf(","));
+                }
+
+                if (titleDueCustomer.Contains(","))
+                {
+                    titleDueCustomer = titleDueCustomer.Substring(0, titleDueCustomer.IndexOf(","));
+                }
+
+                if (titleDueInterco.Contains(","))
+                {
+                    titleDueInterco = titleDueInterco.Substring(0, titleDueInterco.IndexOf(","));
+                }
+
+                if (titleDueAuction.Contains(","))
+                {
+                    titleDueAuction = titleDueAuction.Substring(0, titleDueAuction.IndexOf(","));
+                }
+
+                if (odomDueCustomer.Contains(","))
+                {
+                    odomDueCustomer = odomDueCustomer.Substring(0, odomDueCustomer.IndexOf(","));
+                }
+
+                if (duplicateTitle.Contains(","))
+                {
+                    duplicateTitle = duplicateTitle.Substring(0, duplicateTitle.IndexOf(","));
+                }
+
+                if (LienDueBank.Contains(","))
+                {
+                    LienDueBank = LienDueBank.Substring(0, LienDueBank.IndexOf(","));
+                }
+
+                if (lienDueCustomer.Contains(","))
+                {
+                    lienDueCustomer = lienDueCustomer.Substring(0, lienDueCustomer.IndexOf(","));
+                }
+                if (POADue.Contains(","))
+                {
+                    POADue = POADue.Substring(0, POADue.IndexOf(","));
+                }
+                if (payoffDue.Contains(","))
+                {
+                    payoffDue = payoffDue.Substring(0, payoffDue.IndexOf(","));
+                }
+                if (waitingOUT.Contains(","))
+                {
+                    waitingOUT = waitingOUT.Substring(0, waitingOUT.IndexOf(","));
+                }
+                if (other.Contains(","))
+                {
+                    other = other.Substring(0, other.IndexOf(","));
+                }
+
+
+                if (noTitleDispose.Contains(","))
+                {
+                    noTitleDispose = noTitleDispose.Substring(0, noTitleDispose.IndexOf(","));
+                }
+
+                if (eTitle.Contains(","))
+                {
+                    eTitle = eTitle.Substring(0, eTitle.IndexOf(","));
+                }
+
+
+                updateTitleDue.ClearTitle = bool.Parse(clearTitle);
+                updateTitleDue.TitleDueBank= bool.Parse(titleDueBank);
+                updateTitleDue.TitleDueCustomer= bool.Parse(titleDueCustomer);
+                updateTitleDue.TitleDueInterco= bool.Parse(titleDueInterco);
+                updateTitleDue.TitleDueAuction= bool.Parse(titleDueAuction);
+                updateTitleDue.OdomDueCustomer = bool.Parse(odomDueCustomer);
+                updateTitleDue.DuplicateTitleAppliedFor= bool.Parse(duplicateTitle);
+                updateTitleDue.LienDueBank= bool.Parse(LienDueBank);
+                updateTitleDue.LienDueCustomer= bool.Parse(lienDueCustomer);
+                updateTitleDue.POADueCust= bool.Parse(POADue);
+                updateTitleDue.PayoffDueCust= bool.Parse(payoffDue);
+                updateTitleDue.WaitingOutSTTitle= bool.Parse(waitingOUT);
+                updateTitleDue.Other= bool.Parse(other);
+
+                updateTitleDue.NoTitleDispose = bool.Parse(noTitleDispose);
+                updateTitleDue.ElectronicTitle = bool.Parse(eTitle);
+
+
+                updateTitleDue.Notes = comments;
+                updateTitleDue.UpdateUser = Session["UserName"].ToString();
+
+                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+
+                if(Request.Form["chkSendNotification"] != null)
+                {
+                    var bNotify = false;
+
+                    var isChecked = Request.Form["chkSendNotification"];
+
+                    if(isChecked.ToUpper() == "ON")
+                    {
+                        bNotify = true;
+                    }
+                    
+                    if(bNotify)
+                    {
+                        var notifyIds = Request.Form["notifyUsers"];
+                        var emails = "";
+                        var emailList = new List<MailAddress>();
+
+                        if (notifyIds != null)
+                        {
+                            foreach (var email in notifyIds.Split(','))
+                            {
+                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
+
+                                //if (user != null)
+                                //{
+                                    //emails += email + ",";
+
+                                    var emailItem = new MailAddress(email);
+                                    emailList.Add(emailItem);
+                               // }
+                            }
+
+                            //Now send the email to everyone in the list
+
+                            var updatedTitleStatus = SqlMapperUtil.SqlWithParams<TitleDue>("Select * from TitleDue where Id = @id", new { id = updateTitleDue.Id },"SalesCommission");
+                            foreach(var titleDue in updatedTitleStatus)
+                            {
+                                var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == titleDue.SalesAssociate1);
+                                titleDue.SalesAssociate1Name = user.FirstName + " " + user.LastName;
+
+                                var locationName = titleDue.Location;
+
+                                switch (titleDue.Location)
+                                {
+                                    case "FLP":
+                                        locationName = "Lexington Park";
+                                        break;
+                                    case "LFO":
+                                        locationName = "Gaithersburg Hyundai/Subaru";
+                                        break;
+                                    case "LFT":
+                                        locationName = "Gaithersburg Toyota/Middlebrook";
+                                        break;
+                                    case "FOC":
+                                        locationName = "Annapolis";
+                                        break;
+                                    case "FAM":
+                                        locationName = "Frederick";
+                                        break;
+                                    case "WDC":
+                                        locationName = "Wheaton";
+                                        break;
+                                    case "CDO":
+                                        locationName = "Rockville Hyundai";
+                                        break;
+                                    case "FBS":
+                                        locationName = "Rockville Buick Subaru";
+                                        break;
+                                    case "FTN":
+                                        locationName = "Chambersburg";
+                                        break;
+                                    case "CJE":
+                                        locationName = "Clearwater";
+                                        break;
+                                    case "FHG":
+                                        locationName = "Hagerstown GM";
+                                        break;
+                                    case "FHT":
+                                        locationName = "Hagerstown Chrysler";
+                                        break;
+
+                                }
+
+                                titleDue.LocationName = locationName;
+                            }
+                            using (var client = new SmtpClient())
+                            {
+                                var forward = new MailMessage();
+                                try
+                                {
+
+                                    var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Title Update");
+                                    MailMessage mail = new MailMessage();
+
+                                    mail.Subject = "Title Due Update";
+                                    mail.Body = "The following Vehicle was updated...";
+
+                                    forward.From = fromAddress;
+                                    mail.To.Clear();
+                                    foreach(var email in emailList)
+                                    {
+                                        forward.To.Add(email);
+                                    }
+
+                                    mail.CC.Clear();
+                                    forward.Subject = mail.Subject;
+                                    forward.Body = PopulateNotificationEmail(updatedTitleStatus[0]);
+                                    forward.IsBodyHtml = true;
+                                    client.Send(forward);
+                                    Console.WriteLine("Email was sent...");
+                                }
+                                catch (Exception ex)
+                                {
+                                    
+                                    throw ex;
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+
+            }
+
+
+            return View(titleDueModel);
+        }
+
+        public ActionResult UpdateTitleDue(string vin = "", string stock = "", string deal = "")
+        {
+            var titleDueModel = new TitleDueModel();
+
+            titleDueModel.TitleDue = SqlQueries.GetTitleStatus(vin, stock, deal);
+
+            if (titleDueModel.TitleDue != null && titleDueModel.TitleDue.Count > 0)
+            {
+                titleDueModel.TitleDueHistory = SqlQueries.GetTitleStatusHistory(titleDueModel.TitleDue[0].Id);
+            }
+
+            titleDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
+
+            return View(titleDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult UpdateTitleDue()
+        {
+            var titleDueModel = new TitleDueModel();
+            titleDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
+
+            if (Request.Form != null)
+            {
+                var updateTitleDue = new TitleDue();
+
+                var id = Request.Form["TitleDue[0].Id"];
+                var stockNumber = Request.Form["TitleDue[0].StockNumber"];
+                var year = Request.Form["TitleDue[0].Year"];
+                var make = Request.Form["TitleDue[0].Make"];
+                var model = Request.Form["TitleDue[0].Model"];
+
+                var clearTitle = Request.Form["TitleDue[0].ClearTitle"];
+                var titleDueBank = Request.Form["TitleDue[0].TitleDueBank"];
+                var titleDueCustomer = Request.Form["TitleDueCustomer"];
+                var titleDueInterco = Request.Form["TitleDue[0].TitleDueInterco"];
+                var titleDueAuction = Request.Form["TitleDue[0].TitleDueAuction"];
+                var odomDueCustomer = Request.Form["TitleDue[0].OdomDueCustomer"];
+                var duplicateTitle = Request.Form["TitleDue[0].DuplicateTitleAppliedFor"];
+                var LienDueBank = Request.Form["TitleDue[0].LienDueBank"];
+                var lienDueCustomer = Request.Form["TitleDue[0].LienDueCustomer"];
+                var POADue = Request.Form["TitleDue[0].POADueCust"];
+                var payoffDue = Request.Form["TitleDue[0].PayoffDueCust"];
+                var waitingOUT = Request.Form["TitleDue[0].WaitingOutSTTitle"];
+                var other = Request.Form["TitleDue[0].Other"];
+
+                var noTitleDispose = Request.Form["TitleDue[0].NoTitleDispose"];
+                var eTitle = Request.Form["TitleDue[0].ElectronicTitle"];
+
+
+                var comments = Request.Form["TitleDue[0].Comments"];
+
+                updateTitleDue.Id = Int32.Parse(id);
+                updateTitleDue.StockNumber = stockNumber;
+                updateTitleDue.Year = Int32.Parse(year);
+                updateTitleDue.Make = make;
+                updateTitleDue.Model = model;
+
+                updateTitleDue.UpdateDate = DateTime.Now;
+                updateTitleDue.DealDate = DateTime.Now;
+
+                if (clearTitle.Contains(","))
+                {
+                    clearTitle = clearTitle.Substring(0, clearTitle.IndexOf(","));
+                }
+
+                if (titleDueBank.Contains(","))
+                {
+                    titleDueBank = titleDueBank.Substring(0, titleDueBank.IndexOf(","));
+                }
+
+                if (titleDueCustomer.Contains(","))
+                {
+                    titleDueCustomer = titleDueCustomer.Substring(0, titleDueCustomer.IndexOf(","));
+                }
+
+                if (titleDueInterco.Contains(","))
+                {
+                    titleDueInterco = titleDueInterco.Substring(0, titleDueInterco.IndexOf(","));
+                }
+
+                if (titleDueAuction.Contains(","))
+                {
+                    titleDueAuction = titleDueAuction.Substring(0, titleDueAuction.IndexOf(","));
+                }
+
+                if (odomDueCustomer.Contains(","))
+                {
+                    odomDueCustomer = odomDueCustomer.Substring(0, odomDueCustomer.IndexOf(","));
+                }
+
+                if (duplicateTitle.Contains(","))
+                {
+                    duplicateTitle = duplicateTitle.Substring(0, duplicateTitle.IndexOf(","));
+                }
+
+                if (LienDueBank.Contains(","))
+                {
+                    LienDueBank = LienDueBank.Substring(0, LienDueBank.IndexOf(","));
+                }
+
+                if (lienDueCustomer.Contains(","))
+                {
+                    lienDueCustomer = lienDueCustomer.Substring(0, lienDueCustomer.IndexOf(","));
+                }
+                if (POADue.Contains(","))
+                {
+                    POADue = POADue.Substring(0, POADue.IndexOf(","));
+                }
+                if (payoffDue.Contains(","))
+                {
+                    payoffDue = payoffDue.Substring(0, payoffDue.IndexOf(","));
+                }
+                if (waitingOUT.Contains(","))
+                {
+                    waitingOUT = waitingOUT.Substring(0, waitingOUT.IndexOf(","));
+                }
+                if (other.Contains(","))
+                {
+                    other = other.Substring(0, other.IndexOf(","));
+                }
+
+                if (noTitleDispose.Contains(","))
+                {
+                    noTitleDispose = noTitleDispose.Substring(0, noTitleDispose.IndexOf(","));
+                }
+
+                if (eTitle.Contains(","))
+                {
+                    eTitle = eTitle.Substring(0, eTitle.IndexOf(","));
+                }
+
+
+                updateTitleDue.ClearTitle = bool.Parse(clearTitle);
+                updateTitleDue.TitleDueBank = bool.Parse(titleDueBank);
+                updateTitleDue.TitleDueCustomer = bool.Parse(titleDueCustomer);
+                updateTitleDue.TitleDueInterco = bool.Parse(titleDueInterco);
+                updateTitleDue.TitleDueAuction = bool.Parse(titleDueAuction);
+                updateTitleDue.OdomDueCustomer = bool.Parse(odomDueCustomer);
+                updateTitleDue.DuplicateTitleAppliedFor = bool.Parse(duplicateTitle);
+                updateTitleDue.LienDueBank = bool.Parse(LienDueBank);
+                updateTitleDue.LienDueCustomer = bool.Parse(lienDueCustomer);
+                updateTitleDue.POADueCust = bool.Parse(POADue);
+                updateTitleDue.PayoffDueCust = bool.Parse(payoffDue);
+                updateTitleDue.WaitingOutSTTitle = bool.Parse(waitingOUT);
+                updateTitleDue.Other = bool.Parse(other);
+
+                updateTitleDue.NoTitleDispose = bool.Parse(noTitleDispose);
+                updateTitleDue.ElectronicTitle = bool.Parse(eTitle);
+
+
+                updateTitleDue.Notes = comments;
+                updateTitleDue.UpdateUser = Session["UserName"].ToString();
+
+                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+
+                if (Request.Form["chkSendNotification"] != null)
+                {
+                    var bNotify = false;
+
+                    var isChecked = Request.Form["chkSendNotification"];
+
+                    if (isChecked.ToUpper() == "ON")
+                    {
+                        bNotify = true;
+                    }
+
+                    if (bNotify)
+                    {
+                        var notifyIds = Request.Form["notifyUsers"];
+                        var emails = "";
+                        var emailList = new List<MailAddress>();
+
+                        if (notifyIds != null)
+                        {
+                            foreach (var email in notifyIds.Split(','))
+                            {
+                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
+
+                                //if (user != null)
+                                //{
+                                //emails += email + ",";
+
+                                var emailItem = new MailAddress(email);
+                                emailList.Add(emailItem);
+                                // }
+                            }
+
+                            //Now send the email to everyone in the list
+
+                            var updatedTitleStatus = SqlMapperUtil.SqlWithParams<TitleDue>("Select * from TitleDue where Id = @id", new { id = updateTitleDue.Id }, "SalesCommission");
+                            foreach (var titleDue in updatedTitleStatus)
+                            {
+                                var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == titleDue.SalesAssociate1);
+                                titleDue.SalesAssociate1Name = user.FirstName + " " + user.LastName;
+
+                                var locationName = titleDue.Location;
+
+                                switch (titleDue.Location)
+                                {
+                                    case "FLP":
+                                        locationName = "Lexington Park";
+                                        break;
+                                    case "LFO":
+                                        locationName = "Gaithersburg Hyundai/Subaru";
+                                        break;
+                                    case "LFT":
+                                        locationName = "Gaithersburg Toyota/Middlebrook";
+                                        break;
+                                    case "FOC":
+                                        locationName = "Annapolis";
+                                        break;
+                                    case "FAM":
+                                        locationName = "Frederick";
+                                        break;
+                                    case "WDC":
+                                        locationName = "Wheaton";
+                                        break;
+                                    case "CDO":
+                                        locationName = "Rockville Hyundai";
+                                        break;
+                                    case "FBS":
+                                        locationName = "Rockville Buick Subaru";
+                                        break;
+                                    case "FTN":
+                                        locationName = "Chambersburg";
+                                        break;
+                                    case "CJE":
+                                        locationName = "Clearwater";
+                                        break;
+                                    case "FHG":
+                                        locationName = "Hagerstown GM";
+                                        break;
+                                    case "FHT":
+                                        locationName = "Hagerstown Chrysler";
+                                        break;
+
+                                }
+
+                                titleDue.LocationName = locationName;
+                            }
+                            using (var client = new SmtpClient())
+                            {
+                                var forward = new MailMessage();
+                                try
+                                {
+
+                                    var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Title Update");
+                                    MailMessage mail = new MailMessage();
+
+                                    mail.Subject = "Title Due Update";
+                                    mail.Body = "The following Vehicle was updated...";
+
+                                    forward.From = fromAddress;
+                                    mail.To.Clear();
+                                    foreach (var email in emailList)
+                                    {
+                                        forward.To.Add(email);
+                                    }
+
+                                    mail.CC.Clear();
+                                    forward.Subject = mail.Subject;
+                                    forward.Body = PopulateNotificationEmail(updatedTitleStatus[0]);
+                                    forward.IsBodyHtml = true;
+                                    client.Send(forward);
+                                    Console.WriteLine("Email was sent...");
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    throw ex;
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+
+            }
+
 
             return View(titleDueModel);
         }
 
 
+
+        public string PopulateNotificationEmail(TitleDue updatedTitleDue)
+        {
+            var titleDueEmail = @"
+<html xmlns='http://www.w3.org/1999/xhtml'>
+	<head>
+		<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+		<style>
+			body { font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;font-size: 14px;line-height: 1.42857143;color: #333;}
+	   </style>
+	</head>
+	<body style='margin: 0; padding: 0 15px; width='100%'>
+		<table align='center' border='0' cellpadding='0' cellspacing='0' width='800px'>
+			<tbody>
+				<tr style='text-align:center; color:#000;'>
+					<td style='padding-bottom:15px;'>
+						<h2>Title Due Status Update</h2>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<table align='center' border='0' cellpadding='0' cellspacing='0' width='800px' style='margin-top:5px;'>
+			<tr>
+				<td>
+					<h3 style='text-align:center;'>Title Information</h3>
+					<table  border='0' cellpadding='0' cellspacing='0'>
+						<tr>
+							<td style='text-align:right;'><strong>Location: </strong></td>
+							<td>{location}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Customer: </strong></td>
+							<td>{customer}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Sales Associate: </strong></td>
+							<td>{associate}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Finance Manager: </strong></td>
+							<td>{financemanager}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Sales Manager: </strong></td>
+							<td>{salesmanager}</td>
+						</tr>
+
+					</table>
+					<h3 style='text-align:center;'>Vehicle Information</h3>
+					<table  border='0' cellpadding='0' cellspacing='0' class='table table-bordered'>
+						<tr>
+							<td style='text-align:right;'><strong>VIN: </strong></td>
+							<td>{vin}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Stock #: </strong></td>
+							<td>{stock}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Year: </strong></td>
+							<td>{year}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Make: </strong></td>
+							<td>{make}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Model: </strong></td>
+							<td>{model}</td>
+						</tr>
+
+
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2'>
+					<hr/>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2'>
+					<p><strong>Current Title Status: </strong>{status}</p>
+					<p><strong>Last Updated: </strong>{updatedate}</p>
+					<p><strong>Last Updated By: </strong>{updateuser}</p>
+					<p><strong>Comments: </strong>{comment}</p>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2' style='text-align:center; padding-top:15px;'>
+					<a href='{updatelink}' target='_blank'><img src='https://www.fitzmall.com/assets/images/viewdetails.png'/></a>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>            ";
+
+            if (updatedTitleDue != null)
+            {
+
+                titleDueEmail = titleDueEmail.Replace("{updatelink}", "http://jjfserver/SalesCommission/Reports/UpdateTitleDue?vin=" + updatedTitleDue.VIN.Substring(updatedTitleDue.VIN.Length - 6));
+
+                titleDueEmail = titleDueEmail.Replace("{location}", updatedTitleDue.LocationName);
+                titleDueEmail = titleDueEmail.Replace("{customer}", updatedTitleDue.BuyerName);
+                titleDueEmail = titleDueEmail.Replace("{associate}", updatedTitleDue.SalesAssociate1Name);
+                titleDueEmail = titleDueEmail.Replace("{financemanager}", updatedTitleDue.FinanceManager);
+                titleDueEmail = titleDueEmail.Replace("{salesmanager}", updatedTitleDue.SalesManager);
+                titleDueEmail = titleDueEmail.Replace("{vin}", updatedTitleDue.VIN);
+                titleDueEmail = titleDueEmail.Replace("{stock}", updatedTitleDue.StockNumber);
+                titleDueEmail = titleDueEmail.Replace("{year}", updatedTitleDue.Year.ToString());
+                titleDueEmail = titleDueEmail.Replace("{make}", updatedTitleDue.Make);
+                titleDueEmail = titleDueEmail.Replace("{model}", updatedTitleDue.Model);
+
+                var status = "";
+
+                if (updatedTitleDue.TitleDueBank)
+                {
+                    status += "Title Bank, ";
+
+                }
+                if (updatedTitleDue.TitleDueCustomer == true)
+                {
+                    status += "Title Customer, ";
+
+                }
+                if (updatedTitleDue.TitleDueInterco)
+                {
+                    status += "Title Interco, ";
+
+                }
+                if (updatedTitleDue.TitleDueAuction)
+                {
+                    status += "Title Auction, ";
+
+                }
+
+                if (updatedTitleDue.LienDueBank)
+                {
+                    status += "Lien Bank, ";
+
+                }
+                if (updatedTitleDue.LienDueCustomer)
+                {
+                    status += "Lien Customer, ";
+
+                }
+
+                if (updatedTitleDue.OdomDueCustomer)
+                {
+                    status += "Odom Customer, ";
+
+                }
+
+                if (updatedTitleDue.POADueCust)
+                {
+                    status += "POA Due, ";
+
+                }
+                if (updatedTitleDue.PayoffDueCust)
+                {
+                    status += "Payoff Due, ";
+
+                }
+                if (updatedTitleDue.WaitingOutSTTitle)
+                {
+                    status += "Waiting Out, ";
+
+                }
+                if (updatedTitleDue.DuplicateTitleAppliedFor)
+                {
+                    status += "Dup Title, ";
+
+                }
+                if (updatedTitleDue.Other)
+                {
+                    status += "Other, ";
+
+                }
+
+                status = status.TrimEnd(' ').TrimEnd(',');
+
+                titleDueEmail = titleDueEmail.Replace("{status}", status);
+                titleDueEmail = titleDueEmail.Replace("{updatedate}", updatedTitleDue.UpdateDate.ToString());
+                titleDueEmail = titleDueEmail.Replace("{updateuser}", updatedTitleDue.UpdateUser);
+                titleDueEmail = titleDueEmail.Replace("{comment}", updatedTitleDue.Notes);
+            }
+
+            return titleDueEmail;
+        }
+
+        public string PopulateNotificationEmailMoneyDue(MoneyDue moneyDue)
+        {
+            var moneyDueEmail = @"
+<html xmlns='http://www.w3.org/1999/xhtml'>
+	<head>
+		<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+		<style>
+			body { font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;font-size: 14px;line-height: 1.42857143;color: #333;}
+	   </style>
+	</head>
+	<body style='margin: 0; padding: 0 15px; width='100%'>
+		<table align='center' border='0' cellpadding='0' cellspacing='0' width='800px'>
+			<tbody>
+				<tr style='text-align:center; color:#000;'>
+					<td style='padding-bottom:15px;'>
+						<h2>Money Due Status Update</h2>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<table align='center' border='0' cellpadding='0' cellspacing='0' width='800px' style='margin-top:5px;'>
+			<tr>
+				<td>
+					<h3 style='text-align:center;'>Money Due Information</h3>
+					<table  border='0' cellpadding='0' cellspacing='0'>
+						<tr>
+							<td style='text-align:right;'><strong>Location: </strong></td>
+							<td>{location}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Customer: </strong></td>
+							<td>{customer}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Finance Manager: </strong></td>
+							<td>{financemanager}</td>
+						</tr>
+
+					</table>
+					<h3 style='text-align:center;'>Vehicle Information</h3>
+					<table  border='0' cellpadding='0' cellspacing='0' class='table table-bordered'>
+						<tr>
+							<td style='text-align:right;'><strong>Deal: </strong></td>
+							<td>{deal}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Due From: </strong></td>
+							<td>{duefrom}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Amount Due: </strong></td>
+							<td>{amount}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Bank Name: </strong></td>
+							<td>{bank}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Schedule Days: </strong></td>
+							<td>{days}</td>
+						</tr>
+						<tr>
+							<td style='text-align:right;'><strong>Root Cause: </strong></td>
+							<td>{root}</td>
+						</tr>
+
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2'>
+					<hr/>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2'>
+					<p><strong>Funded Status: </strong>{status}</p>
+					<p><strong>Last Updated: </strong>{updatedate}</p>
+					<p><strong>Last Updated By: </strong>{updateuser}</p>
+					<p><strong>Comments: </strong>{comment}</p>
+				</td>
+			</tr>
+			<tr>
+				<td colspan='2' style='text-align:center; padding-top:15px;'>
+					<a href='{updatelink}' target='_blank'><img src='https://www.fitzmall.com/assets/images/viewdetails.png'/></a>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>            ";
+
+            if (moneyDue != null)
+            {
+
+               moneyDueEmail = moneyDueEmail.Replace("{updatelink}", "http://jjfserver/SalesCommission/Reports/UpdateMoneyDueStatus?id=" + moneyDue.CustomerNumber + "&location=" + moneyDue.Location + "&dueFrom=" + moneyDue.DueFrom);
+
+                moneyDueEmail = moneyDueEmail.Replace("{location}", moneyDue.Location);
+                moneyDueEmail = moneyDueEmail.Replace("{customer}", moneyDue.CustomerFirstName + " " + moneyDue.CustomerLastName);
+                moneyDueEmail = moneyDueEmail.Replace("{financemanager}", moneyDue.FIManager);
+
+                var dueFrom = "";
+                if(moneyDue.DueFrom.Contains("106"))
+                    {
+                        dueFrom = "Bank";
+                    }
+                else if (moneyDue.DueFrom.Contains("111"))
+                {
+                    dueFrom = "Customer";
+                }
+
+
+moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
+                moneyDueEmail = moneyDueEmail.Replace("{duefrom}", dueFrom);
+                moneyDueEmail = moneyDueEmail.Replace("{amount}", moneyDue.ControlBalance.ToString());
+                moneyDueEmail = moneyDueEmail.Replace("{bank}", moneyDue.BankName);
+                moneyDueEmail = moneyDueEmail.Replace("{days}", moneyDue.ScheduleDays.ToString());
+                moneyDueEmail = moneyDueEmail.Replace("{root}", moneyDue.RootCause);
+                moneyDueEmail = moneyDueEmail.Replace("{status}", moneyDue.FundedStatus);
+
+                moneyDueEmail = moneyDueEmail.Replace("{updatedate}", moneyDue.CommentDate.ToString());
+                moneyDueEmail = moneyDueEmail.Replace("{updateuser}", moneyDue.CommentUser);
+                moneyDueEmail = moneyDueEmail.Replace("{comment}", moneyDue.Comment);
+            }
+
+            return moneyDueEmail;
+        }
+
         public ActionResult UpdateMoneyDue(string id, string location, string dueFrom)
         {
             var moneyDueModel = new MoneyDueModel();
 
+            moneyDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
             var allMoneyDue = SqlQueries.GetAllMoneyDue();
             var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
 
@@ -2157,9 +3394,43 @@ namespace SalesCommission.Controllers
             return View(moneyDueModel);
         }
 
+        public ActionResult UpdateMoneyDueStatus(string id, string location, string dueFrom)
+        {
+            var moneyDueModel = new MoneyDueModel();
+
+            moneyDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
+            var allMoneyDue = SqlQueries.GetAllMoneyDue();
+            var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
+
+            moneyDueModel.MoneyDue = allMoneyDue.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location);
+            moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x => x.CommentOrder).ToList();
+
+            moneyDueModel.FIManagers = SqlQueries.GetSalesAssociates();
+
+            if (moneyDueModel.MoneyDue != null && moneyDueModel.MoneyDue.Count > 0)
+            {
+                moneyDueModel.FIManagerNumber = moneyDueModel.MoneyDue[0].FIManagerNumber;
+            }
+
+            if (moneyDueModel.MoneyDueHistory != null && moneyDueModel.MoneyDueHistory.Count > 0)
+            {
+                if (moneyDueModel.MoneyDueHistory[0].FIManagerNumber != null && moneyDueModel.MoneyDueHistory[0].FIManagerNumber != "")
+                {
+                    //Check to see if we have an update in the history table
+                    moneyDueModel.FIManagerNumber = moneyDueModel.MoneyDueHistory[0].FIManagerNumber;
+                }
+
+            }
+
+
+
+            return View(moneyDueModel);
+        }
+
         [HttpPost]
         public ActionResult UpdateMoneyDue()
         {
+
             var newComment = new MoneyDue();
 
             if (Request.Form != null)
@@ -2223,9 +3494,225 @@ namespace SalesCommission.Controllers
                 newComment.LastUpdatedDate = DateTime.Now;
 
                 var success = SqlQueries.UpdateMoneyDueReport(newComment);
-            }
+
+                if (Request.Form["chkSendNotification"] != null)
+                {
+                    var bNotify = false;
+
+                    var isChecked = Request.Form["chkSendNotification"];
+
+                    if (isChecked.ToUpper() == "ON")
+                    {
+                        bNotify = true;
+                    }
+
+                    if (bNotify)
+                    {
+                        var notifyIds = Request.Form["notifyUsers"];
+                        var emails = "";
+                        var emailList = new List<MailAddress>();
+
+                        if (notifyIds != null)
+                        {
+                            foreach (var email in notifyIds.Split(','))
+                            {
+                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
+
+                                //if (user != null)
+                                //{
+                                //emails += email + ",";
+
+                                var emailItem = new MailAddress(email);
+                                emailList.Add(emailItem);
+                                // }
+                            }
+
+                            //Now send the email to everyone in the list
+                            
+                            using (var client = new SmtpClient())
+                            {
+                                var forward = new MailMessage();
+                                try
+                                {
+
+                                    var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Money Due Update");
+                                    MailMessage mail = new MailMessage();
+
+                                    mail.Subject = "Money Due Update";
+                                    mail.Body = "The following information was updated...";
+
+                                    forward.From = fromAddress;
+                                    mail.To.Clear();
+                                    foreach (var email in emailList)
+                                    {
+                                        forward.To.Add(email);
+                                    }
+
+                                    mail.CC.Clear();
+                                    forward.Subject = mail.Subject;
+                                    forward.Body = PopulateNotificationEmailMoneyDue(newComment);
+                                    forward.IsBodyHtml = true;
+                                    client.Send(forward);
+                                    Console.WriteLine("Email was sent...");
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    throw ex;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                }
 
             return new EmptyResult();
+        }
+
+
+        [HttpPost]
+        public ActionResult UpdateMoneyDueStatus()
+        {
+
+            var newComment = new MoneyDue();
+
+            if (Request.Form != null)
+            {
+                newComment.Location = Request.Form["hdn-Location"];
+                newComment.StockNumber = Request.Form["hdn-StockNumber"];
+                newComment.ScheduleDays = (Request.Form["hdn-ScheduleDays"] != null ? Convert.ToInt32(Request.Form["hdn-ScheduleDays"]) : 0);
+                newComment.DealDate = (Request.Form["hdn-DealDate"] != null ? Convert.ToDateTime(Request.Form["hdn-DealDate"]) : new DateTime(1900, 1, 1));
+
+                if (newComment.DealDate < new DateTime(1900, 1, 1))
+                {
+                    newComment.DealDate = new DateTime(1900, 1, 1);
+                }
+
+                newComment.DueFrom = Request.Form["hdn-DueFrom"];
+                newComment.CustomerNumber = Request.Form["hdn-CustomerNumber"];
+                newComment.ControlBalance = (Request.Form["hdn-ControlBalance"] != null ? Convert.ToDecimal(Request.Form["hdn-ControlBalance"]) : 0);
+                newComment.CustomerFirstName = Request.Form["hdn-CustomerFirstName"];
+                newComment.CustomerLastName = Request.Form["hdn-CustomerLastName"];
+                newComment.FIManager = Request.Form["hdn-FIManager"];
+                newComment.BankName = Request.Form["hdn-BankName"];
+                newComment.FIManagerNumber = Request.Form["FIManagerNumber"];
+                newComment.DealNumber = Request.Form["hdn-DealNumber"];
+
+                newComment.BusinessPhone = Request.Form["hdn-BusinessPhone"];
+                newComment.ResidencePhone = Request.Form["hdn-ResidencePhone"];
+                newComment.SalesManager = Request.Form["hdn-SalesManager"];
+
+                newComment.CommentOrder = (Request.Form["hdn-CommentOrder"] != null ? Convert.ToInt32(Request.Form["hdn-CommentOrder"]) : 0) + 1;
+
+                var rootCause = Request.Form["rootCause"];
+                var fundedStatus = Request.Form["fundedStatus"];
+                var userComments = "(" + Session["UserName"].ToString() + "-" + DateTime.Now + ")" + Request.Form["userComments"];
+
+                var oldStatus = Request.Form["hdn-FundedStatus"];
+                var oldcommentUser = Request.Form["hdn-CommentUser"];
+
+                newComment.RootCause = rootCause;
+
+                newComment.Comment = userComments;
+
+                if (oldStatus != fundedStatus)
+                {
+                    newComment.FundedStatus = fundedStatus;
+                    newComment.CommentDate = DateTime.Now;
+                    newComment.CommentUser = Session["UserName"].ToString();
+                }
+                else
+                {
+                    newComment.FundedStatus = fundedStatus;
+                    newComment.CommentDate = (Request.Form["hdn-CommentDate"] != null ? Convert.ToDateTime(Request.Form["hdn-CommentDate"]) : new DateTime(1900, 1, 1));
+
+                    if (newComment.CommentDate < new DateTime(1900, 1, 1))
+                    {
+                        newComment.CommentDate = DateTime.Now;
+                    }
+
+                    newComment.CommentUser = oldcommentUser;
+                }
+
+                newComment.LastUpdatedDate = DateTime.Now;
+
+                var success = SqlQueries.UpdateMoneyDueReport(newComment);
+
+                if (Request.Form["chkSendNotification"] != null)
+                {
+                    var bNotify = false;
+
+                    var isChecked = Request.Form["chkSendNotification"];
+
+                    if (isChecked.ToUpper() == "ON")
+                    {
+                        bNotify = true;
+                    }
+
+                    if (bNotify)
+                    {
+                        var notifyIds = Request.Form["notifyUsers"];
+                        var emails = "";
+                        var emailList = new List<MailAddress>();
+
+                        if (notifyIds != null)
+                        {
+                            foreach (var email in notifyIds.Split(','))
+                            {
+                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
+
+                                //if (user != null)
+                                //{
+                                //emails += email + ",";
+
+                                var emailItem = new MailAddress(email);
+                                emailList.Add(emailItem);
+                                // }
+                            }
+
+                            //Now send the email to everyone in the list
+
+                            using (var client = new SmtpClient())
+                            {
+                                var forward = new MailMessage();
+                                try
+                                {
+
+                                    var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Money Due Update");
+                                    MailMessage mail = new MailMessage();
+
+                                    mail.Subject = "Money Due Update";
+                                    mail.Body = "The following information was updated...";
+
+                                    forward.From = fromAddress;
+                                    mail.To.Clear();
+                                    foreach (var email in emailList)
+                                    {
+                                        forward.To.Add(email);
+                                    }
+
+                                    mail.CC.Clear();
+                                    forward.Subject = mail.Subject;
+                                    forward.Body = PopulateNotificationEmailMoneyDue(newComment);
+                                    forward.IsBodyHtml = true;
+                                    client.Send(forward);
+                                    Console.WriteLine("Email was sent...");
+                                }
+                                catch (Exception ex)
+                                {
+
+                                    throw ex;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            var moneyDueModel = new MoneyDueModel();
+            return View(moneyDueModel);
         }
 
         //public void SetUserInformation()

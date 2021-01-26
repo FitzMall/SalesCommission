@@ -187,11 +187,110 @@
 
             </tbody>
         </table>
-            }
-                   }
+        <hr />
+                        <div class="row" style="margin-bottom:100px;">
+                            <div class="col-sm-12">
+                                <span style="font-size:24px;">
+                                    <input type="checkbox" style="width: 24px; height:24px;" name="chkSendNotification" id="chkSendNotification" checked /> Send Notifications to users?
+                                </span>
+                                <div class="row notification-row">
+                                    <div class="col-sm-6">
+                                        <h4>Select Users:</h4>
+                                        <select id="selectUsers" name="selectUsers" class="form-control chosen-select">
+                                            <option value=""></option>
+                                            @foreach (var user in Model.JJFUsers)
+                                            {
+                                                if (user.LastName != null || user.FirstName != null)
+                                                {
+                                                    <option value="@user.Email">@user.LastName, @user.FirstName</option>
+                                                }
+                                            }
+                                        </select>
+                                        <input type="button" id="AddUser" name="AddUser" value="Add User" />
+
+                                        <h4>Enter Email:</h4>
+                                        <input type="text" class="form-control" id="enter-email" name="enter-email" />
+                                        <input type="button" id="AddEmail" name="AddEmail" value="Add Email" />
+
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <h4>Notify Users:</h4>
+                                        <select id="notifyUsers" name="notifyUsers" class="form-control" multiple style="display:inline-block">
+                                            @{
+                                                if (Model.FIManagerNumber != null && Model.FIManagerNumber != "")
+                                                {
+                                                    var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.FIManagerNumber);
+                                                    if (sales2 != null)
+                                                    {
+                                                        @:<option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                    }
+                                                }
+                                                if (currentHistory.SalesManagerNumber != null && currentHistory.SalesManagerNumber != "")
+                                                {
+                                                    var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == currentHistory.SalesManagerNumber);
+                                                    if (sales2 != null)
+                                                    {
+                                                        @:
+                                                        <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                    }
+    }
+}
+                                        </select>
+
+
+
+
+                                        <input type="button" id="RemoveUser" name="RemoveUser" value="Remove User" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                                                    }
+                                                }
 </div>
 
 
     <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
     <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
     <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+            $(document).ready(function() {
+                $('#chkSendNotification').click(function () {
+                    $(".notification-row").toggle();
+                });
+       $('#AddUser').on('click', function () {
+
+                    optionText = $("#selectUsers option:selected").text();
+                    optionValue = $('#selectUsers').val();
+
+                    $('#notifyUsers').append(`<option value="${optionValue}">
+                                       ${optionText}
+                                  </option>`);
+
+                    $('#notifyUsers option').prop('selected', true);
+
+                });
+
+                $('#AddEmail').on('click', function () {
+
+                    optionText = $('#enter-email').val();
+                    optionValue = $('#enter-email').val();
+
+                    $('#notifyUsers').append(`<option value="${optionValue}">
+                                       ${optionText}
+                                  </option>`);
+
+                    $('#notifyUsers option').prop('selected', true);
+
+                });
+
+                $('#RemoveUser').on('click', function () {
+                    optionValue = $('#notifyUsers').val();
+                    $("#notifyUsers option[value='" + optionValue + "']").remove();
+                    $('#notifyUsers option').prop('selected', true);
+                });
+
+            });
+</script>

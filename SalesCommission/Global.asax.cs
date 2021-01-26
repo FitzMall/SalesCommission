@@ -291,7 +291,7 @@ namespace SalesCommission
                 Session.Add("IsCommissionAdmin", true);
                 Session.Add("IsAssociateAdmin", true);
                 Session.Add("CanSeeReporting", true);
-                Session.Add("CanOfficeValidate", true);
+                Session.Add("CanOfficeValidate", false);
 
                 //Session.Add("UserId", "shaver");
                 //Session.Add("UserName", "The person formally known as Chris");

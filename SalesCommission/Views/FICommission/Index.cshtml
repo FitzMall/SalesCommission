@@ -457,24 +457,140 @@
                             decimal otherItemAmount = 0;
                             if (deal.AftermarketItems.Count > 0)
                             {
-                                foreach (var item in deal.AftermarketItems)
+
+                                var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+
+                                if (dealValidation.Count > 0)
                                 {
-                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                    var validation = dealValidation[0];
+                                    foreach (var item in deal.AftermarketItems)
                                     {
-                                        var profit = item.AftermarketPrice - item.AftermarketCost;
-                                        otherItemAmount += profit;
-                                    }
+                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                        {
 
-                                    if(item.AftermarketId == 8)
-                                    {
-                                        LeaseWandTCount += 1;
-                                        var profit = item.AftermarketPrice - item.AftermarketCost;
-                                        TotalLeaseWandT += profit;
-                                    }
+                                            decimal profit = 0;
+                                            switch (item.AftermarketId)
+                                            {
+                                                case 2:
+                                                    if (validation.NitrogenPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 4:
+                                                    if (validation.SelectProtectionPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 5:
+                                                    if (validation.TireWheelPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 6:
+                                                    if (validation.KeyReplacementPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 7:
+                                                    if (validation.WindshieldProtectionPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 8:
+                                                    if (validation.WearAndTearPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 9:
+                                                    if (validation.SecureGuardPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 10:
+                                                    if (validation.FitzTotalPackagePaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 11:
+                                                    if (validation.RustInhibitUnderCoatPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 12:
+                                                    if (validation.UndercoatingPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 13:
+                                                    if (validation.RustInhibitorPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 14:
+                                                    if (validation.DataDotsPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 15:
+                                                    if (validation.PaintDentPaid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 16:
+                                                    if (validation.Miscellaneous1Paid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 17:
+                                                    if (validation.Miscellaneous2Paid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 18:
+                                                    if (validation.Miscellaneous3Paid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
+                                                case 19:
+                                                    if (validation.Miscellaneous4Paid)
+                                                    {
+                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                    }
+                                                    break;
 
+                                            }
+
+
+
+                                            otherItemAmount += profit;
+                                        }
+
+                                        if (item.AftermarketId == 8)
+                                        {
+                                            LeaseWandTCount += 1;
+                                            var profit = item.AftermarketPrice - item.AftermarketCost;
+                                            TotalLeaseWandT += profit;
+                                        }
+                                    }
                                 }
-
                             }
+
 
                             TotalOther += otherItemAmount;
 
@@ -764,60 +880,156 @@
                                                         var vehicleMiles = Int32.Parse(deal.VehicleMiles);
 
 
-                                                            if ((currentYear - vehicleYear) >= 10 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 100000)
-                                                            {
-                                                                bEligible = false;
-                                                            }
+                                                        if ((currentYear - vehicleYear) >= 10 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 100000)
+                                                        {
+                                                            bEligible = false;
+                                                        }
 
-                                                            decimal otherItemAmount = 0;
-                                                            if (deal.AftermarketItems.Count > 0)
+                                                        decimal otherItemAmount = 0;
+                                                        if (deal.AftermarketItems.Count > 0)
+                                                        {
+                                                            foreach (var item in deal.AftermarketItems)
                                                             {
-                                                                foreach (var item in deal.AftermarketItems)
+                                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
                                                                 {
-                                                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
-                                                                    {
-                                                                        var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                        otherItemAmount += profit;
-                                                                    }
-                                                                }
-
-                                                            }
-
-                                                            decimal DealDollar = 0;
-                                                            decimal ProductDollar = 0;
-
-                                                            DealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);// 
-                                                            ProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); // 
-
-                                                            decimal dealMoneyDue = 0;
-
-                                                            var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
-
-                                                            if (itemMoneyDue != null)
-                                                            {
-                                                                foreach (var money in itemMoneyDue)
-                                                                {
-                                                                    dealMoneyDue += money.ControlBalance;
+                                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                    otherItemAmount += profit;
                                                                 }
                                                             }
 
-                                                            DealTotalMoneyDue += dealMoneyDue;
+                                                        }
 
-                                                            var moneyDueBGColor = "";
-                                                            var moneyDueWarning = deal.DealKey + " Details";
+                                                        decimal DealDollar = 0;
+                                                        decimal ProductDollar = 0;
 
-                                                            if (dealMoneyDue > 0)
+                                                        DealDollar = (deal.FinanceIncomeAmount + deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount);// 
+                                                        ProductDollar = (deal.VSCAmount + deal.MaintenanceAmount + deal.GAPAmount + deal.ZurichAmount + otherItemAmount); // 
+
+                                                        decimal dealMoneyDue = 0;
+
+                                                        var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.VehicleStockNumber.Trim());
+
+                                                        if (itemMoneyDue != null)
+                                                        {
+                                                            foreach (var money in itemMoneyDue)
                                                             {
-                                                                moneyDueBGColor = "background-color: #d2070769";
-                                                                moneyDueWarning = "There is " + dealMoneyDue.ToString("C", nfi) + " due on this deal.";
+                                                                dealMoneyDue += money.ControlBalance;
+                                                            }
+                                                        }
+
+                                                        DealTotalMoneyDue += dealMoneyDue;
+
+                                                        var moneyDueBGColor = "";
+                                                        var moneyDueWarning = deal.DealKey + " Details";
+
+                                                        if (dealMoneyDue > 0)
+                                                        {
+                                                            moneyDueBGColor = "background-color: #d2070769";
+                                                            moneyDueWarning = "There is " + dealMoneyDue.ToString("C", nfi) + " due on this deal.";
+                                                        }
+                                                        else
+                                                        {
+                                                            moneyDueWarning = "";
+                                                        }
+
+                                                        var titleStatus = "";
+                                                        var itemTitleDue = Model.TitleDue.FindAll(x => x.VIN.Trim() == deal.Trade1VIN.Trim() || x.VIN.Trim() == deal.Trade2VIN.Trim());
+
+                                                        if (itemTitleDue != null && itemTitleDue.Count > 0)
+                                                        {
+                                                            var titleDue = itemTitleDue[0];
+                                                            var ManagerNoStatus = true;
+
+                                                            //if (titleDue.TitleDueBank)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Bank, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.TitleDueCustomer == true)
+                                                            {
+                                                                titleStatus += "Title Due from Customer, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.TitleDueInterco)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Interco, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            //if (titleDue.TitleDueAuction)
+                                                            //{
+                                                            //    titleStatus += "Title Due from Auction, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+
+                                                            //if (titleDue.LienDueBank)
+                                                            //{
+                                                            //    titleStatus += "Lien Due from Bank, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.LienDueCustomer)
+                                                            {
+                                                                titleStatus += "Lien Due from Customer, ";
+                                                                ManagerNoStatus = false;
                                                             }
 
-                                                            var markup = (deal.APR - deal.BuyRate).ToString("0.##");
-
-                                                            if (deal.VehicleCategory == "L")
+                                                            if (titleDue.OdomDueCustomer)
                                                             {
-                                                                markup = "L";
+                                                                titleStatus += "Odom Due from Customer, ";
+                                                                ManagerNoStatus = false;
                                                             }
+
+                                                            if (titleDue.POADueCust)
+                                                            {
+                                                                titleStatus += "POA Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            if (titleDue.PayoffDueCust)
+                                                            {
+                                                                titleStatus += "Payoff Due, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.WaitingOutSTTitle)
+                                                            //{
+                                                            //    titleStatus += "Waiting Out/ST Title, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+                                                            if (titleDue.DuplicateTitleAppliedFor)
+                                                            {
+                                                                titleStatus += "Dup Title Applied For, ";
+                                                                ManagerNoStatus = false;
+                                                            }
+                                                            //if (titleDue.Other)
+                                                            //{
+                                                            //    titleStatus += "Other, ";
+                                                            //    ManagerNoStatus = false;
+                                                            //}
+
+                                                            if (ManagerNoStatus && !titleDue.ClearTitle)
+                                                            {
+                                                                titleStatus = "No Status";
+                                                            }
+
+                                                            titleStatus = titleStatus.TrimEnd(' ').TrimEnd(',');
+                                                        }
+
+                                                        var titleDueBGColor = "";
+                                                        var titleDueWarning = deal.DealKey + " Details";
+
+                                                        if (titleStatus != "")
+                                                        {
+                                                            titleDueBGColor = "background-color: #d26e0769";
+                                                            titleDueWarning = "There is a " + titleStatus + " on this deal, notify F and I Manager.";
+                                                        }
+
+
+
+
+                                                        var markup = (deal.APR - deal.BuyRate).ToString("0.##");
+
+                                                        if (deal.VehicleCategory == "L")
+                                                        {
+                                                            markup = "L";
+                                                        }
 
                                                 <tr>
                                                     <td class="text-center">@dealIndex</td>
@@ -825,7 +1037,7 @@
                                                     {
                                                         <td>@deal.FandIManager</td>
                                                     }
-                                                    <td class="text-center" style="@moneyDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning">@deal.DealKey</a></td>
+                                                    <td class="text-center" style="@moneyDueBGColor @titleDueBGColor"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey" target="_blank" title="@moneyDueWarning @titleDueWarning">@deal.DealKey</a></td>
                                                     <td class="text-center">
                                                         @if (bEligible)
                                                         {

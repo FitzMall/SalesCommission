@@ -74,9 +74,14 @@
             <thead>
                 <tr style="background-color:#d9edf7">
                     <th></th>
+                    <th class="text-center">Loc</th>
+                    <th class="text-center">Deal Make</th>
+                    <th class="text-center">Deal Loc</th>
                     <th class="text-center">Deal</th>
                     <th class="text-center">Customer</th>
                     <th class="text-center">Deal Date</th>
+                    <th class="text-center">Deal Month</th>
+                    <th class="text-center">Deal Year</th>
                     <th class="text-center">Stk #</th>
                     <th class="text-center">Rental</th>
                     <th class="text-center">Year</th>
@@ -133,31 +138,40 @@
                     isTrade = Char.IsLetter(lastChar);
 
 
-                        if(deal.StockNumber.Substring(1,1) == "F" && !isTrade)
-                        {
-                            rentalType = "NextCar (F)";
-                        }
-                        else if (deal.StockNumber.Substring(1, 1) == "N" && !isTrade)
-                        {
-                            rentalType = "NextCar";
-                        }
-                        else if (deal.StockNumber.Substring(1, 1) == "R" && !isTrade)
-                        {
-                            rentalType = "Rental";
-                        }
-                        else if (deal.StockNumber.Substring(1, 1) == "D" && !isTrade)
-                        {
-                            rentalType = "Demo";
-                        }
-                        else if (deal.StockNumber.Substring(1, 1) == "L" && !isTrade)
-                        {
-                            rentalType = "Loaner";
-                        }
+                    if(deal.StockNumber.Substring(1,1) == "F" && !isTrade)
+                    {
+                        rentalType = "NextCar (F)";
+                    }
+                    else if (deal.StockNumber.Substring(1, 1) == "N" && !isTrade)
+                    {
+                        rentalType = "NextCar";
+                    }
+                    else if (deal.StockNumber.Substring(1, 1) == "R" && !isTrade)
+                    {
+                        rentalType = "Rental";
+                    }
+                    else if (deal.StockNumber.Substring(1, 1) == "D" && !isTrade)
+                    {
+                        rentalType = "Demo";
+                    }
+                    else if (deal.StockNumber.Substring(1, 1) == "L" && !isTrade)
+                    {
+                        rentalType = "Loaner";
+                    }
+
+                    var dealMonthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Int32.Parse(Model.MonthId));
+                    var dealYear = Model.YearId;
+
                     <tr>
                         <td>@dealIndex.</td>
+                        <td class="text-center">@deal.Location</td>
+                        <td class="text-center">@deal.MakeName</td>
+                        <td class="text-center">@deal.MallName</td>
                         <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey">@deal.DealKey</a></td>
                         <td class="text-center">@deal.CustomerName</td>
                         <td class="text-center">@deal.DealDate.ToShortDateString()</td>
+                        <td class="text-center">@dealMonthName</td>
+                        <td class="text-center">@dealYear</td>
                         <td class="text-center">@deal.StockNumber</td>
                         <td class="text-center">@rentalType</td>
                         <td class="text-center">@deal.Year</td>
@@ -201,7 +215,12 @@
             <tfoot>
                 <tr style="background-color:#d9edf7">
                     <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                     <th class="text-center">Totals</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
@@ -239,7 +258,12 @@
                 }
                 <tr style="background-color:#d9edf7">
                     <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                     <th class="text-center">Averages</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
@@ -292,8 +316,8 @@
                   }
               ],
               columnDefs: [
-                { type: 'any-number', targets: [10, 12, 12, 13, 14, 15, 16, 17, 18] },
-                { type: 'date-us', targets: [3] }
+                { type: 'any-number', targets: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24] },
+                { type: 'date-us', targets: [6] }
               ]
 
           });
