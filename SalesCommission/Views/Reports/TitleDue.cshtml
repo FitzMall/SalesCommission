@@ -41,6 +41,12 @@
         .input-row{
             margin: 5px 15px;
         }
+
+        .noclose .ui-dialog-titlebar-close
+        {
+            display:none;
+        }
+
     </style>
 }
 
@@ -427,7 +433,7 @@
                                             //var titleDue_History = Model.TitleDueHistory.FindAll(x => x.Id == titleDue.Id);
 
                                             managerName = titleDue.FinanceManager;
-                                            managerFINumber = titleDue.FinanceManager.Replace(" ","").Replace("-", "").Replace(".","").Replace("/", "");
+                                            managerFINumber = titleDue.FinanceManager.Replace(" ","").Replace("-", "").Replace(".","").Replace("/", "").Replace("'", "");
 
                                             var ManagerNoStatus = true;
 
@@ -711,9 +717,9 @@
                                                                 <td class="text-center">@titleDue.DealDate.ToShortDateString()</td>
                                                                 <td class="text-center">@inventoryStatusLabel</td>
                                                                 <td class="text-center">
-                                                                    @if (titleDue.VIN != null && titleDue.VIN != "")
+                                                                    @if (titleDue.VIN != null && titleDue.VIN != "") //.VIN.Substring(titleDue.VIN.Length - 6)
                                                                     {
-                                                                        <a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
+                                                                        <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
                                                                     }
                                                                     @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                                                         {
@@ -968,9 +974,9 @@
                                                             <td class="text-center">@titleDue.DealDate.ToShortDateString()</td>
                                                             <td class="text-center">@inventoryStatusLabel</td>
                                                             <td class="text-center">
-                                                                @if (titleDue.VIN != null && titleDue.VIN != "")
+                                                                @if (titleDue.VIN != null && titleDue.VIN != "") //.VIN.Substring(titleDue.VIN.Length - 6)
                                                                 {
-                                                                    <a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
+                                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
                                                                 }
                                                                 @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                                                                 {
@@ -1247,9 +1253,9 @@
                                             <td class="text-center">@titleDue.DealDate.ToShortDateString()</td>
                                             <td class="text-center">@inventoryStatusLabel</td>
                                             <td class="text-center">
-                                                @if (titleDue.VIN != null && titleDue.VIN != "")
+                                                @if (titleDue.VIN != null && titleDue.VIN != "") //.VIN.Substring(titleDue.VIN.Length - 6)
                                                 {
-                                                    <a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
+                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
                                                 }
                                                 @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                                                 {
@@ -1357,10 +1363,16 @@
                                                                     position: { my: "center", at: "top+25%", of: window },
                                                                     title: 'Update Title Status',
                                                                     modal: true,
+                                                                    closeOnEscape: false,
+                                                                    beforeClose: function (event, ui) { return false; },
+                                                                    dialogClass: "noclose",
                                                                     open: function (event, ui) {
                                                                         $(this).load(url);
                                                                         //$('#BonusDraws').validate();
                                                                     },
+                                                                    //close: function(){
+                                                                    //    $(dialogBox).dialog("close").dialog("destroy").remove();
+                                                                    //},
                                                                     buttons: {
                                                                         "Save": function () {
                                                                             var $this = this;
@@ -1381,7 +1393,7 @@
                                                                         },
 
                                                                         "Close": function () {
-                                                                            $(this).dialog("close");
+                                                                            $(this).dialog("close").dialog("destroy").remove();
                                                                             $(this).empty();
                                                                         }
                                                                     }
@@ -1433,10 +1445,16 @@
                     position: { my: "center", at: "top+25%", of: window },
                     title: 'Update Title Status',
                     modal: true,
+                    closeOnEscape: false,
+                    beforeClose: function (event, ui) { return false; },
+                    dialogClass: "noclose",
                     open: function (event, ui) {
                         $(this).load(url);
                         //$('#BonusDraws').validate();
                     },
+                    //close: function () {
+                    //    $(this).dialog("close").dialog("destroy").remove();
+                    //},
                     buttons: {
                         "Save": function () {
                             var $this = this;
@@ -1453,11 +1471,11 @@
                                 success: $($this).dialog("close").dialog("destroy").remove()
                             });
 
-                            location.reload();
+                            //location.reload();
                         },
 
                         "Close": function () {
-                            $(this).dialog("close");
+                            $(this).dialog("close").dialog("destroy").remove();
                             $(this).empty();
                         }
                     }

@@ -863,8 +863,10 @@ namespace SalesCommission.Controllers
             var yearId = 0;
             var locationId = "";
             var associateSSN = "";
+            var associateSSI = "";
+            var associateLevel = "";
 
-            if(Request.Form["hdn-MonthId"] != null && Request.Form["hdn-MonthId"].Contains(","))
+            if (Request.Form["hdn-MonthId"] != null && Request.Form["hdn-MonthId"].Contains(","))
             {
                 var cleanedMonthId = Request.Form["hdn-MonthId"].Substring(Request.Form["hdn-MonthId"].IndexOf(',') + 1);
                 monthId = (cleanedMonthId != "") ? Int32.Parse(cleanedMonthId) : 0;
@@ -904,7 +906,26 @@ namespace SalesCommission.Controllers
                 associateSSN = (Request.Form["hdn-SSN"] != null && Request.Form["hdn-SSN"] != "") ? Request.Form["hdn-SSN"].ToString() : "";
             }
 
-            
+            if (Request.Form["hdn-SSI"] != null && Request.Form["hdn-SSI"].Contains(","))
+            {
+                var cleanedassociateSSI = Request.Form["hdn-SSI"].Substring(Request.Form["hdn-SSI"].IndexOf(',') + 1);
+                associateSSI = (cleanedassociateSSI != "") ? cleanedassociateSSI.ToString() : "";
+            }
+            else
+            {
+                associateSSI = (Request.Form["hdn-SSI"] != null && Request.Form["hdn-SSI"] != "") ? Request.Form["hdn-SSI"].ToString() : "";
+            }
+
+
+            if (Request.Form["hdn-Level"] != null && Request.Form["hdn-Level"].Contains(","))
+            {
+                var cleanedassociateLevel = Request.Form["hdn-Level"].Substring(Request.Form["hdn-Level"].IndexOf(',') + 1);
+                associateLevel = (cleanedassociateLevel != "") ? cleanedassociateLevel.ToString() : "";
+            }
+            else
+            {
+                associateLevel = (Request.Form["hdn-Level"] != null && Request.Form["hdn-Level"] != "") ? Request.Form["hdn-Level"].ToString() : "";
+            }
 
             if (Request.Form["SaveAssociate"] != null)
             {
@@ -915,10 +936,10 @@ namespace SalesCommission.Controllers
 
                 var associateInformation = new AssociateUpdate();
                 associateInformation.AssociateSSN = associateSSN;
-                associateInformation.AssociateLevel = (Request.Form["associate.AssociateLevel"] != null && Request.Form["associate.AssociateLevel"] != "") ? Request.Form["associate.AssociateLevel"].ToString() : "";
+                associateInformation.AssociateLevel = associateLevel; //(Request.Form["associate.AssociateLevel"] != null && Request.Form["associate.AssociateLevel"] != "") ? Request.Form["associate.AssociateLevel"].ToString() : "";
                 associateInformation.AssociateMonthYear = monthId + "/" + yearId;
                 associateInformation.AssociateStoreVolume = (Request.Form["associate.AssociateStoreVolume"] != null && Request.Form["associate.AssociateStoreVolume"] != "") ? Request.Form["associate.AssociateStoreVolume"].ToString() : "";
-                associateInformation.AssociateSSI = (Request.Form["associate.AssociateSSI"] != null && Request.Form["associate.AssociateSSI"] != "") ? Request.Form["associate.AssociateSSI"].ToString() : "";
+                associateInformation.AssociateSSI = associateSSI; //(Request.Form["associate.AssociateSSI"] != null && Request.Form["associate.AssociateSSI"] != "") ? Request.Form["associate.AssociateSSI"].ToString() : "";
                 associateInformation.AssociatePayscale = (Request.Form["associate.AssociatePayscale"] != null && Request.Form["associate.AssociatePayscale"] != "") ? Request.Form["associate.AssociatePayscale"].ToString() : "";
                 associateInformation.AssociateStatus = (Request.Form["associate.AssociateStatus"] != null && Request.Form["associate.AssociateStatus"] != "") ? Request.Form["associate.AssociateStatus"].ToString() : "";
                 associateInformation.AssociateMentor = (Request.Form["associate.AssociateMentor"] != null && Request.Form["associate.AssociateMentor"] != "") ? Request.Form["associate.AssociateMentor"].ToString() : "";

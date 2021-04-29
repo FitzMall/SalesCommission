@@ -17,6 +17,11 @@
 
     var JJFUsers = SalesCommission.Business.SqlQueries.GetJJFEmailUsers();
 
+    var Associates = SalesCommission.Business.SqlQueries.GetSalesAssociates();
+    var Associates2 = SalesCommission.Business.SqlQueries.GetSalesAssociates();
+    var SalesManagers = SalesCommission.Business.SqlQueries.GetSalesAssociates();
+    var FinanceManagers = SalesCommission.Business.SqlQueries.GetSalesAssociates();
+
 }
 
 @section CSS
@@ -60,6 +65,8 @@
         .chosen-container-single .chosen-single abbr {
             top: 11px;
         }
+
+        .lookup-results {display:none;}
     </style>
 }
 
@@ -84,7 +91,7 @@
             <div class="col-sm-12 report-parameters">
                 <div class="row input-row">
                     <div class="col-sm-6">
-                        <strong>Lookup By VIN (last 6): </strong><input type="text" id="vinlookup" name="vinlookup" class="form-control" style="display:inline-block" />
+                        <strong>Lookup By VIN (min last 6): </strong><input type="text" id="vinlookup" name="vinlookup" class="form-control" style="display:inline-block" />
                     </div>
                     <div class="col-sm-2">
                         <input type="submit" value="Lookup" name="btnLookup" id="btnLookup" class="btn btn-primary" />
@@ -92,6 +99,8 @@
                 </div>
             </div>
         </div>
+        if(ViewBag.IsLookup)
+        { 
         <div class="row">
             <div class="col-sm-4">
                 <div class="row title-row">
@@ -99,7 +108,7 @@
                         <strong>Location:</strong>
                     </div>
                     <div class="col-sm-8">
-                        <select class="form-control" id="location" name="location">
+                        <select class="form-control" id="location" name="location" required="required">
                             <option value=""></option>
                             <option value="FOC" @(Model.Location == "FOC" ? "selected" : "")>Annapolis</option>
                             <option value="FTN" @(Model.Location == "FTN" ? "selected" : "")>Chambersburg</option>
@@ -121,7 +130,7 @@
                         <strong>VIN:</strong>
                     </div>
                     <div class="col-sm-8">
-                        @Html.TextBoxFor(x => x.VIN, new { @class = "form-control" })
+                        @Html.TextBoxFor(x => x.VIN, new { @class = "form-control", @required = "required" })
                         @Html.HiddenFor(x => x.Id)
                     </div>
                     
@@ -191,8 +200,8 @@
                         <strong>Associate:</strong>
                     </div>
                     <div class="col-sm-8">
-                        
-                        <select class="form-control chosen-select" id="salesassociate1" name="salesassociate1">  
+                        @Html.DropDownListFor(x => x.SalesAssociate1, Associates, new { @class = "form-control form-inline chosen-select" })
+                        @*<select class="form-control chosen-select" id="salesassociate1" name="salesassociate1">  
                             <option value=""></option>                          
                             @foreach (var user in JJFUsers)
                             {
@@ -210,7 +219,7 @@
                                     <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
                                 }
                             }                            
-                        </select>
+                        </select>*@
                     </div>
                 </div>
                 <div class="row title-row">
@@ -218,7 +227,8 @@
                         <strong>Associate:</strong>
                     </div>
                     <div class="col-sm-8">
-                        <select class="form-control chosen-select" id="salesassociate2" name="salesassociate2">
+                        @Html.DropDownListFor(x => x.SalesAssociate2, Associates2, new { @class = "form-control form-inline chosen-select" })
+                        @*<select class="form-control chosen-select" id="salesassociate2" name="salesassociate2">
                             <option value=""></option>
                             @foreach (var user in JJFUsers)
                             {
@@ -235,7 +245,7 @@
                                     <option value="@user.DMS_Id" @selected>@user.LastName, @user.FirstName</option>
                                 }
                             }                        
-                        </select>
+                        </select>*@
                     </div>
                 </div>
                 <div class="row title-row">
@@ -243,7 +253,8 @@
                         <strong>Finance Mgr:</strong>
                     </div>
                     <div class="col-sm-8">
-                        <select class="form-control chosen-select" id="financemanager" name="financemanager">
+                        @Html.DropDownListFor(x => x.FinanceManagerId,FinanceManagers, new { @class = "form-control form-inline chosen-select" })
+                        @*<select class="form-control chosen-select" id="financemanager" name="financemanager">
                             <option value=""></option>
                             @foreach (var user in JJFUsers)
                             {
@@ -262,7 +273,7 @@
                                 }
                             }
          
-                        </select>
+                        </select>*@
                     </div>
                 </div>
                 <div class="row title-row">
@@ -270,7 +281,8 @@
                         <strong>Sales Mgr:</strong>
                     </div>
                     <div class="col-sm-8">
-                        <select class="form-control chosen-select" id="salesmanager" name="salesmanager">
+                        @Html.DropDownListFor(x => x.SalesManagerId, SalesManagers, new { @class = "form-control form-inline chosen-select" })
+                        @*<select class="form-control chosen-select" id="salesmanager" name="salesmanager">
                             <option value=""></option>
                             @foreach (var user in JJFUsers)
                             {
@@ -290,7 +302,7 @@
                                 }
                             }
 
-                        </select>
+                        </select>*@
                     </div>
                 </div>
             </div>
@@ -314,7 +326,7 @@
                             }
                             else
                             {
-                                TitleDueCustomer = (bool) Model.TitleDueCustomer;
+                                TitleDueCustomer = (bool)Model.TitleDueCustomer;
                             }
                         }
                         @Html.CheckBoxFor(x => TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
@@ -351,15 +363,15 @@
                 @Html.TextAreaFor(x => x.Comments, new { style = "-webkit-box-sizing: border-box;-moz-box-sizing: border-box;box-sizing: border-box;max-width:none;width: 100%;height:100px; " })
             </div>
         </div>
-         
+
         <div class="row" style="margin-top:25px;">
             <div class="col-sm-12" style="text-align:center">
-                <input type="submit" class="btn btn-primary" value="Add Title Due" name="btnAdd" id="btnAdd" />
+                <input type="submit" class="btn btn-primary" value="Save Title Due" name="btnAdd" id="btnAdd" />
             </div>
         </div>
+                                }
 
-
-    }
+                            }
 @section scripts
 {
 <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>

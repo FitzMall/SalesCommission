@@ -55,6 +55,7 @@ namespace SalesCommission.Models
     public class MonthlySalesReportDetail
     {
         public string AutoMallName { get; set; }
+        public int OrderId { get; set; }
         public List<SalesReportDetail> SalesReportDetails { get; set; }
     }
 
@@ -101,7 +102,45 @@ namespace SalesCommission.Models
         public string AssociateName { get; set; }
         public List<AssociateTradeReport> AssociateTradeReports { get; set; }
     }
+    public class SalesReportModel
+    {
+        public string StoreId { get; set; }
+        public string[] SelectedStores { get; set; }
+        public int ReportStartMonth { get; set; }
+        public int ReportStartYear { get; set; }
+        public int ReportEndMonth { get; set; }
+        public int ReportEndYear { get; set; }
+        public List<SalesReportDetail> SalesReportDetails { get; set; }
+        public List<MonthlySalesReportDetail> MonthlySalesReportDetails { get; set; }
+        public List<ObjectivesAndStandards> ObjectivesAndStandards { get; set; }
+        public List<FactoryToDealerCash> FactoryToDealerCash { get; set; }
+        public List<Status5> Status5 { get; set; }
+        public List<FiscalMonth> FiscalMonth { get; set; }
 
+        public int ReportComparisonStartMonth { get; set; }
+        public int ReportComparisonStartYear { get; set; }
+        public int ReportComparisonEndMonth { get; set; }
+        public int ReportComparisonEndYear { get; set; }
+        public List<SalesReportDetail> CompareSalesReportDetails { get; set; }
+        public List<MonthlySalesReportDetail> CompareMonthlySalesReportDetails { get; set; }
+        public List<ObjectivesAndStandards> CompareObjectivesAndStandards { get; set; }
+        public List<FactoryToDealerCash> CompareFactoryToDealerCash { get; set; }
+        public List<Status5> CompareStatus5 { get; set; }
+        public List<FiscalMonth> CompareFiscalMonth { get; set; }
+
+
+        public bool IncludeHandyman { get; set; }
+        public bool CompareDates { get; set; }
+        public bool ShowOnlyHandyman { get; set; }
+        public bool ExcludeBadDuplicates { get; set; }
+        public bool ExcludeAllBad { get; set; }
+        public bool ShowExcludedGroups { get; set; }
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+        public string VehicleType { get; set; }
+     }
     public class LeadReportModel
     {
         public string StoreId { get; set; }
@@ -397,7 +436,8 @@ namespace SalesCommission.Models
         public int CommentOrder { get; set; }
         public string RootCause { get; set; }
         public string FundedStatus { get; set; }
-
+        public bool EmailSent { get; set; }
+        public string EmailAddresses { get; set; }
     }
 
 
@@ -489,6 +529,8 @@ namespace SalesCommission.Models
         public bool ElectronicTitle { get; set; }
         public string FinanceManagerId { get; set; }
         public string SalesManagerId { get; set; }
+        public bool EmailSent { get; set; }
+        public string EmailAddresses { get; set; }
     }
 
 }

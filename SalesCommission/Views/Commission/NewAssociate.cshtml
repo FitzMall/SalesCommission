@@ -1011,14 +1011,21 @@ else
                             commissionSumTotal += commissionTotal;
                         }
 
-                        decimal dealMoneyDue = 0;
-                        var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.StockNumber.Trim());
+                        var financeManager = "Finance Manager";
 
-                        if (itemMoneyDue != null)
+
+                        decimal dealMoneyDue = 0;
+                        if (!bIsAssociate)
                         {
-                            foreach (var money in itemMoneyDue)
+                            var itemMoneyDue = Model.MoneyDue.FindAll(x => x.StockNumber.Trim() == deal.StockNumber.Trim());
+
+                            if (itemMoneyDue != null)
                             {
-                                dealMoneyDue += money.ControlBalance;
+                                foreach (var money in itemMoneyDue)
+                                {
+                                    dealMoneyDue += money.ControlBalance;
+                                    financeManager = money.FIManager;
+                                }
                             }
                         }
 
@@ -1028,7 +1035,7 @@ else
                         if (dealMoneyDue > 0)
                         {
                             moneyDueBGColor = "background-color: #d2070769";
-                            moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal, notify F and I Manager.";
+                            moneyDueWarning = "There is $" + dealMoneyDue.ToString("C", nfi) + " due on this deal, notify " + financeManager;
                         }
                         else
                         {
@@ -1038,10 +1045,13 @@ else
                         var titleStatus = "";
                         var itemTitleDue = Model.TitleDue.FindAll(x => x.VIN.Trim() == deal.Trade1VIN.Trim() || x.VIN.Trim() == deal.Trade2VIN.Trim());
 
+
                         if (itemTitleDue != null && itemTitleDue.Count > 0)
                         {
                             var titleDue = itemTitleDue[0];
                             var ManagerNoStatus = true;
+
+                            financeManager = titleDue.FinanceManager;
 
                             //if (titleDue.TitleDueBank)
                             //{
@@ -1091,26 +1101,32 @@ else
                                 titleStatus += "Payoff Due, ";
                                 ManagerNoStatus = false;
                             }
-                            //if (titleDue.WaitingOutSTTitle)
-                            //{
-                            //    titleStatus += "Waiting Out/ST Title, ";
-                            //    ManagerNoStatus = false;
-                            //}
+                            if (titleDue.WaitingOutSTTitle)
+                            {
+                                titleStatus += "Waiting Out/ST Title, ";
+                                ManagerNoStatus = false;
+                            }
                             if (titleDue.DuplicateTitleAppliedFor)
                             {
                                 titleStatus += "Dup Title Applied For, ";
                                 ManagerNoStatus = false;
                             }
+                            //if (titleDue.ElectronicTitle)
+                            //{
+                            //    titleStatus += "E-Title, ";
+                            //    ManagerNoStatus = false;
+                            //}
+
                             //if (titleDue.Other)
                             //{
                             //    titleStatus += "Other, ";
                             //    ManagerNoStatus = false;
                             //}
 
-                            if (ManagerNoStatus && !titleDue.ClearTitle)
-                            {
-                                titleStatus = "No Status";
-                            }
+                            //if (ManagerNoStatus && !titleDue.ClearTitle && !titleDue.NoTitleDispose)
+                            //{
+                            //    titleStatus = "No Status";
+                            //}
 
                             titleStatus = titleStatus.TrimEnd(' ').TrimEnd(',');
                         }
@@ -1121,9 +1137,12 @@ else
                         if (titleStatus != "")
                         {
                             titleDueBGColor = "background-color: #d26e0769";
-                            titleDueWarning = "There is a " + titleStatus + " on this deal, notify F and I Manager.";
+                            titleDueWarning = "There is a " + titleStatus + " on this deal, notify " + financeManager;
                         }
-
+                        else
+                        {
+                            titleDueWarning = "";
+                        }
 
 
 
@@ -1136,7 +1155,7 @@ else
                             else
                             {
                                 <td>@dealIndex</td>
-                                <td class="text-center" style="@moneyDueBGColor">@deal.DealKey</td>
+                                <td class="text-center" style="@moneyDueBGColor @titleDueBGColor" title="@moneyDueWarning @titleDueWarning">@deal.DealKey</td>
                     }
 
                             <td class="text-center">

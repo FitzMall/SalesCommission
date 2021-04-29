@@ -1,11 +1,628 @@
-﻿@{
-    ViewBag.Title = "External Reports Dashboard";
+﻿@model SalesCommission.Models.AssociateHomeModel
+
+@{
+    ViewBag.Title = "Sales Commission Dashboard";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 2;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    nfi.PercentSymbol = "";
+
+}
+
+@section CSS
+{
+
+    <script src="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
 }
 
 <div class="jumbotron">
-    <h1>Sales Commission Dashboard</h1>
+    <h1>Sales Commission Dashboard for @Session["UserName"]</h1>
 </div>
 
-<div class="row">
+@if (Model.AssociateTitleDue != null && Model.AssociateTitleDue.Count > 0)
+{
+    <div class="row">
+        <h3>Title Due Issues</h3>
 
-</div>
+        <table id="title-due" class="table table-bordered" style="font-size:12px;">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center">VIN</th>
+                    <th class="text-center">VIN (Last 6)</th>
+                    <th class="text-center">Stock #</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">From</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Bank Name</th>
+                    <th class="text-center">Customer</th>
+                    <th class="text-center">Sales Associate</th>
+                    <th class="text-center">Sales Associate</th>
+                    <th class="text-center">Sales Manager</th>
+                    <th class="text-center">Finance Manager</th>
+                    <th class="text-center">Days</th>
+                    <th class="text-center">Received</th>
+                    <th class="text-center">Inv Status</th>
+                    <th class="text-center">Last Updated</th>
+                    <th class="text-center">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var titleDue in Model.AssociateTitleDue)
+                {
+                    //var titleDue_History = Model.TitleDueHistory.FindAll(x => x.Id == titleDue.Id);
+
+                    var ManagerNoStatus = true;
+
+                    var status = "";
+                    if (titleDue.TitleDueBank)
+                    {
+                        status += "Title Bank, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.TitleDueCustomer == true)
+                    {
+                        status += "Title Customer, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.TitleDueInterco)
+                    {
+                        status += "Title Interco, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.TitleDueAuction)
+                    {
+                        status += "Title Auction, ";
+                        ManagerNoStatus = false;
+                    }
+
+                    if (titleDue.LienDueBank)
+                    {
+                        status += "Lien Bank, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.LienDueCustomer)
+                    {
+                        status += "Lien Customer, ";
+                        ManagerNoStatus = false;
+                    }
+
+                    if (titleDue.OdomDueCustomer)
+                    {
+                        status += "Odom Customer, ";
+                        ManagerNoStatus = false;
+                    }
+
+                    if (titleDue.POADueCust)
+                    {
+                        status += "POA Due, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.PayoffDueCust)
+                    {
+                        status += "Payoff Due, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.WaitingOutSTTitle)
+                    {
+                        status += "Waiting Out, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.DuplicateTitleAppliedFor)
+                    {
+                        status += "Dup Title, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.Other)
+                    {
+                        status += "Other, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.NoTitleDispose)
+                    {
+                        status += "No Title Dispose, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (titleDue.ElectronicTitle)
+                    {
+                        status += "E-Title, ";
+                        ManagerNoStatus = false;
+                    }
+                    if (ManagerNoStatus && !titleDue.ClearTitle)
+                    {
+                        status = "No Status";
+                    }
+
+                    status = status.TrimEnd(' ').TrimEnd(',');
+                    TimeSpan span = DateTime.Now.Subtract(titleDue.DealDate);
+                    var daysDifference = (int)span.TotalDays;
+
+                    var inventoryStatusLabel = titleDue.InventoryStatus.ToString();
+                    switch (titleDue.InventoryStatus)
+                    {
+                        case 1:
+                            inventoryStatusLabel = "In Stock";
+                            break;
+                        case 2:
+                            inventoryStatusLabel = "Deal Pending";
+                            break;
+                        case 3:
+                            inventoryStatusLabel = "Demo";
+                            break;
+                        case 5:
+                            inventoryStatusLabel = "SOLD (Not Delivered)";
+                            break;
+                        case 8:
+                            inventoryStatusLabel = "Wholesale";
+                            break;
+                        case 9:
+                            inventoryStatusLabel = "Wholesale (At Auction)";
+                            break;
+                        case 99:
+                            inventoryStatusLabel = "SOLD";
+                            break;
+                    }
+
+                    <tr>
+                        @*<a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"> </a>*@
+                        <td class="text-center">@titleDue.VIN</td>
+                        @if (titleDue.VIN != null && titleDue.VIN != "")
+                        {
+                            <td class="text-center">@titleDue.VIN.Substring(titleDue.VIN.Length - 6)</td>
+                        }
+                        else
+                        {
+                            <td class="text-center"></td>
+                        }
+                        <td class="text-center">@titleDue.StockNumber</td>
+                        <td class="text-center">@titleDue.Year</td>
+                        <td class="text-center">@titleDue.Make</td>
+                        <td class="text-center">@titleDue.Model</td>
+                        <td class="text-center">
+                            @if (@titleDue.DealKey != "")
+                            {
+                                <a href="@applicationPath/Sales/DealDetail/@titleDue.DealKey" target="_blank">@titleDue.DealKey</a>
+                            }
+                        </td>
+                        <td class="text-center">@status</td>
+                        <td class="text-center">@titleDue.BankName</td>
+                        <td class="text-center">@titleDue.BuyerName<br />@titleDue.BuyerPhone<br />@titleDue.BuyerEmail</td>
+                        <td class="text-center">@titleDue.SalesAssociate1Name</td>
+                        <td class="text-center">@titleDue.SalesAssociate2Name</td>
+                        <td class="text-center">@titleDue.SalesManager</td>
+                        <td class="text-center">@titleDue.FinanceManager</td>
+                        <td class="text-center">@daysDifference</td>
+                        <td class="text-center">@titleDue.DealDate.ToShortDateString()</td>
+                        <td class="text-center">@inventoryStatusLabel</td>
+                        <td class="text-center">
+                            @if (titleDue.VIN != null && titleDue.VIN != "")
+                            {
+                                <a class="editInfoTitle" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br />
+                            }
+                            @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
+                            {
+                                @:@titleDue.UpdateUser - @titleDue.UpdateDate.ToShortDateString()
+                                                                    }
+
+                        </td>
+                        <td class="text-center">
+                            @if (titleDue.Notes != null && titleDue.Notes != "")
+                            {
+                                <a href="#" data-toggle="tooltip" title="@titleDue.Notes">
+                                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+
+                }
+
+            </tbody>
+        </table>
+
+        <script type="text/javascript">
+                                                $('#title-due').DataTable({
+                                                            searching: true,
+                                                            dom: 'Bfrti',
+                                                            pageLength: -1,
+                                                            columnDefs: [
+                                                                { type: 'any-number', targets: [3, 14] },
+                                                                { type: 'date-us', targets: [15] },
+
+                                                            ],
+                                                            order: [[2, "desc"]],
+                                                            buttons: [
+                                                                {
+                                                                    extend: 'copyHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'excelHtml5', footer: true,
+                                                                },
+                                                                {
+                                                                    extend: 'pdfHtml5', footer: true,
+                                                                    orientation: 'landscape'
+                                                                },
+                                                                {
+                                                                    extend: 'print', footer: true,
+                                                                    orientation: 'landscape'
+                                                                }
+                                                            ],
+                                                            retrieve: true
+                                                });
+
+        </script>
+
+
+
+    </div>
+}
+
+@if (Model.AssociateMoneyDue != null && Model.AssociateMoneyDue.Count > 0)
+{
+    <div class="row">
+        <h3>Money Due Issues</h3>
+
+ @{
+     decimal managerBalance = 0;
+     decimal managerBank = 0;
+     decimal managerCustomer = 0;
+     var managerDays = 0;
+     double managerAvgDays = 0;
+     decimal ManagerTotalDeals = 0;
+
+
+     foreach (var moneyDue in Model.AssociateMoneyDue)
+     {
+
+         managerBalance += moneyDue.ControlBalance;
+
+         if (moneyDue.DueFrom.Contains("106"))
+         {
+             managerBank += moneyDue.ControlBalance;
+         }
+         else if (moneyDue.DueFrom.Contains("111"))
+         {
+             managerCustomer += moneyDue.ControlBalance;
+         }
+
+         managerDays += moneyDue.ScheduleDays;
+
+     }
+
+     
+     managerAvgDays = (double)managerDays / (double)Model.AssociateMoneyDue.Count();
+     var avgmanagerBalance = (double)managerBalance / (double)Model.AssociateMoneyDue.Count();
+
+     ManagerTotalDeals += Model.AssociateMoneyDue.Count();
+
+     var medianDays = 0;
+
+     var MGRhighDays = Model.AssociateMoneyDue.Max(x => x.ScheduleDays);
+     var MGRlowDays = Model.AssociateMoneyDue.Min(x => x.ScheduleDays);
+
+     var MGRdiffDays = (MGRhighDays - MGRlowDays) / 2;
+     medianDays = MGRlowDays + MGRdiffDays;
+}
+
+        <table id="money-due" class="table table-bordered" style="font-size:12px;">
+            <thead>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center">Stock #</th>
+                    <th class="text-center">Deal #</th>
+                    <th class="text-center">Schedule<br />Days</th>
+                    <th class="text-center">Deal Date</th>
+                    <th class="text-center">Due From</th>
+                    <th class="text-center">Customer #</th>
+                    <th class="text-center">Control<br />Balance</th>
+                    <th class="text-center">Customer Name</th>
+                    <th class="text-center">Business<br />Phone</th>
+                    <th class="text-center">Residential<br />Phone</th>
+                    <th class="text-center">Sales Manager</th>
+                    <th class="text-center">FI Manager</th>
+                    <th class="text-center">Bank Name</th>
+                    <th class="text-center">Last Updated</th>
+                    <th class="text-center">Funded/Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var moneyDue in Model.AssociateMoneyDue)
+                {
+                    var location = Model.AssociateInformation.AssociateLocation;
+                    var moneyDueHistory = Model.AssociateMoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                    var currentHistory = new SalesCommission.Models.MoneyDue();
+
+                    if (moneyDueHistory != null && moneyDueHistory.Count > 0)
+                    {
+                        currentHistory = moneyDueHistory[0];
+                    }
+
+
+                    <tr>
+                        <td class="text-center">@moneyDue.StockNumber</td>
+                        <td class="text-center">
+
+                            @if (moneyDue.DealNumber != "")
+                            {
+                                <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                            }
+                        </td>
+                        <td class="text-center">@moneyDue.ScheduleDays</td>
+                        <td class="text-center">@moneyDue.DealDate.ToShortDateString()</td>
+
+                        @if (moneyDue.DueFrom.Contains("106"))
+                        {
+                            <td class="text-center">Bank</td>
+                        }
+                        else if (moneyDue.DueFrom.Contains("111"))
+                        {
+                            <td class="text-center">Customer</td>
+                        }
+
+
+                        <td class="text-center">@moneyDue.CustomerNumber</td>
+                        <td class="text-center">@moneyDue.ControlBalance.ToString("C", nfi)</td>
+                        <td class="text-center">@moneyDue.CustomerName</td>
+                        <td class="text-center">@moneyDue.BusinessPhone</td>
+                        <td class="text-center">@moneyDue.ResidencePhone</td>
+                        <td class="text-center">@moneyDue.SalesManager</td>
+                        <td class="text-center">@moneyDue.FIManager</td>
+                        <td class="text-center">@moneyDue.BankName</td>
+                        <td class="text-center">
+                            @if (currentHistory.FundedStatus == "BOOKED" || currentHistory.FundedStatus == "FUNDED")
+                            {
+                                @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
+                                                                        }
+                            <br />
+                            <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                        </td>
+                        <td class="text-center">
+                            @currentHistory.FundedStatus<br />
+                            @if (currentHistory.RootCause != null && currentHistory.RootCause != "")
+                            {
+                                @currentHistory.RootCause<br />
+                            }
+                            @if (currentHistory.Comment != null && currentHistory.Comment != "")
+                            {
+                                <a href="#" data-toggle="tooltip" title="@currentHistory.Comment">
+                                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+
+                }
+
+            </tbody>
+            <tfoot>
+                <tr style="background-color:#d9edf7">
+                    <th class="text-center">@Model.AssociateMoneyDue.Count()</th>
+                    <th class="text-center"></th>
+                    <th class="text-center">Avg Days:<br />@Math.Round(managerAvgDays)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center">@managerBalance</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <script type="text/javascript">
+                                                            $('#money-due').DataTable({
+                                                                searching: true,
+                                                                dom: 'Bfrti',
+                                                                pageLength: -1,
+                                                                order: [[2, "desc"]],
+                                                                columnDefs: [
+                                                                    { type: 'any-number', targets: [2, 5, 6] },
+                                                                    { type: 'date-us', targets: [3] },
+                                                                    {
+                                                                        targets: [0],
+                                                                        orderData: [0, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [1],
+                                                                        orderData: [1, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [2],
+                                                                        orderData: [2, 1]
+                                                                    },
+                                                                    {
+                                                                        targets: [3],
+                                                                        orderData: [3, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [4],
+                                                                        orderData: [4, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [5],
+                                                                        orderData: [5, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [6],
+                                                                        orderData: [6, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [7],
+                                                                        orderData: [7, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [8],
+                                                                        orderData: [8, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [9],
+                                                                        orderData: [9, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [10],
+                                                                        orderData: [10, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [11],
+                                                                        orderData: [11, 2]
+                                                                    },
+                                                                    {
+                                                                        targets: [12],
+                                                                        orderData: [12, 2]
+                                                                    },
+                                                                ],
+                                                                buttons: [
+                                                                    {
+                                                                        extend: 'copyHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'excelHtml5', footer: true,
+                                                                    },
+                                                                    {
+                                                                        extend: 'pdfHtml5', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    },
+                                                                    {
+                                                                        extend: 'print', footer: true,
+                                                                        orientation: 'landscape'
+                                                                    }
+                                                                ],
+                                                                retrieve: true
+                                                            });
+        </script>
+
+
+    </div>
+}
+
+
+@section scripts
+{
+    <script type="text/javascript">
+
+                                                        $(document).ready(function () {
+
+                                                            $('[data-toggle="tooltip"]').tooltip();
+
+                                                            var dialogWidth = 0;
+
+                                                            dialogWidth = ($(window).width() * .75);
+
+                                                            if ($(window).width() > 1199) {
+                                                                dialogWidth = 1200;
+                                                            }
+
+                                                            $('body').on('click', '.editInfo', function (event) {
+                                                                var customer = $(this).attr("data-customer-number");
+                                                                var moneyFrom = $(this).attr("data-due-from");
+                                                                var location = $(this).attr("data-location");
+
+                                                                var url = "@applicationPath/Reports/UpdateMoneyDue/" + customer + "/" + location + "/" + moneyFrom;
+                                                                var dialogBox = $("<div>");
+
+                                                                $(dialogBox).dialog({
+                                                                    resizable: false,
+                                                                    height: "auto",
+                                                                    width: dialogWidth,
+                                                                    position: { my: "center", at: "top+25%", of: window },
+                                                                    title: 'Update Money Due Report',
+                                                                    modal: true,
+                                                                    open: function (event, ui) {
+                                                                        $(this).load(url);
+                                                                        //$('#BonusDraws').validate();
+                                                                    },
+                                                                    buttons: {
+                                                                        "Save": function () {
+                                                                            var $this = this;
+                                                                            var form = $('#UpdateMoneyDue', $this);
+                                                                            //if (!$(form).valid()) {
+                                                                            //    return false;
+                                                                            //}
+
+                                                                            $.ajax({
+                                                                                async: false,
+                                                                                type: 'POST',
+                                                                                url: form.attr("action"),
+                                                                                data: $(form).serialize(),
+                                                                                success: $($this).dialog("close").dialog("destroy").remove()
+                                                                            });
+
+                                                                            //location.reload();
+                                                                        },
+
+                                                                        "Close": function () {
+                                                                            $(this).dialog("close");
+                                                                            $(this).empty();
+                                                                        }
+                                                                    }
+                                                                });
+                                                                $(dialogBox).dialog('open');
+                                                            });
+
+
+        $('body').on('click', '.editInfoTitle', function (event) {
+            var vin = $(this).attr("data-vin");
+
+            var url = "@applicationPath/Reports/UpdateTitleStatus/?vin=" + vin;
+            var dialogBox = $("<div>");
+
+            $(dialogBox).dialog({
+                resizable: false,
+                height: "auto",
+                width: dialogWidth,
+                position: { my: "center", at: "top+25%", of: window },
+                title: 'Update Title Status',
+                modal: true,
+                open: function (event, ui) {
+                    $(this).load(url);
+                    //$('#BonusDraws').validate();
+                },
+                buttons: {
+                    "Save": function () {
+                        var $this = this;
+                        var form = $('#UpdateTitleStatus', $this);
+                        //if (!$(form).valid()) {
+                        //    return false;
+                        //}
+
+                        $.ajax({
+                            async: false,
+                            type: 'POST',
+                            url: form.attr("action"),
+                            data: $(form).serialize(),
+                            success: $($this).dialog("close").dialog("destroy").remove()
+                        });
+
+                        //location.reload();
+                    },
+
+                    "Close": function () {
+                        $(this).dialog("close");
+                        $(this).empty();
+                    }
+                }
+            });
+            $(dialogBox).dialog('open');
+        });
+
+
+                                                        });
+
+
+    </script>
+}

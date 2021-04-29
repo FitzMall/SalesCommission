@@ -155,6 +155,10 @@ namespace SalesCommission.Business
                 Name = "Gaithersburg Hyundai/Subaru"
             },
             new Store {
+                StoreId = "Lakeforest(355)",
+                Name = "Gaithersburg Toyota"
+            },
+            new Store {
                 StoreId = "germantown",
                 Name = "Germantown"
             },
@@ -165,10 +169,6 @@ namespace SalesCommission.Business
             new Store {
                 StoreId = "Hagerstown(GM)",
                 Name = "Hagerstown GM"
-            },
-            new Store {
-                StoreId = "Lakeforest(355)",
-                Name = "Gaithersburg Toyota"
             },
             new Store {
                 StoreId = "lexingtonpark(lexpark)",
@@ -726,8 +726,12 @@ namespace SalesCommission.Business
             new RateException {
                 ExceptionID = "MH",
                 Name = "Max Rate Held"
+            },
+            new RateException {
+                ExceptionID = "FR",
+                Name = "Fixed Rate"
             }
-            
+
         };
 
         public static IEnumerable<PriceException> PriceExceptions = new List<PriceException> {
@@ -1352,8 +1356,82 @@ namespace SalesCommission.Business
             }
         };
 
+        public static IEnumerable<Order> SaleOrder = new List<Order>
+        {
+            new Order {
+                StoreId = "annapolis",
+                OrderId = 1
+            },
+            new Order {
+                StoreId = "annapolis(classic)",
+                OrderId = 2
+            },
+            new Order {
+                StoreId = "chambersburg",
+                OrderId = 3
+            },
+            new Order {
+                StoreId = "clearwater",
+                OrderId = 4
+            },
+            new Order {
+                StoreId = "frederick",
+                OrderId = 5
+            },
+            new Order {
+                StoreId = "superstore",
+                OrderId = 6
+            },
+            new Order {
+                StoreId = "Hagerstown(CDJR)",
+                OrderId = 8
+            },
+            new Order {
+                StoreId = "Hagerstown(GM)",
+                OrderId = 7
+            },
+            new Order {
+                StoreId = "lakeforest(russell)",
+                OrderId = 11
+            },
+            new Order {
+                StoreId = "germantown",
+                OrderId = 9
+            },
+            new Order {
+                StoreId = "Lakeforest(355)",
+                OrderId = 10
+            },
+            new Order {
+                StoreId = "lexingtonpark(lexpark)",
+                OrderId = 15
+            },
+            new Order {
+                StoreId = "nicholson",
+                OrderId = 14
+            },
+            new Order {
+                StoreId = "colonial",
+                OrderId = 12
+            },
+            new Order {
+                StoreId = "subaru",
+                OrderId = 13
+            },
+            new Order {
+                StoreId = "wheaton",
+                OrderId = 16
+            }
+        };
+
     }
 
+}
+
+public class Order
+{
+    public int OrderId { get; set; }
+    public string StoreId { get; set; }
 }
 
 public class Condition

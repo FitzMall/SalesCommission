@@ -188,14 +188,13 @@ namespace SalesCommission.Business
                                 makeName = detail.MakeName.ToUpper();
                             detail.CPOCount = 0;
 
+                            var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) && o.AutoMall == detail.AutoMall && o.BrandId != "AA");
 
-                            var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName));
-
-                            if(detail.MakeId == "41")
+                            if (detail.MakeId == "41" && detail.AutoMall.ToUpper() != "CLEARWATER")
                             {
                                 cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) || o.CertifiedMake.ToUpper().Contains("RAM") || o.CertifiedMake.ToUpper().Contains("DODGE"));
                             }
-
+                            
                             if (cpoListCount != null && cpoListCount.Count > 0)
                             {
                                 foreach (var cpoCount in cpoListCount)
@@ -357,6 +356,140 @@ namespace SalesCommission.Business
 
         }
 
+        public static SalesReportModel GetSalesReportByDateRange(SalesReportModel salesReportModel)
+        {
+
+            var reportStartDate = new DateTime(salesReportModel.ReportStartYear, salesReportModel.ReportStartMonth, 1);
+            var reportEndDate = new DateTime(salesReportModel.ReportEndYear, salesReportModel.ReportEndMonth, 1).AddMonths(1);
+
+            var salesReportDetails = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportByDateRange", new { ReportStartDate = reportStartDate, ReportEndDate = reportEndDate }, "SalesCommission");
+
+            var leaseCounts = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportLeaseCountByDateRange", new { ReportStartDate = reportStartDate, ReportEndDate = reportEndDate }, "SalesCommission");
+            //BPP Collection Percentage
+            var certifiedCounts = SqlMapperUtil.StoredProcWithParams<CertifiedCount>("sp_SalesLogReportCertifiedCountByDateRange", new { ReportStartDate = reportStartDate, ReportEndDate = reportEndDate }, "SalesCommission");
+
+            var bppCollection = SqlMapperUtil.StoredProcWithParams<BPPCollection>("sp_SalesLogGetBPPCollectionByDateRange", new { ReportStartDate = reportStartDate.ToShortDateString(), ReportEndDate = reportEndDate.ToShortDateString() }, "JJFServerFOX");
+
+            foreach (var detail in salesReportDetails)
+            {
+                detail.TotalAmount = detail.DealGrossAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; //detail.OtherAmount + detail.FTDAmount
+
+                var currentSelectedDate = new DateTime(salesReportModel.ReportStartYear, salesReportModel.ReportStartMonth, 1);
+                var grossChangeDate = new DateTime(2020, 1, 31);
+                if (currentSelectedDate > grossChangeDate)
+                {
+                    detail.TotalAmount += detail.BackGrossItemAmount;
+                }
+
+                detail.VariancePercentage = (double)detail.VarianceCount / (double)detail.DealCount;
+
+                if (detail.DealCount > 0 && detail.TotalAmount != 0)
+                {
+                    detail.PVRAmount = (double)detail.TotalAmount / (double)detail.DealCount;
+                }
+
+
+                //Set the lease counts...
+
+                if (leaseCounts != null && leaseCounts.Count > 0)
+                {
+                    var leases = leaseCounts.Find(o => o.MakeId == detail.MakeId && o.DealMonth == detail.DealMonth);
+                    if (leases != null)
+                    {
+                        detail.LeaseCount = leases.LeaseCount;
+                    }
+                }
+                var locationCode = "";
+                //Determine Location Code
+                foreach (var location in Enums.StoreLocations)
+                {
+                    if (location.StoreId.ToLower() == detail.AutoMall.ToLower())
+                    {
+                        locationCode = location.LocationId;
+                    }
+
+                }
+
+                var locationBPP = new List<BPPCollection>();
+                if (locationBPP != null)
+                {
+                    if (detail.BrandId.ToUpper() == "UU")
+                    {
+                        locationBPP = bppCollection.FindAll(o => o.Location == locationCode && o.ConditionAtSold == "U");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            locationBPP = bppCollection.FindAll(o => o.Location == locationCode && o.ConditionAtSold == "N" && o.VehMake.ToUpper().Contains(detail.MakeName.ToUpper()));
+                        }
+                        catch (Exception ex)
+                        {
+                            locationBPP = new List<BPPCollection>();
+                        }
+                    }
+                }
+
+                //Set the BPP Collection percentage
+                //var locationBPP = bppCollection.FindAll(o => o.Location == locationCode);
+
+                double totalListAmount = 0;
+                double totalListCollected = 0;
+
+                foreach (var locBPP in locationBPP)
+                {
+                    totalListAmount += locBPP.BPPListAmt;
+                    totalListCollected += locBPP.CollectedAmt;
+                }
+
+                detail.BPPCollectionPercent = totalListCollected / totalListAmount;
+
+                if (detail.BrandId.ToUpper() != "UU")// || detail.MakeId == "87")
+                {
+
+                    if (certifiedCounts != null && certifiedCounts.Count > 0)
+                    {
+                        try
+                        {
+                            var makeName = "";
+
+                            makeName = detail.MakeName.ToUpper();
+                            detail.CPOCount = 0;
+
+
+                            var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) && o.AutoMall == detail.AutoMall && o.DealMonth == detail.DealMonth);
+
+                            if (detail.MakeId == "41")
+                            {
+                                cpoListCount = certifiedCounts.FindAll(o => (o.CertifiedMake.ToUpper().Contains(makeName) || o.CertifiedMake.ToUpper().Contains("RAM") || o.CertifiedMake.ToUpper().Contains("DODGE")) && o.DealMonth == detail.DealMonth);
+                            }
+
+                            if (cpoListCount != null && cpoListCount.Count > 0)
+                            {
+                                foreach (var cpoCount in cpoListCount)
+                                {
+                                    detail.CPOCount += cpoCount.CertifiedMakeCount;
+                                }
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            detail.CPOCount = 0;
+                        }
+
+                    }
+                }
+
+
+
+            }
+
+            salesReportModel.SalesReportDetails = salesReportDetails;
+
+            return salesReportModel;
+        }
+
         public static MonthlySalesLogReportModel GetMonthlySalesReportByDate(MonthlySalesLogReportModel salesLogReportModel, bool includeHandyman)
         {
 
@@ -486,13 +619,14 @@ namespace SalesCommission.Business
                             detail.CPOCount = 0;
 
 
-                            var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) && o.AutoMall == detail.AutoMall);
+                            var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) && o.AutoMall == detail.AutoMall && o.BrandId != "AA");
 
-                            if (detail.MakeId == "41")
+                            if (detail.MakeId == "41" &&  detail.AutoMall.ToUpper() != "CLEARWATER")
                             {
                                 cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) || o.CertifiedMake.ToUpper().Contains("RAM") || o.CertifiedMake.ToUpper().Contains("DODGE"));
                             }
 
+                            
                             if (cpoListCount != null && cpoListCount.Count > 0)
                             {
                                 foreach (var cpoCount in cpoListCount)
@@ -633,7 +767,7 @@ namespace SalesCommission.Business
                         deal.MaintenanceContractAmount +
                         deal.GapAmount +
                         deal.FinIncAmount +
-                        deal.BankFee;
+                        deal.BankFee + deal.AdjustmentAmount;
 
                     //var dealHistory = SqlQueries.GetSalesLogDealHistoryByDealKey(deal.DealKey);
 
@@ -648,7 +782,7 @@ namespace SalesCommission.Business
                                     showroomValidated.sl_maintenanceContract +
                                     showroomValidated.sl_gap +
                                     showroomValidated.sl_financeInc +
-                                    showroomValidated.sl_bankFee;
+                                    showroomValidated.sl_bankFee + showroomValidated.sl_ftdpcadj;
 
                         deal.DealVariance = (decimal)dealTotal - previousDealTotal;
                     }
@@ -1167,7 +1301,7 @@ namespace SalesCommission.Business
             foreach (var deal in moneyDue)
             {
 
-                var moneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == deal.CustomerNumber && x.DueFrom == deal.DueFrom && x.Location == deal.Location).OrderByDescending(x => x.CommentOrder).ToList();
+                var moneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == deal.CustomerNumber && x.DueFrom == deal.DueFrom && x.Location == deal.Location && x.DealNumber == deal.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                 if (moneyDueHistory != null && moneyDueHistory.Count > 0)
                 {
                     if (moneyDueHistory[0].FIManagerNumber != null && moneyDueHistory[0].FIManagerNumber != "")
@@ -1184,6 +1318,16 @@ namespace SalesCommission.Business
                     }
                 }
                 var locationName = deal.Location;
+
+                if(deal.SalesManagerNumber != null && deal.SalesManagerNumber != "")
+                {
+                    var manager = allAssociates.Find(x => x.Value.Trim() == deal.SalesManagerNumber.Trim());
+                    if (manager != null)
+                    {
+                        deal.SalesManager = manager.Text;
+                    }
+                }
+
 
                 switch (deal.Location)
                 {
@@ -4314,6 +4458,15 @@ namespace SalesCommission.Business
 
             return factoryToDealerCash;
         }
+
+        public static List<FactoryToDealerCash> GetFTDByDateRange(int startYear, int startMonth, int endYear, int endMonth)
+        {
+
+            var factoryToDealerCash = SqlMapperUtil.StoredProcWithParams<FactoryToDealerCash>("sp_SalesLogGetFTDByDateRange", new {StartYearID = startYear, StartMonthID = startMonth, EndYearID = endYear, EndMonthID = endMonth}, "SalesCommission");
+
+            return factoryToDealerCash;
+        }
+
         public static List<FactoryToDealerCash> GetFTDByStoreAndDate(SalesLogReportModel salesLogReportModel)
         {
             var locationId = "";

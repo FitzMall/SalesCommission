@@ -140,6 +140,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AftermarketReportModel.cs" />
+    <Compile Include="Models\AssociateHomeModel.cs" />
     <Compile Include="Models\AssociateModel.cs" />
     <Compile Include="Models\ChargebackModel.cs" />
     <Compile Include="Models\CommissionModel.cs" />
@@ -324,6 +325,9 @@
     <Content Include="Views\Reports\AddTitleDue.cshtml" />
     <Content Include="Views\Reports\UpdateTitleDue.cshtml" />
     <Content Include="Views\Reports\UpdateMoneyDueStatus.cshtml" />
+    <Content Include="Views\Reports\SalesReport.cshtml" />
+    <Content Include="Views\Reports\_SalesReportByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\_SalesReportByBreakdownsCompare.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

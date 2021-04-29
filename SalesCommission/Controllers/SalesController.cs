@@ -711,6 +711,8 @@ namespace SalesCommission.Controllers
                         titleDue1.BankName = individualDeal.sl_TradeBankName;
                         titleDue1.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
                         titleDue1.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+                        titleDue1.BuyerEmail = individualDeal.sl_BuyerEmail;
+                        titleDue1.BuyerPhone = individualDeal.sl_BuyerPhone;
 
                         if (Request.Form["TitleDueTrade.Id"] != null)
                         {
@@ -942,7 +944,7 @@ namespace SalesCommission.Controllers
                         var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue1.VIN);
 
 
-                        if (VehicleData != null)
+                        if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
                         {
                             titleDue1.Make = VehicleData.Make;
                             titleDue1.Model = VehicleData.Model;
@@ -951,7 +953,7 @@ namespace SalesCommission.Controllers
                                 titleDue1.Year = Int32.Parse(VehicleData.ModelYear);
                             }
 
-                            titleDue1.Location = VehicleData.Location;
+                            //titleDue1.Location = VehicleData.Location;
                             titleDue1.StockNumber = VehicleData.StockNumber;
                             titleDue1.VIN = VehicleData.VIN;
                             titleDue1.InventoryStatus = VehicleData.InventoryStatus;
@@ -959,6 +961,27 @@ namespace SalesCommission.Controllers
                             if (titleDue1.DealDate < new DateTime(2000, 1, 1))
                             {
                                 titleDue1.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                            }
+                        }
+                        else
+                        {
+                            if (individualDeal.sl_descOftrade != null && individualDeal.sl_descOftrade != "")
+                            {
+                                try
+                                {
+                                    var firstSpace = individualDeal.sl_descOftrade.IndexOf(" ");
+                                    var secondSpace = individualDeal.sl_descOftrade.IndexOf(" ", firstSpace + 1);
+
+                                    titleDue1.Year = Convert.ToInt16(individualDeal.sl_descOftrade.Substring(0, firstSpace));
+                                    titleDue1.Make = individualDeal.sl_descOftrade.Substring(firstSpace, secondSpace - firstSpace);
+                                    titleDue1.Model = individualDeal.sl_descOftrade.Substring(secondSpace);
+                                }
+                                catch(Exception ex)
+                                {
+                                    titleDue1.Year = 0;
+                                    titleDue1.Make = "Error";
+                                    titleDue1.Model = "Bad Trade Data";
+                                }
                             }
                         }
 
@@ -987,6 +1010,8 @@ namespace SalesCommission.Controllers
                         titleDue2.BankName = individualDeal.sl_Trade2BankName;
                         titleDue2.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
                         titleDue2.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+                        titleDue2.BuyerEmail = individualDeal.sl_BuyerEmail;
+                        titleDue2.BuyerPhone = individualDeal.sl_BuyerPhone;
 
                         if (Request.Form["TitleDueTrade2.Id"] != null)
                         {
@@ -1220,7 +1245,7 @@ namespace SalesCommission.Controllers
                         var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue2.VIN);
 
 
-                        if (VehicleData != null)
+                        if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
                         {
                             titleDue2.Make = VehicleData.Make;
                             titleDue2.Model = VehicleData.Model;
@@ -1229,7 +1254,7 @@ namespace SalesCommission.Controllers
                                 titleDue2.Year = Int32.Parse(VehicleData.ModelYear);
                             }
 
-                            titleDue2.Location = VehicleData.Location;
+                            //titleDue2.Location = VehicleData.Location;
                             titleDue2.StockNumber = VehicleData.StockNumber;
                             titleDue2.VIN = VehicleData.VIN;
                             titleDue2.InventoryStatus = VehicleData.InventoryStatus;
@@ -1239,6 +1264,28 @@ namespace SalesCommission.Controllers
                                 titleDue2.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
                             }
                         }
+                        else
+                        {
+                            if (individualDeal.sl_descOftrade2 != null && individualDeal.sl_descOftrade2 != "")
+                            {
+                                try
+                                {
+                                    var firstSpace = individualDeal.sl_descOftrade2.IndexOf(" ");
+                                    var secondSpace = individualDeal.sl_descOftrade2.IndexOf(" ", firstSpace + 1);
+
+                                    titleDue2.Year = Convert.ToInt16(individualDeal.sl_descOftrade2.Substring(0, firstSpace));
+                                    titleDue2.Make = individualDeal.sl_descOftrade2.Substring(firstSpace, secondSpace - firstSpace);
+                                    titleDue2.Model = individualDeal.sl_descOftrade2.Substring(secondSpace);
+                                }
+                                catch (Exception ex)
+                                {
+                                    titleDue2.Year = 0;
+                                    titleDue2.Make = "Error";
+                                    titleDue2.Model = "Bad Trade Data";
+                                }
+                            }
+                        }
+
 
 
                         var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue2);
@@ -1329,8 +1376,13 @@ namespace SalesCommission.Controllers
                     titleDue1.DealDate = individualDeal.sl_VehicleDealDate;
                     titleDue1.UpdateUser = Session["UserName"].ToString();
                     titleDue1.DealId = Int32.Parse(individualDeal.sl_pkey);
-                    titleDue1.BuyerName = individualDeal.sl_VehicleBuyerName;
+                    titleDue1.BuyerName = individualDeal.sl_VehicleCustomer;
                     titleDue1.Location = individualDeal.sl_VehicleLoc;
+                    titleDue1.BankName = individualDeal.sl_TradeBankName;
+                    titleDue1.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
+                    titleDue1.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+                    titleDue1.BuyerEmail = individualDeal.sl_BuyerEmail;
+                    titleDue1.BuyerPhone = individualDeal.sl_BuyerPhone;
 
                     if (Request.Form["TitleDueTrade.Id"] != null)
                     {
@@ -1560,6 +1612,51 @@ namespace SalesCommission.Controllers
                         titleDue1.NoTitleDispose = false;
                     }
 
+                    var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue1.VIN);
+
+
+                    if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
+                    {
+                        titleDue1.Make = VehicleData.Make;
+                        titleDue1.Model = VehicleData.Model;
+                        if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                        {
+                            titleDue1.Year = Int32.Parse(VehicleData.ModelYear);
+                        }
+
+                        //titleDue1.Location = VehicleData.Location;
+                        titleDue1.StockNumber = VehicleData.StockNumber;
+                        titleDue1.VIN = VehicleData.VIN;
+                        titleDue1.InventoryStatus = VehicleData.InventoryStatus;
+
+                        if (titleDue1.DealDate < new DateTime(2000, 1, 1))
+                        {
+                            titleDue1.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                        }
+                    }
+                    else
+                    {
+                        if (individualDeal.sl_descOftrade != null && individualDeal.sl_descOftrade != "")
+                        {
+                            try
+                            {
+                                var firstSpace = individualDeal.sl_descOftrade.IndexOf(" ");
+                                var secondSpace = individualDeal.sl_descOftrade.IndexOf(" ", firstSpace + 1);
+
+                                titleDue1.Year = Convert.ToInt16(individualDeal.sl_descOftrade.Substring(0, firstSpace));
+                                titleDue1.Make = individualDeal.sl_descOftrade.Substring(firstSpace, secondSpace - firstSpace);
+                                titleDue1.Model = individualDeal.sl_descOftrade.Substring(secondSpace);
+                            }
+                            catch (Exception ex)
+                            {
+                                titleDue1.Year = 0;
+                                titleDue1.Make = "Error";
+                                titleDue1.Model = "Bad Trade Data";
+                            }
+                        }
+                    }
+
+
                     var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue1);
 
                 }
@@ -1579,6 +1676,11 @@ namespace SalesCommission.Controllers
                     titleDue2.DealId = Int32.Parse(individualDeal.sl_pkey);
                     titleDue2.BuyerName = individualDeal.sl_VehicleBuyerName;
                     titleDue2.Location = individualDeal.sl_VehicleLoc;
+                    titleDue2.BankName = individualDeal.sl_TradeBankName;
+                    titleDue2.FinanceManagerId = individualDeal.sl_FinanceManagerNumber;
+                    titleDue2.SalesManagerId = individualDeal.sl_SalesManagerNumber;
+                    titleDue2.BuyerEmail = individualDeal.sl_BuyerEmail;
+                    titleDue2.BuyerPhone = individualDeal.sl_BuyerPhone;
 
                     if (Request.Form["TitleDueTrade2.Id"] != null)
                     {
@@ -1808,6 +1910,51 @@ namespace SalesCommission.Controllers
                     {
                         titleDue2.NoTitleDispose = false;
                     }
+
+                    var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue2.VIN);
+
+
+                    if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
+                    {
+                        titleDue2.Make = VehicleData.Make;
+                        titleDue2.Model = VehicleData.Model;
+                        if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                        {
+                            titleDue2.Year = Int32.Parse(VehicleData.ModelYear);
+                        }
+
+                        //titleDue2.Location = VehicleData.Location;
+                        titleDue2.StockNumber = VehicleData.StockNumber;
+                        titleDue2.VIN = VehicleData.VIN;
+                        titleDue2.InventoryStatus = VehicleData.InventoryStatus;
+
+                        if (titleDue2.DealDate < new DateTime(2000, 1, 1))
+                        {
+                            titleDue2.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                        }
+                    }
+                    else
+                    {
+                        if (individualDeal.sl_descOftrade2 != null && individualDeal.sl_descOftrade2 != "")
+                        {
+                            try
+                            {
+                                var firstSpace = individualDeal.sl_descOftrade2.IndexOf(" ");
+                                var secondSpace = individualDeal.sl_descOftrade2.IndexOf(" ", firstSpace + 1);
+
+                                titleDue2.Year = Convert.ToInt16(individualDeal.sl_descOftrade2.Substring(0, firstSpace));
+                                titleDue2.Make = individualDeal.sl_descOftrade2.Substring(firstSpace, secondSpace - firstSpace);
+                                titleDue2.Model = individualDeal.sl_descOftrade2.Substring(secondSpace);
+                            }
+                            catch (Exception ex)
+                            {
+                                titleDue2.Year = 0;
+                                titleDue2.Make = "Error";
+                                titleDue2.Model = "Bad Trade Data";
+                            }
+                        }
+                    }
+
 
                     var bUpdated = SqlQueries.UpdateTitleStatusByIdDealDetail(titleDue2);
                 }

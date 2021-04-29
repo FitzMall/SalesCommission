@@ -1127,6 +1127,31 @@ namespace SalesCommission.Controllers
                         var success = SqlQueries.SaveAssociateBonus(associateBonus);
                     }
 
+                    if(FIDealApproval.FIManagerNumber != null && FIDealApproval.FIManagerNumber != "")
+                    {
+
+                        var associateInformation = SqlQueries.GetAssociateInformationByDate(FIDealApproval.FIManagerNumber, Int32.Parse(yearId), Int32.Parse(monthId));
+
+                        var bonusDate = DateTime.Now.ToShortDateString();
+                        var bonusAmount = 50;
+                        var bonusComments = "F and I BPP Sale for Deal " + FIDealApproval.DealKey;
+
+                        var associateBonus = new Bonus();
+
+                        associateBonus.Id = Int32.Parse(id);
+                        associateBonus.AssociateSSN = associateInformation.AssociateSSN;
+                        associateBonus.MonthYear = monthId + "/" + yearId;
+
+                        associateBonus.CreateDate = DateTime.Now;
+                        associateBonus.CreateUser = Session["UserName"].ToString();
+
+                        associateBonus.BonusDate = bonusDate;
+                        associateBonus.BonusAmount = bonusAmount;
+                        associateBonus.BonusComments = bonusComments;
+
+                        var success = SqlQueries.SaveAssociateBonus(associateBonus);
+                    }
+
                 }
 
             }
@@ -1257,6 +1282,8 @@ namespace SalesCommission.Controllers
                 }
 
                 associateCommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(Int32.Parse(yearId), Int32.Parse(monthId), id);
+
+                associateCommissionModel.FIPayscaleAftermarket = SqlQueries.GetFIPayscaleAftermarketByIDAndDate(FICommissionModel.YearId, FICommissionModel.MonthId, payscaleId);
 
             }
 

@@ -22,6 +22,14 @@
 
     <script src="~/Scripts/jquery-ui.js"></script>
     <link href="~/Scripts/jquery-ui.css" rel="stylesheet" />
+
+    <style>
+
+        .noclose .ui-dialog-titlebar-close
+        {
+            display:none;
+        }
+    </style>
 }
 
 @if (Model.MoneyDue != null)
@@ -64,7 +72,7 @@
                 <tbody>
                     @foreach (var location in locations)
                     {
-                        var locationMoneyDue = Model.MoneyDue.FindAll(x => x.Location == location).OrderByDescending(x => x.ScheduleDays);
+                        var locationMoneyDue = Model.MoneyDue.FindAll(x => x.Location == location).OrderByDescending(x => x.ScheduleDays).ToList();
 
                         var locationName = location;
 
@@ -138,7 +146,7 @@
 
                                             @foreach (var managerNumber in FIManagers)
                                             {
-                                                var managerMoneyDue = locationMoneyDue.ToList().FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays);
+                                                var managerMoneyDue = locationMoneyDue.FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays).ToList();
 
                                                 var managerName = managerNumber;
                                                 var managerFINumber = managerNumber;
@@ -225,7 +233,7 @@
                                                                 @foreach (var moneyDue in managerMoneyDue)
                                                                 {
 
-                                                                    var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                    var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                                                                     var currentHistory = new SalesCommission.Models.MoneyDue();
 
                                                                     if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -447,7 +455,7 @@
                                                             @foreach (var moneyDue in locationMoneyDue)
                                                             {
 
-                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                                                                 var currentHistory = new SalesCommission.Models.MoneyDue();
 
                                                                 if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -678,7 +686,7 @@
 
                                         @foreach (var managerNumber in AllFIManagers)
                                         {
-                                            var managerMoneyDue = Model.MoneyDue.ToList().FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays);
+                                            var managerMoneyDue = Model.MoneyDue.ToList().FindAll(x => x.FIManagerNumber == managerNumber).OrderByDescending(x => x.ScheduleDays).ToList();
 
                                             var managerName = managerNumber;
                                             var managerFINumber = managerNumber;
@@ -768,7 +776,7 @@
                                                             @foreach (var moneyDue in managerMoneyDue)
                                                             {
 
-                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                                                                 var currentHistory = new SalesCommission.Models.MoneyDue();
 
                                                                 if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -990,7 +998,7 @@
                                                         @foreach (var moneyDue in Model.MoneyDue)
                                                         {
 
-                                                            var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                                            var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                                                             var currentHistory = new SalesCommission.Models.MoneyDue();
 
                                                             if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -1201,7 +1209,7 @@
     {
         if (bank != "")
         {
-            var bankMoneyDue = Model.MoneyDue.FindAll(x => x.BankName == bank && x.DueFrom.Contains("106")).OrderByDescending(x => x.ScheduleDays);
+            var bankMoneyDue = Model.MoneyDue.FindAll(x => x.BankName == bank && x.DueFrom.Contains("106")).OrderByDescending(x => x.ScheduleDays).ToList();
             var bankName = "";
 
 
@@ -1278,7 +1286,7 @@
             {
                 var location = moneyDue.Location;
 
-                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                 var currentHistory = new SalesCommission.Models.MoneyDue();
 
                 if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -1506,7 +1514,7 @@
                                     {
                                         var location = moneyDue.Location;
 
-                                        var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                                        var moneyDueHistory = Model.MoneyDueHistory.FindAll(x => x.Location == location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
                                         var currentHistory = new SalesCommission.Models.MoneyDue();
 
                                         if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -1740,10 +1748,16 @@
                                                                     position: { my: "center", at: "top+25%", of: window },
                                                                     title: 'Update Money Due Report',
                                                                     modal: true,
+                                                                    closeOnEscape: false,
+                                                                    beforeClose: function (event, ui) { return false; },
+                                                                    dialogClass: "noclose",
                                                                     open: function (event, ui) {
                                                                         $(this).load(url);
                                                                         //$('#BonusDraws').validate();
                                                                     },
+                                                                    //close: function () {
+                                                                    //    $(this).dialog("close").dialog("destroy").remove();
+                                                                    //},
                                                                     buttons: {
                                                                         "Save": function () {
                                                                             var $this = this;
@@ -1760,11 +1774,11 @@
                                                                                 success: $($this).dialog("close").dialog("destroy").remove()
                                                                             });
 
-                                                                            location.reload();
+                                                                            //location.reload();
                                                                         },
 
                                                                         "Close": function () {
-                                                                            $(this).dialog("close");
+                                                                            $(this).dialog("close").dialog("destroy").remove();;
                                                                             $(this).empty();
                                                                         }
                                                                     }

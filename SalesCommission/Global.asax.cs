@@ -283,10 +283,10 @@ namespace SalesCommission
             }
             else
             {
-                Session.Add("AssociateId", "007");
+                Session.Add("AssociateId", "3363");
                 Session.Add("LocationId", "JJF");
                 Session.Add("UserId", "statlerc");
-                Session.Add("UserName", "Default User");
+                Session.Add("UserName", "Not Logged In");
                 Session.Add("IsAdmin", true);
                 Session.Add("IsCommissionAdmin", true);
                 Session.Add("IsAssociateAdmin", true);

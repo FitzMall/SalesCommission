@@ -1,4 +1,4 @@
-﻿@model SalesCommission.Models.LeadReportModel
+﻿@model SalesCommission.Models.SalesReportModel
 
 @{ 
     System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
@@ -48,7 +48,7 @@
 
 
 
-    <div class="col-sm-12" id="location-associate">
+    @*<div class="col-sm-12" id="location-associate">
         <h4>Lead Report Results for @Model.ComparisonReportStartDate.ToShortDateString() to @Model.ComparisonReportEndDate.ToShortDateString() for @Model.VehicleType Vehicles</h4>
 
         <table class="table table-bordered" style="font-size:12px">
@@ -67,7 +67,7 @@
                     <th class="text-center">Sold</th>
                     <th class="text-center divider-column">Sold %</th>
                     <th class="text-center">Total</th>
-                    @*<th class="text-center">Time</th>*@
+                    
                     <th class="text-center">Sold</th>
                     <th class="text-center divider-column">Sold %</th>
                     <th class="text-center">Total</th>
@@ -79,7 +79,6 @@
                     <th class="text-center">Sold</th>
                     <th class="text-center divider-column">Sold %</th>
                     <th class="text-center">Total</th>
-                    @*<th class="text-center">Time</th>*@
                     <th class="text-center">Sold</th>
                     <th class="text-center divider-column">Sold %</th>
 
@@ -270,7 +269,6 @@
                     <td class="text-center divider-column">@CompanyTotalLeadSoldPercent.ToString("P", nfi)</td>
 
                     <td class="text-center">@CompanyWalkInLeadCount</td>
-                    @*<td class="text-center">@CompanyWalkinAvgAdjustedResponseTime.ToString("C", nfi)</td>*@
                     <td class="text-center">@CompanyWalkInLeadSoldCount</td>
                     <td class="text-center divider-column">@CompanyWalkInLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -285,7 +283,6 @@
                     <td class="text-center divider-column">@CompanyPhoneLeadSoldPercent.ToString("P", nfi)</td>
 
                     <td class="text-center">@CompanyOtherLeadCount</td>
-                    @*<td class="text-center"></td>*@
                     <td class="text-center">@CompanyOtherLeadSoldCount</td>
                     <td class="text-center divider-column">@CompanyOtherLeadSoldCount</td>
                 </tr>
@@ -342,9 +339,9 @@
                             breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
                             break;
 
-                        //case "brand":
-                        //    breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
-                        //    break;
+                        case "brand":
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                            break;
 
                         case "leadgroupname":
                             breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.LeadGroupMapping).Distinct().OrderBy(x => x).ToList();
@@ -371,11 +368,11 @@
                             break;
 
                         case "make":
-                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Make).Distinct().OrderBy(x => x).ToList();
                             break;
 
                         case "model":
-                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Model.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                            breakdownLevel1Values = Model.ComparisonLeads.Select(x => x.VOfInterest_Model).Distinct().OrderBy(x => x).ToList();
                             break;
 
                         case "stock":
@@ -467,11 +464,11 @@
                                 break;
 
                             case "make":
-                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_Make.ToUpper() == breakdown1.ToUpper());
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_Make == breakdown1);
                                 break;
 
                             case "model":
-                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_Model.ToUpper() == breakdown1.ToUpper());
+                                BreakDown1filteredLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_Model == breakdown1);
                                 break;
 
                             case "stock":
@@ -699,7 +696,6 @@
                             <td class="text-center divider-column">@BreakDown1TotalLeadSoldPercent.ToString("P", nfi)</td>
 
                             <td class="text-center">@BreakDown1WalkInLeadCount</td>
-                            @*<td class="text-center">@BreakDown1WalkinAvgAdjustedResponseTime.ToString("C", nfi)</td>*@
                             <td class="text-center">@BreakDown1WalkInLeadSoldCount</td>
                             <td class="text-center divider-column">@BreakDown1WalkInLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -737,9 +733,9 @@
                                 breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
                                 break;
 
-                            //case "brand":
-                            //    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
-                            //    break;
+                            case "brand":
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                break;
 
                             case "leadgroupname":
                                 breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadGroupMapping).Distinct().OrderBy(x => x).ToList();
@@ -766,11 +762,11 @@
                                 break;
 
                             case "make":
-                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Make).Distinct().OrderBy(x => x).ToList();
                                 break;
 
                             case "model":
-                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Model.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VOfInterest_Model).Distinct().OrderBy(x => x).ToList();
                                 break;
 
                             case "stock":
@@ -862,11 +858,11 @@
                                     break;
 
                                 case "make":
-                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make.ToUpper() == breakdown2.ToUpper());
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make == breakdown2);
                                     break;
 
                                 case "model":
-                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Model.ToUpper() == breakdown2.ToUpper());
+                                    BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Model == breakdown2);
                                     break;
 
                                 case "stock":
@@ -1090,7 +1086,6 @@
 
 
                                 <td class="text-center">@BreakDown2WalkInLeadCount</td>
-                                @*<td class="text-center">@BreakDown2WalkinAvgAdjustedResponseTime.ToString("C", nfi)</td>*@
                                 <td class="text-center">@BreakDown2WalkInLeadSoldCount</td>
                                 <td class="text-center divider-column">@BreakDown2WalkInLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -1127,9 +1122,9 @@
                                     breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
                                     break;
 
-                                //case "brand":
-                                //    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
-                                //    break;
+                                case "brand":
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                    break;
 
                                 case "leadgroupname":
                                     breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadGroupMapping).Distinct().OrderBy(x => x).ToList();
@@ -1156,11 +1151,11 @@
                                     break;
 
                                 case "make":
-                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Make).Distinct().OrderBy(x => x).ToList();
                                     break;
 
                                 case "model":
-                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Model.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                    breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VOfInterest_Model).Distinct().OrderBy(x => x).ToList();
                                     break;
 
                                 case "stock":
@@ -1249,11 +1244,11 @@
                                         break;
 
                                     case "make":
-                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make.ToUpper() == BreakDown3.ToUpper());
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make == BreakDown3);
                                         break;
 
                                     case "model":
-                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Model.ToUpper() == BreakDown3.ToUpper());
+                                        BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Model == BreakDown3);
                                         break;
 
                                     case "stock":
@@ -1479,7 +1474,6 @@
 
 
                                     <td class="text-center">@BreakDown3WalkInLeadCount</td>
-                                    @*<td class="text-center">@BreakDown3WalkinAvgAdjustedResponseTime.ToString("C", nfi)</td>*@
                                     <td class="text-center">@BreakDown3WalkInLeadSoldCount</td>
                                     <td class="text-center divider-column">@BreakDown3WalkInLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -1517,9 +1511,9 @@
                                         breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
                                         break;
 
-                                    //case "brand":
-                                    //    breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
-                                    //    break;
+                                    case "brand":
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                        break;
 
                                     case "leadgroupname":
                                         breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadGroupMapping).Distinct().OrderBy(x => x).ToList();
@@ -1546,11 +1540,11 @@
                                         break;
 
                                     case "make":
-                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Make.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Make).Distinct().OrderBy(x => x).ToList();
                                         break;
 
                                     case "model":
-                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Model.Trim().ToUpper()).Distinct().OrderBy(x => x).ToList();
+                                        breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VOfInterest_Model).Distinct().OrderBy(x => x).ToList();
                                         break;
 
                                     case "stock":
@@ -1639,11 +1633,11 @@
                                             break;
 
                                         case "make":
-                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make.ToUpper() == BreakDown4.ToUpper());
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make == BreakDown4);
                                             break;
 
                                         case "model":
-                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Model.ToUpper() == BreakDown4.ToUpper());
+                                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Model == BreakDown4);
                                             break;
 
                                         case "stock":
@@ -1868,7 +1862,6 @@
                                         <td class="text-center divider-column">@BreakDown4TotalLeadSoldPercent.ToString("P", nfi)</td>
 
                                         <td class="text-center">@BreakDown4WalkInLeadCount</td>
-                                        @*<td class="text-center">@BreakDown4WalkinAvgAdjustedResponseTime.ToString("C", nfi)</td>*@
                                         <td class="text-center">@BreakDown4WalkInLeadSoldCount</td>
                                         <td class="text-center divider-column">@BreakDown4WalkInLeadSoldPercent.ToString("P", nfi)</td>
 
@@ -1946,23 +1939,7 @@
                     var index = 0;
                 }
 
-                @*@foreach (var storeInformation in Model.StoreLeadInformation)
-                {
-
-
-
-                    <script type="text/javascript">
-
-                        $(document).ready(function () {
-                            $(".location-associate-collapse-@index-href").click(function () {
-                                $('.location-associate-data-row-@index').toggleClass('selected-row');
-                                $(".location-associate-collapse-@index-href").toggleClass('changed');
-                            });
-                        });
-                    </script>
-
-                }*@
-
+                
                 @{
                     if (TotalPhoneLeadCount > 0)
                     {
@@ -2012,7 +1989,6 @@
                     <th class="text-center divider-column">@CompanyTotalLeadSoldPercent.ToString("P", nfi)</th>
 
                     <th class="text-center">@CompanyWalkInLeadCount</th>
-                    @*<th class="text-center">@CompanyWalkinAvgAdjustedResponseTime.ToString("C", nfi)</th>*@
                     <th class="text-center">@CompanyWalkInLeadSoldCount</th>
                     <th class="text-center divider-column">@CompanyWalkInLeadSoldPercent.ToString("P", nfi)</th>
 
@@ -2027,14 +2003,13 @@
                     <th class="text-center divider-column">@CompanyPhoneLeadSoldPercent.ToString("P", nfi)</th>
 
                     <th class="text-center">@CompanyOtherLeadCount</th>
-                    @*<th class="text-center"></th>*@
                     <th class="text-center">@CompanyOtherLeadSoldCount</th>
                     <th class="text-center divider-column">@CompanyOtherLeadSoldCount</th>
                 </tr>
             </tfoot>
         </table>
 
-    </div>
+    </div>*@
            
          
     <script>

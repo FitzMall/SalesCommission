@@ -74,6 +74,7 @@ namespace SalesCommission.Models
         public int DealerId { get; set; }
         public string LeadId { get; set; }
         public DateTime LeadCreatedEastTime { get; set; }
+        public DateTime VehicleSoldEastTime { get; set; }
         public string LeadStatusId { get; set; }
         public string LeadStatusName { get; set; }
         public string LeadStatusTypeName { get; set; }

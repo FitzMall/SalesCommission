@@ -438,136 +438,146 @@ else
                                     {
 
                                         var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+                                        var validation = new SalesCommission.Models.FIDealApproval();
 
-                                        if (dealValidation.Count > 0)
+                                        if (dealValidation != null && dealValidation.Count > 0)
                                         {
-                                            var validation = dealValidation[0];
-                                            foreach (var item in deal.AftermarketItems)
+                                            validation = dealValidation[0];
+                                        }
+
+
+
+                                        foreach (var item in deal.AftermarketItems)
+                                        {
+                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
                                             {
-                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                                var amItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                if (Model.FIPayscaleAftermarket != null && Model.FIPayscaleAftermarket.Count > 0)
                                                 {
-
-                                                    decimal profit = 0;
-                                                    switch (item.AftermarketId)
-                                                    {
-                                                        case 2:
-                                                            if (validation.NitrogenPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 4:
-                                                            if (validation.SelectProtectionPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 5:
-                                                            if (validation.TireWheelPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 6:
-                                                            if (validation.KeyReplacementPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 7:
-                                                            if (validation.WindshieldProtectionPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 8:
-                                                            if (validation.WearAndTearPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 9:
-                                                            if (validation.SecureGuardPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 10:
-                                                            if (validation.FitzTotalPackagePaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 11:
-                                                            if (validation.RustInhibitUnderCoatPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 12:
-                                                            if (validation.UndercoatingPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 13:
-                                                            if (validation.RustInhibitorPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 14:
-                                                            if (validation.DataDotsPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 15:
-                                                            if (validation.PaintDentPaid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 16:
-                                                            if (validation.Miscellaneous1Paid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 17:
-                                                            if (validation.Miscellaneous2Paid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 18:
-                                                            if (validation.Miscellaneous3Paid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-                                                        case 19:
-                                                            if (validation.Miscellaneous4Paid)
-                                                            {
-                                                                profit = item.AftermarketPrice - item.AftermarketCost;
-                                                            }
-                                                            break;
-
-                                                    }
-
-
-
-                                                    otherItemAmount += profit;
+                                                    amItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
                                                 }
 
-                                                if (item.AftermarketId == 8)
+                                                decimal profit = 0;
+                                                switch (item.AftermarketId)
                                                 {
-                                                    LeaseWandTCount += 1;
-                                                    var profit = item.AftermarketPrice - item.AftermarketCost;
-                                                    TotalLeaseWandT += profit;
+                                                    case 2:
+                                                        if (amItem.CoreItem || validation.NitrogenPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 4:
+                                                        if (amItem.CoreItem || validation.SelectProtectionPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 5:
+                                                        if (amItem.CoreItem || validation.TireWheelPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 6:
+                                                        if (amItem.CoreItem || validation.KeyReplacementPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 7:
+                                                        if (amItem.CoreItem || validation.WindshieldProtectionPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 8:
+                                                        if (amItem.CoreItem || validation.WearAndTearPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 9:
+                                                        if (amItem.CoreItem || validation.SecureGuardPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 10:
+                                                        if (amItem.CoreItem || validation.FitzTotalPackagePaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 11:
+                                                        if (amItem.CoreItem || validation.RustInhibitUnderCoatPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 12:
+                                                        if (amItem.CoreItem || validation.UndercoatingPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 13:
+                                                        if (amItem.CoreItem || validation.RustInhibitorPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 14:
+                                                        if (amItem.CoreItem || validation.DataDotsPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 15:
+                                                        if (amItem.CoreItem || validation.PaintDentPaid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 16:
+                                                        if (amItem.CoreItem || validation.Miscellaneous1Paid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 17:
+                                                        if (amItem.CoreItem || validation.Miscellaneous2Paid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 18:
+                                                        if (amItem.CoreItem || validation.Miscellaneous3Paid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+                                                    case 19:
+                                                        if (amItem.CoreItem || validation.Miscellaneous4Paid)
+                                                        {
+                                                            profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        }
+                                                        break;
+
                                                 }
+
+
+
+                                                otherItemAmount += profit;
+                                            }
+
+                                            if (item.AftermarketId == 8)
+                                            {
+                                                LeaseWandTCount += 1;
+                                                var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                TotalLeaseWandT += profit;
                                             }
                                         }
+
                                     }
 
 
@@ -643,7 +653,7 @@ else
                                 ZurichPercent = (double)ZurichCount / (double)TotalEligibleDeals;
                                 LeaseWandTPercent = (double)LeaseWandTCount / (double)LeaseCount;
 
-                                TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther+ TotalLeaseWandT) / TotalEligibleDeals;
+                                TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT) / TotalEligibleDeals;
                                 ProductDollarPerDeal = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT) / TotalEligibleDeals;
                             }
 
@@ -1209,129 +1219,138 @@ else
                                                         {
 
                                                             var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+                                                            var validation = new SalesCommission.Models.FIDealApproval();
 
-                                                            if (dealValidation.Count > 0)
+                                                            if (dealValidation != null && dealValidation.Count > 0)
                                                             {
-                                                                var validation = dealValidation[0];
-                                                                foreach (var item in deal.AftermarketItems)
+                                                                validation = dealValidation[0];
+                                                            }
+
+                                                            foreach (var item in deal.AftermarketItems)
+                                                            {
+                                                                if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
                                                                 {
-                                                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+
+                                                                    var amItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                                    if (Model.FIPayscaleAftermarket != null && Model.FIPayscaleAftermarket.Count > 0)
                                                                     {
-
-                                                                        decimal profit = 0;
-                                                                        switch (item.AftermarketId)
-                                                                        {
-                                                                            case 2:
-                                                                                if (validation.NitrogenPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 4:
-                                                                                if (validation.SelectProtectionPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 5:
-                                                                                if (validation.TireWheelPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 6:
-                                                                                if (validation.KeyReplacementPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 7:
-                                                                                if (validation.WindshieldProtectionPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 8:
-                                                                                if (validation.WearAndTearPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 9:
-                                                                                if (validation.SecureGuardPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 10:
-                                                                                if (validation.FitzTotalPackagePaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 11:
-                                                                                if (validation.RustInhibitUnderCoatPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 12:
-                                                                                if (validation.UndercoatingPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 13:
-                                                                                if (validation.RustInhibitorPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 14:
-                                                                                if (validation.DataDotsPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 15:
-                                                                                if (validation.PaintDentPaid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 16:
-                                                                                if (validation.Miscellaneous1Paid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 17:
-                                                                                if (validation.Miscellaneous2Paid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 18:
-                                                                                if (validation.Miscellaneous3Paid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-                                                                            case 19:
-                                                                                if (validation.Miscellaneous4Paid)
-                                                                                {
-                                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                }
-                                                                                break;
-
-                                                                        }
-
-
-
-                                                                        otherItemAmount += profit;
+                                                                        amItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
                                                                     }
+
+                                                                    decimal profit = 0;
+                                                                    switch (item.AftermarketId)
+                                                                    {
+                                                                        case 2:
+                                                                            if (amItem.CoreItem || validation.NitrogenPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 4:
+                                                                            if (amItem.CoreItem || validation.SelectProtectionPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 5:
+                                                                            if (amItem.CoreItem || validation.TireWheelPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 6:
+                                                                            if (amItem.CoreItem || validation.KeyReplacementPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 7:
+                                                                            if (amItem.CoreItem || validation.WindshieldProtectionPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 8:
+                                                                            if (amItem.CoreItem || validation.WearAndTearPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 9:
+                                                                            if (amItem.CoreItem || validation.SecureGuardPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 10:
+                                                                            if (amItem.CoreItem || validation.FitzTotalPackagePaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 11:
+                                                                            if (amItem.CoreItem || validation.RustInhibitUnderCoatPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 12:
+                                                                            if (amItem.CoreItem || validation.UndercoatingPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 13:
+                                                                            if (amItem.CoreItem || validation.RustInhibitorPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 14:
+                                                                            if (amItem.CoreItem || validation.DataDotsPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 15:
+                                                                            if (amItem.CoreItem || validation.PaintDentPaid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 16:
+                                                                            if (amItem.CoreItem || validation.Miscellaneous1Paid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 17:
+                                                                            if (amItem.CoreItem || validation.Miscellaneous2Paid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 18:
+                                                                            if (amItem.CoreItem || validation.Miscellaneous3Paid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+                                                                        case 19:
+                                                                            if (amItem.CoreItem || validation.Miscellaneous4Paid)
+                                                                            {
+                                                                                profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                            }
+                                                                            break;
+
+                                                                    }
+
+
+
+                                                                    otherItemAmount += profit;
                                                                 }
                                                             }
+
                                                         }
                                                         decimal NonEligibleDealDollar = 0;
                                                         decimal NonEligibleProductDollar = 0;
@@ -1713,129 +1732,137 @@ else
                                                                                 {
 
                                                                                     var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+                                                                                    var validation = new SalesCommission.Models.FIDealApproval();
 
-                                                                                    if (dealValidation.Count > 0)
+                                                                                    if (dealValidation != null && dealValidation.Count > 0)
                                                                                     {
-                                                                                        var validation = dealValidation[0];
-                                                                                        foreach (var item in deal.AftermarketItems)
+                                                                                        validation = dealValidation[0];
+                                                                                    }
+
+                                                                                    foreach (var item in deal.AftermarketItems)
+                                                                                    {
+                                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
                                                                                         {
-                                                                                            if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20)// && item.AftermarketId != 8)
+
+                                                                                            var amItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                                                            if (Model.FIPayscaleAftermarket != null && Model.FIPayscaleAftermarket.Count > 0)
                                                                                             {
-
-                                                                                                decimal profit = 0;
-                                                                                                switch (item.AftermarketId)
-                                                                                                {
-                                                                                                    case 2:
-                                                                                                        if (validation.NitrogenPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 4:
-                                                                                                        if (validation.SelectProtectionPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 5:
-                                                                                                        if (validation.TireWheelPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 6:
-                                                                                                        if (validation.KeyReplacementPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 7:
-                                                                                                        if (validation.WindshieldProtectionPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 8:
-                                                                                                        if (validation.WearAndTearPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 9:
-                                                                                                        if (validation.SecureGuardPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 10:
-                                                                                                        if (validation.FitzTotalPackagePaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 11:
-                                                                                                        if (validation.RustInhibitUnderCoatPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 12:
-                                                                                                        if (validation.UndercoatingPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 13:
-                                                                                                        if (validation.RustInhibitorPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 14:
-                                                                                                        if (validation.DataDotsPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 15:
-                                                                                                        if (validation.PaintDentPaid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 16:
-                                                                                                        if (validation.Miscellaneous1Paid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 17:
-                                                                                                        if (validation.Miscellaneous2Paid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 18:
-                                                                                                        if (validation.Miscellaneous3Paid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-                                                                                                    case 19:
-                                                                                                        if (validation.Miscellaneous4Paid)
-                                                                                                        {
-                                                                                                            profit = item.AftermarketPrice - item.AftermarketCost;
-                                                                                                        }
-                                                                                                        break;
-
-                                                                                                }
-
-
-
-                                                                                                otherItemAmount += profit;
+                                                                                                amItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
                                                                                             }
+
+                                                                                            decimal profit = 0;
+                                                                                            switch (item.AftermarketId)
+                                                                                            {
+                                                                                                case 2:
+                                                                                                    if (amItem.CoreItem || validation.NitrogenPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 4:
+                                                                                                    if (amItem.CoreItem || validation.SelectProtectionPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 5:
+                                                                                                    if (amItem.CoreItem || validation.TireWheelPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 6:
+                                                                                                    if (amItem.CoreItem || validation.KeyReplacementPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 7:
+                                                                                                    if (amItem.CoreItem || validation.WindshieldProtectionPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 8:
+                                                                                                    if (amItem.CoreItem || validation.WearAndTearPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 9:
+                                                                                                    if (amItem.CoreItem || validation.SecureGuardPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 10:
+                                                                                                    if (amItem.CoreItem || validation.FitzTotalPackagePaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 11:
+                                                                                                    if (amItem.CoreItem || validation.RustInhibitUnderCoatPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 12:
+                                                                                                    if (amItem.CoreItem || validation.UndercoatingPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 13:
+                                                                                                    if (amItem.CoreItem || validation.RustInhibitorPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 14:
+                                                                                                    if (amItem.CoreItem || validation.DataDotsPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 15:
+                                                                                                    if (amItem.CoreItem || validation.PaintDentPaid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 16:
+                                                                                                    if (amItem.CoreItem || validation.Miscellaneous1Paid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 17:
+                                                                                                    if (amItem.CoreItem || validation.Miscellaneous2Paid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 18:
+                                                                                                    if (amItem.CoreItem || validation.Miscellaneous3Paid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case 19:
+                                                                                                    if (amItem.CoreItem || validation.Miscellaneous4Paid)
+                                                                                                    {
+                                                                                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                                                    }
+                                                                                                    break;
+
+                                                                                            }
+
+
+                                                                                            otherItemAmount += profit;
                                                                                         }
                                                                                     }
+
                                                                                 }
 
                                                                                 decimal EligibleDealDollar = 0;
@@ -2048,7 +2075,7 @@ else
                                                                                 EligibleMaintenanceTotal += deal.MaintenanceAmount;
                                                                                 EligibleGAPTotal += deal.GAPAmount;
                                                                                 EligibleZurichTotal += deal.ZurichAmount;
-                                                                                if (bValidated)
+                                                                                if (otherItemAmount > 0)
                                                                                 {
                                                                                     EligibleOtherTotal += otherItemAmount;
                                                                                 }

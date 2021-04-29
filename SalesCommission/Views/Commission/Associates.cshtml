@@ -199,6 +199,9 @@
                                     <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
                                     <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
                                     <input type="hidden" id="hdn-SSN" name="hdn-SSN" value="@associate.AssociateSSN" />
+                                    <input type="hidden" id="hdn-SSN" name="hdn-Level" value="@associate.AssociateLevel" />
+                                    <input type="hidden" id="hdn-SSN" name="hdn-SSI" value="@associate.AssociateSSI" />
+
                                     <a id="@associate.AssociateSSN"></a>
                                     @associate.AssociateFullName<br/>
                                     @if (@associate.UpdateDate.ToShortDateString() == "1/1/0001")

@@ -48,10 +48,10 @@
         padding:6px;
     }
 
-    @@media (min-width: 1200px) {
+    /*@@media (min-width: 1200px) {
         .container {
             max-width: 80%;
-        }
+        }*/
     }
 </style>
 
@@ -673,7 +673,7 @@
                                         <th class="text-center">Days in Stk</th>
                                         <th class="text-center">Stk</th>
                                         <th class="text-center">Model</th>
-                                        @*<th class="text-center">V/I</th>*@
+                                        <th class="text-center">Trade</th>
                                         <th class="text-center">Deal Gross</th>
                                         <th class="text-center">Fin Inc</th>
                                         <th class="text-center">Bank Fee</th>
@@ -696,7 +696,7 @@
                                 </thead>
                                 <tbody id="tbodyMake-@detail.MakeId">
                                     <tr>
-                                        <td id="loadingRow-@detail.MakeId" colspan="24" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
+                                        <td id="loadingRow-@detail.MakeId" colspan="26" style="text-align:center"><strong>Loading Deals, please wait...</strong></td>
                                     </tr>
                                     <script type="text/javascript">
                                         $('#@detail.MakeName.Replace(" ","")').bind('click', function () {
@@ -803,7 +803,7 @@
                         <th class="text-center">Days in Stk</th>
                         <th class="text-center">Stk</th>
                         <th class="text-center">Model</th>
-                        @*<th class="text-center">V/I</th>*@
+                        <th class="text-center">Trade</th>
                         <th class="text-center">Deal Gross</th>
                         <th class="text-center">Fin Inc</th>
                         <th class="text-center">Bank Fee</th>
@@ -1518,6 +1518,8 @@
                             bgStyle = "style=background-color:#f2dede;";
                         }
 
+                        var check = '<i class="fa fa-check" aria-hidden="true"></i>';
+
                         outputHTML += '<tr>';
                         outputHTML += '<td class="text-center">' + (i+1) + '.</td>';
                         outputHTML += '<td class="text-center"><a href="@applicationPath/Sales/DealDetail/' + obj.DealKey + '">' + obj.DealKey + '</a></td>';
@@ -1527,7 +1529,14 @@
                         outputHTML += '<td class="text-center">' + obj.DaysInStock + '</td>';
                         outputHTML += '<td class="text-center">' + obj.StockNumber + '</td>';
                         outputHTML += '<td class="text-center">' + obj.Carline + '</td>';
-                        //outputHTML += '<td class="text-center">' + obj.ValueInternet + '</td>';
+
+                        if (obj.TradeAmount > 0) {
+                            outputHTML += '<td class="text-center">' + check + '</td>';
+                        }
+                        else
+                        {
+                            outputHTML += '<td class="text-center"></td>';
+                        }
                         outputHTML += '<td class="text-center">' + obj.DealGrossAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         outputHTML += '<td class="text-center">' + obj.FinIncAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         outputHTML += '<td class="text-center">' + obj.BankFee.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
@@ -1537,7 +1546,7 @@
                         outputHTML += '<td class="text-center">' + obj.BackGrossItemAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         outputHTML += '<td class="text-center">';
 
-                        var totalAmount = obj.DealGrossAmount + obj.FinIncAmount + obj.VSCAmount + obj.MaintenanceContractAmount + obj.GapAmount + obj.BankFee;//+ obj.FTDAmount + obj.OtherAmount;
+                        var totalAmount = obj.DealGrossAmount + obj.FinIncAmount + obj.VSCAmount + obj.MaintenanceContractAmount + obj.GapAmount + obj.BankFee + obj.AdjustmentAmount;//+ obj.FTDAmount + obj.OtherAmount;
 
                         var selectedDate = new Date("@Model.YearId-@Model.MonthId-1");
                         var startDate = new Date("2019-1-31");
@@ -1573,8 +1582,7 @@
 
                         outputHTML += '<td class="text-center"' + bgStyle + '>' + obj.VarianceAmount.toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';
                         
-                        var check = '<i class="fa fa-check" aria-hidden="true"></i>';
-
+                        
 
 
                         if (obj.ShowroomValidatedBy != "" && obj.ShowroomValidatedBy != null) {
@@ -1824,6 +1832,7 @@
           });
           $('#section3').DataTable({
               searching: false,
+              pageLength: -1,
               dom: 'Bfrt',
               buttons: [
                   {

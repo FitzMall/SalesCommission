@@ -30,6 +30,7 @@ namespace SalesCommission.Models
         public string MakeName { get; set; }
         public string BrandId { get; set; }
         public string AutoMall { get; set; }
+        public DateTime DealMonth { get; set; }
         public string CertifiedMake { get; set; }
         public int CertifiedMakeCount { get; set; }
     }
@@ -40,6 +41,7 @@ namespace SalesCommission.Models
         public string MakeName { get; set; }
         public string BrandId { get; set; }
         public string AutoMall { get; set; }
+        public DateTime DealMonth { get; set; }
         public int DealCount { get; set; }
         public int UnValidatedCount { get; set; }
         public int OfficeValidatedCount { get; set; }
@@ -101,6 +103,7 @@ namespace SalesCommission.Models
         public double VSCAmount { get; set; }
         public double MaintenanceContractAmount { get; set; }
         public double FTDAmount { get; set; }
+        public double AdjustmentAmount { get; set; }
         public double VarianceAmount { get; set; }
         public string VarianceReason { get; set; }
         public double GapAmount { get; set; }

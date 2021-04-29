@@ -34,6 +34,8 @@
         .chosen-container-single .chosen-single abbr {
             top: 11px;
         }
+
+]
 </style>
 
     <div id="interested" class="module clearfloats">
@@ -179,12 +181,12 @@
                         <h4>Comments</h4>
                         <div class="row">
                            <div class="col-sm-12">
-                               @if(Model.TitleDueHistory != null)
+                               @if (Model.TitleDueHistory != null)
                                {
-                                   foreach(var history in Model.TitleDueHistory)
+                                   foreach (var history in Model.TitleDueHistory)
                                    {
                                        var statusUpdates = "";
-                                       if(history.ClearTitle == true)
+                                       if (history.ClearTitle == true)
                                        {
                                            statusUpdates += "Clear Title Checked,";
                                        }
@@ -200,7 +202,7 @@
                                            histTitleDueCustomer = (bool)history.TitleDueCustomer;
                                        }
 
-                                       if(histTitleDueCustomer == true)
+                                       if (histTitleDueCustomer == true)
                                        {
                                            statusUpdates += "Title Due Customer Checked,";
                                        }
@@ -261,11 +263,19 @@
 
                                        statusUpdates = statusUpdates.TrimEnd(',');
 
-                                       @: @history.UpdateDate (@history.UpdateUser) - @history.Notes (@statusUpdates)<br/>
+                                       var historySent = "";
+                                       if (history.EmailSent)
+                                       {
+                                           historySent = "Email";
+                                       }
+
+                                    @: @history.UpdateDate (@history.UpdateUser) - @history.Notes (@statusUpdates) <a href="#" style="color:cornflowerblue; text-decoration:underline;" title="@history.EmailAddresses">@historySent</a><br />
+
+
                                    }
                                }
 
-                               @{ 
+                               @{
                                    var currentStatusUpdates = "";
                                    if (Model.TitleDue[0].ClearTitle == true)
                                    {
@@ -332,9 +342,15 @@
                                    }
 
                                    currentStatusUpdates = currentStatusUpdates.TrimEnd(',');
-                               }
+                                   var emailSent = "";
+                                   if (Model.TitleDue[0].EmailSent)
+                                   {
+                                       emailSent = "Email";
+                                   }
+                            }
 
-                               @Model.TitleDue[0].UpdateDate (@Model.TitleDue[0].UpdateUser) - @Model.TitleDue[0].Notes (@currentStatusUpdates)<br />
+
+                            @Model.TitleDue[0].UpdateDate (@Model.TitleDue[0].UpdateUser) - @Model.TitleDue[0].Notes (@currentStatusUpdates) <a href="#" style="color:cornflowerblue; text-decoration:underline;" title="@Model.TitleDue[0].EmailAddresses">@emailSent</a><br />
                            </div>
                         </div>
                         <div class="row">
@@ -374,72 +390,77 @@
                                 <h4>Notify Users:</h4>
                                 <select id="notifyUsers" name="notifyUsers" class="form-control" multiple  style="display:inline-block">
                                     @{
-                                        if (Model.TitleDue[0].SalesAssociate1 != null && Model.TitleDue[0].SalesAssociate1 != "")
+                                        if (Model.TitleDue[0].EmailAddresses != null && Model.TitleDue[0].EmailAddresses != "")
                                         {
-                                            var sales1 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate1);
-                                            if (sales1 != null)
+                                            var addresses = Model.TitleDue[0].EmailAddresses.Split(';');
+
+                                            foreach (var address in addresses)
                                             {
-                                                @:<option selected value="@sales1.Email">@sales1.LastName, @sales1.FirstName</option>
+                                                var associate = Model.JJFUsers.Find(x => x.Email.ToLower() == address.ToLower() && !String.IsNullOrEmpty(x.LastName));
+                                                if (associate != null)
+                                                {
+                                                    @:
+                                                    <option selected value="@associate.Email">@associate.LastName, @associate.FirstName</option>
+
+
+                                                }
+                                                else
+                                                {
+                                                    @:
+                                                    <option selected value="@address">@address</option>
+
+
+                                                }
                                             }
                                         }
-                                        if (Model.TitleDue[0].SalesAssociate2 != null && Model.TitleDue[0].SalesAssociate2 != "")
+                                        else
                                         {
-                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate2);
-                                            if (sales2 != null)
+                                            if (Model.TitleDue[0].SalesAssociate1 != null && Model.TitleDue[0].SalesAssociate1 != "")
                                             {
-                                                @:<option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                var sales1 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate1);
+                                                if (sales1 != null)
+                                                {
+                                                    @:
+                                                    <option selected value="@sales1.Email">@sales1.LastName, @sales1.FirstName</option>
+                                                }
                                             }
-                                        }
-                                        if (Model.TitleDue[0].FinanceManagerId != null && Model.TitleDue[0].FinanceManagerId != "")
-                                        {
-                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].FinanceManagerId);
-                                            if (sales2 != null)
+                                            if (Model.TitleDue[0].SalesAssociate2 != null && Model.TitleDue[0].SalesAssociate2 != "")
                                             {
-                                                @:
-                                                <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesAssociate2);
+                                                if (sales2 != null)
+                                                {
+                                                    @:
+                                                    <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                }
                                             }
-                                        }
-                                        if (Model.TitleDue[0].SalesManagerId != null && Model.TitleDue[0].SalesManagerId != "")
-                                        {
-                                            var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesManagerId);
-                                            if (sales2 != null)
+                                            if (Model.TitleDue[0].FinanceManagerId != null && Model.TitleDue[0].FinanceManagerId != "")
                                             {
-                                                @:
-                                                <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].FinanceManagerId);
+                                                if (sales2 != null)
+                                                {
+                                                    @:
+                                                    <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                }
+                                            }
+                                            if (Model.TitleDue[0].SalesManagerId != null && Model.TitleDue[0].SalesManagerId != "")
+                                            {
+                                                var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.TitleDue[0].SalesManagerId);
+                                                if (sales2 != null)
+                                                {
+                                                    @:
+                                                    <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                }
+                                            }
+                                            if (Session["AssociateId"] != null)
+                                            {
+                                                var self = Model.JJFUsers.Find(x => x.DMS_Id == Session["AssociateId"].ToString());
+                                                if (self != null)
+                                                {
+                                                    @:<option selected value="@self.Email">@self.LastName, @self.FirstName</option>
+                                                }
+            }
         }
     }
-                                        @*if (Model.TitleDue[0].FinanceManager != null && Model.TitleDue[0].FinanceManager != "")
-                                        {
-                                            var firstspace = Model.TitleDue[0].FinanceManager.IndexOf(" ");
-                                            var lastspace = Model.TitleDue[0].FinanceManager.LastIndexOf(" ");
-                                            var length = Model.TitleDue[0].FinanceManager.Length;
-
-                                            var firstName = Model.TitleDue[0].FinanceManager.Substring(0,firstspace).Trim();
-                                            var lastName = Model.TitleDue[0].FinanceManager.Substring(lastspace,length-lastspace).Trim();
-
-                                            var finance = Model.JJFUsers.Find(x => x.LastName == lastName && x.FirstName == firstName);
-                                            if (finance != null)
-                                            {
-                                                @:<option selected value="@finance.Email">@finance.LastName, @finance.FirstName</option>
-                                            }
-                                        }
-                                        if (Model.TitleDue[0].SalesManager != null && Model.TitleDue[0].SalesManager != "")
-                                        {
-                                            var space = Model.TitleDue[0].SalesManager.IndexOf(" ");
-                                            var lastspace = Model.TitleDue[0].SalesManager.LastIndexOf(" ");
-                                            var length = Model.TitleDue[0].SalesManager.Length;
-
-                                            var firstName = Model.TitleDue[0].SalesManager.Substring(0, space).Trim();
-                                            var lastName = Model.TitleDue[0].SalesManager.Substring(lastspace, length - lastspace).Trim();
-
-                                            var sales = Model.JJFUsers.Find(x => x.LastName == lastName && x.FirstName == firstName);
-                                            if (sales != null)
-                                            {
-                                                @:<option selected value="@sales.Email">@sales.LastName, @sales.FirstName</option>
-                                            }
-                                        }*@
-
-}
                                 </select>
 
 
@@ -460,7 +481,7 @@
             <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript">
-
+            //$(window).load(function() {
             $(document).ready(function() {
                 $('#chkSendNotification').click(function () {
                     $(".notification-row").toggle();

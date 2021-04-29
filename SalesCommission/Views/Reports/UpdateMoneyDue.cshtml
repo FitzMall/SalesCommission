@@ -171,7 +171,7 @@
                     <td>
                         <select class="form-control" name="fundedStatus" id="fundedStatus">
                             <option value=""></option>
-                            <option value="BOOKED" @(currentHistory.FundedStatus == "BOOKED" ? "selected" : "")>Booked</option>
+                            @*<option value="BOOKED" @(currentHistory.FundedStatus == "BOOKED" ? "selected" : "")>Booked</option>*@
                             <option value="FUNDED" @(currentHistory.FundedStatus == "FUNDED" ? "selected" : "")>Funded</option>
                             <option value="COLLECT" @(currentHistory.FundedStatus == "COLLECT" ? "selected" : "")>Collected</option>
                         </select>
@@ -179,7 +179,14 @@
                     <td width="50%">
                         @foreach (var history in Model.MoneyDueHistory)
                         {
-                            <p>@Html.Raw(history.Comment)</p>
+
+                            var emailSent = "";
+                            if (history.EmailSent)
+                            {
+                                emailSent = "Email";
+                            }
+
+                            <p>@Html.Raw(history.Comment) <a href="#" style="color:cornflowerblue; text-decoration:underline;" title="@history.EmailAddresses">@emailSent</a></p>
                         }
                         <textarea class="form-control" name="userComments" id="userComments"></textarea>
                     </td>
@@ -217,22 +224,58 @@
                                         <h4>Notify Users:</h4>
                                         <select id="notifyUsers" name="notifyUsers" class="form-control" multiple style="display:inline-block">
                                             @{
-                                                if (Model.FIManagerNumber != null && Model.FIManagerNumber != "")
+                                                if (currentHistory.EmailAddresses != null && currentHistory.EmailAddresses != "")
                                                 {
-                                                    var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.FIManagerNumber);
-                                                    if (sales2 != null)
+                                                    var addresses = currentHistory.EmailAddresses.Split(';');
+
+                                                    foreach (var address in addresses)
                                                     {
-                                                        @:<option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                        var associate = Model.JJFUsers.Find(x => x.Email.ToLower() == address.ToLower() && !String.IsNullOrEmpty(x.LastName));
+                                                        if (associate != null)
+                                                        {
+                                                            @:
+                                                            <option selected value="@associate.Email">@associate.LastName, @associate.FirstName</option>
+
+
+                                                        }
+                                                        else
+                                                        {
+                                                            @:
+                                                            <option selected value="@address">@address</option>
+
+
+                                                        }
                                                     }
                                                 }
-                                                if (currentHistory.SalesManagerNumber != null && currentHistory.SalesManagerNumber != "")
+                                                else
                                                 {
-                                                    var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == currentHistory.SalesManagerNumber);
-                                                    if (sales2 != null)
+
+                                                    if (Model.FIManagerNumber != null && Model.FIManagerNumber != "")
                                                     {
+                                                        var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == Model.FIManagerNumber);
+                                                        if (sales2 != null)
+                                                        {
+                                                        @:<option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                    }
+                                                    }
+                                                    if (currentHistory.SalesManagerNumber != null && currentHistory.SalesManagerNumber != "")
+                                                    {
+                                                        var sales2 = Model.JJFUsers.Find(x => x.DMS_Id == currentHistory.SalesManagerNumber);
+                                                        if (sales2 != null)
+                                                        {
                                                         @:
                                                         <option selected value="@sales2.Email">@sales2.LastName, @sales2.FirstName</option>
+                                                        }
                                                     }
+                                                }
+                                                if (Session["AssociateId"] != null)
+                                                {
+                                                    var self = Model.JJFUsers.Find(x => x.DMS_Id == Session["AssociateId"].ToString());
+                                                    if (self != null)
+                                                    {
+                                                        @:
+                                                        <option selected value="@self.Email">@self.LastName, @self.FirstName</option>
+                                                }
     }
 }
                                         </select>

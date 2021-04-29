@@ -175,6 +175,9 @@ namespace SalesCommission.Models
         public string sl_SalesManagerNumber { get; set; }
         public string sl_TradeBankName { get; set; }
         public string sl_Trade2BankName { get; set; }
+        public decimal sl_TradeBankPayoff { get; set; }
+        public decimal sl_Trade2BankPayoff { get; set; }
+        public decimal sl_PercentAmtFinanced { get; set; }
         public string sl_BuyerEmail { get; set; }
         public string sl_BuyerPhone { get; set; }
         public List<IndividualDealDetails> DealHistory { get; set; }
@@ -303,6 +306,10 @@ namespace SalesCommission.Models
         public string sl_SalesManagerNumber { get; set; }
         public string sl_TradeBankName { get; set; }
         public string sl_Trade2BankName { get; set; }
+
+        public decimal sl_TradeBankPayoff { get; set; }
+        public decimal sl_Trade2BankPayoff { get; set; }
+        public decimal sl_PercentAmtFinanced { get; set; }
         public string sl_BuyerEmail { get; set; }
         public string sl_BuyerPhone { get; set; }
 

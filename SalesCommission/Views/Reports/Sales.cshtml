@@ -251,7 +251,10 @@
 
                 @{ 
 
-                    var salesReportDetails = Model.MonthlySalesReportDetails.OrderBy(x => x.AutoMallName).ToList();
+
+                    var salesReportDetails = Model.MonthlySalesReportDetails.OrderBy(x => x.OrderId).ToList();
+                    // Order here by specified order
+
                 }
 
                 @foreach (var groupDetail in salesReportDetails)
@@ -490,7 +493,7 @@
                                 var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
                                 var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
                                 var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
-                                
+
                             }
 
                             @if (brandCode.Contains("Used"))
@@ -1008,19 +1011,20 @@
 
             </thead>
             <tbody>
-
-
-                @foreach (var groupDetail in Model.MonthlySalesReportDetails)
+                @{ 
+                    Model.MonthlySalesReportDetails = Model.MonthlySalesReportDetails.OrderBy(x => x.OrderId).ToList();
+                }
+                    @foreach (var groupDetail in Model.MonthlySalesReportDetails)
                 {
-                    var AutoMallName = "";
-                    if (groupDetail.SalesReportDetails.Count > 0)
-                    {
-                        AutoMallName = groupDetail.SalesReportDetails[0].AutoMall;
-                        foreach (var store in SalesCommission.Business.Enums.Stores)
+                        var AutoMallName = "";
+                        if (groupDetail.SalesReportDetails.Count > 0)
                         {
-                            if (store.StoreId.ToLower() == groupDetail.SalesReportDetails[0].AutoMall.ToLower())
+                            AutoMallName = groupDetail.SalesReportDetails[0].AutoMall;
+                            foreach (var store in SalesCommission.Business.Enums.Stores)
                             {
-                                AutoMallName = store.Name;
+                                if (store.StoreId.ToLower() == groupDetail.SalesReportDetails[0].AutoMall.ToLower())
+                                {
+                                    AutoMallName = store.Name;
                             }
                         }
                     }

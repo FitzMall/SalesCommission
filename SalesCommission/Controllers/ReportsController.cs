@@ -46,7 +46,17 @@ namespace SalesCommission.Controllers
 
                     foreach (var moneyDue in moneyDueModel.MoneyDue)
                     {
-                        var moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        var moneyDueHistory = new List<MoneyDue>();
+                        if (moneyDue.DealNumber != null && moneyDue.DealNumber != "")
+                        {
+                            moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
+
+                        }
+                        else
+                        {
+                            moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        }
+
                         var currentHistory = new SalesCommission.Models.MoneyDue();
 
                         if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -70,7 +80,17 @@ namespace SalesCommission.Controllers
 
                     foreach (var moneyDue in moneyDueModel.MoneyDue)
                     {
-                        var moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        var moneyDueHistory = new List<MoneyDue>();
+                        if (moneyDue.DealNumber != null && moneyDue.DealNumber != "")
+                        {
+                            moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom && x.DealNumber == moneyDue.DealNumber).OrderByDescending(x => x.CommentOrder).ToList();
+
+                        }
+                        else
+                        {
+                            moneyDueHistory = moneyDueModel.MoneyDueHistory.FindAll(x => x.Location == moneyDue.Location && x.CustomerNumber == moneyDue.CustomerNumber && x.DueFrom == moneyDue.DueFrom).OrderByDescending(x => x.CommentOrder).ToList();
+                        }
+                       
                         var currentHistory = new SalesCommission.Models.MoneyDue();
 
                         if (moneyDueHistory != null && moneyDueHistory.Count > 0)
@@ -102,14 +122,42 @@ namespace SalesCommission.Controllers
         public ActionResult AddTitleDue(string vin = "")
         {
             var titleDue = new TitleDue();
-            
+            ViewBag.IsLookup = false;
+
             if(vin != null && vin != "")
             {
+                ViewBag.IsLookup = true;
                 var oldtitleStatus = SqlQueries.GetTitleStatus(vin, null, null);
 
                 if (oldtitleStatus != null && oldtitleStatus.Count > 0)
                 {
                     titleDue = oldtitleStatus[0];
+
+                    if (titleDue.Model == null || titleDue.Model == "")
+                    {
+
+                        // Update vehicle trade information
+                        var VehicleData = SqlQueries.GetVehicleDataByVIN(vin);
+                        if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
+                        {
+                            titleDue.Make = VehicleData.Make;
+                            titleDue.Model = VehicleData.Model;
+                            if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                            {
+                                titleDue.Year = Int32.Parse(VehicleData.ModelYear);
+                            }
+
+                            //titleDue.Location = VehicleData.Location;
+                            titleDue.StockNumber = VehicleData.StockNumber;
+                            //titleDue.VIN = VehicleData.VIN;
+                            titleDue.InventoryStatus = VehicleData.InventoryStatus;
+
+                            //if (titleDue.DealDate < new DateTime(2000, 1, 1))
+                            //{
+                            //    titleDue.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                            //}
+                        }
+                    }
                 }
                 else
                 {
@@ -157,8 +205,12 @@ namespace SalesCommission.Controllers
         [HttpPost]
         public ActionResult AddTitleDue(TitleDue titleDue)
         {
-            if(Request.Form != null && Request.Form["btnLookup"] != null)
+            ViewBag.IsLookup = false;
+
+            if (Request.Form != null && Request.Form["btnLookup"] != null)
             {
+                ViewBag.IsLookup = true;
+
                 if (Request.Form["vinlookup"] != null && Request.Form["vinlookup"] != "")
                 {
                     var vinLookup = Request.Form["vinlookup"];
@@ -172,6 +224,30 @@ namespace SalesCommission.Controllers
                     if (oldtitleStatus != null && oldtitleStatus.Count > 0)
                     {
                         titleDue = oldtitleStatus[0];
+                        if (titleDue.Model == null || titleDue.Model == "")
+                        {
+                            var VehicleData = SqlQueries.GetVehicleDataByVIN(titleDue.VIN);
+                            if (VehicleData != null && VehicleData.Model != null && VehicleData.Model != "")
+                            {
+                                titleDue.Make = VehicleData.Make;
+                                titleDue.Model = VehicleData.Model;
+                                if (VehicleData.ModelYear != null && VehicleData.ModelYear != "")
+                                {
+                                    titleDue.Year = Int32.Parse(VehicleData.ModelYear);
+                                }
+
+                                //titleDue.Location = VehicleData.Location;
+                                titleDue.StockNumber = VehicleData.StockNumber;
+                                //titleDue.VIN = VehicleData.VIN;
+                                titleDue.InventoryStatus = VehicleData.InventoryStatus;
+
+                                //if (titleDue.DealDate < new DateTime(2000, 1, 1))
+                                //{
+                                //    titleDue.DealDate = DateTime.Now.AddDays(VehicleData.DaysInStock * -1);
+                                //}
+                            }
+                        }
+
                     }
                     else
                     {
@@ -1254,7 +1330,13 @@ namespace SalesCommission.Controllers
                         salesReportDetailsGroup.AutoMallName = store.Name;
                     }
                 }
-
+                foreach (var store in Enums.SaleOrder)
+                {
+                    if (store.StoreId.ToLower() == autoMall.ToLower())
+                    {
+                        salesReportDetailsGroup.OrderId = store.OrderId;
+                    }
+                }
             }
 
 
@@ -1274,13 +1356,21 @@ namespace SalesCommission.Controllers
                             salesReportDetailsGroup.AutoMallName = store.Name;
                         }
                     }
+
+                    foreach (var store in Enums.SaleOrder)
+                    {
+                        if(store.StoreId.ToLower() == autoMall.ToLower())
+                        {
+                            salesReportDetailsGroup.OrderId = store.OrderId;
+                        }
+                    }
                 }
 
                 salesReportDetailsGroup.SalesReportDetails.Add(detail);
 
             }
             monthlySalesReportDetails.Add(salesReportDetailsGroup);
-            return monthlySalesReportDetails;
+            return monthlySalesReportDetails.OrderBy(x => x.AutoMallName).ToList();
         }
 
 
@@ -1407,6 +1497,90 @@ namespace SalesCommission.Controllers
 
             return View(leadReportModel);
         }
+        public ActionResult SalesReport()
+        {
+
+            var salesReportModel = new SalesReportModel();
+            
+            salesReportModel.ReportEndMonth = DateTime.Now.Month;
+            salesReportModel.ReportEndYear = DateTime.Now.Year;
+
+            salesReportModel.ReportStartMonth = DateTime.Now.AddMonths(-1).Month;
+            salesReportModel.ReportStartYear = DateTime.Now.AddMonths(-1).Year;
+
+            salesReportModel.ReportComparisonEndMonth = DateTime.Now.AddMonths(-1).Month;
+            salesReportModel.ReportComparisonEndYear = DateTime.Now.AddMonths(-1).Year;
+
+            salesReportModel.ReportComparisonStartMonth = DateTime.Now.AddMonths(-2).Month;
+            salesReportModel.ReportComparisonStartYear = DateTime.Now.AddMonths(-2).Year;
+
+
+            salesReportModel.IncludeHandyman = true;
+            salesReportModel.VehicleType = "All";
+            salesReportModel.ExcludeBadDuplicates = true;
+            salesReportModel.ShowExcludedGroups = true;
+            salesReportModel.ExcludeAllBad = false;
+
+            return View(salesReportModel);
+        }
+
+        [HttpPost]
+        public ActionResult SalesReport(SalesReportModel salesReportModel)
+        {
+
+            var vehicleType = "All";
+            if (Request.Form["chkVehicleType"] != null)
+            {
+                vehicleType = Request.Form["chkVehicleType"];
+            }
+            salesReportModel.VehicleType = vehicleType;
+
+            if (Request.Form["breakdown1"] != null)
+            {
+                salesReportModel.BreakDownLevel1 = Request.Form["breakdown1"];
+            }
+
+            if (Request.Form["breakdown2"] != null)
+            {
+                salesReportModel.BreakDownLevel2 = Request.Form["breakdown2"];
+            }
+
+            if (Request.Form["breakdown3"] != null)
+            {
+                salesReportModel.BreakDownLevel3 = Request.Form["breakdown3"];
+            }
+
+            if (Request.Form["breakdown4"] != null)
+            {
+                salesReportModel.BreakDownLevel4 = Request.Form["breakdown4"];
+            }
+
+            //salesReportModel.ReportEndMonth = DateTime.Now.Month;
+            //salesReportModel.ReportEndYear = DateTime.Now.Year;
+
+            //salesReportModel.ReportStartMonth = DateTime.Now.AddMonths(-1).Month;
+            //salesReportModel.ReportStartYear = DateTime.Now.AddMonths(-1).Year;
+
+            //salesReportModel.ReportComparisonEndMonth = DateTime.Now.AddMonths(-1).Month;
+            //salesReportModel.ReportComparisonEndYear = DateTime.Now.AddMonths(-1).Year;
+
+            //salesReportModel.ReportComparisonStartMonth = DateTime.Now.AddMonths(-2).Month;
+            //salesReportModel.ReportComparisonStartYear = DateTime.Now.AddMonths(-2).Year;
+
+
+            //salesReportModel.IncludeHandyman = true;
+            //salesReportModel.VehicleType = "All";
+            //salesReportModel.ExcludeBadDuplicates = true;
+            //salesReportModel.ShowExcludedGroups = true;
+            //salesReportModel.ExcludeAllBad = false;
+
+            salesReportModel = SqlQueries.GetSalesReportByDateRange(salesReportModel);
+
+            salesReportModel.FactoryToDealerCash = SqlQueries.GetFTDByDateRange(salesReportModel.ReportStartYear, salesReportModel.ReportStartMonth, salesReportModel.ReportEndYear, salesReportModel.ReportEndMonth);
+            return View(salesReportModel);
+        }
+
+        
 
         public ActionResult LeadReport()
         {
@@ -1794,6 +1968,12 @@ namespace SalesCommission.Controllers
                             Label1Value = fromTimeString;
 
                             break;
+                            
+                        case "leadmonthyear":
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue1);
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => ((x.LeadStatusTypeName.ToUpper() != "SOLD" && x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue1) || (x.LeadStatusTypeName.ToUpper() == "SOLD" && x.VehicleSoldEastTime.ToString("MM/yyyy") == bdValue1)));
+
+                            break;
 
                         default:
                             BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.DealerId.ToString() == bdValue1);
@@ -1883,6 +2063,13 @@ namespace SalesCommission.Controllers
                             string fromTimeString = result.ToString("hh':'mm");
 
                             Label2Value = fromTimeString;
+
+                            break;
+
+
+                        case "leadmonthyear":
+                            //BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue2);
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => ((x.LeadStatusTypeName.ToUpper() != "SOLD" && x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue2) || (x.LeadStatusTypeName.ToUpper() == "SOLD" && x.VehicleSoldEastTime.ToString("MM/yyyy") == bdValue2)));
 
                             break;
 
@@ -1976,6 +2163,13 @@ namespace SalesCommission.Controllers
 
                             break;
 
+
+                        case "leadmonthyear":
+                            //BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue3);
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => ((x.LeadStatusTypeName.ToUpper() != "SOLD" && x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue3) || (x.LeadStatusTypeName.ToUpper() == "SOLD" && x.VehicleSoldEastTime.ToString("MM/yyyy") == bdValue3)));
+
+                            break;
+
                         default:
                             BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DealerId.ToString() == bdValue3);
                             break;
@@ -2063,6 +2257,13 @@ namespace SalesCommission.Controllers
                             string fromTimeString = result.ToString("hh':'mm");
 
                             Label4Value = fromTimeString;
+
+                            break;
+
+
+                        case "leadmonthyear":
+                            //BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue4);
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => ((x.LeadStatusTypeName.ToUpper() != "SOLD" && x.LeadCreatedEastTime.ToString("MM/yyyy") == bdValue4) || (x.LeadStatusTypeName.ToUpper() == "SOLD" && x.VehicleSoldEastTime.ToString("MM/yyyy") == bdValue4)));
 
                             break;
 
@@ -2625,39 +2826,48 @@ namespace SalesCommission.Controllers
                 updateTitleDue.Notes = comments;
                 updateTitleDue.UpdateUser = Session["UserName"].ToString();
 
-                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+                var bNotify = false;
 
-                if(Request.Form["chkSendNotification"] != null)
+
+                if (Request.Form["chkSendNotification"] != null)
                 {
-                    var bNotify = false;
 
                     var isChecked = Request.Form["chkSendNotification"];
 
-                    if(isChecked.ToUpper() == "ON")
+                    if (isChecked.ToUpper() == "ON")
                     {
                         bNotify = true;
                     }
+                }
+
+                var notifyIds = Request.Form["notifyUsers"];
+                var emails = "";
+                var emailList = new List<MailAddress>();
+                if (notifyIds != null)
+                {
+                    foreach (var email in notifyIds.Split(','))
+                    {
+                        var emailItem = new MailAddress(email);
+                        emailList.Add(emailItem);
+                    }
+
+                }
+
+                if (bNotify && notifyIds != null)
+                {
+                    updateTitleDue.EmailAddresses = notifyIds.Replace(",", ";");
+                }
+                updateTitleDue.EmailSent = bNotify;
+                
+
+                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+
                     
                     if(bNotify)
                     {
-                        var notifyIds = Request.Form["notifyUsers"];
-                        var emails = "";
-                        var emailList = new List<MailAddress>();
 
                         if (notifyIds != null)
                         {
-                            foreach (var email in notifyIds.Split(','))
-                            {
-                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
-
-                                //if (user != null)
-                                //{
-                                    //emails += email + ",";
-
-                                    var emailItem = new MailAddress(email);
-                                    emailList.Add(emailItem);
-                               // }
-                            }
 
                             //Now send the email to everyone in the list
 
@@ -2721,7 +2931,7 @@ namespace SalesCommission.Controllers
                                     var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Title Update");
                                     MailMessage mail = new MailMessage();
 
-                                    mail.Subject = "Title Due Update";
+                                    mail.Subject = "Title Due Update by " + updatedTitleStatus[0].UpdateUser;
                                     mail.Body = "The following Vehicle was updated...";
 
                                     forward.From = fromAddress;
@@ -2747,7 +2957,7 @@ namespace SalesCommission.Controllers
                         }
 
                     }
-                }
+                
 
 
             }
@@ -2910,40 +3120,50 @@ namespace SalesCommission.Controllers
                 updateTitleDue.Notes = comments;
                 updateTitleDue.UpdateUser = Session["UserName"].ToString();
 
-                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+                var bNotify = false;
 
+                
                 if (Request.Form["chkSendNotification"] != null)
                 {
-                    var bNotify = false;
-
+                 
                     var isChecked = Request.Form["chkSendNotification"];
 
                     if (isChecked.ToUpper() == "ON")
                     {
                         bNotify = true;
                     }
+                }
 
-                    if (bNotify)
+                var notifyIds = Request.Form["notifyUsers"];
+                var emails = "";
+                var emailList = new List<MailAddress>();
+                if(notifyIds != null)
+                {
+                    foreach (var email in notifyIds.Split(','))
                     {
-                        var notifyIds = Request.Form["notifyUsers"];
-                        var emails = "";
-                        var emailList = new List<MailAddress>();
+                        var emailItem = new MailAddress(email);
+                        emailList.Add(emailItem);
+                    }
 
+                }
+
+                if (bNotify && notifyIds != null)
+                {
+                    updateTitleDue.EmailAddresses = notifyIds.Replace(",", ";");
+                }
+                updateTitleDue.EmailSent = bNotify;
+               
+
+                var success = SqlQueries.UpdateTitleStatusById(updateTitleDue);
+
+
+                if (bNotify)
+                    {
+                        
+        
                         if (notifyIds != null)
                         {
-                            foreach (var email in notifyIds.Split(','))
-                            {
-                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
-
-                                //if (user != null)
-                                //{
-                                //emails += email + ",";
-
-                                var emailItem = new MailAddress(email);
-                                emailList.Add(emailItem);
-                                // }
-                            }
-
+                
                             //Now send the email to everyone in the list
 
                             var updatedTitleStatus = SqlMapperUtil.SqlWithParams<TitleDue>("Select * from TitleDue where Id = @id", new { id = updateTitleDue.Id }, "SalesCommission");
@@ -3006,7 +3226,7 @@ namespace SalesCommission.Controllers
                                     var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Title Update");
                                     MailMessage mail = new MailMessage();
 
-                                    mail.Subject = "Title Due Update";
+                                    mail.Subject = "Title Due Update by " + updatedTitleStatus[0].UpdateUser;
                                     mail.Body = "The following Vehicle was updated...";
 
                                     forward.From = fromAddress;
@@ -3032,7 +3252,7 @@ namespace SalesCommission.Controllers
                         }
 
                     }
-                }
+                
 
 
             }
@@ -3370,7 +3590,21 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
             var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
 
             moneyDueModel.MoneyDue = allMoneyDue.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location);
-            moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x=>x.CommentOrder).ToList();
+
+            var dealNumber = "";
+            if (moneyDueModel.MoneyDue != null && moneyDueModel.MoneyDue.Count > 0)
+            {
+                dealNumber = moneyDueModel.MoneyDue[0].DealNumber;
+            }
+
+            if (dealNumber != "")
+            {
+                moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location && x.DealNumber == dealNumber).OrderByDescending(x => x.CommentOrder).ToList();
+            }
+            else
+            {
+                moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x => x.CommentOrder).ToList();
+            }
 
             moneyDueModel.FIManagers = SqlQueries.GetSalesAssociates();
 
@@ -3403,7 +3637,21 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
             var allMoneyDueHistory = SqlQueries.GetAllMoneyDueHistory();
 
             moneyDueModel.MoneyDue = allMoneyDue.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location);
-            moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x => x.CommentOrder).ToList();
+
+            var dealNumber = "";
+            if (moneyDueModel.MoneyDue != null && moneyDueModel.MoneyDue.Count > 0)
+            {
+                dealNumber = moneyDueModel.MoneyDue[0].DealNumber;
+            }
+
+            if (dealNumber != "")
+            {
+                moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location && x.DealNumber == dealNumber).OrderByDescending(x => x.CommentOrder).ToList();
+            }
+            else
+            {
+                moneyDueModel.MoneyDueHistory = allMoneyDueHistory.FindAll(x => x.CustomerNumber == id && x.DueFrom == dueFrom && x.Location == location).OrderByDescending(x => x.CommentOrder).ToList();
+            }
 
             moneyDueModel.FIManagers = SqlQueries.GetSalesAssociates();
 
@@ -3493,11 +3741,9 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
 
                 newComment.LastUpdatedDate = DateTime.Now;
 
-                var success = SqlQueries.UpdateMoneyDueReport(newComment);
-
+                var bNotify = false;
                 if (Request.Form["chkSendNotification"] != null)
                 {
-                    var bNotify = false;
 
                     var isChecked = Request.Form["chkSendNotification"];
 
@@ -3505,28 +3751,36 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                     {
                         bNotify = true;
                     }
+                }
 
+                var notifyIds = Request.Form["notifyUsers"];
+                var emails = "";
+                var emailList = new List<MailAddress>();
+                if (notifyIds != null)
+                {
+                    foreach (var email in notifyIds.Split(','))
+                    {
+                        var emailItem = new MailAddress(email);
+                        emailList.Add(emailItem);
+                    }
+
+                }
+
+                newComment.EmailSent = bNotify;
+                if (bNotify && notifyIds != null)
+                {
+                    newComment.EmailAddresses = notifyIds.Replace(",", ";");
+                }
+
+                var success = SqlQueries.UpdateMoneyDueReport(newComment);
+
+                
                     if (bNotify)
                     {
-                        var notifyIds = Request.Form["notifyUsers"];
-                        var emails = "";
-                        var emailList = new List<MailAddress>();
-
+                        
                         if (notifyIds != null)
                         {
-                            foreach (var email in notifyIds.Split(','))
-                            {
-                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
-
-                                //if (user != null)
-                                //{
-                                //emails += email + ",";
-
-                                var emailItem = new MailAddress(email);
-                                emailList.Add(emailItem);
-                                // }
-                            }
-
+                            
                             //Now send the email to everyone in the list
                             
                             using (var client = new SmtpClient())
@@ -3538,7 +3792,7 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                                     var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Money Due Update");
                                     MailMessage mail = new MailMessage();
 
-                                    mail.Subject = "Money Due Update";
+                                    mail.Subject = "Money Due Update by " + newComment.CommentUser;
                                     mail.Body = "The following information was updated...";
 
                                     forward.From = fromAddress;
@@ -3563,7 +3817,7 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                             }
                         }
                     }
-                }
+                
 
                 }
 
@@ -3637,11 +3891,9 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
 
                 newComment.LastUpdatedDate = DateTime.Now;
 
-                var success = SqlQueries.UpdateMoneyDueReport(newComment);
-
+                var bNotify = false;
                 if (Request.Form["chkSendNotification"] != null)
                 {
-                    var bNotify = false;
 
                     var isChecked = Request.Form["chkSendNotification"];
 
@@ -3649,28 +3901,34 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                     {
                         bNotify = true;
                     }
+                }
 
+                var notifyIds = Request.Form["notifyUsers"];
+                var emails = "";
+                var emailList = new List<MailAddress>();
+                if (notifyIds != null)
+                {
+                    foreach (var email in notifyIds.Split(','))
+                    {
+                        var emailItem = new MailAddress(email);
+                        emailList.Add(emailItem);
+                    }
+
+                }
+
+                newComment.EmailSent = bNotify;
+                if (bNotify && notifyIds != null)
+                {
+                    newComment.EmailAddresses = notifyIds.Replace(",", ";");
+                }
+
+                var success = SqlQueries.UpdateMoneyDueReport(newComment);
+                
                     if (bNotify)
                     {
-                        var notifyIds = Request.Form["notifyUsers"];
-                        var emails = "";
-                        var emailList = new List<MailAddress>();
 
                         if (notifyIds != null)
                         {
-                            foreach (var email in notifyIds.Split(','))
-                            {
-                                //var user = titleDueModel.JJFUsers.Find(x => x.DMS_Id == dms_id);
-
-                                //if (user != null)
-                                //{
-                                //emails += email + ",";
-
-                                var emailItem = new MailAddress(email);
-                                emailList.Add(emailItem);
-                                // }
-                            }
-
                             //Now send the email to everyone in the list
 
                             using (var client = new SmtpClient())
@@ -3682,7 +3940,7 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                                     var fromAddress = new MailAddress("idd04@fitzmall.com", "JJFServer Money Due Update");
                                     MailMessage mail = new MailMessage();
 
-                                    mail.Subject = "Money Due Update";
+                                mail.Subject = "Money Due Update by " + newComment.CommentUser;
                                     mail.Body = "The following information was updated...";
 
                                     forward.From = fromAddress;
@@ -3707,7 +3965,7 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
                             }
                         }
                     }
-                }
+                
 
             }
 

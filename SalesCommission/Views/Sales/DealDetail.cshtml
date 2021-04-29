@@ -363,6 +363,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                 //Model.sl_ftdpc1 +
                 //Model.sl_ftdpc2 +
                 //Model.sl_ftdpc3;
+                //Model.sl_ftdpc_adj
 
                 Decimal previousDealTotal = 0;
                 if (Model.PreviousSavedValues != null)
@@ -708,9 +709,18 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         </label>
                         <div class="col-sm-6">
                             @Html.TextBoxFor(n => n.sl_TradeBankName, new { @class = "form-control" })
+                            
+                        </div>
+                    </div>
+                    <div class="form-group" style="@titleShown">
+                        <label class="col-sm-6 control-label">
+                            Payoff Amount
+                        </label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(n => n.sl_TradeBankPayoff, new { @class = "form-control" })
                             <br />
 
-                            @if(Model.sl_TradeBankName != null && Model.sl_TradeBankName != "")
+                            @if (Model.sl_TradeBankName != null && Model.sl_TradeBankName != "")
                             {
                                 Model.TitleDueTrade.LienDueBank = true;
                             }
@@ -829,6 +839,15 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
         </label>
         <div class="col-sm-6">
             @Html.TextBoxFor(n => n.sl_Trade2BankName, new { @class = "form-control" })
+            
+        </div>
+    </div>
+    <div class="form-group" style="@titleShown">
+        <label class="col-sm-6 control-label">
+            Payoff Amount
+        </label>
+        <div class="col-sm-6">
+            @Html.TextBoxFor(n => n.sl_Trade2BankPayoff, new { @class = "form-control" })
             <br />
             @if (Model.sl_Trade2BankName != null && Model.sl_Trade2BankName != "")
             {
@@ -1652,6 +1671,24 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                     </div>
                 </div>                                                
                 <div class="form-group">
+                    <label for="paf" class="col-sm-5 control-label">Percent Amount Financed</label>
+                    <div class="col-sm-7">
+                        @Html.TextBoxFor(n => n.sl_PercentAmtFinanced, new { @class = "form-control", placeholder = "0.00" })
+                        @foreach (var deal in Model.DealHistory)
+                        {
+                            if (deal.sl_PercentAmtFinanced != Model.sl_PercentAmtFinanced)
+                            {
+                                <label style="background-color:#fcf8e3;margin-left:13px">@deal.sl_PercentAmtFinanced</label>
+                                break;
+                            }
+                        }
+                        @*@if (Model.PreviousSavedValues != null && Model.sl_apr != Model.PreviousSavedValues.sl_apr)
+                {
+                    <label style="background-color:#fcf8e3;margin-left:13px"> @Model.PreviousSavedValues.sl_apr </label>
+                }*@
+                    </div>
+                </div>  
+                <div class="form-group">
                     <label for="rateExceptionReason" class="col-sm-5 control-label" style="padding-top:0px;">Rate Exception Reason</label>
                     <div class="col-sm-7">
                         @{ 
@@ -1912,6 +1949,13 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             }
                         });
 
+      
+          $(document).ready(function(){
+              $('#sl_buyRate').focusout(function () {
+                  alert("When changing Buy Rate, please be sure to update the value in Reynolds & Reynolds.");
+            });
+          });
+
 </script>
 
 @section Scripts{
@@ -1929,6 +1973,15 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
 
             $(document).ready(function () {
                 $('#btnSubmit').click(function () {
+
+                    var percentFinanced = 0;
+                    percentFinanced = $("#sl_PercentAmtFinanced").val();
+
+                    //if ((percentFinanced * 100) > 2)
+                    //{
+                    //    alert("Markup exceeds standards, please correct prior to validation!");
+                    //    return false;
+                    //}
 
             var location = "";
             location = $("#sl_mall_id").val();

@@ -52,6 +52,7 @@
     var currentSelectedDate = new DateTime(Int32.Parse(Model.YearId), Int32.Parse(Model.MonthId), 1);
     var grossChangeDate = new DateTime(2020, 1, 31);
 
+    var TradeCount = 0;
 }
 
 @section CSS
@@ -82,6 +83,7 @@
                     <th class="text-center">Make</th>
                     <th class="text-center">Model</th>
                     <th class="text-center">Days</th>
+                    <th class="text-center">Trade</th>
                     <th class="text-center">Deal Gross</th>
                     <th class="text-center">Fin Inc</th>
                     <th class="text-center">Bank Fee</th>
@@ -123,6 +125,11 @@
                     {
                         bgStyle = "style=background-color:#f2dede;";
                     }
+
+                    if (deal.TradeAmount > 0)
+                    {
+                        TradeCount += 1;
+                    }
                     <tr>
                         <td>@dealIndex.</td>
                         <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.DealKey">@deal.DealKey</a></td>
@@ -133,6 +140,12 @@
                         <td class="text-center">@deal.CarMake</td>
                         <td class="text-center">@deal.Carline</td>
                         <td class="text-center">@deal.DaysInStock</td>
+                        <td class="text-center">
+                            @if (deal.TradeAmount > 0)
+                            {
+                                <i class="fa fa-check" aria-hidden="true"></i>
+                            }
+                        </td>
                         <td class="text-center">@deal.DealGrossAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.FinIncAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.BankFee.ToString("C", nfi)</td>
@@ -178,6 +191,7 @@
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
+                    <th class="text-center">@TradeCount of @dealIndex</th>
                     <th class="text-center">@TotalDealGross.ToString("C", nfi)</th>
                     <th class="text-center">@TotalFinInc.ToString("C", nfi)</th>
                     <th class="text-center">@TotalBankFee.ToString("C", nfi)</th>
@@ -204,6 +218,8 @@
                     var AvgMaintenance = (TotalMaintenance / dealIndex);
                     var AvgBankFee = (TotalBankFee / dealIndex);
                     var AvgBack = (TotalBackGrossItemAmount / dealIndex);
+
+                    var TradePercent = ((double)TradeCount / dealIndex);
                 }
                 <tr style="background-color:#d9edf7">
                     <th></th>
@@ -215,6 +231,7 @@
                     <th class="text-center"></th>
                     <th class="text-center"></th>
                     <th class="text-center"></th>
+                    <th class="text-center">@TradePercent.ToString("P", nfi)</th>
                     <th class="text-center">@AvgGross.ToString("C", nfi)</th>
                     <th class="text-center">@AvgFinInc.ToString("C", nfi)</th>
                     <th class="text-center">@AvgBankFee.ToString("C", nfi)</th>
@@ -259,7 +276,7 @@
                   }
               ],
               columnDefs: [
-                { type: 'any-number', targets: [9, 10, 11, 12, 13, 14, 15, 16, 17] },
+                { type: 'any-number', targets: [ 10, 11, 12, 13, 14, 15, 16, 17, 18] },
                 { type: 'date-us', targets: [3] }
               ]
 
