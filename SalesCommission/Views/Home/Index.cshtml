@@ -209,6 +209,10 @@
                             {
                                 <a class="editInfoTitle" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br />
                             }
+                            @if (Session["UserId"].ToString() == "jaffer" || Session["UserId"].ToString() == "statlerc")
+                            {
+                                <a class="deleteVehicle" data-vin="@titleDue.VIN"><i class="fa fa-trash" aria-hidden="true"></i> Delete</a><br />
+                            }
                             @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                             {
                                 @:@titleDue.UpdateUser - @titleDue.UpdateDate.ToShortDateString()
@@ -526,6 +530,12 @@
                                                             if ($(window).width() > 1199) {
                                                                 dialogWidth = 1200;
                                                             }
+
+                                                            $('body').on('click', '.deleteVehicle', function (event) {
+                                                                var vin = $(this).attr("data-vin");
+                                                                var url = '@applicationPath/Reports/DeleteTitleDue/?vin=' + vin
+                                                                $.ajax({ url: url, success: DataRetrieved, type: 'POST', dataType: 'json' });
+                                                            });
 
                                                             $('body').on('click', '.editInfo', function (event) {
                                                                 var customer = $(this).attr("data-customer-number");

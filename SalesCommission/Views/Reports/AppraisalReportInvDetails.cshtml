@@ -1,0 +1,514 @@
+﻿@model SalesCommission.Models.AppraisalReportDetailModel
+
+@{
+    ViewBag.Title = "Appraisal Report Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    var breakDowns = new List<string>();
+    var breakDownValues = new List<string>();
+
+    breakDowns.Add("Appraiser");
+    breakDownValues.Add("appraiser");
+
+    breakDowns.Add("Certification");
+    breakDownValues.Add("certified");
+
+    breakDowns.Add("Days In Stock");
+    breakDownValues.Add("days");
+
+    breakDowns.Add("Lead Group");
+    breakDownValues.Add("leadgroup");
+
+    breakDowns.Add("Lead Source");
+    breakDownValues.Add("lead");
+
+    breakDowns.Add("Location");
+    breakDownValues.Add("location");
+
+    breakDowns.Add("Make");
+    breakDownValues.Add("make");
+
+    breakDowns.Add("Mileage");
+    breakDownValues.Add("mileage");
+
+    breakDowns.Add("Model");
+    breakDownValues.Add("model");
+
+    breakDowns.Add("Model Year");
+    breakDownValues.Add("modelyear");
+
+    breakDowns.Add("Month Year");
+    breakDownValues.Add("monthyear");
+
+    breakDowns.Add("Selling Price");
+    breakDownValues.Add("price");
+
+    breakDowns.Add("Status");
+    breakDownValues.Add("status");
+
+    breakDowns.Add("Stock Number");
+    breakDownValues.Add("stock");
+
+    breakDowns.Add("Vehicle Source");
+    breakDownValues.Add("vehiclesource");
+
+
+
+
+    var BreakDownLabel1 = "";
+    var BreakDownLabel2 = "";
+    var BreakDownLabel3 = "";
+    var BreakDownLabel4 = "";
+
+    var index = 0;
+    foreach (var breakdown in breakDownValues)
+    {
+        if(breakdown == Model.BreakDownLevel1)
+        {
+            BreakDownLabel1 = breakDowns[index];
+        }
+        if (breakdown == Model.BreakDownLevel2)
+        {
+            BreakDownLabel2 = breakDowns[index];
+        }
+        if (breakdown == Model.BreakDownLevel3)
+        {
+            BreakDownLabel3 = breakDowns[index];
+        }
+        if (breakdown == Model.BreakDownLevel4)
+        {
+            BreakDownLabel4 = breakDowns[index];
+        }
+        index += 1;
+    }
+
+    if(Model.BreakDownLevel1 == "location")
+    {
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        {
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel1Value.ToLower().Trim())
+            {
+                Model.BreakDownLevel1Value = store.Name;
+            }
+        }
+    }
+
+    if (Model.BreakDownLevel2 == "location")
+    {
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        {
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel2Value.ToLower().Trim())
+            {
+                Model.BreakDownLevel2Value = store.Name;
+            }
+        }
+    }
+
+    if (Model.BreakDownLevel3 == "location")
+    {
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        {
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel3Value.ToLower().Trim())
+            {
+                Model.BreakDownLevel3Value = store.Name;
+            }
+        }
+    }
+
+    if (Model.BreakDownLevel4 == "location")
+    {
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        {
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel4Value.ToLower().Trim())
+            {
+                Model.BreakDownLevel4Value = store.Name;
+            }
+        }
+    }
+
+    var priceChanges = SalesCommission.Business.SqlQueries.GetAllVehiclePriceChanges();
+}
+@section CSS
+{
+<link rel="stylesheet" href="~/Scripts/jquery-ui.css">
+<style type="text/css">
+    .container {
+        max-width: 100%;
+    }
+    .report-parameters{
+        background-color:#eee;
+    }
+
+    .hr-divider{
+        border-color:#999; margin-top:10px; margin-bottom:10px;
+    }
+    .hr-separator{
+        border-color:#999; border-style:dashed; margin-top:10px; margin-bottom:5px;
+    }
+
+    .tooltip-inner {
+        width: 350px;
+    
+    }
+</style>
+    }
+<div class="row report-parameters" style="padding-top:15px;">
+    <div class="col-xs-12">
+        <h2>Appraisal Report Details</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-2 report-parameters" style="padding-top:15px;padding-bottom:15px;">
+        
+        
+        <div class="row">
+            <div class="col-sm-12">
+                <strong>Breakdowns:</strong>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                @BreakDownLabel1
+            </div>
+            <div class="col-sm-6">
+                @Model.BreakDownLevel1Value
+            </div>
+        </div>
+@if (Model.BreakDownLevel2Value != null)
+{
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-separator" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                @BreakDownLabel2
+            </div>
+            <div class="col-sm-6">
+                @Model.BreakDownLevel2Value
+            </div>
+        </div>
+}
+        @if (Model.BreakDownLevel3Value != null)
+        {
+            <div class="row">
+                <div class="col-sm-12">
+                    <hr class="hr-separator" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    @BreakDownLabel3
+                </div>
+                <div class="col-sm-6">
+                    @Model.BreakDownLevel3Value
+                </div>
+            </div>
+        }
+@if (Model.BreakDownLevel4Value != null)
+{
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-separator" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                @BreakDownLabel4
+            </div>
+            <div class="col-sm-6">
+                @Model.BreakDownLevel4Value
+            </div>
+        </div>
+}
+               <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <strong>Status Types:</strong>
+            </div>
+        </div>
+        <div class="row" style="">
+            <div class="col-sm-6">
+                <input type="checkbox" disabled value="1" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("1") ? "checked" : "") /> In Stock (1)<br />
+                <input type="checkbox" disabled value="2" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("2") ? "checked" : "") /> Deal Pending (2)<br />
+                <input type="checkbox" disabled value="3" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("3") ? "checked" : "") /> Demos (3)<br />
+                <input type="checkbox" disabled value="4" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("4") ? "checked" : "") /> Loaner (4)<br />
+                <input type="checkbox" disabled value="5" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("5") ? "checked" : "") /> Sold - Not Del (5)<br />
+                <input type="checkbox" disabled value="6" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("6") ? "checked" : "") /> Delivered (6)<br />
+            </div>
+            <div class="col-sm-6">
+                <input type="checkbox" disabled value="8" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("8") ? "checked" : "") /> Wholesale (8)<br />
+                <input type="checkbox" disabled value="9" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("9") ? "checked" : "") /> Whlsle/Auct (9)<br />
+                <input type="checkbox" disabled value="14" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("14") ? "checked" : "") /> Stop Sale (14)<br />
+                <input type="checkbox" disabled value="15" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("15") ? "checked" : "") /> Comp Veh (15)<br />
+                <input type="checkbox" disabled value="20" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("20") ? "checked" : "") /> Svc Loaner (20)<br />
+                <input type="checkbox" disabled value="21" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("21") ? "checked" : "") /> Nextcar (21)<br />
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-separator" />
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-sm-12">
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-sm-12">
+                        <input type="radio" disabled value="All" name="chkStatusFM" @(Model.StatusOnFM == "All" ? "checked" : "") /> All<br />
+                        <input type="radio" disabled value="OnFitzMall" name="chkStatusFM" @(Model.StatusOnFM == "OnFitzMall" ? "checked" : "") /> On FitzMall<br />
+                        <input type="radio" disabled value="MissingFitzMall" name="chkStatusFM" @(Model.StatusOnFM == "MissingFitzMall" ? "checked" : "") /> Missing On FitzMall<br />
+                    </div>
+                </div>
+            </div>            
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <strong>Acquisition Types:</strong>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-sm-12">
+                <input type="radio" value="All" name="chkAcquisitionType" @(Model.AcquisitionType == "All" ? "checked" : "") disabled/> All<br />
+                <input type="radio" value="Purchase" name="chkAcquisitionType" @(Model.AcquisitionType == "Purchase" ? "checked" : "") disabled/> Purchase<br />
+                <input type="radio" value="Trade" name="chkAcquisitionType" @(Model.AcquisitionType == "Trade" ? "checked" : "") disabled/> Trade<br />
+            </div>
+        </div>
+       </div>
+    <div class="col-xs-10" style="padding-top:15px;">
+        <div class="row" style="padding-bottom:15px;">
+            <div class="col-xs-2">
+                <input type="checkbox" id="chk-vehicle" name="chk-vehicle" checked /> Vehicle Information
+            </div>
+            <div class="col-xs-2">
+                <input type="checkbox" id="chk-pricing" name="chk-pricing" checked /> Pricing Information
+            </div>
+            <div class="col-xs-2">
+                <input type="checkbox" id="chk-vauto" name="chk-vauto" checked /> vAuto Information
+            </div>
+        </div>
+        <script>
+                        $('#chk-vehicle').change(function () {
+                                if (this.checked) {
+                                    $('.col-vehicle').show();
+                                }
+                                else {
+                                    $('.col-vehicle').hide();
+                                }
+                            });
+
+                        $('#chk-pricing').change(function () {
+                            if (this.checked) {
+                                $('.col-pricing').show();
+                            }
+                            else {
+                                $('.col-pricing').hide();
+                            }
+                        });
+
+                        $('#chk-vauto').change(function () {
+                            if (this.checked) {
+                                $('.col-vauto').show();
+                            }
+                            else {
+                                $('.col-vauto').hide();
+                            }
+                        });
+
+        </script>
+
+        @if(Model.TradeAcquisitionDetails != null)
+        {
+            <table id="associate-appraisal-table" class="table table-striped table-bordered">
+                <thead>
+                    <tr style="background-color:#d9edf7;">
+                        <th class="text-center">Pur Location</th>
+                        <th class="text-center">Appraiser</th>
+                        <th class="text-center">Vehicle Source</th>
+                        <th class="text-center col-vehicle">VIN</th>
+                        <th class="text-center col-vehicle">Stock</th>
+                        <th class="text-center">Days</th>
+                        <th class="text-center col-vehicle">Year</th>
+                        <th class="text-center col-vehicle">Make</th>
+                        <th class="text-center col-vehicle">Model</th>
+                        <th class="text-center col-vehicle">Miles</th>
+                        <th class="text-center col-vauto">Last Modified (v)</th>
+                        <th class="text-center col-vauto">Reconditioning Cost (v)</th>
+                        <th class="text-center col-vauto">Est Actual Recon</th>
+                        <th class="text-center col-vauto">Appraised Value (v)</th>
+                        <th class="text-center col-vauto">Asking Price (v)</th>
+                        <th class="text-center col-pricing">Inventory Amount</th>
+                        <th class="text-center col-pricing">FitzMall Amount</th>
+                        <th class="text-center col-pricing">Markup</th>
+                        <th class="text-center col-vauto">Profit Obj (v)</th>
+                        <th class="text-center col-vauto">Adjusted % Market (v)</th>                        
+                        <th class="text-center col-vauto">vRank (v)</th>
+                        <th class="text-center col-vauto">Current Adjusted % Market (v)</th>
+                        <th class="text-center col-vauto">Current vRank (v)</th>
+                        <th class="text-center col-vauto">Current Rank (v)</th>
+                        <th class="text-center col-vauto">Current Size (v)</th>
+                        <th class="text-center col-vauto">Current Avg List Price (v)</th>
+                        <th class="text-center">Lead Count</th>
+                        <th class="text-center">Active Leads</th>
+                        <th class="text-center">Price Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var appraisal in Model.TradeAcquisitionDetails)
+                    {
+                        var markup = (appraisal.ListAmount - appraisal.InventoryAmount);
+
+                        decimal estRecon = 0;
+
+                        if (appraisal.InitialACV > 0)
+                        {
+                            estRecon = appraisal.InventoryAmount - appraisal.InitialACV;
+                        }
+
+                        var vAutoData = Model.vAutoInventoryDetails.Find(x => x.VIN == appraisal.VIN);
+
+                        var VehiclePriceChanges = priceChanges.FindAll(x => x.StockNumber.Trim() == appraisal.StockNumber.Trim()).OrderBy(x => x.PriceDate).ToList();
+
+                        int priceCount = 0;
+                        var priceChangeString = "";
+
+                        decimal listAmount = 0;
+                        var startDate = new DateTime();
+
+                        if (VehiclePriceChanges != null && VehiclePriceChanges.Count > 0)
+                        {
+                            listAmount = VehiclePriceChanges[0].ListAmount;
+                            startDate = VehiclePriceChanges[0].PriceDate;
+
+                            foreach (var change in VehiclePriceChanges)
+                            {
+                                if (listAmount != change.ListAmount)
+                                {
+                                    var endDate = change.PriceDate;
+
+                                    priceChangeString += startDate.ToShortDateString() + " - " + endDate.ToShortDateString() + " (" + listAmount.ToString("C") + "), ";
+
+                                    listAmount = change.ListAmount;
+                                    startDate = endDate;
+                                    priceCount += 1;
+                                }
+                            }
+                            priceChangeString += startDate.ToShortDateString() + " - Current (" + listAmount.ToString("C") + ")";
+
+                        }
+
+
+
+                    <tr>
+                        <td class="text-center">@appraisal.DRloc</td>
+                        <td class="text-center">@appraisal.Appraiser</td>
+                        <td class="text-center">@appraisal.VehicleSource</td>
+                        <td class="text-center col-vehicle">@appraisal.VIN</td>
+                        <td class="text-center col-vehicle"><a href="https://responsive.fitzmall.com/Inventory/Detail/@appraisal.XrefId" target="_blank">@appraisal.StockNumber</a></td>
+                        <td class="text-center">@appraisal.Days</td>                        
+                        <td class="text-center col-vehicle">@appraisal.Year</td>
+                        <td class="text-center col-vehicle">@appraisal.Make</td>
+                        <td class="text-center col-vehicle">@appraisal.Carline</td>
+                        <td class="text-center col-vehicle">@appraisal.Miles</td>
+                        <td class="text-center col-vauto">@appraisal.LastModifiedDate.ToShortDateString()</td>
+                        <td class="text-center col-vauto">@appraisal.ReconditioningCost.ToString("C")</td>
+                        <td class="text-center col-vauto">@estRecon.ToString("C")</td>
+                        <td class="text-center col-vauto">@appraisal.AppraisedValue.ToString("C")</td>
+                        <td class="text-center col-vauto">@appraisal.AskingPrice.ToString("C")</td>
+                        <td class="text-center col-pricing">@appraisal.InventoryAmount.ToString("C")</td>
+                        <td class="text-center col-pricing">@appraisal.ListAmount.ToString("C")</td>
+                        <td class="text-center col-pricing">@markup.ToString("C")</td>
+                        <td class="text-center col-vauto">@appraisal.ProfitObjective.ToString("C")</td>
+                        <td class="text-center col-vauto">@appraisal.AdjustedPctMarket.ToString("P")</td>
+                        <td class="text-center col-vauto">@appraisal.vRank</td>
+
+                        @if (vAutoData != null)
+                        {
+                        <td class="text-center col-vauto">@vAutoData.EffectivePercentOfMarket %</td>
+                        <td class="text-center col-vauto">@vAutoData.VRank</td>
+                        <td class="text-center col-vauto">@vAutoData.Rank</td>
+                        <td class="text-center col-vauto">@vAutoData.Size</td>
+                        <td class="text-center col-vauto">@vAutoData.AverageListPrice.ToString("C")</td>
+                        }
+                        else
+                        {
+                            <td class="text-center col-vauto"></td>
+                            <td class="text-center col-vauto"></td>
+                            <td class="text-center col-vauto"></td>
+                            <td class="text-center col-vauto"></td>
+                            <td class="text-center col-vauto"></td>
+                        }
+                        <td class="text-center"><a href="@applicationPath/Reports/AppraisalReportLeadDetails?stock=@appraisal.StockNumber&vin=@appraisal.VIN" target="_blank">@appraisal.LeadCount</a></td>
+                        <td class="text-center">@appraisal.ActiveLeadCount<br/>
+                            @if (appraisal.LastActiveLeadDate.ToShortDateString() != "1/1/0001")
+                            {
+                                @appraisal.LastActiveLeadDate.ToShortDateString()
+                            }
+                        </td>
+                        <td class="text-center col-vauto"><a href="#" data-toggle="tooltip" data-container="body" title="@priceChangeString">@priceCount</a></td>
+</tr>
+                    }
+                </tbody>
+
+            </table>
+
+
+
+        }
+    </div>
+    </div>
+@section scripts
+{
+
+    <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+
+        $('#associate-appraisal-table').DataTable({
+            searching: true,
+            dom: 'Bfrti',
+            pageLength: -1,
+            order: [[1, "desc"]],
+            buttons: [
+                {
+                    extend: 'copyHtml5', footer: true,
+                },
+                {
+                    extend: 'excelHtml5', footer: true,
+                },
+                {
+                    extend: 'pdfHtml5', footer: true,
+                    orientation: 'landscape'
+                },
+                {
+                    extend: 'print', footer: true,
+                    orientation: 'landscape'
+                }
+            ],
+            columnDefs: [
+                { type: 'any-number', targets: [5, 6, 9, 11, 12, 13, 14, 15, 16, 17, 18, 25] },
+                { type: 'date', targets: [10] }
+            ],
+            retrieve: true
+        });
+    });
+</script>
+}

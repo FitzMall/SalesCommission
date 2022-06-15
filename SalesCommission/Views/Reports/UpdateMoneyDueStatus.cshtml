@@ -224,8 +224,9 @@
 
                                                 if (currentHistory.EmailAddresses != null && currentHistory.EmailAddresses != "")
                                                 {
-                                                    var addresses = currentHistory.EmailAddresses.Split(';');
+                                                    var AllAddresses = currentHistory.EmailAddresses.Split(';');
 
+                                                    var addresses = AllAddresses.Distinct().ToList<string>();
                                                     foreach (var address in addresses)
                                                     {
                                                         var associate = Model.JJFUsers.Find(x => x.Email.ToLower() == address.ToLower() && !String.IsNullOrEmpty(x.LastName));

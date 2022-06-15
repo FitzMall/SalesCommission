@@ -1,7 +1,7 @@
-﻿@model SalesCommission.Models.LeadReportDetailsModel
+﻿@model SalesCommission.Models.ExceptionReportDetailModel
 
 @{
-    ViewBag.Title = "Lead Report Details";
+    ViewBag.Title = "Exception Report Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var applicationPath = Request.ApplicationPath;
@@ -14,53 +14,23 @@
     var breakDowns = new List<string>();
     var breakDownValues = new List<string>();
 
-    breakDowns.Add("Associate");
-    breakDownValues.Add("associatename");
+    breakDowns.Add("Bank Name");
+    breakDownValues.Add("bankname");
 
-    breakDowns.Add("Brand");
-    breakDownValues.Add("brand");
-
-    breakDowns.Add("Inventory Type");
-    breakDownValues.Add("inventorytype");
-
-    breakDowns.Add("Lead Date");
-    breakDownValues.Add("leaddate");
-
-    breakDowns.Add("Lead Time");
-    breakDownValues.Add("leadtime");
-
-    breakDowns.Add("Lead Month Year");
-    breakDownValues.Add("leadmonthyear");
-
-    breakDowns.Add("Lead Group");
-    breakDownValues.Add("leadgroupname");
-
-    breakDowns.Add("Lead Source");
-    breakDownValues.Add("leadsourcename");
-
-    breakDowns.Add("Lead Condition");
-    breakDownValues.Add("leadstatusname");
-
-    breakDowns.Add("Lead Status");
-    breakDownValues.Add("leadstatustype");
+    breakDowns.Add("Finance Manager");
+    breakDownValues.Add("financemanager");
 
     breakDowns.Add("Location");
-    breakDownValues.Add("locationid");
+    breakDownValues.Add("location");
 
-    breakDowns.Add("Make");
-    breakDownValues.Add("make");
+    //breakDowns.Add("Price Variance Exception");
+    //breakDownValues.Add("priceexception");
 
-    breakDowns.Add("Model");
-    breakDownValues.Add("model");
+    breakDowns.Add("Rate Exception");
+    breakDownValues.Add("rateexception");
 
-    breakDowns.Add("Sales Team");
-    breakDownValues.Add("salesteam");
-
-    breakDowns.Add("Stock Number");
-    breakDownValues.Add("stock");
-
-    breakDowns.Add("Zip Code");
-    breakDownValues.Add("zip");
+    breakDowns.Add("Sales Associate");
+    breakDownValues.Add("salesassociate");
 
     var BreakDownLabel1 = "";
     var BreakDownLabel2 = "";
@@ -89,46 +59,46 @@
         index += 1;
     }
 
-    if(Model.BreakDownLevel1 == "locationid")
+    if(Model.BreakDownLevel1 == "location")
     {
-        foreach (var vinStore in SalesCommission.Business.Enums.VinStores)
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
         {
-            if (vinStore.StoreId == Model.BreakDownLevel1Value)
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel1Value.ToLower().Trim())
             {
-                Model.BreakDownLevel1Value = vinStore.Name;
+                Model.BreakDownLevel1Value = store.Name;
             }
         }
     }
 
-    if (Model.BreakDownLevel2 == "locationid")
+    if (Model.BreakDownLevel2 == "location")
     {
-        foreach (var vinStore in SalesCommission.Business.Enums.VinStores)
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
         {
-            if (vinStore.StoreId == Model.BreakDownLevel2Value)
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel2Value.ToLower().Trim())
             {
-                Model.BreakDownLevel2Value = vinStore.Name;
+                Model.BreakDownLevel2Value = store.Name;
             }
         }
     }
 
-    if (Model.BreakDownLevel3 == "locationid")
+    if (Model.BreakDownLevel3 == "location")
     {
-        foreach (var vinStore in SalesCommission.Business.Enums.VinStores)
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
         {
-            if (vinStore.StoreId == Model.BreakDownLevel3Value)
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel3Value.ToLower().Trim())
             {
-                Model.BreakDownLevel3Value = vinStore.Name;
+                Model.BreakDownLevel3Value = store.Name;
             }
         }
     }
 
-    if (Model.BreakDownLevel4 == "locationid")
+    if (Model.BreakDownLevel4 == "location")
     {
-        foreach (var vinStore in SalesCommission.Business.Enums.VinStores)
+        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
         {
-            if (vinStore.StoreId == Model.BreakDownLevel4Value)
+            if (store.LocationId.ToLower().Trim() == Model.BreakDownLevel4Value.ToLower().Trim())
             {
-                Model.BreakDownLevel4Value = vinStore.Name;
+                Model.BreakDownLevel4Value = store.Name;
             }
         }
     }
@@ -156,7 +126,7 @@
     }
 <div class="row report-parameters" style="padding-top:15px;">
     <div class="col-xs-12">
-        <h2>Lead Report Details</h2>
+        <h2>Exception Report Details</h2>
     </div>
 </div>
 <div class="row">
@@ -172,10 +142,10 @@
         </div>
         <div class="row">
             <div class="col-sm-6">
-                @Model.ReportStartDate.ToShortDateString()
+                @Model.ReportStartMonth.ToString()/@Model.ReportStartYear.ToString()
             </div>
             <div class="col-sm-6">
-                @Model.ReportEndDate.ToShortDateString()
+                @Model.ReportEndMonth.ToString()/@Model.ReportEndYear.ToString()
             </div>
         </div>
         <div class="row">
@@ -251,54 +221,77 @@
         </div>
         <div class="row">
             <div class="col-sm-12">
-                <strong>Lead Type Filters:</strong>
+                <strong>Deal Types:</strong>
             </div>
         </div>
         <div class="row" style="margin-bottom: 15px;">
             <div class="col-sm-12">
-                <input type="checkbox" id="chkBadDuplicates" name="chkBadDuplicates" @(Model.ExcludeBadDuplicates == true ? "checked" : "") disabled/> Exclude Bad Duplicates<br />
-                <input type="checkbox" id="chkShowExcluded" name="chkShowExcluded" @(Model.ShowExcludedGroups == true ? "checked" : "") disabled/> Show Excluded Groups<br />
-                <input type="checkbox" id="chkExcludeAllBad" name="chkExcludeAllBad" @(Model.ExcludeAllBad == true ? "checked" : "") disabled/> Exclude All Bad Leads<br/>
-                <input type="checkbox" id="chkIncludeHandyman" name="chkIncludeHandyman" @(Model.IncludeHandyman == false ? "checked" : "" ) disabled /> Exclude Handyman Leads
+                <input type="radio" value="All" name="chkDealType" @(Model.DealType == "All" ? "checked" : "") disabled/> All<br />
+                <input type="radio" value="Finance" name="chkDealType" @(Model.DealType == "Finance" ? "checked" : "") disabled/> Finance<br />
+                <input type="radio" value="Cash" name="chkDealType" @(Model.DealType == "Cash" ? "checked" : "") disabled/> Cash<br />
             </div>
         </div>
+        
        </div>
     <div class="col-xs-10" style="padding-top:15px;">
-        @if(Model.AssociateLeads != null)
+        
+        @if(Model.ExceptionDetails != null)
         {
-            <table id="associate-lead-table" class="table table-striped table-bordered">
+            <table id="associate-appraisal-table" class="table table-striped table-bordered">
                 <thead>
                     <tr style="background-color:#d9edf7;">
-                        <th class="text-center">Dealer ID</th>
-                        <th class="text-center">Lead ID</th>
-                        <th class="text-center">Lead Date</th>
+                        <th class="text-center">Location</th>
+                        <th class="text-center">Deal</th>
+                        <th class="text-center">Exception</th>
                         <th class="text-center">Customer</th>
-                        <th class="text-center">Lead Status</th>
-                        <th class="text-center">Lead Status Type</th>
-                        <th class="text-center">Lead Source</th>
-                        <th class="text-center">Lead Source Type</th>
-                        <th class="text-center">Lead Source Group</th>
+                        <th class="text-center">Deal Date</th>
+                        <th class="text-center">Stk #</th>
+                        <th class="text-center">Year</th>
+                        <th class="text-center">Make</th>
+                        <th class="text-center">Model</th>
+                        <th class="text-center">Days</th>
+                        <th class="text-center">Associates</th>
+                        <th class="text-center">Fin Mgr</th>
+                        <th class="text-center">Bank</th>
+                        <th class="text-center">APR</th>
+                        <th class="text-center">Buy Rate</th>
+                        <th class="text-center">Term</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var lead in Model.AssociateLeads)
+                @foreach (var deal in Model.ExceptionDetails)
+                {
+                    var rateException = "";
+                    foreach (var exception in SalesCommission.Business.Enums.RateExceptions)
                     {
-                    <tr>
-                        <td class="text-center">@lead.DealerId</td>
-                        <td class="text-center">@lead.LeadId</td>
-                        <td class="text-center">@lead.LeadCreatedEastTime.ToShortDateString()</td>
-                        <td class="text-center"><a class="deal-detail" href="https://apps.vinmanager.com/CarDashboard/Pages/CRM/CustomerDashboard.aspx?GlobalCustomerID=@lead.CustomerId&r=@lead.CustomerId" target="_blank">@lead.CustomerName</a></td>
-                        <td class="text-center">@lead.LeadStatusName</td>
-                        <td class="text-center">@lead.LeadStatusTypeName</td>
-                        <td class="text-center">@lead.LeadSourceName</td>
-                        <td class="text-center">@lead.LeadSourceTypeName</td>
-                        <td class="text-center">@lead.LeadSourceGroupName</td>
-                    </tr>
+                        if (exception.ExceptionID.ToUpper().Trim() == deal.sl_rate_exception.ToUpper().Trim())
+                        {
+                            rateException = exception.Name;
+                        }
                     }
+
+<tr>
+    <td>@deal.sl_VehicleLoc</td>
+    <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@deal.sl_dealkey">@deal.sl_dealkey</a></td>
+    <td class="text-center">@rateException</td>
+    <td class="text-center">@deal.sl_VehicleBuyerName</td>
+    <td class="text-center">@deal.sl_VehicleDealDate.ToShortDateString()</td>
+    <td class="text-center">@deal.sl_VehicleStockNumber</td>
+    <td class="text-center">@deal.sl_VehicleYear</td>
+    <td class="text-center">@deal.sl_VehicleMake</td>
+    <td class="text-center">@deal.sl_VehicleCarline</td>
+    <td class="text-center">@deal.sl_VehicleDaysInStock</td>
+    <td class="text-center">@deal.sl_SalesAssociate1<br />@deal.sl_SalesAssociate2</td>
+    <td class="text-center">@deal.sl_FinMgr</td>
+    <td class="text-center">@deal.sl_BankName</td>
+    <td class="text-center">@deal.sl_apr</td>
+    <td class="text-center">@deal.sl_buyRate</td>
+    <td class="text-center">@deal.sl_VehicleTerm</td>
+</tr>
+                                }
                 </tbody>
 
             </table>
-
 
 
         }
@@ -309,7 +302,7 @@
 
     <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
 <script type="text/javascript">
-                $('#associate-lead-table').DataTable({
+                $('#associate-appraisal-table').DataTable({
                     searching: true,
                     dom: 'Bfrti',
                     pageLength: -1,
@@ -329,6 +322,10 @@
                             extend: 'print', footer: true,
                             orientation: 'landscape'
                         }
+                    ],
+                    columnDefs: [
+                        { type: 'any-number', targets: [6,9,13,14,15] },
+                        { type: 'date', targets: [4] }
                     ],
                     retrieve: true
                 });

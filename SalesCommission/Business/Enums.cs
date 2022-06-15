@@ -682,9 +682,86 @@ namespace SalesCommission.Business
             new CertificationLevel {
                 CertificationID = "HDM",
                 Name = "FitzWay Handyman/Wholesale"
+            },
+            new CertificationLevel {
+                CertificationID = "CPO",
+                Name = "Manufacturer Certified Pre-Owned"
             }
-            
+
         };
+
+        public static IEnumerable<CertificationLevel> CPOCodes = new List<CertificationLevel> {
+            new CertificationLevel {
+                CertificationID = "",
+                Name = ""
+            },
+            new CertificationLevel {
+                CertificationID = "F915",
+                Name = "FitzWay Value"
+            },
+            new CertificationLevel {
+                CertificationID = "F910",
+                Name = "FitzWay Certified"
+            },
+            new CertificationLevel {
+                CertificationID = "F914",
+                Name = "FitzWay Plus"
+            },
+            new CertificationLevel {
+                CertificationID = "F916",
+                Name = "FitzWay Handyman MD"
+            },
+            new CertificationLevel {
+                CertificationID = "F917",
+                Name = "FitzWay Handyman FL"
+            },
+            new CertificationLevel {
+                CertificationID = "F918",
+                Name = "FitzWay Handyman PA"
+            },
+            new CertificationLevel {
+                CertificationID = "F924",
+                Name = "Other Certs"
+            },
+            new CertificationLevel {
+                CertificationID = "F906",
+                Name = "CPO GM"
+            },
+            new CertificationLevel {
+                CertificationID = "F907",
+                Name = "CPO CDJR"
+            },
+            new CertificationLevel {
+                CertificationID = "F911",
+                Name = "CPO Toyota"
+            },
+            new CertificationLevel {
+                CertificationID = "F912",
+                Name = "CPO Subaru"
+            },
+            new CertificationLevel {
+                CertificationID = "F909",
+                Name = "CPO Volkswagen"
+            },
+            new CertificationLevel {
+                CertificationID = "F908",
+                Name = "CPO Hyundai"
+            },
+            new CertificationLevel {
+                CertificationID = "F922",
+                Name = "CPO Cadillac"
+            },
+            new CertificationLevel {
+                CertificationID = "F913",
+                Name = "CPO Nissan"
+            },
+            new CertificationLevel {
+                CertificationID = "F923",
+                Name = "CPO Mazda"
+            },
+        };
+        
+
 
         public static IEnumerable<RateException> RateExceptions = new List<RateException> {
             new RateException {
@@ -693,44 +770,44 @@ namespace SalesCommission.Business
             },
             new RateException {
                 ExceptionID = "PMR",
-                Name = "Rate Limited by Lender"
+                Name = "Dealer Participation Limited by Finance Source"
             },
             new RateException {
                 ExceptionID = "CC",
-                Name = "Customer Payment Constraint"
+                Name = "Customer Stated Monthly Payment Constraint"
             },
             new RateException {
                 ExceptionID = "RM",
-                Name = "Competing Offer"
+                Name = "Customer Stated Competing Offer"
             },
-            new RateException {
-                ExceptionID = "SP",
-                Name = "Dealer Promo"
-            },            
+            //new RateException {
+            //    ExceptionID = "SP",
+            //    Name = "Dealer Promo"
+            //},            
             new RateException {
                 ExceptionID = "SVR",
-                Name = "Sub Vented Rate"
+                Name = "Customer Qualified for Subvened Interest Rate"
             },
             new RateException {
                 ExceptionID = "FER",
-                Name = "Family/Employee Rate"
+                Name = "Customer Qualified for Dealership Employee Incentive Program"
             },
-            new RateException {
-                ExceptionID = "IPL",
-                Name = "Lender Portfolio Enhancement"
-            },
-            new RateException {
-                ExceptionID = "OTH",
-                Name = "Inventory Reduction Criteria"
-            },
+            //new RateException {
+            //    ExceptionID = "IPL",
+            //    Name = "Lender Portfolio Enhancement"
+            //},
+            //new RateException {
+            //    ExceptionID = "OTH",
+            //    Name = "Inventory Reduction Criteria"
+            //},
             new RateException {
                 ExceptionID = "MH",
                 Name = "Max Rate Held"
-            },
-            new RateException {
-                ExceptionID = "FR",
-                Name = "Fixed Rate"
             }
+            //new RateException {
+            //    ExceptionID = "FR",
+            //    Name = "Fixed Rate"
+            //}
 
         };
 
@@ -1130,6 +1207,416 @@ namespace SalesCommission.Business
 
         };
 
+        public static IEnumerable<Location> AppraisalLocations = new List<Location> {
+            new Location {
+                LocationId = "FOC",
+                Name = "Annapolis Cadillac/Volkswagen"
+            },
+            new Location {
+                LocationId = "FMM",
+                Name = "Annapolis Mazda/Mitsubishi"
+            },
+            new Location {
+                LocationId = "FTN",
+                Name = "Chambersburg"
+            },
+            new Location {
+                LocationId = "FTO",
+                Name = "Chambersburg"
+            },
+            new Location {
+                LocationId = "CJE",
+                Name = "Clearwater Chrysler/Jeep"
+            },
+            new Location {
+                LocationId = "CHS",
+                Name = "Clearwater Hyundai/Subaru"
+            },
+            new Location {
+                LocationId = "CHY",
+                Name = "Clearwater Hyundai"
+            },
+            new Location {
+                LocationId = "CSS",
+                Name = "Clearwater Subaru"
+            },
+            new Location {
+                LocationId = "COC",
+                Name = "Clearwater Outlet Center"
+            },
+            new Location {
+                LocationId = "FAM",
+                Name = "Frederick Baughmans"
+            },
+            new Location {
+                LocationId = "FCG",
+                Name = "Frederick Baughmans"
+            },
+            new Location {
+                LocationId = "FSS",
+                Name = "Frederick Rt 85"
+            },
+            new Location {
+                LocationId = "LFO",
+                Name = "Lakeforest Hyundai/Subaru"
+            },
+            new Location {
+                LocationId = "LFT",
+                Name = "Gaithersburg Toyota"
+            },
+            new Location {
+                LocationId = "LFU",
+                Name = "Gaithersburg Used"
+            },
+            new Location {
+                LocationId = "FLP",
+                Name = "Lexington Park"
+            },
+            new Location {
+                LocationId = "LFM",
+                Name = "Germantown"
+            },
+            new Location {
+                LocationId = "FHT",
+                Name = "Hagerstown Chrysler"
+            },
+            new Location {
+                LocationId = "FHG",
+                Name = "Hagerstown GM"
+            },
+            new Location {
+                LocationId = "WDC",
+                Name = "Wheaton"
+            },
+            new Location {
+                LocationId = "WFN",
+                Name = "White Flint Buick/GMC"
+            },
+            new Location {
+                LocationId = "FBN",
+                Name = "White Flint Buick/GMC"
+            },
+            new Location {
+                LocationId = "WF",
+                Name = "White Flint Hyundai/Subaru"
+            },
+            new Location {
+                LocationId = "CDO",
+                Name = "White Flint Hyundai"
+            },
+            new Location {
+                LocationId = "FBS",
+                Name = "White Flint Subaru"
+            },
+            new Location {
+                LocationId = "FBC",
+                Name = "White Flint Subaru"
+            }
+            //,
+            //new Location {
+            //    LocationId = "FBS",
+            //    Name = "White Flint Subaru"
+            //}
+
+        };
+
+        public static IEnumerable<Location> SoldLocations = new List<Location> {
+            new Location {
+                LocationId = "FOC",
+                Name = "Annapolis"
+            },
+            new Location {
+                LocationId = "FTN",
+                Name = "Chambersburg"
+            },
+            new Location {
+                LocationId = "FTO",
+                Name = "Chambersburg"
+            },
+            new Location {
+                LocationId = "CJE",
+                Name = "Clearwater"
+            },
+            new Location {
+                LocationId = "FAM",
+                Name = "Frederick"
+            },
+            new Location {
+                LocationId = "FCG",
+                Name = "Frederick"
+            },
+            new Location {
+                LocationId = "LFO",
+                Name = "Gaithersburg Hyundai/Subaru"
+            },
+            new Location {
+                LocationId = "LFT",
+                Name = "Gaithersburg Toyota"
+            },
+            new Location {
+                LocationId = "LFU",
+                Name = "Gaithersburg Used"
+            },
+            new Location {
+                LocationId = "FLP",
+                Name = "Lexington Park"
+            },
+            new Location {
+                LocationId = "LFM",
+                Name = "Germantown"
+            },
+            new Location {
+                LocationId = "FHT",
+                Name = "Hagerstown Chrysler"
+            },
+            new Location {
+                LocationId = "FHG",
+                Name = "Hagerstown GM"
+            },
+            new Location {
+                LocationId = "WDC",
+                Name = "Wheaton"
+            },
+            new Location {
+                LocationId = "FBS",
+                Name = "Rockville Nicholson"
+            },
+            new Location {
+                LocationId = "FBC",
+                Name = "White Flint Subaru"
+            },
+            new Location {
+                LocationId = "CDO",
+                Name = "Rockville Hyundai"
+            }
+            //,
+            //new Location {
+            //    LocationId = "FBS",
+            //    Name = "White Flint Subaru"
+            //}
+
+        };
+
+        public static IEnumerable<Location> ShowroomLocations = new List<Location> {
+            new Location {
+                LocationId = "48",
+                Name = "Rockville Hyundai Used"
+            },
+            new Location {
+                LocationId = "70",
+                Name = "Clearwater Hyundai Used"
+            },
+            new Location {
+                LocationId = "94",
+                Name = "Clearwater Chrysler/Jeep Used"
+            },
+            new Location {
+                LocationId = "95",
+                Name = "Clearwater Subaru Used"
+            },
+            new Location {
+               LocationId = "96",
+                Name = "Clearwater Outlet Center Used"
+            },
+            new Location {
+                LocationId = "164",
+                Name = "Frederick Route 85 Used"
+            },
+                        new Location {
+                LocationId = "36",
+                Name = "Frederick Baughmans Used"
+            },
+            new Location {
+                LocationId = "5",
+                Name = "Rockville Subaru Used"
+            },
+            new Location {
+                LocationId = "9",
+                Name = "Rockville Buick/GMC Used"
+            },
+
+            new Location {
+                LocationId = "161",
+                Name = "Hagerstown GM Used"
+            },
+            new Location {
+                LocationId = "158",
+                Name = "Hagerstown Chrysler Used"
+            },
+            new Location {
+                LocationId = "91",
+                Name = "Lexington Park Used"
+            },
+            new Location {
+                LocationId = "24",
+                Name = "Annapolis Cadillac/Volkswagen Used"
+            },
+            new Location {
+                LocationId = "29",
+                Name = "Annapolis Mazda/Mitsubishi Used"
+            },
+            new Location {
+                LocationId = "40",
+                Name = "Chambersburg Used"
+            },
+            new Location {
+                LocationId = "13",
+                Name = "Gaithersburg Hyundai/Subaru Used"
+            },
+            new Location {
+                LocationId = "111",
+                Name = "Gaithersburg Handyman"
+            },
+            new Location {
+                LocationId = "60",
+                Name = "Gaithersburg Toyota Used"
+            },
+            new Location {
+                LocationId = "87",
+                Name = "Germantown Used"
+            },
+            new Location {
+                LocationId = "20",
+                Name = "Wheaton Used"
+            },
+
+        };
+
+        public static IEnumerable<Location> ShowroomIDMapping = new List<Location> {
+            new Location {
+                LocationId = "48",
+                Name = "CDO"
+            },
+            new Location {
+                LocationId = "70",
+                Name = "CHY"
+            },
+            new Location {
+                LocationId = "94",
+                Name = "CJE"
+            },
+            new Location {
+                LocationId = "95",
+                Name = "CSS"
+            },
+            new Location {
+               LocationId = "96",
+                Name = "COC"
+            },
+            new Location {
+                LocationId = "164",
+                Name = "FSS"
+            },
+                        new Location {
+                LocationId = "36",
+                Name = "FCG"
+            },
+            new Location {
+                LocationId = "5",
+                Name = "FBC"
+            },
+            new Location {
+                LocationId = "9",
+                Name = "FBN"
+            },
+
+            new Location {
+                LocationId = "161",
+                Name = "FHG"
+            },
+            new Location {
+                LocationId = "158",
+                Name = "FHT"
+            },
+            new Location {
+                LocationId = "91",
+                Name = "FLP"
+            },
+            new Location {
+                LocationId = "24",
+                Name = "FOC"
+            },
+            new Location {
+                LocationId = "29",
+                Name = "FMM"
+            },
+            new Location {
+                LocationId = "40",
+                Name = "FTO"
+            },
+            new Location {
+                LocationId = "13",
+                Name = "LFO"
+            },
+            new Location {
+                LocationId = "60",
+                Name = "LFT"
+            },
+            new Location {
+                LocationId = "87",
+                Name = "LFM"
+            },
+            new Location {
+                LocationId = "20",
+                Name = "WDC"
+            },
+
+        };
+
+        public static IEnumerable<VehicleStatus> VehicleStatuses = new List<VehicleStatus>
+        {
+            new VehicleStatus {
+                StatusId = "1",
+                Name = "In Stock (1)"
+            },
+            new VehicleStatus {
+                StatusId = "2",
+                Name = "Deal Pending (2)"
+            },
+            new VehicleStatus {
+                StatusId = "3",
+                Name = "Demo Vehicles (3)"
+            },
+            new VehicleStatus {
+                StatusId = "4",
+                Name = "Loaner (4)"
+            },
+            new VehicleStatus {
+                StatusId = "5",
+                Name = "Sold - Not Delivered (5)"
+            },
+            new VehicleStatus {
+                StatusId = "6",
+                Name = "Delivered (6)"
+            },
+            new VehicleStatus {
+                StatusId = "8",
+                Name = "Wholesale (8)"
+            },
+            new VehicleStatus {
+                StatusId = "9",
+                Name = "Wholesale/Auction (9)"
+            },
+            new VehicleStatus {
+                StatusId = "14",
+                Name = "Stop Sale (14)"
+            },
+            new VehicleStatus {
+                StatusId = "15",
+                Name = "Company Vehicle (15)"
+            },
+            new VehicleStatus {
+                StatusId = "20",
+                Name = "Service Loaner (20)"
+            },
+            new VehicleStatus {
+                StatusId = "21",
+                Name = "Nextcar (21)"
+            },
+
+
+        };
+        
         public static IEnumerable<Brand> Brands = new List<Brand>
         {
             new Brand {
@@ -1255,6 +1742,14 @@ namespace SalesCommission.Business
             new Payscale {
                 PayscaleID = "COMHGR",
                 Name = "Compensation Plan - Hagerstown"
+            },
+            new Payscale {
+                PayscaleID = "COMTEMP1",
+                Name = "Compensation Plan Temporary - Mazda"
+            },
+            new Payscale {
+                PayscaleID = "COMTEMP2",
+                Name = "Compensation Plan Temporary - Subaru"
             }
         };
 
@@ -1544,6 +2039,13 @@ public class AssociateStatus
 public class Brand
 {
     public string BrandId { get; set; }
+    public string Name { get; set; }
+
+}
+
+public class VehicleStatus
+{
+    public string StatusId { get; set; }
     public string Name { get; set; }
 
 }

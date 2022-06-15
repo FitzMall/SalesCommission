@@ -294,15 +294,7 @@
     <Content Include="Views\Reports\AfterSalesStores.cshtml" />
     <Content Include="Views\Reports\AfterSalesFandI.cshtml" />
     <Content Include="Views\Reports\LeadReportOld.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByBrandAssociate.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByLocationAssociate.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByLocationLeadSource.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByLocationLeadGroup.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByBrandLeadSource.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByBrandLeadGroup.cshtml" />
     <Content Include="Views\Commission\AdditionalCommission.cshtml" />
-    <Content Include="Views\Reports\_LeadReportByLocationAssociateOld.cshtml" />
-    <Content Include="Views\Reports\LeadReport.cshtml" />
     <Content Include="Views\Reports\_LeadReportByBreakdowns.cshtml" />
     <Content Include="Views\Reports\_LeadReportByBreakdownsCompare.cshtml" />
     <Content Include="Views\Reports\LeadMapping.cshtml" />
@@ -328,6 +320,24 @@
     <Content Include="Views\Reports\SalesReport.cshtml" />
     <Content Include="Views\Reports\_SalesReportByBreakdowns.cshtml" />
     <Content Include="Views\Reports\_SalesReportByBreakdownsCompare.cshtml" />
+    <Content Include="Views\Reports\AppraisalReport.cshtml" />
+    <Content Include="Views\Reports\_AppraisalReportByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\_AppraisalReportByBreakdownsCompare.cshtml" />
+    <Content Include="Views\Reports\_TemplateReportByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\AppraisalReportDetails.cshtml" />
+    <Content Include="Views\Reports\AcquisitionReport.cshtml" />
+    <Content Include="Views\Reports\AppraiserReport.cshtml" />
+    <Content Include="Views\Reports\_AppraisalReportInvByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\AppraisalReportInvDetails.cshtml" />
+    <Content Include="Views\Reports\_AppraisalReportInvByBreakdownsOld.cshtml" />
+    <Content Include="Views\Reports\_AppraisalReportComboByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\TemplateReport.cshtml" />
+    <Content Include="Views\Reports\AppraisalReportLeadDetails.cshtml" />
+    <Content Include="Views\Reports\AppraisalReportTradeDetails.cshtml" />
+    <Content Include="Views\Reports\_ExceptionReportByBreakdowns.cshtml" />
+    <Content Include="Views\Reports\ExceptionReport.cshtml" />
+    <Content Include="Views\Reports\ExceptionReportDetails.cshtml" />
+    <Content Include="Views\Reports\LeadReport.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

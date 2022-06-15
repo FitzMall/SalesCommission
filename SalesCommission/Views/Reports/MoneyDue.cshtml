@@ -791,7 +791,7 @@
 
                                                                     @if (moneyDue.DealNumber != "")
                                                                     {
-                                                                        <a href="@applicationPath/Sales/DealDetail/@location@moneyDue.DealNumber" target="_blank">@location@moneyDue.DealNumber</a>
+                                                                        <a href="@applicationPath/Sales/DealDetail/@moneyDue.Location@moneyDue.DealNumber" target="_blank">@moneyDue.Location@moneyDue.DealNumber</a>
                                                                     }
                                                                 </td>
                                                                 <td class="text-center">@moneyDue.ScheduleDays</td>
@@ -821,7 +821,7 @@
                                                                         @:@currentHistory.CommentUser - @currentHistory.CommentDate.ToShortDateString()
                                                                         }
                                                                     <br />
-                                                                    <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
+                                                                    <a class="editInfo" data-customer-number="@moneyDue.CustomerNumber" data-due-from="@moneyDue.DueFrom" data-location="@moneyDue.Location"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
                                                                 </td>
                                                                 <td class="text-center">
                                                                     @currentHistory.FundedStatus<br />

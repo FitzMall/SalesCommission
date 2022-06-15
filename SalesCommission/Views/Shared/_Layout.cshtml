@@ -52,6 +52,7 @@
 
     <script type="text/javascript" src="https://cdn.datatables.net/v/bs/jszip-2.5.0/dt-1.10.16/b-1.5.1/b-flash-1.5.1/b-html5-1.5.1/b-print-1.5.1/datatables.min.js"></script>
 
+
     <style>
 .dropdown-submenu {
     position:relative;
@@ -210,6 +211,9 @@
                                     <ul class="dropdown-menu">
                                         <li>@Html.ActionLink("Monthly Sales", "Sales", "Reports")</li>
                                         <li>@Html.ActionLink("Monthly Trades", "Trades", "Reports")</li>
+                                        <li class="divider"></li>
+                                        <li>@Html.ActionLink("Monthly Sales Trend", "SalesReport", "Reports")</li>
+                                        <li>@Html.ActionLink("Monthly Appraisal Trend", "AppraisalReport", "Reports")</li>
                                     </ul>
                                 </li>
                                 <li class="dropdown dropdown-submenu">
@@ -231,7 +235,9 @@
                                         <li>@Html.ActionLink("Lead Mapping", "LeadMapping", "Reports")</li>
                                     </ul>
                                 </li>
+                                <li>@Html.ActionLink("Rate Exception Report", "ExceptionReport", "Reports")</li>
                                 <li class="divider"></li>
+                                <li><a href="//jjfserver/sp/datatable/dot/PMatrix.asp">Inventory Analysis and Price Matrix</a></li>
                                 <li><a href="//jjfserver/InventoryWriteDown">Used Vehicles</a></li>
                                 <li><a href="//jjfserver/InventoryWriteDown/Home/TitleStatus">Used Vehicle Title Status</a></li>
                                 <li>@Html.ActionLink("Bonus Paid", "BonusPaid", "Reports")</li>

@@ -139,6 +139,9 @@ namespace SalesCommission.Models
         public string CertificationLevel { get; set; }
         public double TradeAmount { get; set; }
         public string Location { get; set; }
-        
+        public string TradeVIN { get; set; }
+        public string Trade2VIN { get; set; }
+        public string SoldVIN { get; set; }
+        public bool Appraisal { get; set; }
     }
 }

@@ -624,7 +624,7 @@ namespace SalesCommission.Controllers
 
             fiAssociatesModel.MonthId = DateTime.Now.Month;
             fiAssociatesModel.YearId = DateTime.Now.Year;
-            fiAssociatesModel.FIManagers = SqlQueries.GetSalesAssociates();
+            fiAssociatesModel.FIManagers = SqlQueries.GetSalesAssociatesWithKey();
             fiAssociatesModel.FIPayscaleSelectList = SqlQueries.GetFIPayscaleSelectList().OrderBy(x => x.Text).ToList();
 
             return View(fiAssociatesModel);
@@ -648,8 +648,8 @@ namespace SalesCommission.Controllers
             }
 
 
-            fiAssociatesModel.FIManagers = SqlQueries.GetSalesAssociates();
-            fiAssociatesModel.SelectedManager = SqlQueries.GetSelectedFIManager(fiAssociatesModel.MonthId, fiAssociatesModel.YearId, fiAssociatesModel.AssociateId);
+            fiAssociatesModel.FIManagers = SqlQueries.GetSalesAssociatesWithKey();
+            fiAssociatesModel.SelectedManager = SqlQueries.GetSelectedFIManagerByKey(fiAssociatesModel.MonthId, fiAssociatesModel.YearId, fiAssociatesModel.AssociateId);
             fiAssociatesModel.FIPayscaleSelectList = SqlQueries.GetFIPayscaleSelectList().OrderBy(x => x.Text).ToList();
 
             return View(fiAssociatesModel);

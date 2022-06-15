@@ -674,6 +674,7 @@
                                         <th class="text-center">Stk</th>
                                         <th class="text-center">Model</th>
                                         <th class="text-center">Trade</th>
+                                        <th class="text-center">Appraisal</th>
                                         <th class="text-center">Deal Gross</th>
                                         <th class="text-center">Fin Inc</th>
                                         <th class="text-center">Bank Fee</th>
@@ -804,6 +805,7 @@
                         <th class="text-center">Stk</th>
                         <th class="text-center">Model</th>
                         <th class="text-center">Trade</th>
+                        <th class="text-center">Appraisal</th>
                         <th class="text-center">Deal Gross</th>
                         <th class="text-center">Fin Inc</th>
                         <th class="text-center">Bank Fee</th>
@@ -1535,6 +1537,13 @@
                         }
                         else
                         {
+                            outputHTML += '<td class="text-center"></td>';
+                        }
+
+                        if (obj.Appraisal) {
+                            outputHTML += '<td class="text-center">' + check + '</td>';
+                        }
+                        else {
                             outputHTML += '<td class="text-center"></td>';
                         }
                         outputHTML += '<td class="text-center">' + obj.DealGrossAmount.toFixed(0).toString().replace(/\B(?=(\d{3})+\b)/g, ",").replace(/-(.*)/, "($1)") + '</td>';

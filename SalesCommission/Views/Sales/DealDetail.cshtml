@@ -336,6 +336,8 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
         @Html.HiddenFor(n => n.sl_certificationLevel)
         @Html.HiddenFor(n => n.sl_BuyerEmail)
         @Html.HiddenFor(n => n.sl_BuyerPhone)
+        @Html.HiddenFor(n => n.sl_BankName)
+
         //var includedTotalPre = Convert.ToDecimal(Model.sl_BPP) + Model.sl_maint + Model.sl_insurance + Model.sl_leaseWnT + Model.sl_etch + Model.sl_Adjustments + Model.sl_CertFee + Model.sl_otheram;
 
         var includedTotalPre = Model.sl_Adjustments + Model.sl_CertFee;
@@ -749,6 +751,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             @Html.HiddenFor(x => x.sl_TradeVIN)
                             @Html.HiddenFor(x => x.TitleDueTrade.Id)
                             @Html.CheckBoxFor(x => x.TitleDueTrade.ClearTitle, new { @class = "" }) Clear Title<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
                         </div>
                     </div>
                     <div class="row" style="margin-bottom:15px;">
@@ -757,7 +760,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             @Html.CheckBoxFor(x => x.TitleDueTrade.LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
                             @Html.CheckBoxFor(x => x.TitleDueTrade.TitleDueBank, new { @class = "" }) Title Due Bank<br />
                             @Html.CheckBoxFor(x => x.TitleDueTrade.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
-                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
+                            
                         </div>
                         @*<div class="col-sm-6">
                             @Html.CheckBoxFor(x => x.TitleDueTrade.WaitingOutSTTitle, new { @class = "" }) Waiting Out Of State Title<br />
@@ -778,7 +781,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                 </div>
                 <hr/>
                 }
-                <label class="col-sm-6">Desc Of Trade</label>
+                <label class="col-sm-6">Desc Of Trade 2</label>
                 <label class="col-sm-3">ACV</label>
                 <label class="col-sm-3">Allowance</label>
                 <div class="form-group">
@@ -878,6 +881,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             @Html.HiddenFor(x => x.sl_TradeVIN2)
                             @Html.HiddenFor(x => x.TitleDueTrade2.Id)
                             @Html.CheckBoxFor(x => x.TitleDueTrade2.ClearTitle, new { @class = "" }) Clear Title<br />
+                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
                         </div>
                     </div>
                     <div class="row" style="margin-bottom:15px;">
@@ -887,7 +891,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             @Html.CheckBoxFor(x => x.TitleDueTrade2.TitleDueBank, new { @class = "" }) Title Due Bank<br />
 
                             @Html.CheckBoxFor(x => x.TitleDueTrade2.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
-                            @Html.CheckBoxFor(x => x.TitleDueTrade.ElectronicTitle, new { @class = "" }) E-Title<br />
+                            
                         </div>
                         @*<div class="col-sm-6">
                             @Html.CheckBoxFor(x => x.TitleDueTrade2.WaitingOutSTTitle, new { @class = "" }) Waiting Out Of State Title<br />
@@ -1706,15 +1710,25 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                         @Html.DropDownListFor(n => n.sl_rate_exception, new SelectList(SalesCommission.Business.Enums.RateExceptions, "ExceptionID", "Name"), htmlAttributes)
                         @if (Model.PreviousSavedValues != null && Model.sl_rate_exception != Model.PreviousSavedValues.sl_rate_exception)
                         {
-                            if (Model.PreviousSavedValues.sl_rate_exception != null)
-                            {
-                                var selected = SalesCommission.Business.Enums.RateExceptions.First(o => o.ExceptionID == Model.PreviousSavedValues.sl_rate_exception.Trim());
 
-                                <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+                            if (Model.PreviousSavedValues.sl_rate_exception != null)
+
+                            {
+                                try
+                                {
+                                    var selected = SalesCommission.Business.Enums.RateExceptions.First(o => o.ExceptionID == Model.PreviousSavedValues.sl_rate_exception.Trim());
+                                    <label style="background-color:#fcf8e3;margin-left:13px">@selected.Name</label>
+                                }
+                                catch
+                                {
+                                    <label style="background-color:#fcf8e3;margin-left:13px">@Model.PreviousSavedValues.sl_rate_exception</label>
+                                         
+                                }
+
 
                             }
                         }
-                    </div>
+</div>
                 </div>
                 <div class="form-group">
                     <label for="priceVariance" class="col-sm-5 control-label">Price Variance</label>
@@ -1977,12 +1991,34 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                     var percentFinanced = 0;
                     percentFinanced = $("#sl_PercentAmtFinanced").val();
 
-                    //if ((percentFinanced * 100) > 2)
-                    //{
-                    //    alert("Markup exceeds standards, please correct prior to validation!");
-                    //    return false;
-                    //}
+                    var buyRate = 0;
+                    buyRate = $("#sl_buyRate").val();
 
+                    var APR = 0;
+                    APR = $("#sl_apr").val();
+
+                    var markup = 0;
+                    markup = (APR - buyRate);
+
+                    var bankName = "";
+                    bankName = $("#sl_BankName").val()
+
+                    
+                    if (bankName.toUpperCase().includes("KENSINGTON"))
+                    {
+                        if (markup.toFixed(2) > 3)
+                        {
+                            alert("Markup exceeds standards, please correct prior to validation!");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (markup.toFixed(2) > 2.25) {
+                            alert("Markup exceeds standards, please correct prior to validation!");
+                            return false;
+                        }
+                    }
             var location = "";
             location = $("#sl_mall_id").val();
 
@@ -2054,51 +2090,74 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
 
                 $('#TitleDueTrade_LienDueCustomer').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade_TitleDueBank').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade_DuplicateTitleAppliedFor').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
+                    alert("Check CVR for any Liens.");
                 });
 
                 $('#TitleDueTrade_LienDueBank').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade_Other').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade_ElectronicTitle').click(function () {
                     $('#TitleDueTrade_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade_LienDueCustomer').removeAttr('checked');
+                    $('#TitleDueTrade_TitleDueBank').removeAttr('checked');
+                    $('#TitleDueTrade_DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDueTrade_LienDueBank').removeAttr('checked');
+                    $('#TitleDueTrade_Other').removeAttr('checked');
                 });
 
 
                 $('#TitleDueTrade2_LienDueCustomer').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade2_TitleDueBank').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade2_DuplicateTitleAppliedFor').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
+                    alert("Check CVR for any Liens.");
                 });
 
                 $('#TitleDueTrade2_LienDueBank').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade2_Other').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDueTrade2_ElectronicTitle').click(function () {
                     $('#TitleDueTrade2_ClearTitle').removeAttr('checked');
+                    $('#TitleDueTrade2_LienDueCustomer').removeAttr('checked');
+                    $('#TitleDueTrade2_TitleDueBank').removeAttr('checked');
+                    $('#TitleDueTrade2_DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDueTrade2_LienDueBank').removeAttr('checked');
+                    $('#TitleDueTrade2_Other').removeAttr('checked');
+
                 });
 
 

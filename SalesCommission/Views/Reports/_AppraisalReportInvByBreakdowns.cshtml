@@ -1,0 +1,2054 @@
+﻿@model SalesCommission.Models.AppraisalReportModel
+
+@{ 
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    var breakDownsInv = new List<string>();
+    var breakDownInvValues = new List<string>();
+
+    breakDownsInv.Add("Appraiser");
+    breakDownInvValues.Add("appraiser");
+
+    breakDownsInv.Add("Body Style");
+    breakDownInvValues.Add("body");
+
+
+    breakDownsInv.Add("Certification");
+    breakDownInvValues.Add("certified");
+
+    breakDownsInv.Add("Days In Stock");
+    breakDownInvValues.Add("days");
+
+    breakDownsInv.Add("Lead Group");
+    breakDownInvValues.Add("leadgroup");
+
+    breakDownsInv.Add("Lead Source");
+    breakDownInvValues.Add("lead");
+
+    breakDownsInv.Add("Location");
+    breakDownInvValues.Add("location");
+
+    breakDownsInv.Add("Make");
+    breakDownInvValues.Add("make");
+
+    breakDownsInv.Add("Mileage");
+    breakDownInvValues.Add("mileage");
+
+    breakDownsInv.Add("Model");
+    breakDownInvValues.Add("model");
+
+    breakDownsInv.Add("Model Year");
+    breakDownInvValues.Add("modelyear");
+
+    breakDownsInv.Add("Month Year");
+    breakDownInvValues.Add("monthyear");
+
+    breakDownsInv.Add("Selling Price");
+    breakDownInvValues.Add("price");
+
+    breakDownsInv.Add("Showroom");
+    breakDownInvValues.Add("showroom");
+
+    breakDownsInv.Add("Status");
+    breakDownInvValues.Add("status");
+
+    breakDownsInv.Add("Stock Number");
+    breakDownInvValues.Add("stock");
+
+    breakDownsInv.Add("Vehicle Source");
+    breakDownInvValues.Add("vehiclesource");
+
+}
+
+<style type="text/css">
+    .indent-2{        
+        padding-left:10px;
+    }
+    .indent-3{
+        padding-left:20px;
+    }
+    .indent-4{
+        padding-left:30px;
+    }
+    table.floatThead-table {
+        font-size:12px;
+    }
+
+    .indent-td2{
+        display: block;
+        margin-left: 10px;
+        margin-right: -2px;
+    }
+    .indent-td3{
+        display: block;
+        margin-left: 20px;
+        margin-right: -2px;
+    }
+    .indent-td4{
+        display: block;
+        margin-left: 30px;
+        margin-right: -2px;
+    }
+    .breakdown-column{
+        width:250px;
+    }
+</style>
+
+<div class="col-sm-12" id="location-associate">
+
+
+    <div class="row report-parameters" style="padding:10px 0px;margin-bottom:10px;">
+@using (Html.BeginForm("AppraisalReport", "Reports", FormMethod.Post, new { name = "FilterForm", id = "FilterForm" }))
+{
+
+    @Html.Hidden("bd1", Model.BreakDownLevel1);
+    @Html.Hidden("bd2", Model.BreakDownLevel2);
+    @Html.Hidden("bd3", Model.BreakDownLevel3);
+    @Html.Hidden("bd4", Model.BreakDownLevel4);
+
+    @Html.Hidden("startmonth", Model.ReportStartMonth.ToString());
+    @Html.Hidden("startyear", Model.ReportStartYear.ToString());
+    @Html.Hidden("endmonth", Model.ReportEndMonth.ToString());
+    @Html.Hidden("endyear", Model.ReportEndYear.ToString());
+    @Html.Hidden("vt", Model.VehicleType);
+    @Html.Hidden("at", Model.AcquisitionType);
+    @Html.Hidden("rt", Model.ReportType);
+    @Html.Hidden("st", Model.StatusType);
+    @Html.Hidden("sfm", Model.StatusOnFM);
+
+        if (@Model.BreakDownLevel1 != null && @Model.BreakDownLevel1 != "")
+        {
+            var index = breakDownInvValues.IndexOf(Model.BreakDownLevel1);
+
+            <div class="col-sm-2">
+                @breakDownsInv[index]
+                <select name="filterBreakdown1" id="filterBreakdown1" class="form-control form-inline chosen-select " multiple>
+                    <option></option>
+                </select>
+            </div>
+        }
+        if (@Model.BreakDownLevel2 != null && @Model.BreakDownLevel2 != "")
+        {
+            var index = breakDownInvValues.IndexOf(Model.BreakDownLevel2);
+
+            <div class="col-sm-2">
+                @breakDownsInv[index]
+                <select name="filterBreakdown2" id="filterBreakdown2" class="form-control form-inline chosen-select " multiple>
+                    <option></option>
+                </select>
+            </div>
+        }
+        if (@Model.BreakDownLevel3 != null && @Model.BreakDownLevel3 != "")
+        {
+            var index = breakDownInvValues.IndexOf(Model.BreakDownLevel3);
+
+            <div class="col-sm-2">
+                @breakDownsInv[index]
+                <select name="filterBreakdown3" id="filterBreakdown3" class="form-control form-inline chosen-select " multiple>
+                    <option></option>
+                </select>
+            </div>
+        }
+        if (@Model.BreakDownLevel4 != null && @Model.BreakDownLevel4 != "")
+        {
+            var index = breakDownInvValues.IndexOf(Model.BreakDownLevel4);
+
+            <div class="col-sm-2">
+                @breakDownsInv[index]
+                <select name="filterBreakdown4" id="filterBreakdown4" class="form-control form-inline chosen-select " multiple>
+                    <option></option>
+                </select>
+            </div>
+        }
+        <div class="col-sm-2">
+            <button class="btn btn-primary" style="margin-top:15px" type="submit" value="Filter" name="Filter">Filter</button>
+        </div>
+        }
+    </div>
+    <h4>Appraisal Inventory Report</h4>
+
+    <table class="table table-bordered" style="font-size:12px">
+            <thead>
+
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center breakdown-column">Company Totals</th>
+                    <th class="text-center">Total Inv</th>
+                    <th class="text-center">Days Supply</th>
+                    <th class="text-center">Total Inv<br/>Value $</th>
+                    <th class="text-center"> < 30 Day<br />Units</th>
+                    <th class="text-center"> < 30 Day<br />% of Inv</th>
+                    <th class="text-center">30-59 Day<br />Units</th>
+                    <th class="text-center">30-59 Day<br />% of Inv</th>
+                    <th class="text-center">60-89 Day<br />Units</th>
+                    <th class="text-center">60-89 Day<br />% of Inv</th>
+                    <th class="text-center">90+ Day<br />Units</th>
+                    <th class="text-center">90+ Day<br />% of Inv</th>
+                    <th class="text-center">Avg FitzWay<br/>Low Price</th>
+                    <th class="text-center">Avg Inventory<br/>Amount</th>
+                    <th class="text-center">Avg Current<br/>Markup/(Loss)</th>
+              
+                </tr>
+
+            </thead>
+            <tbody>
+
+                @{ 
+                            var TotalCount = Model.TradeAcquisitionDetails.Count;
+                    var TotalWithCost = 0;
+                    var TotalWithInvAmount = 0;
+
+                    decimal TotalInvAmount = 0;
+                    decimal TotalInvCost = 0;
+                    decimal TotalFitzWayAmount = 0;
+                    decimal TotalMarkup = 0;
+
+                    decimal TotalDaysSupply = 0;
+
+                    decimal Day30Count = 0;
+                    decimal Day3060Count = 0;
+                    decimal Day6090Count = 0;
+                    decimal Day90Count = 0;
+
+                    decimal Day30Percent = 0;
+                    decimal Day3060Percent = 0;
+                    decimal Day6090Percent = 0;
+                    decimal Day90Percent = 0;
+
+                    decimal MarkupAverage = 0;
+                    decimal FitzAverage = 0;
+                    decimal InventoryAverage = 0;
+
+                    foreach (var detail in Model.TradeAcquisitionDetails)
+                    {
+                        var days = Int32.Parse(detail.Days);
+                        if(days < 30)
+                        {
+                            Day30Count += 1;
+                        }
+                        else if(days >= 30 && days < 60)
+                        {
+                            Day3060Count += 1;
+                        }
+                        else if (days >= 60 && days < 90)
+                        {
+                            Day6090Count += 1;
+                        }
+                        else if (days >= 90)
+                        {
+                            Day90Count += 1;
+                        }
+
+
+                        TotalInvAmount += detail.InventoryAmount;
+
+                        if (detail.ListAmount > 0)
+                        {
+                            TotalWithCost += 1;
+                            TotalFitzWayAmount += detail.ListAmount;
+                        }
+
+
+                        var halfListAmount = (detail.ListAmount * (decimal).5);
+                        if (detail.InventoryAmount > halfListAmount)
+                        {
+                            TotalWithInvAmount += 1;
+                            TotalMarkup += (detail.ListAmount - detail.InventoryAmount);
+                        }
+
+                    }
+                    if (TotalCount > 0)
+                    {
+                        Day30Percent = (Day30Count / TotalCount);
+                        Day3060Percent = (Day3060Count / TotalCount);
+                        Day6090Percent = (Day6090Count / TotalCount);
+                        Day90Percent = (Day90Count / TotalCount);
+                    }
+
+                    if (TotalWithCost > 0)
+                    {
+                        FitzAverage = (TotalFitzWayAmount / TotalWithCost);
+                    }
+
+                    if (TotalWithInvAmount > 0)
+                    {
+                        MarkupAverage = (TotalMarkup / TotalWithInvAmount);
+                        InventoryAverage = (TotalInvAmount / TotalWithInvAmount);
+                    }
+
+                }
+
+                <tr>
+                    <td class="text-center breakdown-column">Company Totals</td>
+                    <td class="text-center">@TotalCount</td>
+                    <td class="text-center">@TotalDaysSupply</td>
+                    <td class="text-center">@TotalInvAmount.ToString("C",nfi)</td>
+                    <td class="text-center">@Day30Count</td>
+                    <td class="text-center">@Day30Percent.ToString("P",nfi)</td>
+                    <td class="text-center">@Day3060Count</td>
+                    <td class="text-center">@Day3060Percent.ToString("P", nfi)</td>
+                    <td class="text-center">@Day6090Count</td>
+                    <td class="text-center">@Day6090Percent.ToString("P", nfi)</td>
+                    <td class="text-center">@Day90Count</td>
+                    <td class="text-center">@Day90Percent.ToString("P", nfi)</td>
+                    <td class="text-center">@FitzAverage.ToString("C", nfi)</td>
+                    <td class="text-center">@InventoryAverage.ToString("C", nfi)</td>
+                    <td class="text-center">@MarkupAverage.ToString("C", nfi)</td>
+                </tr>
+                
+
+            </tbody>
+            <tfoot>
+                <tr style="background-color:#d9edf7;">
+                </tr>
+
+            </tfoot>
+        </table>
+    <table class="table table-bordered sticky-header" style="font-size:12px; border-left: none;">
+        <thead>
+            <tr style="background-color:#d9edf7;">
+                <th class="text-center breakdown-column">Breakdown</th>
+                <th class="text-center">Total Inv</th>
+                <th class="text-center">Days Supply</th>
+                <th class="text-center">Total Inv<br />Value $</th>
+                <th class="text-center"> < 30 Day<br />Units</th>
+                <th class="text-center"> < 30 Day<br />% of Inv</th>
+                <th class="text-center">30-59 Day<br />Units</th>
+                <th class="text-center">30-59 Day<br />% of Inv</th>
+                <th class="text-center">60-89 Day<br />Units</th>
+                <th class="text-center">60-89 Day<br />% of Inv</th>
+                <th class="text-center">90+ Day<br />Units</th>
+                <th class="text-center">90+ Day<br />% of Inv</th>
+                <th class="text-center">Avg FitzWay<br/>Low Price</th>
+                <th class="text-center">Avg Inventory<br />Amount</th>
+                <th class="text-center">Avg Current<br/>Markup/(Loss)</th>
+            </tr>
+
+        </thead>
+        <tbody>
+
+    @if (Model.TradeAcquisitionDetails != null)
+    {
+
+        var breakdownLevel1Values = new List<string>();
+
+
+        switch (Model.BreakDownLevel1)
+        {
+            case "appraiser":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Appraiser).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "location":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.DRloc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "showroom":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Loc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "vehiclesource":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.VehicleSource).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "make":
+                //breakdownLevel1Values = Model.AppraisalSoldDetails.Select(x => x.MakeName).Distinct().OrderBy(x => x).ToList();
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Where(x => !x.Make.Contains("Used")).Select(x => x.Make).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "lead":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "leadgroup":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.LeadGroup).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "status":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Status.ToString()).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "model":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Carline).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "stock":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.StockNumber).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "certified":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Certification.Trim()).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "modelyear":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.Year).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "body":
+                breakdownLevel1Values = Model.TradeAcquisitionDetails.Select(x => x.BodyStyle).Distinct().OrderBy(x => x).ToList();
+                break;
+
+            case "days":
+                breakdownLevel1Values.Add("30");
+                breakdownLevel1Values.Add("60");
+                breakdownLevel1Values.Add("90");
+                breakdownLevel1Values.Add("120");
+                break;
+
+
+            case "mileage":
+                breakdownLevel1Values.Add("25000");
+                breakdownLevel1Values.Add("50000");
+                breakdownLevel1Values.Add("75000");
+                breakdownLevel1Values.Add("100000");
+                breakdownLevel1Values.Add("500000");
+                break;
+
+            case "price":
+                breakdownLevel1Values.Add("10000");
+                breakdownLevel1Values.Add("20000");
+                breakdownLevel1Values.Add("30000");
+                breakdownLevel1Values.Add("40000");
+                breakdownLevel1Values.Add("50000");
+                breakdownLevel1Values.Add("60000");
+                breakdownLevel1Values.Add("70000");
+                breakdownLevel1Values.Add("80000");
+                breakdownLevel1Values.Add("90000");
+                breakdownLevel1Values.Add("100000");
+                breakdownLevel1Values.Add("200000");
+                break;
+
+            case "monthyear":
+                var monthYears = Model.TradeAcquisitionDetails.Select(x => x.LastModifiedDate.ToString("MM/yyyy")).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                breakdownLevel1Values = monthYears.Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                break;
+
+
+            default:
+                // breakdownLevel1Values = Model.AssociateLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
+                break;
+        }
+
+        <script type="text/javascript">
+            $("#filterBreakdown1").empty();
+            $("#filterBreakdown1").append("<option value=''></option>");
+            $("#filterBreakdown2").empty();
+            $("#filterBreakdown2").append("<option value=''></option>");
+            $("#filterBreakdown3").empty();
+            $("#filterBreakdown3").append("<option value=''></option>");
+            $("#filterBreakdown4").empty();
+            $("#filterBreakdown4").append("<option value=''></option>");
+        </script>
+
+        var breakdown1Index = 0;
+        var breakdown2Index = 0;
+        var BreakDown3Index = 0;
+        var BreakDown4Index = 0;
+
+        foreach (var breakdown1 in breakdownLevel1Values)
+        {
+            var label1 = breakdown1;
+
+            var BreakDown1filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+
+            switch (Model.BreakDownLevel1)
+            {
+                case "appraiser":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Appraiser == breakdown1);
+                    break;
+
+                case "location":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.DRloc == breakdown1);
+
+                    foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                    {
+                        if (store.LocationId.ToLower().Trim() == breakdown1.ToLower().Trim())
+                        {
+                            label1 = store.Name;
+                        }
+                    }
+
+                    break;
+
+                case "showroom":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Loc == breakdown1);
+
+                    foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                    {
+                        if (store.LocationId.ToLower().Trim() == breakdown1.ToLower().Trim())
+                        {
+                            label1 = store.Name;
+                        }
+                    }
+
+                    break;
+
+                case "vehiclesource":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == breakdown1);
+                    break;
+
+                case "lead":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == breakdown1);
+                    break;
+
+                case "leadgroup":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == breakdown1);
+                    break;
+
+                case "status":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == breakdown1);
+
+                    foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                    {
+                        if (status.StatusId.ToLower().Trim() == breakdown1.ToLower().Trim())
+                        {
+                            label1 = status.Name;
+                        }
+                    }
+                    break;
+
+                case "make":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Make == breakdown1);
+                    break;
+
+                case "model":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Carline == breakdown1);
+                    break;
+
+                case "stock":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.StockNumber == breakdown1);
+                    break;
+
+                case "certified":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == breakdown1);
+
+                    foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                    {
+                        if (status.CertificationID.ToLower().Trim() == breakdown1.ToLower().Trim())
+                        {
+                            label1 = status.Name;
+                        }
+                    }
+
+
+                    break;
+
+                case "modelyear":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Year == breakdown1);
+                    break;
+
+                case "body":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.BodyStyle == breakdown1);
+                    break;
+
+                case "days":
+                    var daysbreakdown = Convert.ToDecimal(breakdown1);
+
+                    if (daysbreakdown == 120)
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                        label1 = "> 90";
+                    }
+                    else
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                        label1 = (daysbreakdown - 30) + " - " + (daysbreakdown - 1);
+                    }
+                    break;
+
+                case "mileage":
+                    var milesbreakdown = Convert.ToDecimal(breakdown1);
+
+                    if (milesbreakdown == 500000)
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                        label1 = "> 100000";
+                    }
+                    else
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                        label1 = (milesbreakdown - 25000) + " - " + (milesbreakdown - 1);
+                    }
+                    break;
+
+                case "price":
+                    var pricebreakdown = Convert.ToDecimal(breakdown1);
+
+                    if (pricebreakdown == 200000)
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000);
+                        label1 = "> 100000";
+                    }
+                    else
+                    {
+                        BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                        label1 = (pricebreakdown - 10000) + " - " + (pricebreakdown - 1);
+                    }
+                    break;
+
+                case "monthyear":
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == breakdown1);
+                    var dealDate = Convert.ToDateTime(breakdown1);
+                    label1 = dealDate.Month + "/" + dealDate.Year;
+
+                    break;
+
+                default:
+                    BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Loc == breakdown1);
+                    break;
+            }
+
+            var BD1TotalCount = BreakDown1filteredLeads.Count;
+            var BD1TotalWithCost = 0;
+            var BD1TotalWithInvAmount = 0;
+
+            decimal BD1TotalInvAmount = 0;
+            decimal BD1TotalInvCost = 0;
+            decimal BD1TotalFitzWayAmount = 0;
+            decimal BD1TotalMarkup = 0;
+
+            decimal BD1Day30Count = 0;
+            decimal BD1Day3060Count = 0;
+            decimal BD1Day6090Count = 0;
+            decimal BD1Day90Count = 0;
+
+            decimal BD1Day30Percent = 0;
+            decimal BD1Day3060Percent = 0;
+            decimal BD1Day6090Percent = 0;
+            decimal BD1Day90Percent = 0;
+
+            decimal BD1DaysSupply = 0;
+
+            decimal BD1MarkupAverage = 0;
+            decimal BD1FitzAverage = 0;
+            decimal BD1InventoryAverage = 0;
+
+            foreach (var detail in BreakDown1filteredLeads)
+            {
+                var days = Int32.Parse(detail.Days);
+                if (days < 30)
+                {
+                    BD1Day30Count += 1;
+                }
+                else if (days >= 30 && days < 60)
+                {
+                    BD1Day3060Count += 1;
+                }
+                else if (days >= 60 && days < 90)
+                {
+                    BD1Day6090Count += 1;
+                }
+                else if (days >= 90)
+                {
+                    BD1Day90Count += 1;
+                }
+
+                BD1TotalInvAmount += detail.InventoryAmount;
+
+                if (detail.ListAmount > 0)
+                {
+                    BD1TotalWithCost += 1;
+                    BD1TotalFitzWayAmount += detail.ListAmount;
+
+                }
+
+                var halfListAmount = (detail.ListAmount * (decimal).5);
+                if (detail.InventoryAmount > halfListAmount)
+                {
+                    BD1TotalWithInvAmount += 1;
+                    BD1TotalMarkup += (detail.ListAmount - detail.InventoryAmount);
+                }
+
+            }
+            if (BD1TotalCount > 0)
+            {
+                BD1Day30Percent = (BD1Day30Count / BD1TotalCount);
+                BD1Day3060Percent = (BD1Day3060Count / BD1TotalCount);
+                BD1Day6090Percent = (BD1Day6090Count / BD1TotalCount);
+                BD1Day90Percent = (BD1Day90Count / BD1TotalCount);
+
+            }
+
+            if (BD1TotalWithCost > 0)
+            {
+                BD1FitzAverage = (BD1TotalFitzWayAmount / BD1TotalWithCost);
+            }
+
+            if (BD1TotalWithInvAmount > 0)
+            {
+                BD1MarkupAverage = (BD1TotalMarkup / BD1TotalWithInvAmount);
+                BD1InventoryAverage = (BD1TotalInvAmount / BD1TotalWithInvAmount);
+            }
+
+            decimal BD1SoldLast30 = 0;
+            //var BD1SupplyOutput = "";
+
+            //var soldLast30BD1 = BreakDown1filteredLeadsSold.FindAll(x => x.DealDate > DateTime.Now.AddDays(-31));
+            //if (soldLast30BD1 != null)
+            //{
+            //    BD1SoldLast30 = soldLast30BD1.Count;
+
+            //    if (BD1SoldLast30 != 0)
+            //    {
+            //        BD1DaysSupply = (30 / BD1SoldLast30) * BD1TotalCount;
+            //        BD1SupplyOutput = decimal.ToInt32(BD1DaysSupply).ToString();
+            //    }
+            //    else
+            //    {
+            //        BD1SupplyOutput = "Err";
+            //    }
+        //}
+
+        var bd1URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + "&bd3=" + "&bd4=" + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
+
+            <tr class="location-bd1-data-row-@breakdown1Index @label1.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd1-collapse-@breakdown1Index">
+                <td class="breakdown-column"><a data-toggle="collapse" id="location-bd1-collapse-@breakdown1Index" style="cursor: pointer;" class="location-bd1-collapse-@breakdown1Index-href collapsed" data-target=".location-bd1-collapse-@breakdown1Index">@label1 </a></td>
+                <td class="text-center"><a href="@bd1URL" target="_blank">@BD1TotalCount</a></td>
+                <td class="text-center">@BD1SoldLast30</td>
+                <td class="text-center">@BD1TotalInvAmount.ToString("C", nfi)</td>
+                <td class="text-center"><a href="@bd1URL&days=30" target="_blank">@BD1Day30Count</a></td>
+                <td class="text-center">@BD1Day30Percent.ToString("P", nfi)</td>
+                <td class="text-center"><a href="@bd1URL&days=3060" target="_blank">@BD1Day3060Count</a></td>
+                <td class="text-center">@BD1Day3060Percent.ToString("P", nfi)</td>
+                <td class="text-center"><a href="@bd1URL&days=6090" target="_blank">@BD1Day6090Count</a></td>
+                <td class="text-center">@BD1Day6090Percent.ToString("P", nfi)</td>
+                <td class="text-center"><a href="@bd1URL&days=90" target="_blank">@BD1Day90Count</a></td>
+                <td class="text-center">@BD1Day90Percent.ToString("P", nfi)</td>
+                <td class="text-center">@BD1FitzAverage.ToString("C", nfi)</td>
+                <td class="text-center">@BD1InventoryAverage.ToString("C", nfi)</td>
+                <td class="text-center">@BD1MarkupAverage.ToString("C", nfi)</td>
+
+            </tr>
+
+
+                            <script type="text/javascript">
+                                $("#filterBreakdown1").append("<option value='" + "@label1" + "'>" + "@label1" + "</option>");
+
+                                $(document).ready(function () {
+                                    $(".location-bd1-collapse-@breakdown1Index-href").click(function () {
+                                        $('.location-bd1-data-row-@breakdown1Index').toggleClass('selected-row');
+                                        $(".location-bd1-collapse-@breakdown1Index-href").toggleClass('changed');
+                                    });
+                                });
+                            </script>
+
+            var breakdownLevel2Values = new List<string>();
+
+            switch (Model.BreakDownLevel2)
+            {
+                case "appraiser":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Appraiser).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "location":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DRloc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "showroom":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Loc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "vehiclesource":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.VehicleSource).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "make":
+                    //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.MakeName).Distinct().OrderBy(x => x).ToList();
+                    breakdownLevel2Values = BreakDown1filteredLeads.Where(x => !x.Make.Contains("Used")).Select(x => x.Make).Distinct().OrderBy(x => x).ToList();
+
+                    break;
+
+                case "model":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Carline).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "lead":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "leadgroup":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LeadGroup).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "status":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Status.ToString()).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "stock":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.StockNumber).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "certified":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Certification.Trim()).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "modelyear":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Year).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "body":
+                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.BodyStyle).Distinct().OrderBy(x => x).ToList();
+                    break;
+
+                case "days":
+                    breakdownLevel2Values.Add("30");
+                    breakdownLevel2Values.Add("60");
+                    breakdownLevel2Values.Add("90");
+                    breakdownLevel2Values.Add("120");
+                    break;
+
+                case "mileage":
+                    breakdownLevel2Values.Add("25000");
+                    breakdownLevel2Values.Add("50000");
+                    breakdownLevel2Values.Add("75000");
+                    breakdownLevel2Values.Add("100000");
+                    breakdownLevel2Values.Add("500000");
+                    break;
+
+                case "price":
+                    breakdownLevel2Values.Add("10000");
+                    breakdownLevel2Values.Add("20000");
+                    breakdownLevel2Values.Add("30000");
+                    breakdownLevel2Values.Add("40000");
+                    breakdownLevel2Values.Add("50000");
+                    breakdownLevel2Values.Add("60000");
+                    breakdownLevel2Values.Add("70000");
+                    breakdownLevel2Values.Add("80000");
+                    breakdownLevel2Values.Add("90000");
+                    breakdownLevel2Values.Add("100000");
+                    breakdownLevel2Values.Add("200000");
+                    break;
+
+                case "monthyear":
+                    var monthYears = BreakDown1filteredLeads.Select(x => x.LastModifiedDate.ToString("MM/yyyy")).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                    breakdownLevel2Values = monthYears.Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                    //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.LastModifiedDate.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                    break;
+
+                default:
+                    //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
+                    break;
+            }
+
+            foreach (var breakdown2 in breakdownLevel2Values)
+            {
+
+                var label2 = breakdown2;
+
+                var BreakDown2filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+
+                switch (Model.BreakDownLevel2)
+                {
+
+                    case "appraiser":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Appraiser == breakdown2);
+                        break;
+
+                    case "location":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.DRloc == breakdown2);
+
+                        foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                        {
+                            if (store.LocationId.ToLower().Trim() == breakdown2.ToLower().Trim())
+                            {
+                                label2 = store.Name;
+                            }
+                        }
+
+                        break;
+
+                    case "showroom":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Loc == breakdown2);
+
+                        foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                        {
+                            if (store.LocationId.ToLower().Trim() == breakdown2.ToLower().Trim())
+                            {
+                                label2 = store.Name;
+                            }
+                        }
+
+                        break;
+
+                    case "vehiclesource":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VehicleSource == breakdown2);
+                        break;
+
+                    case "make":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Make.Contains(breakdown2));
+                        break;
+
+                    case "model":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Carline == breakdown2);
+                        break;
+
+                    case "lead":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadSourceName == breakdown2);
+                        break;
+
+                    case "leadgroup":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LeadGroup == breakdown2);
+                        break;
+
+                    case "status":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Status.ToString() == breakdown2);
+
+                        foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                        {
+                            if (status.StatusId.ToLower().Trim() == breakdown2.ToLower().Trim())
+                            {
+                                label2 = status.Name;
+                            }
+                        }
+
+                        break;
+
+
+                    case "stock":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.StockNumber == breakdown2);
+                        break;
+
+                    case "certified":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Certification.Trim() == breakdown2);
+                        foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                        {
+                            if (status.CertificationID.ToLower().Trim() == breakdown2.ToLower().Trim())
+                            {
+                                label2 = status.Name;
+                            }
+                        }
+
+                        break;
+
+                    case "modelyear":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Year == breakdown2);
+                        break;
+
+                    case "body":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.BodyStyle == breakdown2);
+                        break;
+
+                    case "days":
+                        var daysbreakdown = Convert.ToDecimal(breakdown2);
+
+                        if (daysbreakdown == 120)
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                            label2 = "> 90";
+                        }
+                        else
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                            label2 = (daysbreakdown - 30) + " - " + (daysbreakdown - 1);
+                        }
+                        break;
+
+                    case "mileage":
+                        var milesbreakdown = Convert.ToDecimal(breakdown2);
+
+                        if (milesbreakdown == 500000)
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            label2 = "> 100000";
+                        }
+                        else
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            label2 = (milesbreakdown - 25000) + " - " + (milesbreakdown - 1);
+                        }
+                        break;
+
+                    case "price":
+                        var pricebreakdown = Convert.ToDecimal(breakdown2);
+
+                        if (pricebreakdown == 200000)
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.ListAmount >= 100000);
+                            label2 = (pricebreakdown - 10000) + " - " + (pricebreakdown - 1);
+
+                        }
+                        else
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                            label2 = "< " + breakdown2;
+                        }
+                        break;
+
+
+                    case "monthyear":
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == breakdown2);
+                        var dealDate = Convert.ToDateTime(breakdown2);
+                        label2 = dealDate.Month + "/" + dealDate.Year;
+                        break;
+
+                    default:
+                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Loc == breakdown2);
+                        break;
+
+                }
+
+                var BD2TotalCount = BreakDown2filteredLeads.Count;
+                var BD2TotalWithCost = 0;
+                var BD2TotalWithInvAmount = 0;
+
+                decimal BD2TotalInvAmount = 0;
+                decimal BD2TotalInvCost = 0;
+                decimal BD2TotalFitzWayAmount = 0;
+                decimal BD2TotalMarkup = 0;
+
+                decimal BD2Day30Count = 0;
+                decimal BD2Day3060Count = 0;
+                decimal BD2Day6090Count = 0;
+                decimal BD2Day90Count = 0;
+
+                decimal BD2Day30Percent = 0;
+                decimal BD2Day3060Percent = 0;
+                decimal BD2Day6090Percent = 0;
+                decimal BD2Day90Percent = 0;
+
+                decimal BD2MarkupAverage = 0;
+                decimal BD2FitzAverage = 0;
+                decimal BD2InventoryAverage = 0;
+
+                decimal BD2DaysSupply = 0;
+
+                foreach (var detail in BreakDown2filteredLeads)
+                {
+                    var days = Int32.Parse(detail.Days);
+                    if (days < 30)
+                    {
+                        BD2Day30Count += 1;
+                    }
+                    else if (days >= 30 && days < 60)
+                    {
+                        BD2Day3060Count += 1;
+                    }
+                    else if (days >= 60 && days < 90)
+                    {
+                        BD2Day6090Count += 1;
+                    }
+                    else if (days >= 90)
+                    {
+                        BD2Day90Count += 1;
+                    }
+
+                    BD2TotalInvAmount += detail.InventoryAmount;
+
+                    if (detail.ListAmount > 0)
+                    {
+                        BD2TotalWithCost += 1;
+                        BD2TotalFitzWayAmount += detail.ListAmount;
+                    }
+
+                    var halfListAmount = (detail.ListAmount * (decimal).5);
+                    if (detail.InventoryAmount > halfListAmount)
+                    {
+                        BD2TotalWithInvAmount += 1;
+                        BD2TotalMarkup += (detail.ListAmount - detail.InventoryAmount);
+                    }
+
+                }
+                if (BD2TotalCount > 0)
+                {
+                    BD2Day30Percent = (BD2Day30Count / BD2TotalCount);
+                    BD2Day3060Percent = (BD2Day3060Count / BD2TotalCount);
+                    BD2Day6090Percent = (BD2Day6090Count / BD2TotalCount);
+                    BD2Day90Percent = (BD2Day90Count / BD2TotalCount);
+
+                }
+
+                if (BD2TotalWithCost > 0)
+                {
+                    BD2FitzAverage = (BD2TotalFitzWayAmount / BD2TotalWithCost);
+                }
+
+                if (BD2TotalWithInvAmount > 0)
+                {
+                    BD2MarkupAverage = (BD2TotalMarkup / BD2TotalWithInvAmount);
+                    BD2InventoryAverage = (BD2TotalInvAmount / BD2TotalWithInvAmount);
+                }
+
+                var bd2URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + "&bd4=" + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
+
+                <tr class="location-bd1-collapse-@breakdown1Index collapse out location-bd2-data-row-@breakdown2Index @label2.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd2-collapse-@breakdown2Index">
+
+                    <td class="indent-td2"><a data-toggle="collapse" id="location-bd2-collapse-@breakdown2Index" style="cursor: pointer;" class="location-bd2-collapse-@breakdown2Index-href collapsed indent-2" data-target=".location-bd2-collapse-@breakdown2Index">@label2 </a></td>
+                    <td class="text-center"><a href="@bd2URL" target="_blank">@BD2TotalCount</a></td>
+                    <td class="text-center">@BD2DaysSupply</td>
+                    <td class="text-center">@BD2TotalInvAmount.ToString("C", nfi)</td>
+                    <td class="text-center"><a href="@bd2URL&days=30" target="_blank">@BD2Day30Count</a></td>
+                    <td class="text-center">@BD2Day30Percent.ToString("P", nfi)</td>
+                    <td class="text-center"><a href="@bd2URL&days=3060" target="_blank">@BD2Day3060Count</a></td>
+                    <td class="text-center">@BD2Day3060Percent.ToString("P", nfi)</td>
+                    <td class="text-center"><a href="@bd2URL&days=6090" target="_blank">@BD2Day6090Count</a></td>
+                    <td class="text-center">@BD2Day6090Percent.ToString("P", nfi)</td>
+                    <td class="text-center"><a href="@bd2URL&days=90" target="_blank">@BD2Day90Count</a></td>
+                    <td class="text-center">@BD2Day90Percent.ToString("P", nfi)</td>
+                    <td class="text-center">@BD2FitzAverage.ToString("C", nfi)</td>
+                    <td class="text-center">@BD2InventoryAverage.ToString("C", nfi)</td>
+                    <td class="text-center">@BD2MarkupAverage.ToString("C", nfi)</td>
+                </tr>
+
+                                <script type="text/javascript">
+                                    var bAdd = true;
+                                    $("#filterBreakdown2 option").each(function () {
+                                        if ($(this).attr('value') == '@label2') {
+                                            bAdd = false;
+                                        }
+                                    });
+
+                                    if (bAdd == true) {
+                                        $("#filterBreakdown2").append("<option value='" + "@label2" + "'>" + "@label2" + "</option>");
+                                    }
+
+                                    $(document).ready(function () {
+                                        $(".location-bd2-collapse-@breakdown2Index-href").click(function () {
+                                            $('.location-bd2-data-row-@breakdown2Index').toggleClass('selected-row');
+                                            $(".location-bd2-collapse-@breakdown2Index-href").toggleClass('changed');
+                                        });
+                                    });
+                                </script>
+
+                var breakdownLevel3Values = new List<string>();
+
+                switch (Model.BreakDownLevel3)
+                {
+                    case "appraiser":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Appraiser).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "location":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.DRloc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "showroom":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Loc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "vehiclesource":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.VehicleSource).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "make":
+                        //breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.MakeName).Distinct().OrderBy(x => x).ToList();
+                        breakdownLevel3Values = BreakDown2filteredLeads.Where(x => !x.Make.Contains("Used")).Select(x => x.Make).Distinct().OrderBy(x => x).ToList();
+
+                        break;
+
+                    case "model":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Carline).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "lead":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "leadgroup":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LeadGroup).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "status":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Status.ToString()).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "stock":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.StockNumber).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "certified":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Certification.Trim()).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "modelyear":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Year).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "body":
+                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.BodyStyle).Distinct().OrderBy(x => x).ToList();
+                        break;
+
+                    case "days":
+                        breakdownLevel3Values.Add("30");
+                        breakdownLevel3Values.Add("60");
+                        breakdownLevel3Values.Add("90");
+                        breakdownLevel3Values.Add("120");
+                        break;
+
+
+                    case "mileage":
+                        breakdownLevel3Values.Add("25000");
+                        breakdownLevel3Values.Add("50000");
+                        breakdownLevel3Values.Add("75000");
+                        breakdownLevel3Values.Add("100000");
+                        breakdownLevel3Values.Add("500000");
+                        break;
+
+                    case "price":
+                        breakdownLevel3Values.Add("10000");
+                        breakdownLevel3Values.Add("20000");
+                        breakdownLevel3Values.Add("30000");
+                        breakdownLevel3Values.Add("40000");
+                        breakdownLevel3Values.Add("50000");
+                        breakdownLevel3Values.Add("60000");
+                        breakdownLevel3Values.Add("70000");
+                        breakdownLevel3Values.Add("80000");
+                        breakdownLevel3Values.Add("90000");
+                        breakdownLevel3Values.Add("100000");
+                        breakdownLevel3Values.Add("200000");
+                        break;
+
+                    case "monthyear":
+                        var monthYears = BreakDown2filteredLeads.Select(x => x.LastModifiedDate.ToString("MM/yyyy")).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                        breakdownLevel3Values = monthYears.Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                        //breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.LastModifiedDate.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                        break;
+
+                    default:
+                        //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
+                        break;
+                }
+
+                foreach (var BreakDown3 in breakdownLevel3Values)
+                {
+                    var label3 = BreakDown3;
+                    var BreakDown3filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+
+                    switch (Model.BreakDownLevel3)
+                    {
+                        case "appraiser":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Appraiser == BreakDown3);
+                            break;
+
+                        case "location":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.DRloc == BreakDown3);
+
+                            foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == BreakDown3.ToLower().Trim())
+                                {
+                                    label3 = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "showroom":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Loc == BreakDown3);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == BreakDown3.ToLower().Trim())
+                                {
+                                    label3 = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VehicleSource == BreakDown3);
+                            break;
+
+                        case "make":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Make.Contains(BreakDown3));
+                            break;
+
+                        case "model":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Carline == BreakDown3);
+                            break;
+
+                        case "lead":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LeadSourceName == BreakDown3);
+                            break;
+
+                        case "leadgroup":
+                            BreakDown3filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadGroup == BreakDown3);
+                            break;
+
+                        case "status":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Status.ToString() == BreakDown3);
+
+                            foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                            {
+                                if (status.StatusId.ToLower().Trim() == BreakDown3.ToLower().Trim())
+                                {
+                                    label3 = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "stock":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.StockNumber == BreakDown3);
+                            break;
+
+                        case "certified":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Certification.Trim() == BreakDown3);
+                            foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                            {
+                                if (status.CertificationID.ToLower().Trim() == BreakDown3.ToLower().Trim())
+                                {
+                                    label3 = status.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "modelyear":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Year == BreakDown3);
+                            break;
+
+
+                        case "body":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.BodyStyle == BreakDown3);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(BreakDown3);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                                label3 = "> 90";
+                            }
+                            else
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                                label3 = (daysbreakdown - 30) + " - " + (daysbreakdown - 1);
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(BreakDown3);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                                label3 = "> 100000";
+                            }
+                            else
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                                label3 = (milesbreakdown - 25000) + " - " + (milesbreakdown - 1);
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(BreakDown3);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.ListAmount >= 100000);
+                                label3 = "> 100000";
+                            }
+                            else
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                                label3 = (pricebreakdown - 10000) + " - " + (pricebreakdown - 1);
+
+                            }
+                            break;
+
+                        case "monthyear":
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == BreakDown3);
+                            var dealDate = Convert.ToDateTime(BreakDown3);
+                            label3 = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        default:
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Loc == BreakDown3);
+                            break;
+
+                    }
+
+                    var BD3TotalCount = BreakDown3filteredLeads.Count;
+                    var BD3TotalWithCost = 0;
+                    var BD3TotalWithInvAmount = 0;
+
+                    decimal BD3TotalInvAmount = 0;
+                    decimal BD3TotalInvCost = 0;
+                    decimal BD3TotalFitzWayAmount = 0;
+                    decimal BD3TotalMarkup = 0;
+
+                    decimal BD3Day30Count = 0;
+                    decimal BD3Day3060Count = 0;
+                    decimal BD3Day6090Count = 0;
+                    decimal BD3Day90Count = 0;
+
+                    decimal BD3Day30Percent = 0;
+                    decimal BD3Day3060Percent = 0;
+                    decimal BD3Day6090Percent = 0;
+                    decimal BD3Day90Percent = 0;
+
+                    decimal BD3MarkupAverage = 0;
+                    decimal BD3FitzAverage = 0;
+                    decimal BD3InventoryAverage = 0;
+
+                    decimal BD3DaysSupply = 0;
+
+                    foreach (var detail in BreakDown3filteredLeads)
+                    {
+                        var days = Int32.Parse(detail.Days);
+                        if (days < 30)
+                        {
+                            BD3Day30Count += 1;
+                        }
+                        else if (days >= 30 && days < 60)
+                        {
+                            BD3Day3060Count += 1;
+                        }
+                        else if (days >= 60 && days < 90)
+                        {
+                            BD3Day6090Count += 1;
+                        }
+                        else if (days >= 90)
+                        {
+                            BD3Day90Count += 1;
+                        }
+
+                        BD3TotalInvAmount += detail.InventoryAmount;
+
+                        if (detail.ListAmount > 0)
+                        {
+                            BD3TotalWithCost += 1;
+                            BD3TotalFitzWayAmount += detail.ListAmount;
+
+                        }
+
+                        var halfListAmount = (detail.ListAmount * (decimal).5);
+                        if (detail.InventoryAmount > halfListAmount)
+                        {
+                            BD3TotalWithInvAmount += 1;
+                            BD3TotalMarkup += (detail.ListAmount - detail.InventoryAmount);
+                        }
+
+                    }
+                    if (BD3TotalCount > 0)
+                    {
+                        BD3Day30Percent = (BD3Day30Count / BD3TotalCount);
+                        BD3Day3060Percent = (BD3Day3060Count / BD3TotalCount);
+                        BD3Day6090Percent = (BD3Day6090Count / BD3TotalCount);
+                        BD3Day90Percent = (BD3Day90Count / BD3TotalCount);
+
+                    }
+
+                    if (BD3TotalWithCost > 0)
+                    {
+                        BD3FitzAverage = (BD3TotalFitzWayAmount / BD3TotalWithCost);
+                    }
+                    if (BD3TotalWithInvAmount > 0)
+                    {
+                        BD3MarkupAverage = (BD3TotalMarkup / BD3TotalWithInvAmount);
+                        BD3InventoryAverage = (BD3TotalInvAmount / BD3TotalWithInvAmount);
+                    }
+                    var bd3URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + Model.BreakDownLevel3 + "," + BreakDown3 + "&bd4=" + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
+
+                    <tr class="location-bd2-collapse-@breakdown2Index collapse out location-bd3-data-row-@BreakDown3Index @label3.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd3-collapse-@BreakDown3Index">
+
+                        <td class="divider-column indent-td3"><a data-toggle="collapse" id="location-bd3-collapse-@BreakDown3Index" style="cursor: pointer;" class="location-bd3-collapse-@BreakDown3Index-href collapsed indent-3" data-target=".location-bd3-collapse-@BreakDown3Index">@label3 </a></td>
+                        <td class="text-center"><a href="@bd3URL" target="_blank">@BD3TotalCount</a></td>
+                        <td class="text-center">@BD3DaysSupply</td>
+                        <td class="text-center">@BD3TotalInvAmount.ToString("C", nfi)</td>
+                        <td class="text-center"><a href="@bd3URL&days=30" target="_blank">@BD3Day30Count</a></td>
+                        <td class="text-center">@BD3Day30Percent.ToString("P", nfi)</td>
+                        <td class="text-center"><a href="@bd3URL&days=3060" target="_blank">@BD3Day3060Count</a></td>
+                        <td class="text-center">@BD3Day3060Percent.ToString("P", nfi)</td>
+                        <td class="text-center"><a href="@bd3URL&days=6090" target="_blank">@BD3Day6090Count</a></td>
+                        <td class="text-center">@BD3Day6090Percent.ToString("P", nfi)</td>
+                        <td class="text-center"><a href="@bd3URL&days=90" target="_blank">@BD3Day90Count</a></td>
+                        <td class="text-center">@BD3Day90Percent.ToString("P", nfi)</td>
+                        <td class="text-center">@BD3FitzAverage.ToString("C", nfi)</td>
+                        <td class="text-center">@BD3InventoryAverage.ToString("C", nfi)</td>
+                        <td class="text-center">@BD3MarkupAverage.ToString("C", nfi)</td>
+                    </tr>
+
+                    <script type="text/javascript">
+                        var bAdd3 = true;
+                        $("#filterBreakdown3 option").each(function () {
+                            if ($(this).attr('value') == '@label3') {
+                                bAdd3 = false;
+                            }
+                        });
+
+                        if (bAdd3 == true) {
+                            $("#filterBreakdown3").append("<option value='" + "@label3" + "'>" + "@label3" + "</option>");
+                        }
+                                        $(document).ready(function () {
+                                            $(".location-bd3-collapse-@BreakDown3Index-href").click(function () {
+                                                $('.location-bd3-data-row-@BreakDown3Index').toggleClass('selected-row');
+                                                $(".location-bd3-collapse-@BreakDown3Index-href").toggleClass('changed');
+                });
+            });
+                    </script>
+
+                    var breakdownLevel4Values = new List<string>();
+
+                    switch (Model.BreakDownLevel4)
+                    {
+                        case "appraiser":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Appraiser).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "location":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.DRloc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "showroom":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Loc.ToUpper()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "vehiclesource":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.VehicleSource).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "make":
+                            //breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.MakeName).Distinct().OrderBy(x => x).ToList();
+                            breakdownLevel4Values = BreakDown3filteredLeads.Where(x => !x.Make.Contains("Used")).Select(x => x.Make).Distinct().OrderBy(x => x).ToList();
+
+                            break;
+
+                        case "model":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Carline).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "lead":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadSourceName).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "leadgroup":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LeadGroup).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "status":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Status.ToString()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "stock":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.StockNumber).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "certified":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Certification.Trim()).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "modelyear":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Year).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+                        case "body":
+                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.BodyStyle).Distinct().OrderBy(x => x).ToList();
+                            break;
+
+
+                        case "days":
+                            breakdownLevel4Values.Add("30");
+                            breakdownLevel4Values.Add("60");
+                            breakdownLevel4Values.Add("90");
+                            breakdownLevel4Values.Add("120");
+                            break;
+
+
+                        case "mileage":
+                            breakdownLevel4Values.Add("25000");
+                            breakdownLevel4Values.Add("50000");
+                            breakdownLevel4Values.Add("75000");
+                            breakdownLevel4Values.Add("100000");
+                            breakdownLevel4Values.Add("500000");
+                            break;
+
+                        case "price":
+                            breakdownLevel4Values.Add("10000");
+                            breakdownLevel4Values.Add("20000");
+                            breakdownLevel4Values.Add("30000");
+                            breakdownLevel4Values.Add("40000");
+                            breakdownLevel4Values.Add("50000");
+                            breakdownLevel4Values.Add("60000");
+                            breakdownLevel4Values.Add("70000");
+                            breakdownLevel4Values.Add("80000");
+                            breakdownLevel4Values.Add("90000");
+                            breakdownLevel4Values.Add("100000");
+                            breakdownLevel4Values.Add("200000");
+                            break;
+                        case "monthyear":
+                            var monthYears = BreakDown3filteredLeads.Select(x => x.ReceivedDate.ToString("MM/yyyy")).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                            breakdownLevel4Values = monthYears.Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                            //breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.LastModifiedDate.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
+                            break;
+
+                        default:
+                            //breakdownLevel3Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
+                            break;
+                    }
+
+                    foreach (var BreakDown4 in breakdownLevel4Values)
+                    {
+                        var label4 = BreakDown4;
+                        var BreakDown4filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+
+                        switch (Model.BreakDownLevel4)
+                        {
+                            case "appraiser":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Appraiser == BreakDown4);
+                                break;
+
+                            case "location":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.DRloc == BreakDown4);
+
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.LocationId.ToLower().Trim() == BreakDown4.ToLower().Trim())
+                                    {
+                                        label4 = store.Name;
+                                    }
+                                }
+
+                                break;
+
+                            case "showroom":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Loc == BreakDown4);
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.LocationId.ToLower().Trim() == BreakDown4.ToLower().Trim())
+                                    {
+                                        label4 = store.Name;
+                                    }
+                                }
+
+                                break;
+
+                            case "vehiclesource":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VehicleSource == BreakDown4);
+                                break;
+
+                            case "make":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Make.Contains(BreakDown4));
+                                break;
+
+                            case "model":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Carline == BreakDown4);
+                                break;
+
+                            case "lead":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadSourceName == BreakDown4);
+                                break;
+
+                            case "leadgroup":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LeadGroup == BreakDown4);
+                                break;
+
+                            case "stock":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.StockNumber == BreakDown4);
+                                break;
+
+                            case "status":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Status.ToString() == BreakDown4);
+
+                                foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                                {
+                                    if (status.StatusId.ToLower().Trim() == BreakDown4.ToLower().Trim())
+                                    {
+                                        label4 = status.Name;
+                                    }
+                                }
+                                break;
+
+                            case "certified":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Certification.Trim() == BreakDown4);
+                                foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                                {
+                                    if (status.CertificationID.ToLower().Trim() == BreakDown4.ToLower().Trim())
+                                    {
+                                        label4 = status.Name;
+                                    }
+                                }
+
+                                break;
+
+                            case "modelyear":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Year == BreakDown4);
+                                break;
+
+
+                            case "body":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.BodyStyle == BreakDown4);
+                                break;
+
+                            case "days":
+                                var daysbreakdown = Convert.ToDecimal(BreakDown4);
+
+                                if (daysbreakdown == 120)
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                                    label4 = "> 90";
+                                }
+                                else
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                                    label4 = (daysbreakdown - 30) + " - " + (daysbreakdown - 1);
+                                }
+                                break;
+
+                            case "mileage":
+                                var milesbreakdown = Convert.ToDecimal(BreakDown4);
+
+                                if (milesbreakdown == 500000)
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                                    label4 = "> 100000";
+                                }
+                                else
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                                    label4 = (milesbreakdown - 25000) + " - " + (milesbreakdown - 1);
+                                }
+                                break;
+
+                            case "price":
+                                var pricebreakdown = Convert.ToDecimal(BreakDown4);
+
+                                if (pricebreakdown == 200000)
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.ListAmount >= 100000);
+                                    label4 = "> 100000";
+                                }
+                                else
+                                {
+                                    BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                                    label4 = (pricebreakdown - 10000) + " - " + (pricebreakdown - 1);
+
+                                }
+                                break;
+
+                            case "monthyear":
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == BreakDown4);
+                                var dealDate = Convert.ToDateTime(BreakDown4);
+                                label4 = dealDate.Month + "/" + dealDate.Year;
+                                break;
+
+                            default:
+                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Loc == BreakDown4);
+                                break;
+
+                        }
+
+                        var BD4TotalCount = BreakDown4filteredLeads.Count;
+                        var BD4TotalWithCost = 0;
+                        var BD4TotalWithInvAmount = 0;
+
+                        decimal BD4TotalInvAmount = 0;
+                        decimal BD4TotalInvCost = 0;
+                        decimal BD4TotalFitzWayAmount = 0;
+                        decimal BD4TotalMarkup = 0;
+
+                        decimal BD4Day30Count = 0;
+                        decimal BD4Day3060Count = 0;
+                        decimal BD4Day6090Count = 0;
+                        decimal BD4Day90Count = 0;
+
+                        decimal BD4Day30Percent = 0;
+                        decimal BD4Day3060Percent = 0;
+                        decimal BD4Day6090Percent = 0;
+                        decimal BD4Day90Percent = 0;
+
+                        decimal BD4MarkupAverage = 0;
+                        decimal BD4FitzAverage = 0;
+                        decimal BD4InventoryAverage = 0;
+
+                        decimal BD4DaysSupply = 0;
+
+                        foreach (var detail in BreakDown4filteredLeads)
+                        {
+                            var days = Int32.Parse(detail.Days);
+                            if (days < 30)
+                            {
+                                BD4Day30Count += 1;
+                            }
+                            else if (days >= 30 && days < 60)
+                            {
+                                BD4Day3060Count += 1;
+                            }
+                            else if (days >= 60 && days < 90)
+                            {
+                                BD4Day6090Count += 1;
+                            }
+                            else if (days >= 90)
+                            {
+                                BD4Day90Count += 1;
+                            }
+
+                            BD4TotalInvAmount += detail.InventoryAmount;
+
+                            if (detail.ListAmount > 0)
+                            {
+                                BD4TotalWithCost += 1;
+                                BD4TotalFitzWayAmount += detail.ListAmount;
+
+                            }
+
+                            var halfListAmount = (detail.ListAmount * (decimal).5);
+                            if (detail.InventoryAmount > halfListAmount)
+                            {
+                                BD4TotalWithInvAmount += 1;
+                                BD4TotalMarkup += (detail.ListAmount - detail.InventoryAmount);
+                            }
+
+                        }
+                        if (BD4TotalCount > 0)
+                        {
+                            BD4Day30Percent = (BD4Day30Count / BD4TotalCount);
+                            BD4Day3060Percent = (BD4Day3060Count / BD4TotalCount);
+                            BD4Day6090Percent = (BD4Day6090Count / BD4TotalCount);
+                            BD4Day90Percent = (BD4Day90Count / BD4TotalCount);
+
+                        }
+
+                        if (BD4TotalWithCost > 0)
+                        {
+                            BD4FitzAverage = (BD4TotalFitzWayAmount / BD4TotalCount);
+                        }
+
+                        if (BD4TotalWithInvAmount > 0)
+                        {
+                            BD4MarkupAverage = (BD4TotalMarkup / BD4TotalWithInvAmount);
+                            BD4InventoryAverage = (BD4TotalInvAmount / BD4TotalWithInvAmount);
+                        }
+                        var bd4URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + Model.BreakDownLevel2 + "," + breakdown2 + "&bd3=" + Model.BreakDownLevel3 + "," + BreakDown3 + "&bd4=" + Model.BreakDownLevel4 + "," + BreakDown4 + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
+
+                        <tr class="location-bd3-collapse-@BreakDown3Index collapse out location-bd4-data-row-@BreakDown4Index @label4.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd4-collapse-@BreakDown4Index">
+
+                            <td class="divider-column indent-td4"><a data-toggle="collapse" id="location-bd4-collapse-@BreakDown4Index" style="cursor: pointer;" class="location-bd4-collapse-@BreakDown4Index-href collapsed indent-4" data-target=".location-bd4-collapse-@BreakDown4Index">@label4 </a></td>
+                            <td class="text-center"><a href="@bd4URL" target="_blank">@BD4TotalCount</a></td>
+                            <td class="text-center">@BD4DaysSupply</td>
+                            <td class="text-center">@BD4TotalInvAmount.ToString("C", nfi)</td>
+                            <td class="text-center"><a href="@bd4URL&days=30" target="_blank">@BD4Day30Count</a></td>
+                            <td class="text-center">@BD4Day30Percent.ToString("P", nfi)</td>
+                            <td class="text-center"><a href="@bd4URL&days=3060" target="_blank">@BD4Day3060Count</a></td>
+                            <td class="text-center">@BD4Day3060Percent.ToString("P", nfi)</td>
+                            <td class="text-center"><a href="@bd4URL&days=6090" target="_blank">@BD4Day6090Count</a></td>
+                            <td class="text-center">@BD4Day6090Percent.ToString("P", nfi)</td>
+                            <td class="text-center"><a href="@bd4URL&days=90" target="_blank">@BD4Day90Count</a></td>
+                            <td class="text-center">@BD4Day90Percent.ToString("P", nfi)</td>
+                            <td class="text-center">@BD4FitzAverage.ToString("C", nfi)</td>
+                            <td class="text-center">@BD4InventoryAverage.ToString("C", nfi)</td>
+                            <td class="text-center">@BD4MarkupAverage.ToString("C", nfi)</td>
+                        </tr>
+
+                        <script type="text/javascript">
+                            var bAdd4 = true;
+                            $("#filterBreakdown4 option").each(function () {
+                                if ($(this).attr('value') == '@label4') {
+                                    bAdd4 = false;
+                                }
+                            });
+
+                            if (bAdd4 == true) {
+                                $("#filterBreakdown4").append("<option value='" + "@label4" + "'>" + "@label4" + "</option>");
+                            }
+                                        $(document).ready(function () {
+                                            $(".location-bd4-collapse-@BreakDown4Index-href").click(function () {
+                                                $('.location-bd4-data-row-@BreakDown4Index').toggleClass('selected-row');
+                                                $(".location-bd4-collapse-@BreakDown4Index-href").toggleClass('changed');
+                });
+            });
+                        </script>
+
+
+
+
+                        BreakDown4Index += 1;
+                    }
+
+
+
+                    BreakDown3Index += 1;
+                }
+
+
+
+
+                breakdown2Index += 1;
+
+            }
+
+            breakdown1Index += 1;
+        }
+
+
+    }
+
+
+        </tbody>
+        <tfoot></tfoot>
+        </table>
+
+
+</div>
+
+<script>
+// @@preserve jQuery.floatThead 1.2.9 - http://mkoryak.github.io/floatThead/ - Copyright (c) 2012 - 2014 Misha Koryak
+// @@license MIT
+!function(a){function b(a,b,c){if(8==g){var d=j.width(),e=f.debounce(function(){var a=j.width();d!=a&&(d=a,c())},a);j.on(b,e)}else j.on(b,f.debounce(c,a))}function c(a){window.console&&window.console&&window.console.log&&window.console.log(a)}function d(){var b=a('<div style="width:50px;height:50px;overflow-y:scroll;position:absolute;top:-200px;left:-200px;"><div style="height:100px;width:100%"></div>');a("body").append(b);var c=b.innerWidth(),d=a("div",b).innerWidth();return b.remove(),c-d}function e(a){if(a.dataTableSettings)for(var b=0;b<a.dataTableSettings.length;b++){var c=a.dataTableSettings[b].nTable;if(a[0]==c)return!0}return!1}a.floatThead=a.floatThead||{},a.floatThead.defaults={cellTag:null,headerCellSelector:"tr:first>th:visible",zIndex:1001,debounceResizeMs:10,useAbsolutePositioning:!0,scrollingTop:0,scrollingBottom:0,scrollContainer:function(){return a([])},getSizingRow:function(a){return a.find("tbody tr:visible:first>*")},floatTableClass:"floatThead-table",floatWrapperClass:"floatThead-wrapper",floatContainerClass:"floatThead-container",copyTableClass:!0,debug:!1};var f=window._,g=function(){for(var a=3,b=document.createElement("b"),c=b.all||[];a=1+a,b.innerHTML="<!--[if gt IE "+a+"]><i><![endif]-->",c[0];);return a>4?a:document.documentMode}(),h=null,i=function(){if(g)return!1;var b=a("<table><colgroup><col></colgroup><tbody><tr><td style='width:10px'></td></tbody></table>");a("body").append(b);var c=b.find("col").width();return b.remove(),0==c},j=a(window),k=0;a.fn.floatThead=function(l){if(l=l||{},!f&&(f=window._||a.floatThead._,!f))throw new Error("jquery.floatThead-slim.js requires underscore. You should use the non-lite version since you do not have underscore.");if(8>g)return this;if(null==h&&(h=i(),h&&(document.createElement("fthtr"),document.createElement("fthtd"),document.createElement("fthfoot"))),f.isString(l)){var m=l,n=this;return this.filter("table").each(function(){var b=a(this).data("floatThead-attached");if(b&&f.isFunction(b[m])){var c=b[m]();"undefined"!=typeof c&&(n=c)}}),n}var o=a.extend({},a.floatThead.defaults||{},l);return a.each(l,function(b){b in a.floatThead.defaults||!o.debug||c("jQuery.floatThead: used ["+b+"] key to init plugin, but that param is not an option for the plugin. Valid options are: "+f.keys(a.floatThead.defaults).join(", "))}),this.filter(":not(."+o.floatTableClass+")").each(function(){function c(a){return a+".fth-"+y+".floatTHead"}function i(){var b=0;A.find("tr:visible").each(function(){b+=a(this).outerHeight(!0)}),Z.outerHeight(b),$.outerHeight(b)}function l(){var a=z.outerWidth(),b=I.width()||a;if(X.width(b-F.vertical),O){var c=100*a/(b-F.vertical);S.css("width",c+"%")}else S.outerWidth(a)}function m(){C=(f.isFunction(o.scrollingTop)?o.scrollingTop(z):o.scrollingTop)||0,D=(f.isFunction(o.scrollingBottom)?o.scrollingBottom(z):o.scrollingBottom)||0}function n(){var b,c;if(V)b=U.find("col").length;else{var d;d=null==o.cellTag&&o.headerCellSelector?o.headerCellSelector:"tr:first>"+o.cellTag,c=A.find(d),b=0,c.each(function(){b+=parseInt(a(this).attr("colspan")||1,10)})}if(b!=H){H=b;for(var e=[],f=[],g=[],i=0;b>i;i++)e.push('<th class="floatThead-col"/>'),f.push("<col/>"),g.push("<fthtd style='display:table-cell;height:0;width:auto;'/>");f=f.join(""),e=e.join(""),h&&(g=g.join(""),W.html(g),bb=W.find("fthtd")),Z.html(e),$=Z.find("th"),V||U.html(f),_=U.find("col"),T.html(f),ab=T.find("col")}return b}function p(){if(!E){if(E=!0,J){var a=z.width(),b=Q.width();a>b&&z.css("minWidth",a)}z.css(db),S.css(db),S.append(A),B.before(Y),i()}}function q(){E&&(E=!1,J&&z.width(fb),Y.detach(),z.prepend(A),z.css(eb),S.css(eb))}function r(a){J!=a&&(J=a,X.css({position:J?"absolute":"fixed"}))}function s(a,b,c,d){return h?c:d?o.getSizingRow(a,b,c):b}function t(){var a,b=n();return function(){var c=s(z,_,bb,g);if(c.length==b&&b>0){if(!V)for(a=0;b>a;a++)_.eq(a).css("width","");q();var d=[];for(a=0;b>a;a++)d[a]=c.get(a).offsetWidth;for(a=0;b>a;a++)ab.eq(a).width(d[a]),_.eq(a).width(d[a]);p()}else S.append(A),z.css(eb),S.css(eb),i()}}function u(a){var b=I.css("border-"+a+"-width"),c=0;return b&&~b.indexOf("px")&&(c=parseInt(b,10)),c}function v(){var a,b=I.scrollTop(),c=0,d=L?K.outerHeight(!0):0,e=M?d:-d,f=X.height(),g=z.offset(),i=0;if(O){var k=I.offset();c=g.top-k.top+b,L&&M&&(c+=d),c-=u("top"),i=u("left")}else a=g.top-C-f+D+F.horizontal;var l=j.scrollTop(),m=j.scrollLeft(),n=I.scrollLeft();return b=I.scrollTop(),function(k){if("windowScroll"==k?(l=j.scrollTop(),m=j.scrollLeft()):"containerScroll"==k?(b=I.scrollTop(),n=I.scrollLeft()):"init"!=k&&(l=j.scrollTop(),m=j.scrollLeft(),b=I.scrollTop(),n=I.scrollLeft()),!h||!(0>l||0>m)){if(R)r("windowScrollDone"==k?!0:!1);else if("windowScrollDone"==k)return null;g=z.offset(),L&&M&&(g.top+=d);var o,s,t=z.outerHeight();if(O&&J){if(c>=b){var u=c-b;o=u>0?u:0}else o=P?0:b;s=i}else!O&&J?(l>a+t+e?o=t-f+e:g.top>l+C?(o=0,q()):(o=C+l-g.top+c+(M?d:0),p()),s=0):O&&!J?(c>b||b-c>t?(o=g.top-l,q()):(o=g.top+b-l-c,p()),s=g.left+n-m):O||J||(l>a+t+e?o=t+C-l+a+e:g.top>l+C?(o=g.top-l,p()):o=C,s=g.left-m);return{top:o,left:s}}}}function w(){var a=null,b=null,c=null;return function(d,e,f){null==d||a==d.top&&b==d.left||(X.css({top:d.top,left:d.left}),a=d.top,b=d.left),e&&l(),f&&i();var g=I.scrollLeft();J&&c==g||(X.scrollLeft(g),c=g)}}function x(){if(I.length){var a=I.width(),b=I.height(),c=z.height(),d=z.width(),e=d>a?G:0,f=c>b?G:0;F.horizontal=d>a-f?G:0,F.vertical=c>b-e?G:0}}var y=k,z=a(this);if(z.data("floatThead-attached"))return!0;if(!z.is("table"))throw new Error('jQuery.floatThead must be run on a table element. ex: $("table").floatThead();');var A=z.find("thead:first"),B=z.find("tbody:first");if(0==A.length)throw new Error("jQuery.floatThead must be run on a table that contains a <thead> element");var C,D,E=!1,F={vertical:0,horizontal:0},G=d(),H=0,I=o.scrollContainer(z)||a([]),J=o.useAbsolutePositioning;null==J&&(J=o.scrollContainer(z).length);var K=z.find("caption"),L=1==K.length;if(L)var M="top"===(K.css("caption-side")||K.attr("align")||"top");var N=a('<fthfoot style="display:table-footer-group;"/>'),O=I.length>0,P=!1,Q=a([]),R=9>=g&&!O&&J,S=a("<table/>"),T=a("<colgroup/>"),U=z.find("colgroup:first"),V=!0;0==U.length&&(U=a("<colgroup/>"),V=!1);var W=a('<fthrow style="display:table-row;height:0;"/>'),X=a('<div style="overflow: hidden;"></div>'),Y=a("<thead/>"),Z=a('<tr class="size-row"/>'),$=a([]),_=a([]),ab=a([]),bb=a([]);if(Y.append(Z),z.prepend(U),h&&(N.append(W),z.append(N)),S.append(T),X.append(S),o.copyTableClass&&S.attr("class",z.attr("class")),S.attr({cellpadding:z.attr("cellpadding"),cellspacing:z.attr("cellspacing"),border:z.attr("border")}),S.css({borderCollapse:z.css("borderCollapse"),border:z.css("border")}),S.addClass(o.floatTableClass).css("margin",0),J){var cb=function(a,b){var c=a.css("position"),d="relative"==c||"absolute"==c;if(!d||b){var e={paddingLeft:a.css("paddingLeft"),paddingRight:a.css("paddingRight")};X.css(e),a=a.wrap("<div class='"+o.floatWrapperClass+"' style='position: relative; clear:both;'></div>").parent(),P=!0}return a};O?(Q=cb(I,!0),Q.append(X)):(Q=cb(z),z.after(X))}else z.after(X);X.css({position:J?"absolute":"fixed",marginTop:0,top:J?0:"auto",zIndex:o.zIndex}),X.addClass(o.floatContainerClass),m();var db={"table-layout":"fixed"},eb={"table-layout":z.css("tableLayout")||"auto"},fb=z[0].style.width||"";x();var gb,hb=function(){(gb=t())()};hb();var ib=v(),jb=w();jb(ib("init"),!0);var kb=f.debounce(function(){jb(ib("windowScrollDone"),!1)},300),lb=function(){jb(ib("windowScroll"),!1),kb()},mb=function(){jb(ib("containerScroll"),!1)},nb=function(){m(),x(),hb(),ib=v(),(jb=w())(ib("resize"),!0,!0)},ob=f.debounce(function(){x(),m(),hb(),ib=v(),jb(ib("reflow"),!0)},1);O?J?I.on(c("scroll"),mb):(I.on(c("scroll"),mb),j.on(c("scroll"),lb)):j.on(c("scroll"),lb),j.on(c("load"),ob),b(o.debounceResizeMs,c("resize"),nb),z.on("reflow",ob),e(z)&&z.on("filter",ob).on("sort",ob).on("page",ob),z.data("floatThead-attached",{destroy:function(){var a=".fth-"+y;q(),z.css(eb),U.remove(),h&&N.remove(),Y.parent().length&&Y.replaceWith(A),z.off("reflow"),I.off(a),P&&(I.length?I.unwrap():z.unwrap()),J&&z.css("minWidth",""),X.remove(),z.data("floatThead-attached",!1),j.off(a)},reflow:function(){ob()},setHeaderHeight:function(){i()},getFloatContainer:function(){return X},getRowGroups:function(){return E?X.find("thead").add(z.find("tbody,tfoot")):z.find("thead,tbody,tfoot")}}),k++}),this}}(jQuery),function(a){a.floatThead=a.floatThead||{},a.floatThead._=window._||function(){var b={},c=Object.prototype.hasOwnProperty,d=["Arguments","Function","String","Number","Date","RegExp"];return b.has=function(a,b){return c.call(a,b)},b.keys=function(a){if(a!==Object(a))throw new TypeError("Invalid object");var c=[];for(var d in a)b.has(a,d)&&c.push(d);return c},a.each(d,function(){var a=this;b["is"+a]=function(b){return Object.prototype.toString.call(b)=="[object "+a+"]"}}),b.debounce=function(a,b,c){var d,e,f,g,h;return function(){f=this,e=arguments,g=new Date;var i=function(){var j=new Date-g;b>j?d=setTimeout(i,b-j):(d=null,c||(h=a.apply(f,e)))},j=c&&!d;return d||(d=setTimeout(i,b)),j&&(h=a.apply(f,e)),h}},b}()}(jQuery);
+
+
+
+$(document).ready(function(){
+
+$(".sticky-header").floatThead({scrollingTop:70});
+
+
+//$("#filterBreakdown1").change(function () {
+
+//    var pickedValue = $(this).val();
+//    //pickedValue.forEach(element => element.replaceAll(" ", "-").replaceAll("/", "-"));
+//    //var showClass = pickedValue.replaceAll(" ", "-").replaceAll("/", "-");//.Replace(".", "-").Replace("/", "-").Replace("'", "-").Replace("*", "-").Replace("(", "-").Replace(")", "-");
+
+//    if (pickedValue != null) {
+//        var arrayLength = pickedValue.length;
+
+//        $("#filterBreakdown1 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var hideClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + hideClass).hide();
+//            }
+//        });
+
+
+//        for (var i = 0; i < arrayLength; i++) {
+//            var showClass = pickedValue[i].replaceAll(" ", "-").replaceAll("/", "-");
+//            $('.' + showClass).show();
+//        }
+//    }
+//    else {
+//        $("#filterBreakdown1 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var showClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + showClass).show();
+//            }
+//        });
+//    }
+//});
+
+//$("#filterBreakdown2").change(function () {
+
+//    var pickedValue = $(this).val();
+//    //pickedValue.forEach(element => element.replaceAll(" ", "-").replaceAll("/", "-"));
+//    //var showClass = pickedValue.replaceAll(" ", "-").replaceAll("/", "-");//.Replace(".", "-").Replace("/", "-").Replace("'", "-").Replace("*", "-").Replace("(", "-").Replace(")", "-");
+
+//    if (pickedValue != null) {
+//        var arrayLength = pickedValue.length;
+
+//        $("#filterBreakdown2 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var hideClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + hideClass).hide();
+//            }
+//        });
+
+
+//        for (var i = 0; i < arrayLength; i++) {
+//            var showClass = pickedValue[i].replaceAll(" ", "-").replaceAll("/", "-");
+//            $('.' + showClass).show();
+//        }
+//    }
+//    else {
+//        $("#filterBreakdown2 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var showClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + showClass).show();
+//            }
+//        });
+//    }
+//});
+
+//$("#filterBreakdown3").change(function () {
+
+//    var pickedValue = $(this).val();
+//    //pickedValue.forEach(element => element.replaceAll(" ", "-").replaceAll("/", "-"));
+//    //var showClass = pickedValue.replaceAll(" ", "-").replaceAll("/", "-");//.Replace(".", "-").Replace("/", "-").Replace("'", "-").Replace("*", "-").Replace("(", "-").Replace(")", "-");
+
+//    if (pickedValue != null) {
+//        var arrayLength = pickedValue.length;
+
+//        $("#filterBreakdown3 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var hideClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + hideClass).hide();
+//            }
+//        });
+
+
+//        for (var i = 0; i < arrayLength; i++) {
+//            var showClass = pickedValue[i].replaceAll(" ", "-").replaceAll("/", "-");
+//            $('.' + showClass).show();
+//        }
+//    }
+//    else {
+//        $("#filterBreakdown3 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var showClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + showClass).show();
+//            }
+//        });
+//    }
+//});
+
+//$("#filterBreakdown4").change(function () {
+
+//    var pickedValue = $(this).val();
+//    //pickedValue.forEach(element => element.replaceAll(" ", "-").replaceAll("/", "-"));
+//    //var showClass = pickedValue.replaceAll(" ", "-").replaceAll("/", "-");//.Replace(".", "-").Replace("/", "-").Replace("'", "-").Replace("*", "-").Replace("(", "-").Replace(")", "-");
+
+//    if (pickedValue != null) {
+//        var arrayLength = pickedValue.length;
+
+//        $("#filterBreakdown4 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var hideClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + hideClass).hide();
+//            }
+//        });
+
+
+//        for (var i = 0; i < arrayLength; i++) {
+//            var showClass = pickedValue[i].replaceAll(" ", "-").replaceAll("/", "-");
+//            $('.' + showClass).show();
+//        }
+//    }
+//    else {
+//        $("#filterBreakdown4 option").each(function () {
+
+//            if ($(this).attr('value') != '') {
+
+//                var showClass = $(this).attr('value').replaceAll(" ", "-").replaceAll("/", "-");
+//                $('.' + showClass).show();
+//            }
+//        });
+//    }
+//});
+
+});
+    </script>

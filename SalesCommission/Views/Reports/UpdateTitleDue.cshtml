@@ -129,6 +129,7 @@
                     <div class="row" style="margin-bottom:15px;">
                         <div class="col-sm-12">
                             @Html.CheckBoxFor(x => x.TitleDue[0].ClearTitle, new { @class = "" }) Clear Title<br />
+                            @Html.CheckBoxFor(x => x.TitleDue[0].ElectronicTitle, new { @class = "" }) E-Title<br />
                         </div>
                     </div>
                     <div class="row" style="margin-bottom:15px;">
@@ -147,9 +148,12 @@
                             }
                             @Html.CheckBoxFor(x => TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
                             @Html.CheckBoxFor(x => x.TitleDue[0].LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                            @Html.CheckBoxFor(x => x.TitleDue[0].DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+
                             @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueBank, new { @class = "" }) Title Due Bank<br />
                             @Html.CheckBoxFor(x => x.TitleDue[0].LienDueBank, new { @class = "" }) Lien Due Bank<br />
-                            @Html.CheckBoxFor(x => x.TitleDue[0].DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+                            @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                            @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueAuction, new { @class = "" }) Title Due Auction<br />
 
 
                         </div>
@@ -158,10 +162,8 @@
                             @Html.CheckBoxFor(x => x.TitleDue[0].PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
                             @Html.CheckBoxFor(x => x.TitleDue[0].POADueCust, new { @class = "" }) POA Due Customer<br />
                             @Html.CheckBoxFor(x => x.TitleDue[0].OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
-                            @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
-                            @Html.CheckBoxFor(x => x.TitleDue[0].TitleDueAuction, new { @class = "" }) Title Due Auction<br />
                             
-                            @Html.CheckBoxFor(x => x.TitleDue[0].ElectronicTitle, new { @class = "" }) E-Title<br />
+
                         </div>
                     </div>
                     <div class="row">
@@ -389,7 +391,9 @@
                                     @{
                                         if (Model.TitleDue[0].EmailAddresses != null && Model.TitleDue[0].EmailAddresses != "")
                                         {
-                                            var addresses = Model.TitleDue[0].EmailAddresses.Split(';');
+                                            var AllAddresses = Model.TitleDue[0].EmailAddresses.Split(';');
+
+                                            var addresses = AllAddresses.Distinct().ToList<string>();
 
                                             foreach (var address in addresses)
                                             {
@@ -523,70 +527,97 @@
 
                 });
 
+
+                $('#TitleDue_0__ElectronicTitle').click(function () {
+                    $('#TitleDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__LienDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueBank').removeAttr('checked');
+                    $('#TitleDue_0__LienDueBank').removeAttr('checked');
+                    $('#TitleDue_0__DuplicateTitleAppliedFor').removeAttr('checked');
+                    $('#TitleDue_0__WaitingOutSTTitle').removeAttr('checked');
+                    $('#TitleDue_0__PayoffDueCust').removeAttr('checked');
+                    $('#TitleDue_0__POADueCust').removeAttr('checked');
+                    $('#TitleDue_0__OdomDueCustomer').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueInterco').removeAttr('checked');
+                    $('#TitleDue_0__TitleDueAuction').removeAttr('checked');
+                    $('#TitleDue_0__Other').removeAttr('checked');
+                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
+                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                });
+
                 $('#TitleDueCustomer').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__LienDueCustomer').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__TitleDueBank').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__LienDueBank').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__DuplicateTitleAppliedFor').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
+                    alert("Check CVR for any Liens.");
                 });
 
                 $('#TitleDue_0__WaitingOutSTTitle').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__PayoffDueCust').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__POADueCust').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__OdomDueCustomer').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__TitleDueInterco').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__TitleDueAuction').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
                 $('#TitleDue_0__Other').click(function () {
                     $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
                     $('#TitleDue_0__ClearTitle').removeAttr('checked');
+                    $('#TitleDue_0__ElectronicTitle').removeAttr('checked');
                 });
 
-                $('#TitleDue_0__ElectronicTitle').click(function () {
-                    $('#TitleDue_0__NoTitleDispose').removeAttr('checked');
-                    $('#TitleDue_0__ClearTitle').removeAttr('checked');
-                });
 
                 $('#AddUser').on('click', function () {
 

@@ -102,6 +102,114 @@ namespace SalesCommission.Models
         public string AssociateName { get; set; }
         public List<AssociateTradeReport> AssociateTradeReports { get; set; }
     }
+
+    public class ExceptionReportModel
+    {
+        public int ReportStartMonth { get; set; }
+        public int ReportStartYear { get; set; }
+        public int ReportEndMonth { get; set; }
+        public int ReportEndYear { get; set; }
+
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+        public string DealType { get; set; }
+        public List<IndividualDealDetails> ExceptionDetails { get; set; }
+
+    }
+
+    public class ExceptionReportDetailModel
+    {
+        public int ReportStartMonth { get; set; }
+        public int ReportStartYear { get; set; }
+        public int ReportEndMonth { get; set; }
+        public int ReportEndYear { get; set; }
+
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+        public string BreakDownLevel1Value { get; set; }
+        public string BreakDownLevel2Value { get; set; }
+        public string BreakDownLevel3Value { get; set; }
+        public string BreakDownLevel4Value { get; set; }
+
+
+        public string DealType { get; set; }
+        public List<IndividualDealDetails> ExceptionDetails { get; set; }
+
+    }
+
+
+    public class AppraisalReportModel
+    {
+        public string StoreId { get; set; }
+        public string[] SelectedStores { get; set; }
+        public int ReportStartMonth { get; set; }
+        public int ReportStartYear { get; set; }
+        public int ReportEndMonth { get; set; }
+        public int ReportEndYear { get; set; }
+        public string ReportType { get; set; }
+        public List<AppraisalDetail> AppraisalDetails { get; set; }
+        public List<AppraisalSoldDetail> AppraisalSoldDetails { get; set; }
+        public List<TradeAcquisitionDetail> TradeAcquisitionDetails { get; set; }
+        public int ReportComparisonStartMonth { get; set; }
+        public int ReportComparisonStartYear { get; set; }
+        public int ReportComparisonEndMonth { get; set; }
+        public int ReportComparisonEndYear { get; set; }
+        public List<AppraisalDetail> CompareAppraisalDetails { get; set; }
+        public List<AppraisalSoldDetail> CompareAppraisalSoldDetails { get; set; }
+        public List<TradeAcquisitionDetail> CompareTradeAcquisitionDetails { get; set; }
+        public int ReportComboStartMonth { get; set; }
+        public int ReportComboStartYear { get; set; }
+        public int ReportComboEndMonth { get; set; }
+        public int ReportComboEndYear { get; set; }
+
+        public bool CompareDates { get; set; }
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+
+        public string BreakDown1Filters { get; set; }
+        public string BreakDown2Filters { get; set; }
+        public string BreakDown3Filters { get; set; }
+        public string BreakDown4Filters { get; set; }
+
+        public string VehicleType { get; set; }
+        public string AcquisitionType { get; set; }
+        public string StatusType { get; set; }
+        public string StatusOnFM { get; set; }
+    }
+
+    public class AppraisalReportDetailModel
+    {
+        public string StoreId { get; set; }
+        public string[] SelectedStores { get; set; }
+        public int ReportStartMonth { get; set; }
+        public int ReportStartYear { get; set; }
+        public int ReportEndMonth { get; set; }
+        public int ReportEndYear { get; set; }
+        public string BreakDownLevel1 { get; set; }
+        public string BreakDownLevel2 { get; set; }
+        public string BreakDownLevel3 { get; set; }
+        public string BreakDownLevel4 { get; set; }
+        public string BreakDownLevel1Value { get; set; }
+        public string BreakDownLevel2Value { get; set; }
+        public string BreakDownLevel3Value { get; set; }
+        public string BreakDownLevel4Value { get; set; }
+        public string VehicleType { get; set; }
+        public string AcquisitionType { get; set; }
+        public string StatusType { get; set; }
+        public string StatusOnFM { get; set; }
+        public List<AppraisalDetail> AppraisalDetails { get; set; }
+        public List<AppraisalSoldDetail> AppraisalSoldDetails { get; set; }
+        public List<TradeAcquisitionDetail> TradeAcquisitionDetails { get; set; }
+        public List<vAutoInventory> vAutoInventoryDetails { get; set; }
+    }
+
+
     public class SalesReportModel
     {
         public string StoreId { get; set; }
@@ -140,7 +248,7 @@ namespace SalesCommission.Models
         public string BreakDownLevel3 { get; set; }
         public string BreakDownLevel4 { get; set; }
         public string VehicleType { get; set; }
-     }
+    }
     public class LeadReportModel
     {
         public string StoreId { get; set; }
@@ -173,6 +281,7 @@ namespace SalesCommission.Models
         public string[] SelectedStores { get; set; }
         public DateTime ReportStartDate { get; set; }
         public DateTime ReportEndDate { get; set; }
+        public bool IncludeHandyman { get; set; }
         public bool ExcludeBadDuplicates { get; set; }
         public bool ExcludeAllBad { get; set; }
         public bool ShowExcludedGroups { get; set; }
@@ -199,6 +308,15 @@ namespace SalesCommission.Models
         public bool IncludeHandyman { get; set; }
         public bool ShowOnlyHandyman { get; set; }
         public List<StoreLeadSourceInformation> StoreLeadInformation { get; set; }
+    }
+
+    public class AppraisalReportLeadDetailsModel
+    {
+        public string StockNumber { get; set; }
+        public string VIN { get; set; }
+        public List<AssociateLead> AssociateLeads { get; set; }
+        public List<StoreLeadSourceInformation> StoreLeadInformation { get; set; }
+
     }
 
     public class StoreLeadSourceInformation
@@ -352,6 +470,32 @@ namespace SalesCommission.Models
         public List<OpportunityDetail> AssociateOpportunities { get; set; }
     }
 
+    public class FitzwaySoldAppraisal
+    {
+        public string CustomerId { get; set; }
+        public string CustomerLastName { get; set; }
+        public string SLD_VIN { get; set; }
+        public DateTime SLD_SoldUTCDate { get; set; }
+        public string TitleNames { get; set; }
+        public DateTime AppraisalDate { get; set; }
+
+    }
+
+    public class FitzwayAppraisal
+    {
+        public string Loc { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime AppraisalDate { get; set; }
+        public string Status { get; set; }
+        public int StepId { get; set; }
+        public string SalePerson { get; set; }
+        public string Mall { get; set; }
+        public string Showroom { get; set; }
+        public int Year { get; set; }
+        public string Make { get; set; }
+        public string Model { get; set; }
+        public string VinNumber { get; set; }
+    }
 
     public class AppraisalDetail
     {
@@ -360,7 +504,7 @@ namespace SalesCommission.Models
         public string Id { get; set; }
         public string VIN { get; set; }
         public string VA_Appraiser { get; set; }
-        public string DealeRName { get; set; }
+        public string DealerName { get; set; }
         public string Loc { get; set; }
         public DateTime VA_LastModifiedDate { get; set; }
         public decimal ReconditioningCost { get; set; }
@@ -381,6 +525,48 @@ namespace SalesCommission.Models
         public string CustomerEmail { get; set; }
         public string CustomerHomePhone { get; set; }
         public string SalesPerson { get; set; }
+    }
+
+    public class AppraisalSoldDetail
+    {
+        public string Location { get; set; }
+        public string SoldLocation { get; set; }
+        public string Appraiser { get; set; }
+        public string SalesAssociate { get; set; }
+        public string VIN { get; set; }
+        public string StockNumber { get; set; }
+        public string DaysInStock { get; set; }
+        public string Year { get; set; }
+        public string Make { get; set; }
+        public string Model { get; set; }
+        public DateTime LastModifiedDate { get; set; }
+        public decimal ReconditioningCost { get; set; }
+        public decimal ActualReconditioningCost { get; set; }
+        public decimal AppraisedValue { get; set; }
+        public decimal AskingPrice { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal SellingLocation { get; set; }
+        public decimal ProfitObjective { get; set; }
+        public decimal AdjustedPctMarket { get; set; }
+        public decimal FrontEndProfit { get; set; }
+        public decimal BackEndProfit { get; set; }
+        public decimal AverageGrossProfit { get; set; }
+        public decimal SL_FrontEndProfit { get; set; }
+        public decimal SL_BackEndProfit { get; set; }
+        public decimal SL_AverageGrossProfit { get; set; }
+        public string DealNumber { get; set; }
+        public string WholesaleRetail { get; set; }
+        public string TradePurchase { get; set; }
+        public string VehicleSource { get; set; }
+        public string Certification { get; set; }
+        public string ZipCode { get; set; }
+        public string State { get; set; }
+        public string Miles { get; set; }
+        public string Showroom { get; set; }
+        public DateTime DealMonthYear { get; set; }
+        public DateTime DealDate { get; set; }
+        public string BodyStyle { get; set; }
+        public int TradeCount { get; set; }
     }
 
     public class OpportunityDetail
@@ -409,7 +595,7 @@ namespace SalesCommission.Models
         public List<JJFUser> JJFUsers { get; set; }
     }
 
-    public class MoneyDue { 
+    public class MoneyDue {
         public string Location { get; set; }
         public string LocationName { get; set; }
         public string StockNumber { get; set; }
@@ -443,14 +629,14 @@ namespace SalesCommission.Models
 
     public class VehicleData
     {
-        public string StockNumber { get; set;}
-        public string Location  { get; set;}
-        public string ModelYear  { get; set;}
-        public string Make  { get; set;}
-        public string Model  { get; set;}
-        public string VIN  { get; set;}
-        public int  DaysInStock  { get; set;}
-        public int InventoryStatus  { get; set;}
+        public string StockNumber { get; set; }
+        public string Location { get; set; }
+        public string ModelYear { get; set; }
+        public string Make { get; set; }
+        public string Model { get; set; }
+        public string VIN { get; set; }
+        public int DaysInStock { get; set; }
+        public int InventoryStatus { get; set; }
     }
 
     public class TradeInformation
@@ -479,12 +665,13 @@ namespace SalesCommission.Models
         public string loc { get; set; }
         public string[] status { get; set; }
         public string[] invstatus { get; set; }
+        public string action { get; set; }
     }
 
     public class TitleDue
     {
         public int Id { get; set; }
-	    public int DealId { get; set; }
+        public int DealId { get; set; }
         public string DealKey { get; set; }
         public DateTime DealDate { get; set; }
         public string Location { get; set; }
@@ -513,7 +700,7 @@ namespace SalesCommission.Models
         public bool WaitingOutSTTitle { get; set; }
         public bool DuplicateTitleAppliedFor { get; set; }
         public bool Other { get; set; }
-	    public string Notes { get; set; }
+        public string Notes { get; set; }
         public DateTime UpdateDate { get; set; }
         public string UpdateUser { get; set; }
         public string StockNumber { get; set; }
@@ -531,6 +718,141 @@ namespace SalesCommission.Models
         public string SalesManagerId { get; set; }
         public bool EmailSent { get; set; }
         public string EmailAddresses { get; set; }
+    }
+
+
+    public class AppraiserReportModel
+    {
+        public int MonthId { get; set; }
+        public int YearId { get; set; }
+        public string AppraiserName { get; set; }
+        public List<AppraiserDetail> AppraiserDetails { get; set; }
+    }
+
+    public class AppraiserDetail
+    {
+        public string Appraiser { get; set; }
+        public DateTime AppraisalDate { get; set; }
+        public string Mall { get; set; }
+        public string Showroom { get; set; }
+        public string Location { get; set; }
+        public int Status { get; set; }
+        public string Days { get; set; }
+        public string StockNumber { get; set; }
+        public string VIN { get; set; }
+        public string Year { get; set; }
+        public string Make { get; set; }
+        public string Carline { get; set; }
+        public int Miles { get; set; }
+        public decimal InitialACV { get; set; }
+        public decimal InventoryAmount { get; set; }
+
+        public string MSI { get; set; }
+        public decimal Cost { get; set; }
+        public decimal ListAmount { get; set; }
+        public DateTime PurchasedDate { get; set; }
+        public string PurchasedBy { get; set; }
+        public string PurchasedUnder { get; set; }
+        public string PurchasedFrom { get; set; }
+        public decimal PurchasedPrice { get; set; }
+        public decimal Offer2Purchase { get; set; }
+        public string PrintOfferYN { get; set; }
+
+        public string DealKey { get; set; }
+        public decimal FrontGross { get; set; }
+    }
+
+    public class TradeAcquisitionReportModel
+    {
+
+        public List<TradeAcquisitionDetail> TradeAcquisitionDetails { get; set; }
+    }
+
+    public class TradeAcquisitionDetail
+    {
+        //from sp_SalesLogReportGetInventoryAcquisitionReport 
+        public string Branch { get; set; }
+        public string Loc { get; set; }
+        public string DRloc { get; set; }
+        public int Status { get; set; }
+        public string Days { get; set; }
+        public DateTime ReceivedDate { get; set; }
+        public string StockNumber { get; set; }
+        public string VIN { get; set; }
+        public string Year { get; set; }
+        public string Make { get; set; }
+        public string Carline { get; set; }
+        public int Miles { get; set; }
+        public decimal InitialACV { get; set; }
+        public decimal InventoryAmount { get; set; }
+        public string Appraiser { get; set; }
+        public string MSI { get; set; }
+        public decimal Cost { get; set; }
+        public decimal ListAmount { get; set; }
+        public DateTime PurchasedDate { get; set; }
+        public string PurchaseBy { get; set; }
+        public string PurchasedUnder { get; set; }
+        public string PurchasedFrom { get; set; }
+        public decimal PurchasedPrice { get; set; }
+        public DateTime AppraisalDate { get; set; }
+        public string AppraisalAppraiser { get; set; }
+        public decimal Offer2Purchase { get; set; }
+        public string PrintOfferYN { get; set; }
+        public string DealKey1 { get; set; }
+        public decimal Trade1Value { get; set; }
+        public string Trade1VIN { get; set; }
+        public string Trade1Customer { get; set; }
+        public string DealKey2 { get; set; }
+        public decimal Trade2Value { get; set; }
+        public string Trade2VIN { get; set; }
+        public string Trade2Customer { get; set; }
+        public string LeadSourceName { get; set; }
+        public string LeadGroup { get; set; }
+        public string VehicleSource { get; set; }
+        public decimal ReconditioningCost { get; set; }
+        public decimal ActualReconditioningCost { get; set; }
+        public decimal AppraisedValue { get; set; }
+        public decimal AskingPrice { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal SellingLocation { get; set; }
+        public decimal ProfitObjective { get; set; }
+        public decimal AdjustedPctMarket { get; set; }
+        public DateTime LastModifiedDate { get; set; }
+        public string Certification { get; set; }
+        public string StyleId { get; set; }
+        public string BodyStyle { get; set; }
+        public string vRank { get; set; }
+        public string XrefId { get; set;}
+        public int LeadCount { get; set; }
+        public int ActiveLeadCount { get; set; }
+        public DateTime LastActiveLeadDate { get; set; }
+    }
+
+    public class vAutoInventory
+    {
+        public string VIN { get; set; }
+        public string StockNumber { get; set; }
+        public decimal UnitCost { get; set; }
+        public decimal AverageListPrice { get; set; }
+        public int AverageOdometer { get; set; }
+        public decimal CostToMarket { get; set; }
+        public decimal EffectiveCostToMarket { get; set; }
+        public decimal EffectivePercentOfMarket { get; set; }
+        public int ExactDaySupply { get; set; }
+        public int Rank { get; set; }
+        public int Size { get; set; }
+        public int VRank { get; set; }
+        public int YearMakeModelDaySupply { get; set; }
+        public DateTime DownloadDateTime { get; set; }
+    }
+
+    public class VehiclePriceChange
+    {
+        public DateTime PriceDate { get; set; }
+        public string StockNumber { get; set; }
+        public string Location { get; set; }
+        public int DaysInventory { get; set; }
+        public decimal ListAmount { get; set; }
     }
 
 }

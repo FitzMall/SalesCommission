@@ -1,0 +1,385 @@
+﻿@model SalesCommission.Models.AppraiserReportModel
+
+@{
+    ViewBag.Title = "Appraiser Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.PercentPositivePattern = 1;
+    nfi.CurrencySymbol = "";
+
+    System.Globalization.NumberFormatInfo percents = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    percents.CurrencyDecimalDigits = 0;
+    percents.PercentDecimalDigits = 1;
+    percents.PercentPositivePattern = 1;
+    percents.CurrencySymbol = "";
+    percents.PercentSymbol = "";
+
+
+}
+@section CSS
+{
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+    <link rel="stylesheet" href="~/Scripts/jquery-ui.css">
+    
+
+    <script type="text/javascript">
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+    </script>
+}
+
+<style type="text/css">
+    th.text-center.sorting_asc {
+        background-color: #d0d0b985;
+    }
+
+    th.text-center.sorting_desc {
+        background-color: #d0d0b985;
+    }
+
+    td.text-center.sorting_1 {
+        background-color: #d0d0b985 !important;
+    }
+
+    .ui-widget-content a{
+         color: #428bca;
+    }
+
+    @@media print {
+        .jumbotron {
+            display: none;
+        }
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Appraiser Report</h1>
+    <div class="row">
+        <div class="col-sm-2">
+            <h3>Month:</h3>
+        </div>
+        <div class="col-sm-2">
+            <h3>Year:</h3>
+        </div>
+    </div>
+    @using (Html.BeginForm())
+    {
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.YearId, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    }
+
+</div>
+
+@if (Model.AppraiserDetails != null)
+{
+    
+
+    <div class="row" style="margin-bottom:15px;">
+        <table class="table table-bordered table-striped" style="font-size:12px;" id="acquisitions">
+            <thead>
+                <tr style="background-color:#d9edf7;">
+                    <th class="text-center">Location</th>
+                    <th class="text-center">Appraiser</th>
+                    <th class="text-center">Received</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">Make</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">Miles</th>
+                    <th class="text-center">Days</th>
+                    <th class="text-center">ACV</th>
+                    <th class="text-center">MSI</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Fitz Price</th>
+                    <th class="text-center">Deal #</th>
+                    <th class="text-center">Front Gross</th>
+                    <th class="text-center">SS</th>
+                    <th class="text-center">Stock Source</th>
+                    <th class="text-center">Vehicle Source</th>
+                    <th class="text-center">Vehicle Notes</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                
+                    @foreach (var vehicle in Model.AppraiserDetails)
+                    {
+                        var vehicleSource = "";
+                        var vehicleNotes = "";
+
+                        var stockSource = "";
+                        var stockSourceName = "";
+
+                        if (vehicle.StockNumber != null)
+                        {
+                            stockSource = vehicle.StockNumber.Substring(1, 1);
+                        }
+                        switch (stockSource)
+                        {
+                            case "A":
+                                stockSourceName = "Auction/Wholesale";
+                                break;
+                            case "B":
+                                stockSourceName = "Lease Buyout";
+                                break;
+                            case "D":
+                                stockSourceName = "Demo/Prev Rental";
+                                break;
+                            case "E":
+                                stockSourceName = "Demo";
+                                break;
+                            case "F":
+                                stockSourceName = "Nextcar/Hist";
+                                break;
+                            case "G":
+                                stockSourceName = "Gov Auction";
+                                break;
+                            case "K":
+                                stockSourceName = "Kelly/ICO";
+                                break;
+                            case "L":
+                                stockSourceName = "In House Loaner";
+                                break;
+                            case "M":
+                                stockSourceName = "Facebook Marketplace";
+                                break;
+                            case "N":
+                                stockSourceName = "Nextcar Purchase";
+                                break;
+                            case "P":
+                                stockSourceName = "Purchase/Lease Cust";
+                                break;
+                            case "R":
+                                stockSourceName = "Rental";
+                                break;
+                            case "X":
+                                stockSourceName = "Prev Repo";
+                                break;
+                            default:
+                                stockSource = "";
+                                stockSourceName = "";
+                                break;
+                        }
+
+                        if (vehicle.PurchasedBy != null && vehicle.PurchasedBy != "")
+                        {
+                            vehicleSource = "Purchase Log";
+                            vehicleNotes = vehicle.PurchasedBy + " from " + vehicle.PurchasedFrom;
+                        }
+
+                        var bkground = "";
+                        if(vehicle.DealKey != null && vehicle.DealKey != "")
+                        {
+                            bkground = "background-color:#ffff0040;";
+                        }
+
+                        if(vehicle.Location == null || vehicle.Location == "")
+                        {
+                            switch(vehicle.Mall)
+                            {
+                                case "AN":
+                                    vehicle.Location = "FOC";
+                                    break;
+                                case "AW":
+                                    vehicle.Location = "FMM";
+                                    break;
+                                case "CH":
+                                    vehicle.Location = "FTN";
+                                    break;
+                                case "CL":
+                                    if (vehicle.Showroom == "S1")
+                                    {
+                                        vehicle.Location = "CSS";
+                                    }
+                                    else if (vehicle.Showroom == "S2")
+                                    {
+                                        vehicle.Location = "CHY";
+                                    }
+                                    else if (vehicle.Showroom == "S3")
+                                    {
+                                        vehicle.Location = "CJE";
+                                    }
+                                    break;
+                                case "FD":
+                                    vehicle.Location = "FCG";
+                                    break;
+                                case "FLP":
+                                    vehicle.Location = "FLP";
+                                    break;
+                                case "FS":
+                                    vehicle.Location = "FSS";
+                                    break;
+                                case "GA":
+                                    if (vehicle.Showroom == "S1")
+                                    {
+                                        vehicle.Location = "LFO";
+                                    }
+                                    else if (vehicle.Showroom == "S2")
+                                    {
+                                        vehicle.Location = "LFT";
+                                    }
+                                    else if (vehicle.Showroom == "S3")
+                                    {
+                                        vehicle.Location = "LFM";
+                                    }
+                                    break;
+                                case "GM":
+                                    vehicle.Location = "LFT";
+                                    break;
+                                case "HT":
+                                    vehicle.Location = "FHT";
+                                    break;
+                                case "LP":
+                                    vehicle.Location = "FLP";
+                                    break;
+                                case "WF":
+                                    if (vehicle.Showroom == "S1")
+                                    {
+                                        vehicle.Location = "CDO";
+                                    }
+                                    else if (vehicle.Showroom == "S2")
+                                    {
+                                        vehicle.Location = "FBS";
+                                    }
+                                    break;
+                                case "WH":
+                                    vehicle.Location = "WDC";
+                                    break;
+                                case "WN":
+                                    vehicle.Location = "FBN";
+                                    break;
+                                default:
+                                    vehicle.Location = "N/A";
+                                    break;
+
+
+
+
+                            }
+                        }
+
+                        <tr>
+                            <td class="text-center" style="@bkground">@vehicle.Location</td>
+                            <td class="text-center" style="@bkground">@vehicle.Appraiser</td>
+                            <td class="text-center" style="@bkground">@vehicle.AppraisalDate.ToShortDateString()</td>
+                            <td class="text-center" style="@bkground">@vehicle.StockNumber</td>
+                            <td class="text-center" style="@bkground">@vehicle.Year</td>
+                            <td class="text-center" style="@bkground">@vehicle.Make</td>
+                            <td class="text-center" style="@bkground">@vehicle.Carline</td>
+                            <td class="text-center" style="@bkground">@vehicle.Miles</td>
+                            <td class="text-center" style="@bkground">@vehicle.Days</td>
+                            <td class="text-center" style="@bkground">@vehicle.InitialACV.ToString("C", nfi)</td>
+                            <td class="text-center" style="@bkground">@vehicle.MSI</td>
+                            <td class="text-center" style="@bkground">@vehicle.InventoryAmount.ToString("C",nfi)</td>
+                            <td class="text-center" style="@bkground">@vehicle.ListAmount.ToString("C", nfi)</td>
+                            <td class="text-center" style="@bkground"><a href="@applicationPath/Sales/DealDetail/@vehicle.DealKey" target="_blank">@vehicle.DealKey</a></td>
+                            <td class="text-center" style="@bkground">@vehicle.FrontGross.ToString("C",nfi)</td>
+                            <td class="text-center" style="@bkground">@stockSource</td>
+                            <td class="text-center" style="@bkground">@stockSourceName</td>
+                            <td class="text-center" style="@bkground">@vehicleSource</td>
+                            <td class="text-center" style="@bkground">@vehicleNotes</td>
+
+                        </tr>
+                    }
+                        
+            </tbody>
+            <tfoot>
+
+
+                <tr style="background-color:#d9edf7;">
+
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+        }
+                    @section scripts
+                    {
+
+                <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+                <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+                <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+                <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+                <script type="text/javascript">
+                    $(document).ready(function () {
+
+                        $('[data-toggle="tooltip"]').tooltip();
+
+                        $('#acquisitions').DataTable({
+                                searching: true,
+                            dom: 'Bfrti',
+                            pageLength: -1,
+                            buttons: [
+                                {
+                                    extend: 'copyHtml5', footer: true,
+                                },
+                                {
+                                    extend: 'excelHtml5', footer: true,
+                                },
+                                {
+                                    extend: 'pdfHtml5', footer: true,
+                                    orientation: 'landscape'
+                                },
+                                {
+                                    extend: 'print', footer: true,
+                                    orientation: 'landscape'
+                                }
+                            
+                            ],
+                            columnDefs: [
+                              { type: 'any-number', targets: [ 4,7,8, 9, 10, 11, 12,14] },
+                              { type: 'date', targets: [2] }
+                            ],
+                             // order: [[ 1, 'desc' ]]
+                        });
+
+                        });
+
+                </script>
+
+            }

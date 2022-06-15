@@ -2353,7 +2353,7 @@ namespace SalesCommission.Controllers
                 //SAVE THE NEW STANDARD
                 var NewStandard = new NewPayscale();
 
-                NewStandard.ps_Key = Convert.ToInt16(Request.Form["NewStandard_Key"]);
+                NewStandard.ps_Key = Convert.ToInt32(Request.Form["NewStandard_Key"]);
                 NewStandard.ps_PlanCode = payscaleId;
                 NewStandard.ps_PayLevel = "STD";
                 NewStandard.ps_NewUsedHandy = "NEW";
@@ -2392,7 +2392,7 @@ namespace SalesCommission.Controllers
                 //SAVE THE Used STANDARD
                 var UsedStandard = new NewPayscale();
 
-                UsedStandard.ps_Key = Convert.ToInt16(Request.Form["UsedStandard_Key"]);
+                UsedStandard.ps_Key = Convert.ToInt32(Request.Form["UsedStandard_Key"]);
                 UsedStandard.ps_PlanCode = payscaleId;
                 UsedStandard.ps_PayLevel = "STD";
                 UsedStandard.ps_NewUsedHandy = "USED";

@@ -38,11 +38,20 @@
 
     if(Model.ExcludeAllBad)
     {
-        filters = filters + "t";
+        filters = filters + "t,";
     }
     else
     {
+        filters = filters + "f,";
+    }
+
+    if (Model.IncludeHandyman)
+    {
         filters = filters + "f";
+    }
+    else
+    {
+        filters = filters + "t";
     }
 
 }
@@ -372,7 +381,7 @@
                         switch (Model.BreakDownLevel1)
                         {
                             case "associatename":
-                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
+                                breakdownLevel1Values = Model.AssociateLeads.Select(x => x.Sales_LastName + " " + x.Sales_FirstName).Distinct().OrderBy(x => x).ToList();
                                 break;
 
                             //case "brand":
@@ -460,7 +469,7 @@
                             switch (Model.BreakDownLevel1)
                             {
                                 case "associatename":
-                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName == breakdown1);
+                                    BreakDown1filteredLeads = Model.AssociateLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == breakdown1);
                                     break;
 
                                 case "brand":
@@ -765,7 +774,7 @@
                             switch (Model.BreakDownLevel2)
                             {
                                 case "associatename":
-                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
+                                    breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.Sales_LastName + " " + x.Sales_FirstName).Distinct().OrderBy(x => x).ToList();
                                     break;
 
                                 //case "brand":
@@ -849,7 +858,7 @@
                                 switch (Model.BreakDownLevel2)
                                 {
                                     case "associatename":
-                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Sales_LastName == breakdown2);
+                                        BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == breakdown2);
                                         break;
 
                                     case "brand":
@@ -1153,7 +1162,7 @@
                                 switch (Model.BreakDownLevel3)
                                 {
                                     case "associatename":
-                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
+                                        breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.Sales_LastName + " " + x.Sales_FirstName).Distinct().OrderBy(x => x).ToList();
                                         break;
 
                                     //case "brand":
@@ -1237,7 +1246,7 @@
                                     switch (Model.BreakDownLevel3)
                                     {
                                         case "associatename":
-                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Sales_LastName == BreakDown3);
+                                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == BreakDown3);
                                             break;
 
                                         case "brand":
@@ -1543,7 +1552,7 @@
                                     switch (Model.BreakDownLevel4)
                                     {
                                         case "associatename":
-                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Sales_LastName).Distinct().OrderBy(x => x).ToList();
+                                            breakdownLevel4Values = BreakDown3filteredLeads.Select(x => x.Sales_LastName + " " + x.Sales_FirstName).Distinct().OrderBy(x => x).ToList();
                                             break;
 
                                         //case "brand":
@@ -1624,7 +1633,7 @@
                                         switch (Model.BreakDownLevel4)
                                         {
                                             case "associatename":
-                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Sales_LastName == BreakDown4);
+                                                BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == BreakDown4);
                                                 break;
 
                                             case "brand":

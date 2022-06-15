@@ -117,7 +117,7 @@
             <tbody>
     @{
 
-        var currentSelectedDate = new DateTime(Model.ReportStartYear, Model.ReportStartMonth, 1);
+        var currentSelectedDate = new DateTime(Model.ReportEndYear, Model.ReportEndMonth, 1);
         var grossChangeDate = new DateTime(2020, 1, 31);
 
         double CompanyTotalLeaseCount = 0;
@@ -249,7 +249,7 @@
             }
             if (Model.FactoryToDealerCash != null)
             {
-                var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+                var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                 if (factoryToDealerCash == null)
                 {
@@ -268,7 +268,7 @@
             if (brandCode == "Used")
             {
 
-                var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode);
+                var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                 foreach (var ftd in usedFTDCash)
                 {
@@ -283,7 +283,7 @@
 
                 foreach (var brand in brands)
                 {
-                    var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                    var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
                     if (ftd != null)
                     {
                         MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
@@ -602,6 +602,10 @@
                 breakdownLevel1Values = Model.SalesReportDetails.Select(x => x.DealMonth.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
                 break;
 
+            case "condition":
+                breakdownLevel1Values.Add("New");
+                breakdownLevel1Values.Add("Used");
+                break;
 
             default:
                 // breakdownLevel1Values = Model.AssociateLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
@@ -652,6 +656,18 @@
                     label1 = dealDate.Month + "/" + dealDate.Year;
 
                     break;
+
+                case "condition":
+                    if(breakdown1 == "Used")
+                    {
+                        BreakDown1filteredLeads = Model.SalesReportDetails.FindAll(x => x.BrandId == "UU");
+                    }
+                    else
+                    {
+                        BreakDown1filteredLeads = Model.SalesReportDetails.FindAll(x => x.BrandId != "UU");
+                    }                    
+                    break;
+
 
                 default:
                     BreakDown1filteredLeads = Model.SalesReportDetails.FindAll(x => x.AutoMall == breakdown1);
@@ -736,9 +752,10 @@
                 {
                     brandCode = "Used";
                 }
+
                 if (Model.FactoryToDealerCash != null)
                 {
-                    var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+                    var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                     if (factoryToDealerCash == null)
                     {
@@ -748,8 +765,7 @@
                     else
                     {
                         MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
-                        //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
-                        detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                        //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                     }
                 }
 
@@ -757,13 +773,13 @@
                 if (brandCode == "Used")
                 {
 
-                    var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode);
+                    var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                     foreach (var ftd in usedFTDCash)
                     {
                         MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
                     }
-                    detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                    //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                 }
                 else if (detail.BrandId == "UU" && locationCode == "CJE")
                 {
@@ -772,11 +788,11 @@
 
                     foreach (var brand in brands)
                     {
-                        var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                        var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
                         if (ftd != null)
                         {
                             MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
-                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                            //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                         }
                     }
                 }
@@ -802,20 +818,32 @@
                 if (detail.BrandId != "AA" || (detail.BrandId == "AA" && breakdown1 == "Additional Gross"))
                 {
                     BD1TotalDealCount += detail.DealCount;
+                    BD1TotalValidatedDealsCount += validatedDeals;
+                    BD1TotalUnValidatedCount += detail.UnValidatedCount;
+                    BD1TotalOfficeValidatedCount += detail.OfficeValidatedCount;
                 }
                 BD1TotalLeaseCount += detail.LeaseCount;
                 BD1TotalHandymanCount += detail.HandymanCount;
                 BD1TotalNextCarCount += detail.NextCarCount;
                 //BD1TotalPotentialHandyman += 0;
 
-                BD1TotalCPOCount += detail.CPOCount;
+                if (!brandCode.Contains("Used"))
+                {
+                    BD1TotalCPOCount += detail.CPOCount;
+                }
+                else
+                {
+                    if (detail.MakeId == "87")
+                    {
+                        BD1TotalCPOCount += detail.CPOCount;
+                    }
+                }
+
 
                 //BD1TotalPotentialCPO += 0;
 
 
-                BD1TotalValidatedDealsCount += validatedDeals;
-                BD1TotalUnValidatedCount += detail.UnValidatedCount;
-                BD1TotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
 
                 BD1TotalDealGrossAmount += detail.DealGrossAmount;
                 BD1TotalMEFTDAmount += MonthEndFTDAmount;
@@ -847,8 +875,6 @@
             var BD1TotalFrontPVRAmount = Math.Round((BD1TotalDealGrossAmount + BD1TotalMEFTDAmount) / BD1TotalValidatedDealsCount); //+ BD1TotalOtherAmount+ BD1TotalFTDAmount
             var BD1TotalBackPVRAmount = Math.Round((BD1TotalBackGrossAmount) / BD1TotalValidatedDealsCount);
             var BD1TotalPVRAmount = Math.Round((BD1TotalDealGrossAmount + BD1TotalMEFTDAmount + BD1TotalBackGrossAmount) / BD1TotalValidatedDealsCount); //+ BD1TotalOtherAmount + BD1TotalFTDAmount
-
-
 
                         <tr class="location-bd1-data-row-@breakdown1Index @label1.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd1-collapse-@breakdown1Index">
                             <td class="breakdown-column"><a data-toggle="collapse" id="location-bd1-collapse-@breakdown1Index" style="cursor: pointer;" class="location-bd1-collapse-@breakdown1Index-href collapsed" data-target=".location-bd1-collapse-@breakdown1Index">@label1 </a></td>
@@ -913,6 +939,11 @@
                     breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealMonth.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
                     break;
 
+                case "condition":
+                    breakdownLevel2Values.Add("New");
+                    breakdownLevel2Values.Add("Used");
+                    break;
+
                 default:
                     //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                     break;
@@ -957,6 +988,17 @@
                         BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.DealMonth.ToShortDateString() == breakdown2);
                         var dealDate = Convert.ToDateTime(breakdown2);
                         label2 = dealDate.Month + "/" + dealDate.Year;
+                        break;
+
+                    case "condition":
+                        if (breakdown2 == "Used")
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.BrandId == "UU");
+                        }
+                        else
+                        {
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.BrandId != "UU");
+                        }
                         break;
 
                     default:
@@ -1044,7 +1086,7 @@
                     }
                     if (Model.FactoryToDealerCash != null)
                     {
-                        var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+                        var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                         if (factoryToDealerCash == null)
                         {
@@ -1054,8 +1096,7 @@
                         else
                         {
                             MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
-                            //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
-                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                            //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                         }
                     }
 
@@ -1063,13 +1104,13 @@
                     if (brandCode == "Used")
                     {
 
-                        var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode);
+                        var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                         foreach (var ftd in usedFTDCash)
                         {
                             MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
                         }
-                        detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                        //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                     }
                     else if (detail.BrandId == "UU" && locationCode == "CJE")
                     {
@@ -1078,11 +1119,11 @@
 
                         foreach (var brand in brands)
                         {
-                            var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                            var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
                             if (ftd != null)
                             {
                                 MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
-                                detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                             }
                         }
                     }
@@ -1108,6 +1149,10 @@
                     if (detail.BrandId != "AA" || (detail.BrandId == "AA" && breakdown2 == "Additional Gross"))
                     {
                         BD2TotalDealCount += detail.DealCount;
+                        BD2TotalValidatedDealsCount += validatedDeals;
+                        BD2TotalUnValidatedCount += detail.UnValidatedCount;
+                        BD2TotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
                     }
 
                     BD2TotalLeaseCount += detail.LeaseCount;
@@ -1115,15 +1160,19 @@
                     BD2TotalNextCarCount += detail.NextCarCount;
                     //BD2TotalPotentialHandyman += 0;
 
-                    BD2TotalCPOCount += detail.CPOCount;
+                    if (!brandCode.Contains("Used"))
+                    {
+                        BD2TotalCPOCount += detail.CPOCount;
+                    }
+                    else
+                    {
+                        if (detail.MakeId == "87")
+                        {
+                            BD2TotalCPOCount += detail.CPOCount;
+                        }
+                    }
 
-                    //BD2TotalPotentialCPO += 0;
 
-
-
-                    BD2TotalValidatedDealsCount += validatedDeals;
-                    BD2TotalUnValidatedCount += detail.UnValidatedCount;
-                    BD2TotalOfficeValidatedCount += detail.OfficeValidatedCount;
 
                     BD2TotalDealGrossAmount += detail.DealGrossAmount;
                     BD2TotalMEFTDAmount += MonthEndFTDAmount;
@@ -1220,6 +1269,11 @@
                         breakdownLevel3Values = BreakDown2filteredLeads.Select(x => x.DealMonth.ToShortDateString()).Distinct().OrderBy(x => Convert.ToDateTime(x)).ToList();
                         break;
 
+                    case "condition":
+                        breakdownLevel3Values.Add("New");
+                        breakdownLevel3Values.Add("Used");
+                        break;
+
                     default:
                         //breakdownLevel2Values = BreakDown1filteredLeads.Select(x => x.DealerId.ToString()).Distinct().OrderBy(x => x).ToList();
                         break;
@@ -1262,6 +1316,18 @@
                             var dealDate = Convert.ToDateTime(BreakDown3);
                             label3 = dealDate.Month + "/" + dealDate.Year;
                             break;
+
+                        case "condition":
+                            if (BreakDown3 == "Used")
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.BrandId == "UU");
+                            }
+                            else
+                            {
+                                BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.BrandId != "UU");
+                            }
+                            break;
+
 
                         default:
                             BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.AutoMall == BreakDown3);
@@ -1350,7 +1416,7 @@
                         }
                         if (Model.FactoryToDealerCash != null)
                         {
-                            var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+                            var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                             if (factoryToDealerCash == null)
                             {
@@ -1360,8 +1426,7 @@
                             else
                             {
                                 MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
-                                //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
-                                detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                             }
                         }
 
@@ -1369,13 +1434,13 @@
                         if (brandCode == "Used")
                         {
 
-                            var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode);
+                            var usedFTDCash = Model.FactoryToDealerCash.FindAll(o => o.StoreId == locationCode && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
 
                             foreach (var ftd in usedFTDCash)
                             {
                                 MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
                             }
-                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                            //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                         }
                         else if (detail.BrandId == "UU" && locationCode == "CJE")
                         {
@@ -1384,11 +1449,11 @@
 
                             foreach (var brand in brands)
                             {
-                                var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                                var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand && o.MonthId == detail.DealMonth.Month && o.YearId == detail.DealMonth.Year);
                                 if (ftd != null)
                                 {
                                     MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
-                                    detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                    //detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
                                 }
                             }
                         }
@@ -1414,20 +1479,30 @@
                         if (detail.BrandId != "AA" || (detail.BrandId == "AA" && BreakDown3 == "Additional Gross"))
                         {
                             BD3TotalDealCount += detail.DealCount;
+                            BD3TotalValidatedDealsCount += validatedDeals;
+                            BD3TotalUnValidatedCount += detail.UnValidatedCount;
+                            BD3TotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
                         }
                         BD3TotalLeaseCount += detail.LeaseCount;
                         BD3TotalHandymanCount += detail.HandymanCount;
                         BD3TotalNextCarCount += detail.NextCarCount;
                         //BD3TotalPotentialHandyman += 0;
 
-                        BD3TotalCPOCount += detail.CPOCount;
-
+                        if (!brandCode.Contains("Used"))
+                        {
+                            BD3TotalCPOCount += detail.CPOCount;
+                        }
+                        else
+                        {
+                            if (detail.MakeId == "87")
+                            {
+                                BD3TotalCPOCount += detail.CPOCount;
+                            }
+                        }
                         //BD3TotalPotentialCPO += 0;
 
 
-                        BD3TotalValidatedDealsCount += validatedDeals;
-                        BD3TotalUnValidatedCount += detail.UnValidatedCount;
-                        BD3TotalOfficeValidatedCount += detail.OfficeValidatedCount;
 
                         BD3TotalDealGrossAmount += detail.DealGrossAmount;
                         BD3TotalMEFTDAmount += MonthEndFTDAmount;
@@ -1439,26 +1514,26 @@
                         BD3TotalFTDAmount += detail.FTDAmount;
                         BD3TotalDXAmount += detail.DXAmount;
                         BD3TotalBackGross += detail.BackGrossItemAmount;
-                    
-                }
+
+                    }
 
 
 
-                var BD3TotalLeasePercent = (BD3TotalLeaseCount / BD3TotalPotentialLease).ToString("P", nfi);
-                var BD3TotalHandyPercent = (BD3TotalHandymanCount / BD3TotalPotentialHandyman).ToString("P", nfi);
-                var BD3TotalCPOPercent = (BD3TotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
-                var BD3TotalNextCarPercent = (BD3TotalNextCarCount / BD3TotalPotentialHandyman).ToString("P", nfi);
+                    var BD3TotalLeasePercent = (BD3TotalLeaseCount / BD3TotalPotentialLease).ToString("P", nfi);
+                    var BD3TotalHandyPercent = (BD3TotalHandymanCount / BD3TotalPotentialHandyman).ToString("P", nfi);
+                    var BD3TotalCPOPercent = (BD3TotalCPOCount / CompanyUsedTotalPotentialCPO).ToString("P", nfi);
+                    var BD3TotalNextCarPercent = (BD3TotalNextCarCount / BD3TotalPotentialHandyman).ToString("P", nfi);
 
-                var BD3TotalBackGrossAmount = BD3TotalFinIncAmount + BD3TotalVSCAmount + BD3TotalGapAmount + BD3TotalMCAmount;
+                    var BD3TotalBackGrossAmount = BD3TotalFinIncAmount + BD3TotalVSCAmount + BD3TotalGapAmount + BD3TotalMCAmount;
 
-                if (currentSelectedDate > grossChangeDate)
-                {
-                    BD3TotalBackGrossAmount += BD3TotalBackGross;
-                }
+                    if (currentSelectedDate > grossChangeDate)
+                    {
+                        BD3TotalBackGrossAmount += BD3TotalBackGross;
+                    }
 
-                var BD3TotalFrontPVRAmount = Math.Round((BD3TotalDealGrossAmount + BD3TotalMEFTDAmount) / BD3TotalValidatedDealsCount); //+ BD3TotalOtherAmount+ BD3TotalFTDAmount
-                var BD3TotalBackPVRAmount = Math.Round((BD3TotalBackGrossAmount) / BD3TotalValidatedDealsCount);
-                var BD3TotalPVRAmount = Math.Round((BD3TotalDealGrossAmount + BD3TotalMEFTDAmount + BD3TotalBackGrossAmount) / BD3TotalValidatedDealsCount); //+ BD3TotalOtherAmount + BD3TotalFTDAmount
+                    var BD3TotalFrontPVRAmount = Math.Round((BD3TotalDealGrossAmount + BD3TotalMEFTDAmount) / BD3TotalValidatedDealsCount); //+ BD3TotalOtherAmount+ BD3TotalFTDAmount
+                    var BD3TotalBackPVRAmount = Math.Round((BD3TotalBackGrossAmount) / BD3TotalValidatedDealsCount);
+                    var BD3TotalPVRAmount = Math.Round((BD3TotalDealGrossAmount + BD3TotalMEFTDAmount + BD3TotalBackGrossAmount) / BD3TotalValidatedDealsCount); //+ BD3TotalOtherAmount + BD3TotalFTDAmount
 
                     <tr class="location-bd2-collapse-@breakdown2Index collapse out location-bd3-data-row-@BreakDown3Index @label3.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd3-collapse-@BreakDown3Index">
 

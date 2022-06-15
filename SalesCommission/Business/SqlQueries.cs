@@ -374,7 +374,7 @@ namespace SalesCommission.Business
             {
                 detail.TotalAmount = detail.DealGrossAmount + detail.FinIncAmount + detail.VSCAmount + detail.GapAmount + detail.MCAmount; //detail.OtherAmount + detail.FTDAmount
 
-                var currentSelectedDate = new DateTime(salesReportModel.ReportStartYear, salesReportModel.ReportStartMonth, 1);
+                var currentSelectedDate = new DateTime(salesReportModel.ReportEndYear, salesReportModel.ReportEndMonth, 1);
                 var grossChangeDate = new DateTime(2020, 1, 31);
                 if (currentSelectedDate > grossChangeDate)
                 {
@@ -459,7 +459,7 @@ namespace SalesCommission.Business
 
                             var cpoListCount = certifiedCounts.FindAll(o => o.CertifiedMake.ToUpper().Contains(makeName) && o.AutoMall == detail.AutoMall && o.DealMonth == detail.DealMonth);
 
-                            if (detail.MakeId == "41")
+                            if (detail.MakeId == "41" && detail.AutoMall.ToUpper() != "CLEARWATER")
                             {
                                 cpoListCount = certifiedCounts.FindAll(o => (o.CertifiedMake.ToUpper().Contains(makeName) || o.CertifiedMake.ToUpper().Contains("RAM") || o.CertifiedMake.ToUpper().Contains("DODGE")) && o.DealMonth == detail.DealMonth);
                             }
@@ -655,6 +655,10 @@ namespace SalesCommission.Business
 
         public static List<DealDetail> GetSalesLogDealsByStoreAndDate(string makeId, int yearId, int monthId)
         {
+
+            var FitzWayAppraisals = SalesCommission.Business.SqlQueries.GetFitzwayAppraisalsByDate(yearId, monthId);
+            var FitzWaySoldAppraisals = SalesCommission.Business.SqlQueries.GetFitzwaySoldAppraisalsByDate(yearId, monthId);
+
             var reportDate = new DateTime(yearId, monthId, 1);
             var dealDetails = new List<DealDetail>();
 
@@ -717,7 +721,41 @@ namespace SalesCommission.Business
 
             foreach (var deal in dealDetails)
             {
-                
+
+                if (deal.TradeVIN != null && deal.TradeVIN != "")
+                {
+
+                    var appraisal = FitzWayAppraisals.Find(x => x.VinNumber.ToUpper() == deal.TradeVIN.ToUpper());
+
+                    if (appraisal != null)
+                    {
+                        deal.Appraisal = true;
+                    }
+                    else if (deal.Trade2VIN != null && deal.Trade2VIN != "")
+                    {
+                        appraisal = FitzWayAppraisals.Find(x => x.VinNumber.ToUpper() == deal.Trade2VIN.ToUpper());
+                        if (appraisal != null)
+                        {
+                            deal.Appraisal = true;
+                        }
+                    }
+
+                }
+                else
+                {
+                    //was there an appraisal done but no trade?
+
+                    var soldAppraisal = FitzWaySoldAppraisals.Find(x => x.SLD_VIN.ToUpper() == deal.SoldVIN.ToUpper());
+
+                    if (soldAppraisal != null)
+                    {
+                        if (soldAppraisal.AppraisalDate.ToShortDateString() != "1/1/0001")
+                        {
+                            deal.Appraisal = true;
+                        }
+                    }
+                }
+
                 deal.ReportDate = reportDate;
                 if (deal.CustomerName == null || deal.CustomerName == "")
                 {
@@ -4798,6 +4836,21 @@ namespace SalesCommission.Business
             return FIManager;
         }
 
+        public static FIAssociate GetSelectedFIManagerByKey(int monthId, int yearId, string associateId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetailsByKey", new { MonthYear = monthYear, EmployeeNumber = associateId }, "SalesCommission");
+            var FIManager = new FIAssociate();
+
+            if (selectedMangers != null && selectedMangers.Count > 0)
+            {
+                FIManager = selectedMangers[0];
+            }
+
+            return FIManager;
+        }
+
         public static int SaveFIManagerDetails(FIAssociate selectedFIManager)
         {
             int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionSaveFIManagerDetails", selectedFIManager, "SalesCommission");
@@ -4808,6 +4861,33 @@ namespace SalesCommission.Business
 
         }
 
+        public static List<SelectListItem> GetSalesAssociatesWithKey()
+        {
+            var sqlGet = "Select distinct [emp_pkey] as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos='Sales Associate' or emp_pos='Finance Manager' order by emp_lname";
+            var salesAssociates = SqlMapperUtil.SqlWithParams<SalesAssociate>(sqlGet, null, "JJFServer");
+
+            var items = new List<SelectListItem>();
+
+            var blankItem = new SelectListItem();
+            blankItem.Text = string.Empty;
+            blankItem.Value = string.Empty;
+            items.Add(blankItem);
+
+            foreach (var associate in salesAssociates)
+            {
+                var item = new SelectListItem();
+                item.Text = associate.AssociateName.Trim();
+                item.Value = associate.AssociateId.Trim();
+                items.Add(item);
+            }
+
+            var houseItem = new SelectListItem();
+            houseItem.Text = "HOUSE";
+            houseItem.Value = "99999";
+            items.Add(houseItem);
+
+            return items;
+        }
 
 
         public static List<SelectListItem> GetSalesAssociates()
@@ -6889,10 +6969,11 @@ namespace SalesCommission.Business
 
             }
             var associateLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>(procedureName, new { StartDate = leadReportModel.ReportStartDate, EndDate = leadReportModel.ReportEndDate }, "ReynoldsData"); //ReportEndDate.AddDays(1)
-            //if(leadReportModel.IncludeHandyman == false)
-            //{
-            //    associateLeads = associateLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
-            //}
+
+            if (leadReportModel.IncludeHandyman == false) // opposite, we are excluding them
+            {
+                associateLeads = associateLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
+            }
 
             if (leadReportModel.ShowExcludedGroups == false)
             {
@@ -6950,10 +7031,12 @@ namespace SalesCommission.Business
             if (leadReportModel.CompareDates)
             {
                 var comparisonLeads = SqlMapperUtil.StoredProcWithParams<AssociateLead>(procedureName, new { StartDate = leadReportModel.ComparisonReportStartDate, EndDate = leadReportModel.ComparisonReportEndDate }, "ReynoldsData"); //ComparisonReportEndDate.AddDays(1)
-                //if (leadReportModel.IncludeHandyman == false)
-                //{
-                //    comparisonLeads = comparisonLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
-                //}
+
+                 if (leadReportModel.IncludeHandyman == false) // opposite, we are excluding them
+                {
+                        comparisonLeads = comparisonLeads.FindAll(x => !x.LeadSourceName.EndsWith("~"));
+                }
+
                 if(excludedLeadGroups != null && excludedLeadGroups.Count > 0)
                 {
                     foreach(var leadGroup in excludedLeadGroups)
@@ -7294,6 +7377,17 @@ namespace SalesCommission.Business
             return saveInputs;
         }
 
+        public static int DeleteTitleDue(string vin)
+        {
+
+            //Now save everything to the database and save the files...
+            int saveInputs = SqlMapperUtil.InsertUpdateOrDeleteSql("Delete from TitleDue where VIN = '" + vin + "'", null, "SalesCommission");
+
+            // End database saving
+
+            return saveInputs;
+        }
+
         public static int DeleteAssociateBonus(Bonus associateBonus)
         {
 
@@ -7505,6 +7599,27 @@ namespace SalesCommission.Business
             return leadMappings;
         }
 
+        public static List<FitzwayAppraisal> GetFitzwayAppraisalsByDate(int yearId, int monthId)
+        {
+            var reportDate = new DateTime(yearId, monthId, 1);
+
+            var appraisals = SqlMapperUtil.StoredProcWithParams<FitzwayAppraisal>("sp_GetFitzwayAppraisals", new { ReportDate = reportDate }, "SalesCommission");
+
+            return appraisals;
+
+        }
+
+        public static List<FitzwaySoldAppraisal> GetFitzwaySoldAppraisalsByDate(int yearId, int monthId)
+        {
+            var reportDate = new DateTime(yearId, monthId, 1);
+
+            var appraisals = SqlMapperUtil.StoredProcWithParams<FitzwaySoldAppraisal>("sp_GetSoldVehicleAppraisals", new { ReportDate = reportDate }, "SalesCommission");
+
+            return appraisals;
+
+        }
+        
+
         public static int AddLeadSourceMapping(LeadMapping leadMapping)
         {
             //Now save everything to the database and save the files...
@@ -7535,6 +7650,14 @@ namespace SalesCommission.Business
             int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_LeadsSaveLeadGroup", leadGroup, "SalesCommission");
 
             return saveObjStn;
+        }
+
+        public static List<AssociateLead> GetVehicleLeadInformation(string stock, string vin)
+        {
+            var leads = SqlMapperUtil.StoredProcWithParams<AssociateLead>("sp_GetAppraisalReportVehicleLeads", new { StockNumber = stock, VIN = vin }, "SalesCommission");
+
+            return leads;
+
         }
 
         public static List<SelectListItem> GetPayscales(string location)
@@ -7846,6 +7969,107 @@ namespace SalesCommission.Business
 
             return tradeInfo;
         }
+
+        public static List<TradeAcquisitionDetail> GetTradeAcquisitionReportDetails()
+        {
+            var tradeDetails = SqlMapperUtil.StoredProcWithParams<TradeAcquisitionDetail>("sp_SalesLogReportGetInventoryAcquisitionReport", new { }, "SalesCommission");
+
+            return tradeDetails;
+        }
+
+        public static List<TradeAcquisitionDetail> GetTradeAcquisitionReportDetailsByDate(DateTime startDate, DateTime endDate)
+        {
+            var tradeDetails = SqlMapperUtil.StoredProcWithParams<TradeAcquisitionDetail>("sp_SalesLogReportGetInventoryAcquisitionReportByDate", new { StartDate = startDate.ToShortDateString(), EndDate = endDate.ToShortDateString() }, "SalesCommission");
+
+            return tradeDetails;
+        }
+
+        public static List<TradeAcquisitionDetail> GetTradeAcquisitionReportDetailsByVIN()
+        {
+            var tradeDetails = SqlMapperUtil.StoredProcWithParams<TradeAcquisitionDetail>("sp_SalesLogReportGetInventoryAcquisitionReportByVIN", new {  }, "SalesCommission");
+
+            return tradeDetails;
+        }
+
+        public static List<TradeAcquisitionDetail> GetTradeAcquisitionAdditionalDetails()
+        {
+            var tradeDetails = SqlMapperUtil.StoredProcWithParams<TradeAcquisitionDetail>("sp_SalesLogReportGetInventoryAcquisitionDetails", new { }, "SalesCommission");
+
+            return tradeDetails;
+        }
+
+        
+            public static List<vAutoInventory> GetVAutoCurrentInventory()
+        {
+            var vAutoData = SqlMapperUtil.StoredProcWithParams<vAutoInventory>("sp_vAutoGetCurrentInventory", new { }, "vAuto");
+
+            return vAutoData;
+        }
+
+        public static List<AppraiserDetail> GetAppraiserReport(DateTime startDate, DateTime endDate)
+        {
+
+            var appraiserDetails = SqlMapperUtil.StoredProcWithParams<AppraiserDetail>("sp_SalesLogReportGetAppraiserReport", new {StartDate = startDate.ToShortDateString() ,EndDate = endDate.ToShortDateString() }, "SalesCommission");
+
+            return appraiserDetails;
+        }
+
+        public static List<VehiclePriceChange> GetAllVehiclePriceChanges()
+        {
+            var sqlGet = @"Select V_SaveId as PriceDate,
+	                         V_Loc as Location,
+	                          V_Stock as StockNumber, 
+	                          V_daysinv as DaysInventory,
+	                           v_int_Price as ListAmount 
+                        FROM Fitzway.[dbo].AllInventory_history  
+                        where V_Stock in (Select V_Stock from [FITZWAY].[dbo].[Allinventory] A where A.V_nu = 'USED')";
+
+            var priceChanges = SqlMapperUtil.SqlWithParams<VehiclePriceChange>(sqlGet, new { }, "Rackspace");
+
+            return priceChanges;
+        }
+
+        public static void DeleteVINTradeSearchTable()
+        {
+            int deleted = SqlMapperUtil.InsertUpdateOrDeleteSql("Delete from VINTradeSearch", new { }, "SalesCommission");
+
+        }
+
+        public static void InsertIntoVINTradeSearchTable(List<string> VINs)
+        {
+            foreach(var VIN in VINs)
+            {
+                int added = SqlMapperUtil.InsertUpdateOrDeleteSql("Insert Into VINTradeSearch values('" + VIN + "')", new { }, "SalesCommission");
+
+            }
+
+        }
+        
+
+        public static List<DealDetail> GetTradeDealDetails(string dealList)
+        {
+            dealList = dealList.TrimEnd(',');
+            dealList = dealList.Replace(",", "','");
+            var formattedList = "'" + dealList + "'";
+
+            var sqlGet = @"Select sl_dealkey as DealKey, sl_TradeVIN as TradeVIN, sl_TradeVIN2 as Trade2VIN from [SalesCommission].dbo.[saleslog] where sl_dealkey in (" + formattedList + ")";
+
+            var tradeDeals = SqlMapperUtil.SqlWithParams<DealDetail>(sqlGet, new { }, "SalesCommission");
+            return tradeDeals;
+        }
+
+        public static List<DealDetail> GetWholeSaleTradeDealDetails(string dealList)
+        {
+            dealList = dealList.TrimEnd(',');
+            dealList = dealList.Replace(",", "','");
+            var formattedList = "'" + dealList + "'";
+
+            var sqlGet = @"Select Deal_NO as DealKey, VIN as TradeVIN, '' as Trade2VIN FROM [REYDATA].[dbo].[AP_UVGrossRPT_detail_V2] where Deal_NO in (" + formattedList + ")  and WholeRetail = 'W'";
+
+            var tradeDeals = SqlMapperUtil.SqlWithParams<DealDetail>(sqlGet, new { }, "ReynoldsData");
+            return tradeDeals;
+        }
+
     }
 
 }

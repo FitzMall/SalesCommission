@@ -1,0 +1,1133 @@
+﻿@model SalesCommission.Models.AppraisalReportModel
+
+@{
+    ViewBag.Title = "Appraisal Report";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    var breakDownsInv = new List<string>();
+    var breakDownInvValues = new List<string>();
+
+    var breakDowns = new List<string>();
+    var breakDownValues = new List<string>();
+
+    var breakDownCombos = new List<string>();
+    var breakDownComboValues = new List<string>();
+
+    breakDownCombos.Add("Appraiser");
+    breakDownComboValues.Add("appraiser");
+
+    breakDownCombos.Add("Certification");
+    breakDownComboValues.Add("certified");
+
+    breakDownCombos.Add("Days In Stock");
+    breakDownComboValues.Add("days");
+
+    breakDownCombos.Add("Location");
+    breakDownComboValues.Add("soldloc");
+
+    breakDownCombos.Add("Make");
+    breakDownComboValues.Add("make");
+
+    breakDownCombos.Add("Mileage");
+    breakDownComboValues.Add("mileage");
+
+    breakDownCombos.Add("Model");
+    breakDownComboValues.Add("model");
+
+    breakDownCombos.Add("Model Year");
+    breakDownComboValues.Add("modelyear");
+
+    breakDownCombos.Add("Month Year");
+    breakDownComboValues.Add("monthyear");
+
+    breakDownCombos.Add("Selling Price");
+    breakDownComboValues.Add("price");
+
+    breakDownCombos.Add("Showroom");
+    breakDownComboValues.Add("showroom");
+
+    breakDownCombos.Add("Vehicle Source");
+    breakDownComboValues.Add("vehiclesource");
+
+
+    breakDowns.Add("Appraiser");
+    breakDownValues.Add("appraiser");
+
+    breakDowns.Add("Certification");
+    breakDownValues.Add("certified");
+
+    breakDowns.Add("Days In Stock");
+    breakDownValues.Add("days");
+
+    breakDowns.Add("Location");
+    breakDownValues.Add("soldloc");
+
+    breakDowns.Add("Make");
+    breakDownValues.Add("make");
+
+    breakDowns.Add("Mileage");
+    breakDownValues.Add("mileage");
+
+    breakDowns.Add("Model");
+    breakDownValues.Add("model");
+
+    breakDowns.Add("Model Year");
+    breakDownValues.Add("modelyear");
+
+    breakDowns.Add("Month Year");
+    breakDownValues.Add("monthyear");
+
+    breakDowns.Add("Sales Associate");
+    breakDownValues.Add("associate");
+
+    breakDowns.Add("Selling Price");
+    breakDownValues.Add("price");
+
+    breakDowns.Add("Showroom");
+    breakDownValues.Add("showroom");
+
+    breakDowns.Add("Stock Number");
+    breakDownValues.Add("stock");
+
+    breakDowns.Add("Vehicle Source");
+    breakDownValues.Add("vehiclesource");
+
+    breakDowns.Add("Zip Code");
+    breakDownValues.Add("zipcode");
+
+
+    breakDownsInv.Add("Appraiser");
+    breakDownInvValues.Add("appraiser");
+
+    breakDownsInv.Add("Body Style");
+    breakDownInvValues.Add("body");
+
+
+    breakDownsInv.Add("Certification");
+    breakDownInvValues.Add("certified");
+
+    breakDownsInv.Add("Days In Stock");
+    breakDownInvValues.Add("days");
+
+    breakDownsInv.Add("Lead Group");
+    breakDownInvValues.Add("leadgroup");
+
+    breakDownsInv.Add("Lead Source");
+    breakDownInvValues.Add("lead");
+
+    breakDownsInv.Add("Location");
+    breakDownInvValues.Add("location");
+
+    breakDownsInv.Add("Make");
+    breakDownInvValues.Add("make");
+
+    breakDownsInv.Add("Mileage");
+    breakDownInvValues.Add("mileage");
+
+    breakDownsInv.Add("Model");
+    breakDownInvValues.Add("model");
+
+    breakDownsInv.Add("Model Year");
+    breakDownInvValues.Add("modelyear");
+
+    breakDownsInv.Add("Month Year");
+    breakDownInvValues.Add("monthyear");
+
+    breakDownsInv.Add("Selling Price");
+    breakDownInvValues.Add("price");
+
+    breakDownsInv.Add("Showroom");
+    breakDownInvValues.Add("showroom");
+
+    breakDownsInv.Add("Status");
+    breakDownInvValues.Add("status");
+
+    breakDownsInv.Add("Stock Number");
+    breakDownInvValues.Add("stock");
+
+    breakDownsInv.Add("Vehicle Source");
+    breakDownInvValues.Add("vehiclesource");
+
+
+}
+@section CSS
+{
+    <link rel="stylesheet" href="~/Scripts/Chosen/chosen.css">
+    <link rel="stylesheet" href="~/Scripts/jquery-ui.css">
+
+    <script type="text/javascript">
+        var dialogWidth = 0;
+
+        dialogWidth = ($(window).width() * .75);
+
+        if ($(window).width() > 1199) {
+            dialogWidth = 800;
+        }
+    </script>
+}
+
+<style type="text/css">
+
+    .container{
+        max-width:100%;
+    }
+
+    th.text-center.sorting_asc {
+        background-color: #FFFF7C;
+    }
+
+    th.text-center.sorting_desc {
+        background-color: #FFFF7C;
+    }
+
+    td.text-center.sorting_1 {
+        background-color: #FFFF7C !important;
+    }
+
+    .ui-widget-content a {
+        color: #428bca;
+    }
+
+    @@media print {
+
+        a[href]:after {
+            content: "";
+        }
+
+        .btn-primary {
+            display: none;
+        }
+
+        .report-parameters{
+            display:none;
+        }
+
+        @@page {
+            size: landscape;
+        }
+    }
+
+    .report-parameters{
+        background-color:#eee;
+    }
+
+    .hr-divider{
+        border-color:#999; margin-top:10px; margin-bottom:10px;
+    }
+    .hr-separator{
+        border-color:#999; border-style:dashed; margin-top:10px; margin-bottom:5px;
+    }
+    .table-bordered > thead > tr > th.divider-column, .table-bordered > tbody > tr > td.divider-column, .table-bordered > tfoot > tr > th.divider-column {
+        border-right: 4px double #808080;
+    }
+
+        td > a:after {
+        content: '\002B';
+    }
+    .changed:after {
+        content: '\2212';
+    }
+
+    .changed {
+        font-weight: bold;
+    }
+
+    .selected-row{
+        background-color: #f7f4e0; /*#f5f5f5;*/
+    }
+
+    .display-none{
+        display:none;
+    }
+
+    td >a.lead-detail-link:after {
+        content: '\2023';
+    }
+
+</style>
+
+@{ 
+
+    var salesDisplay = "";
+    var invDisplay = "display:none;";
+    var comboDisplay = "display:none;";
+
+    if (Model.ReportType == "sales" )
+    {
+        salesDisplay = "";
+        invDisplay = "display:none;";
+        comboDisplay = "display:none;";
+    }
+    else if (Model.ReportType == "combined")
+    {
+        comboDisplay = "";
+        salesDisplay = "display:none;";
+        invDisplay = "display:none;";
+    }
+    else
+    {
+        salesDisplay = "display:none;";
+        comboDisplay = "display:none;";
+        invDisplay = "";
+    }
+}
+<div class="row" style="margin-top:25px;">
+    <div class="col-sm-2 report-parameters">
+    <h4>Appraisal Report Parameters</h4>
+    @using (Html.BeginForm())
+    {
+        <div class="row" style="margin-top:5px;margin-bottom:5px;@salesDisplay">
+            <div class="col-sm-12">
+                <strong>Report Type:</strong>
+            </div>
+        </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <select id="reportType" name="reportType" class="form-control form-inline">
+                        <option value="sales" @(Model.ReportType == "sales" ? "selected" : "")>Appraiser Sold Vehicles</option>
+                        <option value="inventory" @(Model.ReportType == "inventory" ? "selected" : "")>Appraiser Inventory Vehicles</option>
+                        <option value="combined" @(Model.ReportType == "combined" ? "selected" : "")>Combined Vehicles</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <hr class="hr-divider" />
+                </div>
+            </div>
+
+            <div class="combo" style="@comboDisplay">
+                <div class="row" style="margin-top:5px;margin-bottom:5px">
+                    <div class="col-sm-12">
+                        <strong>Start Date:</strong>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        @Html.DropDownListFor(n => n.ReportComboStartMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.DropDownListFor(n => n.ReportComboStartYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:5px;margin-bottom:5px">
+
+                    <div class="col-sm-6">
+                        <strong>End Date:</strong>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        @Html.DropDownListFor(n => n.ReportComboEndMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                    <div class="col-sm-6">
+                        @Html.DropDownListFor(n => n.ReportComboEndYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <hr class="hr-divider" />
+                    </div>
+                </div>
+            </div>
+
+                <div class="sales" style="@salesDisplay">
+                    <div class="row" style="margin-top:5px;margin-bottom:5px">
+                        <div class="col-sm-12">
+                            <strong>Start Date:</strong>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportStartMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportStartYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:5px;margin-bottom:5px">
+
+                        <div class="col-sm-6">
+                            <strong>End Date:</strong>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportEndMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportEndYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <input type="checkbox" id="chkComparison" name="chkComparison" @(Model.CompareDates == true ? "checked" : "") /> Compare Date Ranges
+                        </div>
+                    </div>
+
+                    @{
+                        var displayCompare = "display:none;";
+                        if (Model.CompareDates == true)
+                        {
+                            displayCompare = "";
+                        }
+
+                    }
+
+                    <div class="row comparison-row" style="@displayCompare">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row comparison-row" style="margin-top:5px;margin-bottom:5px;@displayCompare">
+                        <div class="col-sm-12">
+                            <strong>Comparison Start Date:</strong>
+                        </div>
+                    </div>
+                    <div class="row comparison-row" style="@displayCompare">
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportComparisonStartMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportComparisonStartYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                    </div>
+
+                    <div class="row comparison-row" style="margin-top:5px;margin-bottom:5px;@displayCompare">
+
+                        <div class="col-sm-12">
+                            <strong>Comparison End Date:</strong>
+                        </div>
+                    </div>
+                    <div class="row comparison-row" style="@displayCompare">
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportComparisonEndMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(n => n.ReportComparisonEndYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <strong>Breakdowns:</strong>
+                    </div>
+                </div>
+                <div class="sales" style="@salesDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <select id="breakdown1" name="breakdown1" class="form-control form-inline salesbreakdowns1">
+                                <option value=""></option>
+
+                                @{
+                                    var index = 0;
+                                    foreach (var breakdown in breakDowns)
+                                    {
+                                        <option value="@breakDownValues[index]" @(Model.BreakDownLevel1 == breakDownValues[index] ? "selected" : "")>@breakdown</option>
+                                        index += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown2" name="breakdown2" class="form-control form-inline salesbreakdowns2">
+                                <option value=""></option>
+                                @{
+                                    var index2 = 0;
+                                    foreach (var breakdown in breakDowns)
+                                    {
+                                        if (@breakDownValues[index2] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownValues[index2]" @(Model.BreakDownLevel2 == breakDownValues[index2] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        index2 += 1;
+                                    }
+
+                                }
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown3" name="breakdown3" class="form-control form-inline salesbreakdowns3">
+                                <option value=""></option>
+                                @{
+                                    var index3 = 0;
+                                    foreach (var breakdown in breakDowns)
+                                    {
+                                        if (breakDownValues[index3] != Model.BreakDownLevel2 && breakDownValues[index3] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownValues[index3]" @(Model.BreakDownLevel3 == breakDownValues[index3] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        index3 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown4" name="breakdown4" class="form-control form-inline salesbreakdowns4">
+                                <option value=""></option>
+                                @{
+                                    var index4 = 0;
+                                    foreach (var breakdown in breakDowns)
+                                    {
+                                        if (breakDownValues[index4] != Model.BreakDownLevel3 && breakDownValues[index4] != Model.BreakDownLevel2 && breakDownValues[index4] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownValues[index4]" @(Model.BreakDownLevel4 == breakDownValues[index4] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        index4 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="combo" style="@comboDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <select id="breakdown1" name="breakdown1" class="form-control form-inline combobreakdowns1">
+                                <option value=""></option>
+
+                                @{
+                                    var indexCombo = 0;
+                                    foreach (var breakDownCombo in breakDownCombos)
+                                    {
+                                        <option value="@breakDownComboValues[indexCombo]" @(Model.BreakDownLevel1 == breakDownComboValues[indexCombo] ? "selected" : "")>@breakDownCombo</option>
+                                        indexCombo += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown2" name="breakdown2" class="form-control form-inline combobreakdowns2">
+                                <option value=""></option>
+                                @{
+                                    var indexCombo2 = 0;
+                                    foreach (var breakDownCombo in breakDownCombos)
+                                    {
+                                        if (@breakDownComboValues[indexCombo2] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownComboValues[indexCombo2]" @(Model.BreakDownLevel2 == breakDownComboValues[indexCombo2] ? "selected" : "")>@breakDownCombo</option>
+                                        }
+                                        indexCombo2 += 1;
+                                    }
+
+                                }
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown3" name="breakdown3" class="form-control form-inline combobreakdowns3">
+                                <option value=""></option>
+                                @{
+                                    var indexCombo3 = 0;
+                                    foreach (var breakDownCombo in breakDownCombos)
+                                    {
+                                        if (breakDownComboValues[indexCombo3] != Model.BreakDownLevel2 && breakDownComboValues[indexCombo3] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownComboValues[indexCombo3]" @(Model.BreakDownLevel3 == breakDownComboValues[indexCombo3] ? "selected" : "")>@breakDownCombo</option>
+                                        }
+                                        indexCombo3 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown4" name="breakdown4" class="form-control form-inline combobreakdowns4">
+                                <option value=""></option>
+                                @{
+                                    var indexCombo4 = 0;
+                                    foreach (var breakDownCombo in breakDownCombos)
+                                    {
+                                        if (breakDownComboValues[indexCombo4] != Model.BreakDownLevel3 && breakDownComboValues[indexCombo4] != Model.BreakDownLevel2 && breakDownComboValues[indexCombo4] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownComboValues[indexCombo4]" @(Model.BreakDownLevel4 == breakDownComboValues[indexCombo4] ? "selected" : "")>@breakDownCombo</option>
+                                        }
+                                        indexCombo4 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="inventory" style="@invDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <select id="breakdown1" name="breakdown1" class="form-control form-inline invbreakdowns1">
+                                <option value=""></option>
+
+                                @{
+                                    var indexInv = 0;
+                                    foreach (var breakdown in breakDownsInv)
+                                    {
+                                        <option value="@breakDownInvValues[indexInv]" @(Model.BreakDownLevel1 == breakDownInvValues[indexInv] ? "selected" : "")>@breakdown</option>
+                                        indexInv += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown2" name="breakdown2" class="form-control form-inline invbreakdowns2">
+                                <option value=""></option>
+                                @{
+                                    var indexInv2 = 0;
+                                    foreach (var breakdown in breakDownsInv)
+                                    {
+                                        if (@breakDownInvValues[indexInv2] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownInvValues[indexInv2]" @(Model.BreakDownLevel2 == breakDownInvValues[indexInv2] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        indexInv2 += 1;
+                                    }
+
+                                }
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown3" name="breakdown3" class="form-control form-inline invbreakdowns3">
+                                <option value=""></option>
+                                @{
+                                    var indexInv3 = 0;
+                                    foreach (var breakdown in breakDownsInv)
+                                    {
+                                        if (breakDownInvValues[indexInv3] != Model.BreakDownLevel2 && breakDownInvValues[indexInv3] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownInvValues[indexInv3]" @(Model.BreakDownLevel3 == breakDownInvValues[indexInv3] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        indexInv3 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                        <div class="col-sm-12">
+                            <select id="breakdown4" name="breakdown4" class="form-control form-inline invbreakdowns4">
+                                <option value=""></option>
+                                @{
+                                    var indexInv4 = 0;
+                                    foreach (var breakdown in breakDownsInv)
+                                    {
+                                        if (breakDownInvValues[indexInv4] != Model.BreakDownLevel3 && breakDownInvValues[indexInv4] != Model.BreakDownLevel2 && breakDownInvValues[indexInv4] != Model.BreakDownLevel1)
+                                        {
+                                            <option value="@breakDownInvValues[indexInv4]" @(Model.BreakDownLevel4 == breakDownInvValues[indexInv4] ? "selected" : "")>@breakdown</option>
+                                        }
+                                        indexInv4 += 1;
+                                    }
+
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="sales" style="@salesDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Vehicle Types:</strong>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkVehicleType" @(Model.VehicleType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="Retail" name="chkVehicleType" @(Model.VehicleType == "Retail" ? "checked" : "") /> Retail<br />
+                            <input type="radio" value="Wholesale" name="chkVehicleType" @(Model.VehicleType == "Wholesale" ? "checked" : "") /> Wholesale<br />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Acquisition Types:</strong>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkAcquisitionType2" @(Model.AcquisitionType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="Purchase" name="chkAcquisitionType2" @(Model.AcquisitionType == "Purchase" ? "checked" : "") /> Purchase<br />
+                            <input type="radio" value="Trade" name="chkAcquisitionType2" @(Model.AcquisitionType == "Trade" ? "checked" : "") /> Trade<br />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="combo" style="@comboDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Vehicle Types:</strong>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkVehicleType3" @(Model.VehicleType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="Retail" name="chkVehicleType3" @(Model.VehicleType == "Retail" ? "checked" : "") /> Retail<br />
+                            <input type="radio" value="Wholesale" name="chkVehicleType3" @(Model.VehicleType == "Wholesale" ? "checked" : "") /> Wholesale<br />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Acquisition Types:</strong>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkAcquisitionType3" @(Model.AcquisitionType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="Purchase" name="chkAcquisitionType3" @(Model.AcquisitionType == "Purchase" ? "checked" : "") /> Purchase<br />
+                            <input type="radio" value="Trade" name="chkAcquisitionType3" @(Model.AcquisitionType == "Trade" ? "checked" : "") /> Trade<br />
+                        </div>
+                    </div>
+                </div>
+                <div class="inventory" style="@invDisplay">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Vehicle Status:</strong>
+                        </div>
+                    </div>
+                    @*<div class="row" style="margin-bottom: 15px;">
+                            <div class="col-sm-12">
+                                <input type="radio" value="All" name="chkStatusType" @(Model.StatusType == "All" ? "checked" : "") /> All<br />
+                                <input type="radio" value="Online" name="chkStatusType" @(Model.StatusType == "Online" ? "checked" : "") /> Online<br />
+                                <input type="radio" value="Retail" name="chkStatusType" @(Model.StatusType == "Retail" ? "checked" : "") /> Retail<br />
+                                <input type="radio" value="Other" name="chkStatusType" @(Model.StatusType == "Other" ? "checked" : "") /> Other<br />
+                            </div>
+                        </div>*@
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <input type="checkbox" value="1" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("1") ? "checked" : "") /> In Stock (1)<br />
+                            <input type="checkbox" value="2" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("2") ? "checked" : "") /> Deal Pending (2)<br />
+                            <input type="checkbox" value="3" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("3") ? "checked" : "") /> Demos (3)<br />
+                            <input type="checkbox" value="4" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("4") ? "checked" : "") /> Loaner (4)<br />
+                            <input type="checkbox" value="5" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("5") ? "checked" : "") /> Sold - Not Del (5)<br />
+                            <input type="checkbox" value="6" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("6") ? "checked" : "") /> Delivered (6)<br />
+                        </div>
+                        <div class="col-sm-6">
+                            <input type="checkbox" value="8" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("8") ? "checked" : "") /> Wholesale (8)<br />
+                            <input type="checkbox" value="9" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("9") ? "checked" : "") /> Whlsle/Auct (9)<br />
+                            <input type="checkbox" value="14" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("14") ? "checked" : "") /> Stop Sale (14)<br />
+                            <input type="checkbox" value="15" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("15") ? "checked" : "") /> Comp Veh (15)<br />
+                            <input type="checkbox" value="20" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("20") ? "checked" : "") /> Svc Loaner (20)<br />
+                            <input type="checkbox" value="21" id="chkStatusType" name="chkStatusType" @(Model.StatusType.Split(',').Contains("21") ? "checked" : "") /> Nextcar (21)<br />
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-separator" />
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkStatusFM" @(Model.StatusOnFM == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="OnFitzMall" name="chkStatusFM" @(Model.StatusOnFM == "OnFitzMall" ? "checked" : "") /> On FitzMall<br />
+                            <input type="radio" value="MissingFitzMall" name="chkStatusFM" @(Model.StatusOnFM == "MissingFitzMall" ? "checked" : "") /> Missing On FitzMall<br />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr class="hr-divider" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <strong>Acquisition Types:</strong>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkAcquisitionType" @(Model.AcquisitionType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="Purchase" name="chkAcquisitionType" @(Model.AcquisitionType == "Purchase" ? "checked" : "") /> Purchase<br />
+                            <input type="radio" value="Trade" name="chkAcquisitionType" @(Model.AcquisitionType == "Trade" ? "checked" : "") /> Trade<br />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <hr class="hr-divider" />
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-sm-12 text-right">
+                        <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+                    </div>
+                </div>
+
+
+                }
+
+            </div>
+    <div class="col-md-10">
+        <div class="row">
+
+            @if (Model.AppraisalSoldDetails != null || Model.TradeAcquisitionDetails != null)
+            {
+                <div class="col-md-12  report-parameters" style="padding-bottom:10px;">
+                    <div class="row">
+                        
+        
+                        <div class="col-md-2" style="padding-top:10px;">
+                            <input type="button" class="btn btn-primary" value="Print Report" onclick="window.print();return false;" />
+                        </div>
+                    </div>
+                </div>
+
+                if (Model.ReportType == "sales")
+                {
+                    @Html.Partial("_AppraisalReportByBreakdowns", Model)
+
+                    if (Model.CompareDates)
+                    {
+
+                    @Html.Partial("_AppraisalReportByBreakdownsCompare", Model)
+                    }
+                }
+                else if (Model.ReportType == "inventory")
+                {
+                    @Html.Partial("_AppraisalReportInvByBreakdowns", Model)
+
+                    if (Model.CompareDates)
+                    {
+
+                        @Html.Partial("_AppraisalReportInvByBreakdownsCompare", Model)
+                    }
+                }
+                else if (Model.ReportType == "combined")
+                {
+                    @Html.Partial("_AppraisalReportComboByBreakdowns", Model)
+
+                    if (Model.CompareDates)
+                    {
+
+                        @Html.Partial("_AppraisalReportComboByBreakdownsCompare", Model)
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>
+
+
+
+
+            @section scripts{
+
+                <script src="~/Scripts/Chosen/chosen.jquery.js" type="text/javascript"></script>
+                <script src="~/Scripts/Chosen/docsupport/prism.js" type="text/javascript" charset="utf-8"></script>
+                <script src="~/Scripts/Chosen/docsupport/init.js" type="text/javascript" charset="utf-8"></script>
+
+                <script type="text/javascript">
+
+                    //Set multiple values for a chosen select
+                    //var my_val = 3,4,6;
+                    //var str_array = my_val.split(',');
+                    //$("#set-corsi").val(str_array).trigger("chosen:updated");
+
+                    $(document).ready(function () {
+
+                        $("#breakdown1").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+                            
+                            $(breakdownType + "2").empty();
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "2").append("<option value=''></option>");
+                            $(breakdownType + '1 option').each(function () {
+
+                                if ($(breakdownType + "1").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "2").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $("#breakdown2").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "3").append("<option value=''></option>");
+                            $(breakdownType + '2 option').each(function () {
+
+                                if ($(breakdownType + "2").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "3").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $("#breakdown3").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "4").append("<option value=''></option>");
+                            $(breakdownType + '3 option').each(function () {
+
+                                if ($(breakdownType + "3").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "4").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $(".invbreakdowns1").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "2").empty();
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "2").append("<option value=''></option>");
+                            $(breakdownType + '1 option').each(function () {
+
+                                if ($(breakdownType + "1").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "2").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $(".invbreakdowns2").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "3").append("<option value=''></option>");
+                            $(breakdownType + '2 option').each(function () {
+
+                                if ($(breakdownType + "2").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "3").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $(".invbreakdowns3").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales" || $("#reportType").val() == "combined") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "4").append("<option value=''></option>");
+                            $(breakdownType + '3 option').each(function () {
+
+                                if ($(breakdownType + "3").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "4").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+                    
+                        $(".combobreakdowns1").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "combined") {
+                                breakdownType = ".combobreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "2").empty();
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "2").append("<option value=''></option>");
+                            $(breakdownType + '1 option').each(function () {
+
+                                if ($(breakdownType + "1").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "2").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $(".combobreakdowns2").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if ($("#reportType").val() == "combined") {
+                                breakdownType = ".combobreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "3").empty();
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "3").append("<option value=''></option>");
+                            $(breakdownType + '2 option').each(function () {
+
+                                if ($(breakdownType + "2").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "3").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $(".combobreakdowns3").change(function () {
+
+                            var breakdownType = "";
+                            if ($("#reportType").val() == "sales") {
+                                breakdownType = ".salesbreakdowns";
+                            }
+                            if($("#reportType").val() == "combined"){
+                                breakdownType = ".combobreakdowns";
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                breakdownType = ".invbreakdowns";
+                            }
+
+                            $(breakdownType + "4").empty();
+                            $(breakdownType + "4").append("<option value=''></option>");
+                            $(breakdownType + '3 option').each(function () {
+
+                                if ($(breakdownType + "3").val() != $(this).attr('value') && $(this).attr('value') != '') {
+                                    $(breakdownType + "4").append("<option value='" + $(this).attr('value') + "'>" + $(this).text() + "</option>");
+                                }
+                            });
+
+                        });
+
+                        $('#chkComparison').click(function () {
+
+                            if ($(".comparison-row").is(':visible')) {
+                                $('.comparison-row').hide();
+                            }
+                            else {
+                                $('.comparison-row').show();
+                            }
+
+                        });
+
+                        $('#reportType').change(function () {
+
+                            if ($("#reportType").val() == "sales")
+                            {
+                                $('.inventory').hide();
+                                $('.combo').hide();
+                                $('.sales').show();
+                            }
+                            if ($("#reportType").val() == "inventory") {
+                                $('.sales').hide();
+                                $('.combo').hide();
+                                $('.inventory').show();
+                            }
+                            if ($("#reportType").val() == "combined") {
+                                $('.combo').show();
+                                $('.sales').hide();
+                                $('.inventory').hide();
+                            }
+                        });
+
+
+                    });
+
+                </script>
+            }

@@ -382,7 +382,8 @@
             <div class="col-sm-12">
                 <input type="checkbox" id="chkBadDuplicates" name="chkBadDuplicates" @(Model.ExcludeBadDuplicates == true ? "checked" : "") /> Exclude Bad Duplicates<br/>
                 <input type="checkbox" id="chkShowExcluded" name="chkShowExcluded" @(Model.ShowExcludedGroups == true ? "checked" : "") /> Show Excluded Groups<br />
-                <input type="checkbox" id="chkExcludeAllBad" name="chkExcludeAllBad" @(Model.ExcludeAllBad == true ? "checked" : "") /> Exclude All Bad Leads
+                <input type="checkbox" id="chkExcludeAllBad" name="chkExcludeAllBad" @(Model.ExcludeAllBad == true ? "checked" : "") /> Exclude All Bad Leads<br/>
+                <input type="checkbox" id="chkIncludeHandyman" name="chkIncludeHandyman" @(Model.IncludeHandyman == false ? "checked" : "" ) /> Exclude Handyman Leads
             </div>
         </div>
 
@@ -1218,120 +1219,6 @@
 
                         });
 
-                        //$('input[type=radio][name=optBreakdown]').change(function () {
-
-                        //    var optSecondary = $('input[type=radio][name=optBreakdownSecondary]:checked')[0];
-
-                        //    if (this.value == 'location') {
-                        //        if (optSecondary.value == 'associate') {
-                        //            $('#location-associate').show();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').show();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').show();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //    }
-                        //    else if (this.value == 'brand') {
-                        //        if (optSecondary.value == 'associate') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').show();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').show();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').show();
-                        //        }
-                        //    }
-                        //});
-
-                        //$('input[type=radio][name=optBreakdownSecondary]').change(function () {
-                        //    var optBreakdown = $('input[type=radio][name=optBreakdown]:checked')[0];
-
-                        //    if (optBreakdown.value == 'location') {
-                        //        if (this.value == 'associate') {
-                        //            $('#location-associate').show();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').show();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').show();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //    }
-                        //    else if (optBreakdown.value == 'brand') {
-                        //        if (this.value == 'associate') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').show();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').show();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').show();
-                        //        }
-                        //    }
-                        //});
 
                     });
 

@@ -85,6 +85,10 @@
                 @using (Html.BeginForm())
                 {
                 <div class="row input-row">
+                    <input type="checkbox" id="action" name="action" @(Model.action == "on" ? "checked" : "")/><strong> No Activity over 14 days</strong>
+                </div>
+
+                <div class="row input-row">
                     <strong>Title Status</strong><br />
                     <select class="form-control" id="status" name="status" multiple>
                         <option value="ALL">All Title Status</option>
@@ -685,7 +689,13 @@
                                                                     break;
                                                             }
 
-                                                            <tr>
+                                                            var rowstyle = "";
+                                                            if (titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                                            {
+                                                                rowstyle = "background-color: #ff000014;";
+                                                            }
+
+                                                            <tr style="@rowstyle">
                                                                 @*<a class="editInfo" data-vin="@titleDue.VIN.Substring(titleDue.VIN.Length - 6)"> </a>*@
                                                                 <td class="text-center">@titleDue.VIN</td>
                                                                 @if (titleDue.VIN != null && titleDue.VIN != "")
@@ -721,9 +731,20 @@
                                                                     {
                                                                         <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
                                                                     }
+                                                                    @if (Session["UserId"].ToString() == "jaffer" || Session["UserId"].ToString() == "statlerc")
+                                                                    {
+                                                                        <a class="deleteVehicle" data-vin="@titleDue.VIN"><i class="fa fa-trash" aria-hidden="true"></i> Delete</a><br />
+                                                                    }
                                                                     @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
-                                                        {
-                                                                        @:@titleDue.UpdateUser - @titleDue.UpdateDate.ToShortDateString()
+                                                                    {
+                                                                        var fontcolor = "#333333";
+
+                                                                        if(titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                                                        {
+                                                                            fontcolor = "red";
+                                                                        }
+
+                                                                        @:@titleDue.UpdateUser - <span style="color:@fontcolor">@titleDue.UpdateDate.ToShortDateString()</span>
                                                                     }
 
                                                                 </td>
@@ -943,7 +964,13 @@
                                                                 break;
                                                         }
 
-                                                        <tr>
+                                                        var rowstyle = "";
+                                                        if (titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                                        {
+                                                            rowstyle = "background-color: #ff000014;";
+                                                        }
+
+                                                        <tr style="@rowstyle">
                                                             <td class="text-center">@titleDue.VIN</td>
                                                             @if (titleDue.VIN != null && titleDue.VIN != "")
                                                             {
@@ -952,8 +979,8 @@
                                                             else
                                                             {
                                                                 <td class="text-center"></td>
-                                                                    }
-<td class="text-center">@titleDue.StockNumber</td>
+                                                            }
+                                                            <td class="text-center">@titleDue.StockNumber</td>
                                                             <td class="text-center">@titleDue.Year</td>
                                                             <td class="text-center">@titleDue.Make</td>
                                                             <td class="text-center">@titleDue.Model</td>
@@ -965,7 +992,7 @@
                                                             </td>
                                                             <td class="text-center">@status</td>
                                                             <td class="text-center">@titleDue.BankName</td>
-                                                            <td class="text-center">@titleDue.BuyerName<br/>@titleDue.BuyerPhone<br/>@titleDue.BuyerEmail</td>
+                                                            <td class="text-center">@titleDue.BuyerName<br />@titleDue.BuyerPhone<br />@titleDue.BuyerEmail</td>
                                                             <td class="text-center">@titleDue.SalesAssociate1Name</td>
                                                             <td class="text-center">@titleDue.SalesAssociate2Name</td>
                                                             <td class="text-center">@titleDue.SalesManager</td>
@@ -976,13 +1003,24 @@
                                                             <td class="text-center">
                                                                 @if (titleDue.VIN != null && titleDue.VIN != "") //.VIN.Substring(titleDue.VIN.Length - 6)
                                                                 {
-                                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
+                                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br />
+                                                                }
+                                                                @if (Session["UserId"].ToString() == "jaffer" || Session["UserId"].ToString() == "statlerc")
+                                                                {
+                                                                    <a class="deleteVehicle" data-vin="@titleDue.VIN"><i class="fa fa-trash" aria-hidden="true"></i> Delete</a><br />
                                                                 }
                                                                 @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                                                                 {
-                                                                    @:@titleDue.UpdateUser - @titleDue.UpdateDate.ToShortDateString()
+                                                                    var fontcolor = "#333333";
+
+                                                                    if (titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                                                    {
+                                                                        fontcolor = "red";
+                                                                    }
+
+                                                                    @:@titleDue.UpdateUser - <span style="color:@fontcolor">@titleDue.UpdateDate.ToShortDateString()</span>
                                                                 }
-                                                                
+
                                                             </td>
                                                             <td class="text-center">
                                                                 @if (titleDue.Notes != null && titleDue.Notes != "")
@@ -1222,14 +1260,20 @@
                                                 break;
                                         }
 
-                                        <tr>
+                                        var rowstyle = "";
+                                        if (titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                        {
+                                            rowstyle = "background-color: #ff000014;";
+                                        }
+
+                                        <tr style="@rowstyle">
                                             <td class="text-center">@titleDue.VIN</td>
                                             @if (titleDue.VIN != null && titleDue.VIN != "")
                                             {
                                                 <td class="text-center">@titleDue.VIN.Substring(titleDue.VIN.Length - 6)</td>
-                                                    }
-                                                    else
-                                                    {
+                                            }
+                                            else
+                                            {
                                                 <td class="text-center">@titleDue.StockNumber</td>
                                             }
                                             <td class="text-center">@titleDue.StockNumber</td>
@@ -1244,7 +1288,7 @@
                                             </td>
                                             <td class="text-center">@status</td>
                                             <td class="text-center">@titleDue.BankName</td>
-                                            <td class="text-center">@titleDue.BuyerName<br/>@titleDue.BuyerPhone<br/>@titleDue.BuyerEmail</td>
+                                            <td class="text-center">@titleDue.BuyerName<br />@titleDue.BuyerPhone<br />@titleDue.BuyerEmail</td>
                                             <td class="text-center">@titleDue.SalesAssociate1Name</td>
                                             <td class="text-center">@titleDue.SalesAssociate2Name</td>
                                             <td class="text-center">@titleDue.SalesManager</td>
@@ -1255,11 +1299,22 @@
                                             <td class="text-center">
                                                 @if (titleDue.VIN != null && titleDue.VIN != "") //.VIN.Substring(titleDue.VIN.Length - 6)
                                                 {
-                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br/>
+                                                    <a class="editInfo" data-vin="@titleDue.VIN"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a><br />
+                                                }
+                                                @if (Session["UserId"].ToString() == "jaffer" || Session["UserId"].ToString() == "statlerc")
+                                                {
+                                                    <a class="deleteVehicle" data-vin="@titleDue.VIN"><i class="fa fa-trash" aria-hidden="true"></i> Delete</a><br />
                                                 }
                                                 @if (titleDue.UpdateUser != null && titleDue.UpdateUser != "")
                                                 {
-                                                    @:@titleDue.UpdateUser - @titleDue.UpdateDate.ToShortDateString()
+                                                    var fontcolor = "#333333";
+
+                                                    if (titleDue.UpdateDate < DateTime.Now.AddDays(-15))
+                                                    {
+                                                        fontcolor = "red";
+                                                    }
+
+                                                    @:@titleDue.UpdateUser - <span style="color:@fontcolor">@titleDue.UpdateDate.ToShortDateString()</span>
                                                 }
                                             </td>
                                             <td class="text-center">
@@ -1416,6 +1471,13 @@
                 dialogWidth = 1200;
             }
 
+            $('body').on('click', '.deleteVehicle', function (event) {            
+                var vin = $(this).attr("data-vin");
+                var url = '@applicationPath/Reports/DeleteTitleDue/?vin=' + vin
+                $.ajax({ url: url, success: DataRetrieved, type: 'POST', dataType: 'json' });
+            });
+
+
             $('body').on('click', '.editInfoSearch', function (event) {
                 var vin = $("#vin").val();
                 var stock = $("#stock").val();
@@ -1486,5 +1548,8 @@
 
         });
 
+        function DataRetrieved(data) {
+            location.reload();
+        }
     </script>
 }

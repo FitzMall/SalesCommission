@@ -310,13 +310,16 @@
                 <div class="row title-row">
                     <strong>Title Status</strong>
                 </div>
+                @if (ViewBag.CanOfficeValidate)
+                {
                 <div class="row" style="margin-bottom:15px;">
                     <div class="col-sm-12">
                         @Html.CheckBoxFor(x => x.ClearTitle, new { @class = "" }) Clear Title<br />
+                        @Html.CheckBoxFor(x => x.ElectronicTitle, new { @class = "" }) E-Title<br />
                     </div>
                 </div>
                 <div class="row" style="margin-bottom:15px;">
-                    <div class="col-sm-12">
+                    <div class="col-sm-6">
                         @{
                             var TitleDueCustomer = false;
 
@@ -331,16 +334,21 @@
                         }
                         @Html.CheckBoxFor(x => TitleDueCustomer, new { @class = "" }) Title Due Customer<br />
                         @Html.CheckBoxFor(x => x.LienDueCustomer, new { @class = "" }) Lien Due Customer<br />
+                        @Html.CheckBoxFor(x => x.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
                         @Html.CheckBoxFor(x => x.TitleDueBank, new { @class = "" }) Title Due Bank<br />
                         @Html.CheckBoxFor(x => x.LienDueBank, new { @class = "" }) Lien Due Bank<br />
-                        @Html.CheckBoxFor(x => x.DuplicateTitleAppliedFor, new { @class = "" }) Duplicate Title Applied For<br />
+
+
+                        @Html.CheckBoxFor(x => x.TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
+                        @Html.CheckBoxFor(x => x.TitleDueAuction, new { @class = "" }) Title Due Auction<br />
+                        
+                    </div>
+                    <div class="col-sm-6">
+
                         @Html.CheckBoxFor(x => x.WaitingOutSTTitle, new { @class = "" }) Waiting Out of State Title<br />
                         @Html.CheckBoxFor(x => x.PayoffDueCust, new { @class = "" }) Payoff Auth Due Customer<br />
                         @Html.CheckBoxFor(x => x.POADueCust, new { @class = "" }) POA Due Customer<br />
                         @Html.CheckBoxFor(x => x.OdomDueCustomer, new { @class = "" }) Odom Due Customer<br />
-                        @Html.CheckBoxFor(x => x.TitleDueInterco, new { @class = "" }) Title Due INTERCO<br />
-                        @Html.CheckBoxFor(x => x.TitleDueAuction, new { @class = "" }) Title Due Auction<br />
-                        @Html.CheckBoxFor(x => x.ElectronicTitle, new { @class = "" }) E-Title<br />
                     </div>
                 </div>
                 <div class="row">
@@ -353,7 +361,7 @@
                         @Html.CheckBoxFor(x => x.NoTitleDispose, new { @class = "" }) No Title - Dispose of Vehicle<br />
                     </div>
                 </div>
-
+                            }
             </div>
         </div>
 
@@ -414,69 +422,94 @@
             $('#ClearTitle').removeAttr('checked');
         });
 
+        $('#ElectronicTitle').click(function () {
+            $('#TitleDueCustomer').removeAttr('checked');
+            $('#LienDueCustomer').removeAttr('checked');
+            $('#TitleDueBank').removeAttr('checked');
+            $('#LienDueBank').removeAttr('checked');
+            $('#DuplicateTitleAppliedFor').removeAttr('checked');
+            $('#WaitingOutSTTitle').removeAttr('checked');
+            $('#PayoffDueCust').removeAttr('checked');
+            $('#POADueCust').removeAttr('checked');
+            $('#OdomDueCustomer').removeAttr('checked');
+            $('#TitleDueInterco').removeAttr('checked');
+            $('#TitleDueAuction').removeAttr('checked');
+            $('#Other').removeAttr('checked');
+            $('#ClearTitle').removeAttr('checked');
+            $('#NoTitleDispose').removeAttr('checked');
+        });
+
         $('#TitleDueCustomer').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#LienDueCustomer').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#TitleDueBank').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#LienDueBank').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#DuplicateTitleAppliedFor').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
+            alert("Check CVR for any Liens.");
         });
 
         $('#WaitingOutSTTitle').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#PayoffDueCust').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#POADueCust').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#OdomDueCustomer').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#TitleDueInterco').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#TitleDueAuction').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
-        });
-
-        $('#ElectronicTitle').click(function () {
-            $('#ClearTitle').removeAttr('checked');
-            $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
 
         $('#Other').click(function () {
             $('#ClearTitle').removeAttr('checked');
             $('#NoTitleDispose').removeAttr('checked');
+            $('#ElectronicTitle').removeAttr('checked');
         });
     </script>
 }

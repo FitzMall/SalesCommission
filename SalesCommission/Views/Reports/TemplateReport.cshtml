@@ -1,7 +1,7 @@
-﻿@model SalesCommission.Models.SalesReportModel
+﻿@model SalesCommission.Models.TemplateReportModel
 
 @{
-    ViewBag.Title = "Sales Report";
+    ViewBag.Title = "Template Report";
     var applicationPath = Request.ApplicationPath;
 
     if (applicationPath == "/")
@@ -11,48 +11,60 @@
 
     var storeLocations = new List<string>();
 
-    var brands = new List<string>();
+    if (Model.StoreLeadInformation != null)
+    {
+        foreach (var store in Model.StoreLeadInformation)
+        {
+            var storeName = store.StoreId;
 
-    brands.Add("Buick");
-    brands.Add("Cadillac");
-    brands.Add("Chevrolet");
-    brands.Add("Chrysler");
-    brands.Add("Dodge");
-    brands.Add("Genesis");
-    brands.Add("GMC");
-    brands.Add("Hyundai");
-    brands.Add("Jeep");
-    brands.Add("Mazda");
-    brands.Add("Mitsubishi");
-    brands.Add("Nissan");
-    brands.Add("RAM");
-    brands.Add("Subaru");
-    brands.Add("Toyota");
-    brands.Add("Volkswagen");
-    brands.Add("Used");
-    //brands.Add("Handyman");
-    brands.Add("Other");
-
-
-    var associates = new List<string>();
-    var leadSources = new List<string>();
-    var leadGroups = new List<string>();
-
-    var leadStatus = new List<string>();
-    var leadConditions = new List<string>();
-    var salesTeams = new List<string>();
-
+            foreach (var vinStore in SalesCommission.Business.Enums.VinStores)
+            {
+                if (vinStore.StoreId == store.DealerId)
+                {
+                    storeName = vinStore.Name;
+                }
+            }
+            storeLocations.Add(storeName);
+        }
+    }
 
 
     var breakDowns = new List<string>();
     var breakDownValues = new List<string>();
 
+    breakDowns.Add("Associate");
+    breakDownValues.Add("associatename");
+
+    //breakDowns.Add("Brand");
+    //breakDownValues.Add("brand");
 
     breakDowns.Add("Inventory Type");
     breakDownValues.Add("inventorytype");
 
+    breakDowns.Add("Lead Date");
+    breakDownValues.Add("leaddate");
+
+    breakDowns.Add("Lead Time");
+    breakDownValues.Add("leadtime");
+
+    breakDowns.Add("Lead Month Year");
+    breakDownValues.Add("leadmonthyear");
+
+
+    breakDowns.Add("Lead Group");
+    breakDownValues.Add("leadgroupname");
+
+    breakDowns.Add("Lead Source");
+    breakDownValues.Add("leadsourcename");
+
+    breakDowns.Add("Lead Condition");
+    breakDownValues.Add("leadstatusname");
+
+    breakDowns.Add("Lead Status");
+    breakDownValues.Add("leadstatustype");
+
     breakDowns.Add("Location");
-    breakDownValues.Add("location");
+    breakDownValues.Add("locationid");
 
     breakDowns.Add("Make");
     breakDownValues.Add("make");
@@ -60,11 +72,14 @@
     breakDowns.Add("Model");
     breakDownValues.Add("model");
 
-    breakDowns.Add("Month Year");
-    breakDownValues.Add("monthyear");
+    breakDowns.Add("Sales Team");
+    breakDownValues.Add("salesteam");
 
-    breakDowns.Add("Vehicle Condition");
-    breakDownValues.Add("condition");
+    breakDowns.Add("Stock Number");
+    breakDownValues.Add("stock");
+
+    breakDowns.Add("Zip Code");
+    breakDownValues.Add("zip");
 
 }
 @section CSS
@@ -166,394 +181,165 @@
 
 <div class="row" style="margin-top:25px;">
     <div class="col-sm-2 report-parameters">
-    <h4>Lead Report Parameters</h4>
+    <h4>Template Report Parameters</h4>
     @using (Html.BeginForm())
     {
-        <div class="row" style="margin-top:5px;margin-bottom:5px">
+
+
+        <div class="row">
             <div class="col-sm-12">
-                <strong>Start Date:</strong>
+                <hr class="hr-divider" />
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-6">
-                @Html.DropDownListFor(n => n.ReportStartMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
+            <div class="col-sm-12">
+                <strong>Breakdowns:</strong>
             </div>
-            <div class="col-sm-6">
-                @Html.DropDownListFor(n => n.ReportStartYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <select id="breakdown1" name="breakdown1" class="form-control form-inline">
+                    <option value=""></option>
+
+                    @{
+                        var index = 0;
+                        foreach (var breakdown in breakDowns)
+                        {
+                            <option value="@breakDownValues[index]" @(Model.BreakDownLevel1 == breakDownValues[index] ? "selected" : "")>@breakdown</option>
+                            index += 1;
+                        }
+
+                    }
+
+                    
+                    @*<option value="brand" @(Model.BreakDownLevel1 == "brand" ? "selected" : "")>Brand</option>
+                    <option value="leadgroupname" @(Model.BreakDownLevel1 == "leadgroupname" ? "selected" : "")>Lead Group</option>
+                    <option value="leadsourcename" @(Model.BreakDownLevel1 == "leadsourcename" ? "selected" : "")>Lead Source</option>
+                    <option value="locationid" @(Model.BreakDownLevel1 == "locationid" ? "selected" : "")>Location</option>*@
+                </select>
+            </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+            <div class="col-sm-12">
+                <select id="breakdown2" name="breakdown2" class="form-control form-inline">
+                    <option value=""></option>
+                    @{
+                        var index2 = 0;
+                        foreach (var breakdown in breakDowns)
+                        {
+                            if (@breakDownValues[index2] != Model.BreakDownLevel1)
+                            {
+                                <option value="@breakDownValues[index2]" @(Model.BreakDownLevel2 == breakDownValues[index2] ? "selected" : "")>@breakdown</option>
+                            }
+                            index2 += 1;
+                        }
+
+                        }
+
+                </select>
+            </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+            <div class="col-sm-12">
+                <select id="breakdown3" name="breakdown3" class="form-control form-inline">
+                    <option value=""></option>
+                    @{
+                        var index3 = 0;
+                        foreach (var breakdown in breakDowns)
+                        {
+                            if (breakDownValues[index3] != Model.BreakDownLevel2 && breakDownValues[index3] != Model.BreakDownLevel1)
+                            {
+                                <option value="@breakDownValues[index3]" @(Model.BreakDownLevel3 == breakDownValues[index3] ? "selected" : "")>@breakdown</option>
+                            }
+                            index3 += 1;
+                        }
+
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+            <div class="col-sm-12">
+                <select id="breakdown4" name="breakdown4" class="form-control form-inline">
+                    <option value=""></option>
+                    @{
+                        var index4 = 0;
+                        foreach (var breakdown in breakDowns)
+                        {
+                            if (breakDownValues[index4] != Model.BreakDownLevel3 && breakDownValues[index4] != Model.BreakDownLevel2 && breakDownValues[index4] != Model.BreakDownLevel1)
+                            {
+                                <option value="@breakDownValues[index4]" @(Model.BreakDownLevel4 == breakDownValues[index4] ? "selected" : "")>@breakdown</option>
+                            }
+                            index4 += 1;
+                        }
+
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <strong>Lead Type Filters:</strong>
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-sm-12">
+                <input type="checkbox" id="chkBadDuplicates" name="chkBadDuplicates" @(Model.ExcludeBadDuplicates == true ? "checked" : "") /> Exclude Bad Duplicates<br/>
+                <input type="checkbox" id="chkShowExcluded" name="chkShowExcluded" @(Model.ShowExcludedGroups == true ? "checked" : "") /> Show Excluded Groups<br />
+                <input type="checkbox" id="chkExcludeAllBad" name="chkExcludeAllBad" @(Model.ExcludeAllBad == true ? "checked" : "") /> Exclude All Bad Leads
             </div>
         </div>
 
-            <div class="row" style="margin-top:5px;margin-bottom:5px">
-
-                <div class="col-sm-6">
-                    <strong>End Date:</strong>
-                </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
             </div>
-            <div class="row">
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportEndMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportEndYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-            </div>
-
-
-            <div class="row">
-                <div class="col-sm-12">
-                    <input type="checkbox" id="chkComparison" name="chkComparison" @(Model.CompareDates == true ? "checked" : "") /> Compare Date Ranges
-                </div>
-            </div>
-
-
-            var displayCompare = "display:none;";
-            if (Model.CompareDates == true)
-            {
-            displayCompare = "";
-            }
-
-
-
-            <div class="row comparison-row" style="@displayCompare">
-                <div class="col-sm-12">
-                    <hr class="hr-divider" />
-                </div>
-            </div>
-            <div class="row comparison-row" style="margin-top:5px;margin-bottom:5px;@displayCompare">
-                <div class="col-sm-12">
-                    <strong>Comparison Start Date:</strong>
-                </div>
-            </div>
-            <div class="row comparison-row" style="@displayCompare">
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportComparisonStartMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportComparisonStartYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-            </div>
-
-            <div class="row comparison-row" style="margin-top:5px;margin-bottom:5px;@displayCompare">
-
-                <div class="col-sm-12">
-                    <strong>Comparison End Date:</strong>
-                </div>
-            </div>
-            <div class="row comparison-row" style="@displayCompare">
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportComparisonEndMonth, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-                <div class="col-sm-6">
-                    @Html.DropDownListFor(n => n.ReportComparisonEndYear, new SelectList(SalesCommission.Business.Enums.Years, "YearId", "Name"), new { @class = "form-control form-inline" })
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-sm-12">
-                    <hr class="hr-divider" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <strong>Report Type:</strong>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <select id="reportType" name="reportType" class="form-control form-inline">
-                        <option value="sales">Monthly Sales Report</option>    
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <hr class="hr-divider" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <strong>Breakdowns:</strong>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <select id="breakdown1" name="breakdown1" class="form-control form-inline">
-                        <option value=""></option>
-
-                        @{
-                            var index = 0;
-                            foreach (var breakdown in breakDowns)
-                            {
-                                <option value="@breakDownValues[index]" @(Model.BreakDownLevel1 == breakDownValues[index] ? "selected" : "")>@breakdown</option>
-                                index += 1;
-                            }
-
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-                <div class="col-sm-12">
-                    <select id="breakdown2" name="breakdown2" class="form-control form-inline">
-                        <option value=""></option>
-                        @{
-                            var index2 = 0;
-                            foreach (var breakdown in breakDowns)
-                            {
-                                if (@breakDownValues[index2] != Model.BreakDownLevel1)
-                                {
-                                    <option value="@breakDownValues[index2]" @(Model.BreakDownLevel2 == breakDownValues[index2] ? "selected" : "")>@breakdown</option>
-                                }
-                                index2 += 1;
-                            }
-
-                        }
-
-                    </select>
-                </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-                <div class="col-sm-12">
-                    <select id="breakdown3" name="breakdown3" class="form-control form-inline">
-                        <option value=""></option>
-                        @{
-                            var index3 = 0;
-                            foreach (var breakdown in breakDowns)
-                            {
-                                if (breakDownValues[index3] != Model.BreakDownLevel2 && breakDownValues[index3] != Model.BreakDownLevel1)
-                                {
-                                    <option value="@breakDownValues[index3]" @(Model.BreakDownLevel3 == breakDownValues[index3] ? "selected" : "")>@breakdown</option>
-                                }
-                                index3 += 1;
-                            }
-
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-                <div class="col-sm-12">
-                    <select id="breakdown4" name="breakdown4" class="form-control form-inline">
-                        <option value=""></option>
-                        @{
-                            var index4 = 0;
-                            foreach (var breakdown in breakDowns)
-                            {
-                                if (breakDownValues[index4] != Model.BreakDownLevel3 && breakDownValues[index4] != Model.BreakDownLevel2 && breakDownValues[index4] != Model.BreakDownLevel1)
-                                {
-                                    <option value="@breakDownValues[index4]" @(Model.BreakDownLevel4 == breakDownValues[index4] ? "selected" : "")>@breakdown</option>
-                                }
-                                index4 += 1;
-                            }
-
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <hr class="hr-divider" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <strong>Vehicle Types:</strong>
-                </div>
-            </div>
-            <div class="row" style="margin-bottom: 15px;">
-                <div class="col-sm-12">
-                    <input type="radio" value="All" name="chkVehicleType" @(Model.VehicleType == "All" ? "checked" : "") /> All<br />
-                    <input type="radio" value="New" name="chkVehicleType" @(Model.VehicleType == "New" ? "checked" : "") /> New<br />
-                    <input type="radio" value="Used" name="chkVehicleType" @(Model.VehicleType == "Used" ? "checked" : "") /> Used<br />
-                    <input type="radio" value="Handyman" name="chkVehicleType" @(Model.VehicleType == "Handyman" ? "checked" : "") /> Handyman<br />
-                    @*<input type="radio" value="Unspecified" name="chkVehicleType" @(Model.VehicleType == "Unspecified" ? "checked" : "") /> Unspecified<br />*@
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-sm-12">
-                    <hr class="hr-divider" />
-                </div>
-            </div>
-            <div class="row" style="margin-bottom: 15px;">
-                <div class="col-sm-12 text-right">
-                    <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
-                </div>
-            </div>
-
-
-            }
-
-            @*@if (Model.StoreLeadInformation != null)
-                {
-                    <div class="row" style="margin-top:25px;">
-                        <div class="col-sm-12">
-                            <h4>Report URL</h4>
-                            <hr class="hr-divider" />
-                        </div>
-                    </div>
+        </div>
                     <div class="row">
                         <div class="col-sm-12">
-                            @{
-                                var reportURL = "";
-
-                                if (Model.CompareDates)
-                                {
-                                    reportURL = Request.Url.AbsoluteUri.Replace("LeadReport", "SavedLeadReport") + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "&bd2=" + Model.BreakDownLevel2 + "&bd3=" + Model.BreakDownLevel3 + "&bd4=" + Model.BreakDownLevel4 + "&vt=" + Model.VehicleType + "&compstartdate=" + Model.ComparisonReportStartDate.ToShortDateString() + "&compenddate=" + Model.ComparisonReportEndDate.ToShortDateString();
-                                }
-                                else
-                                {
-                                    reportURL = Request.Url.AbsoluteUri.Replace("LeadReport", "SavedLeadReport") + "?startdate=" + Model.ReportStartDate.ToShortDateString() + "&enddate=" + Model.ReportEndDate.ToShortDateString() + "&bd1=" + Model.BreakDownLevel1 + "&bd2=" + Model.BreakDownLevel2 + "&bd3=" + Model.BreakDownLevel3 + "&bd4=" + Model.BreakDownLevel4 + "&vt=" + Model.VehicleType;
-                                }
-                            }
-
-                            <textarea id="reportURL" name="reportURL" class="form-control form-inline">@reportURL</textarea>
+                            <strong>Vehicle Types:</strong>
                         </div>
                     </div>
-
-                    if (Model.AssociateLeads != null)
-                    {
-                        // Setup the distinct values of each filter...
-
-                        <div class="row" style="margin-top:25px;">
-                            <div class="col-sm-12">
-                                <h4>Filter Options</h4>
-                                <hr class="hr-divider" />
-                            </div>
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <input type="radio" value="All" name="chkVehicleType" @(Model.VehicleType == "All" ? "checked" : "") /> All<br />
+                            <input type="radio" value="New" name="chkVehicleType" @(Model.VehicleType == "New" ? "checked" : "") /> New<br />
+                            <input type="radio" value="Used" name="chkVehicleType" @(Model.VehicleType == "Used" ? "checked" : "") /> Used<br />
+                            <input type="radio" value="Handyman" name="chkVehicleType" @(Model.VehicleType == "Handyman" ? "checked" : "") /> Handyman<br />
+                            <input type="radio" value="Unspecified" name="chkVehicleType" @(Model.VehicleType == "Unspecified" ? "checked" : "") /> Unspecified<br />
+                            @*<input type="checkbox" id="chkVehicleTypeCPO" name="chkVehicleTypeCPO" /> CPO<br />
+                            <input type="checkbox" id="chkVehicleTypeMgrSpecial" name="chkVehicleTypeMgrSpecial" /> Manager Special<br />*@
                         </div>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <strong>Report Type:</strong>
-                            </div>
-                            <div class="col-sm-6">
-
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <input type="radio" id="optReportDisplay" name="optReportDisplay" value="leads" checked /> Leads
-                            </div>
-                            <div class="col-sm-6">
-                                <input type="radio" id="optReportDisplay" name="optReportDisplay" value="appointments" /> Appointments
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <hr class="hr-divider" />
-                            </div>
-                        </div>
-                                }
-                                }*@
-
+                    </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <hr class="hr-divider" />
+            </div>
         </div>
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-sm-12 text-right">
+                <button class="btn btn-primary" type="submit" value="submit" name="Submit">Submit</button>
+            </div>
+        </div>
+
+
+    }
+]
+
+                </div>
     <div class="col-md-10">
         <div class="row">
 
-            @if (Model.SalesReportDetails != null)
-            {
-                <div class="col-md-12  report-parameters" style="padding-bottom:10px;">
-                    <div class="row">
-                        
-                        @*<div class="col-md-2 text-center">
-                            <strong>Lead Condition</strong>
-                            <select id="leadconditions" name="leadconditions" class="form-control form-inline chosen-select" multiple>
-                                <option value="ALL">All</option>
-                                @foreach (var condition in leadConditions)
-                                {
-                                    <option value="@condition">@condition</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <strong>Lead Group</strong>
-                            <select id="leadgroups" name="leadgroups" class="form-control form-inline chosen-select" multiple>
-                                <option value="ALL">All</option>
-                                @foreach (var group in leadGroups)
-                                {
-                                    <option value="@group">@group</option>
-                                }
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-2 text-center">
-                            <strong>Lead Status</strong>
-                            <select id="leadstatus" name="leadstatus" class="form-control form-inline chosen-select" multiple>
-                                <option value="ALL">All</option>
-                                @foreach (var status in leadStatus)
-                                {
-                                    <option value="@status">@status</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <strong>Location</strong>
-                            <select id="locations" name="locations" class="form-control form-inline chosen-select" multiple>
-                                <option value="ALL">All</option>
-                                @foreach (var location in storeLocations)
-                                {
-                                    <option value="@location.Replace(" ","-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")">@location</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <strong>Sales Teams</strong>
-                            <select id="salesteams" name="salesteams" class="form-control form-inline chosen-select" multiple>
-                                <option value="ALL">All</option>
-                                @foreach (var team in salesTeams)
-                                {
-                                    <option value="@team.Replace(" ","-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")">@team</option>
-                                }
-                            </select>
-                        </div>*@
-                        <div class="col-md-2" style="padding-top:10px;">
-                            <input type="button" class="btn btn-primary" value="Print Report" onclick="window.print();return false;" />
-                        </div>
-                    </div>
-                </div>
-
-                //if(Model.VehicleType != "All")
-                //{
-                //    if (Model.VehicleType == "New")
-                //    {
-                //       // Model.AssociateLeads = Model.AssociateLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
-                //    }
-                //    else if (Model.VehicleType == "Used")
-                //    {
-                //        //Model.AssociateLeads = Model.AssociateLeads.FindAll(x => x.VOfInterest_InventoryType == "U");
-                //    }
-                //    else if (Model.VehicleType == "Unspecified")
-                //    {
-                //        //Model.AssociateLeads = Model.AssociateLeads.FindAll(x => x.VOfInterest_InventoryType != "U" && x.VOfInterest_InventoryType != "N" && !x.LeadSourceName.Contains("~"));
-                //    }
-                //    else
-                //    {
-                //        //Model.AssociateLeads = Model.AssociateLeads.FindAll(x => x.LeadSourceName.Contains("~"));
-                //    }
-                //}
 
 
-                @Html.Partial("_SalesReportByBreakdowns", Model)
+                @Html.Partial("_TemplateReportByBreakdowns", Model)
 
-                if (Model.CompareDates)
-                {
-                    //if (Model.VehicleType != "All")
-                    //{
-                    //    if (Model.VehicleType == "New")
-                    //    {
-                    //        //  Model.ComparisonLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_InventoryType == "N");
-                    //    }
-                    //    else if (Model.VehicleType == "Used")
-                    //    {
-                    //        //Model.ComparisonLeads = Model.ComparisonLeads.FindAll(x => x.VOfInterest_InventoryType == "U");
-                    //    }
-                    //    else
-                    //    {
-                    //        //Model.ComparisonLeads = Model.ComparisonLeads.FindAll(x => x.LeadSourceName.Contains("~"));
-                    //    }
-                    //}
-                    @Html.Partial("_SalesReportByBreakdownsCompare", Model)
-                }
-
-                @*@Html.Partial("_AppointmentReportByBreakdowns", Model)*@
+             
 
             }
         </div>
@@ -1018,120 +804,6 @@
 
                         });
 
-                        //$('input[type=radio][name=optBreakdown]').change(function () {
-
-                        //    var optSecondary = $('input[type=radio][name=optBreakdownSecondary]:checked')[0];
-
-                        //    if (this.value == 'location') {
-                        //        if (optSecondary.value == 'associate') {
-                        //            $('#location-associate').show();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').show();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').show();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //    }
-                        //    else if (this.value == 'brand') {
-                        //        if (optSecondary.value == 'associate') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').show();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').show();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (optSecondary.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').show();
-                        //        }
-                        //    }
-                        //});
-
-                        //$('input[type=radio][name=optBreakdownSecondary]').change(function () {
-                        //    var optBreakdown = $('input[type=radio][name=optBreakdown]:checked')[0];
-
-                        //    if (optBreakdown.value == 'location') {
-                        //        if (this.value == 'associate') {
-                        //            $('#location-associate').show();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').show();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').show();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //    }
-                        //    else if (optBreakdown.value == 'brand') {
-                        //        if (this.value == 'associate') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').show();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-source') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').show();
-                        //            $('#brand-lead-group').hide();
-                        //        }
-                        //        else if (this.value == 'lead-group') {
-                        //            $('#location-associate').hide();
-                        //            $('#location-lead-source').hide();
-                        //            $('#location-lead-group').hide();
-                        //            $('#brand-associate').hide();
-                        //            $('#brand-lead-source').hide();
-                        //            $('#brand-lead-group').show();
-                        //        }
-                        //    }
-                        //});
 
                     });
 

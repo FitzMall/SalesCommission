@@ -199,6 +199,8 @@ namespace SalesCommission.Controllers
                 }
             }
 
+            ViewBag.CanOfficeValidate = bool.Parse(Session["CanOfficeValidate"].ToString());
+
             return View(titleDue);
         }
 
@@ -206,6 +208,7 @@ namespace SalesCommission.Controllers
         public ActionResult AddTitleDue(TitleDue titleDue)
         {
             ViewBag.IsLookup = false;
+            ViewBag.CanOfficeValidate = bool.Parse(Session["CanOfficeValidate"].ToString());
 
             if (Request.Form != null && Request.Form["btnLookup"] != null)
             {
@@ -331,7 +334,7 @@ namespace SalesCommission.Controllers
         }
 
         [HttpPost]
-        public ActionResult TitleDue(string loc, string[] status, string[] invstatus)
+        public ActionResult TitleDue(string loc, string[] status, string[] invstatus, string action)
         {
             var titleDueModel = new TitleDueModel();
 
@@ -607,10 +610,17 @@ namespace SalesCommission.Controllers
 
                 titleDueModel.TitleDue = finalTitleDue;
             }
-            
-            
+
+            if (action == "on")
+            {
+                var olderTitleDue = titleDueModel.TitleDue.FindAll(x => x.UpdateDate < DateTime.Now.AddDays(-15));
+                titleDueModel.TitleDue = olderTitleDue;
+            }
+
             var removeDups   = titleDueModel.TitleDue.Distinct().ToList();
             titleDueModel.TitleDue = removeDups;
+
+            titleDueModel.action = action;
 
             return View(titleDueModel);
         }
@@ -1497,6 +1507,5106 @@ namespace SalesCommission.Controllers
 
             return View(leadReportModel);
         }
+
+        public ActionResult AppraisalReportLeadDetails(string stock, string vin)
+        {
+            var appraisalReportLeadModel = new AppraisalReportLeadDetailsModel();
+
+            appraisalReportLeadModel.StockNumber = stock;
+            appraisalReportLeadModel.VIN = vin;
+
+            appraisalReportLeadModel.AssociateLeads = SqlQueries.GetVehicleLeadInformation(stock, vin);
+
+            return View(appraisalReportLeadModel);
+        }
+
+        public ActionResult ExceptionReport()
+        {
+            var exceptionReportModel = new ExceptionReportModel();
+
+            exceptionReportModel.DealType = "Finance";
+            exceptionReportModel.ReportEndMonth = DateTime.Now.Month;
+            exceptionReportModel.ReportEndYear = DateTime.Now.Year;
+
+            exceptionReportModel.ReportStartMonth = DateTime.Now.AddMonths(-1).Month;
+            exceptionReportModel.ReportStartYear = DateTime.Now.AddMonths(-1).Year;
+            
+            return View(exceptionReportModel);
+        }
+
+        [HttpPost]
+        public ActionResult ExceptionReport(ExceptionReportModel exceptionReportModel)
+        {
+            if (Request.Form["breakdown1"] != null)
+            {
+                exceptionReportModel.BreakDownLevel1 = Request.Form["breakdown1"];
+            }
+
+            if (Request.Form["breakdown2"] != null)
+            {
+                exceptionReportModel.BreakDownLevel2 = Request.Form["breakdown2"];
+            }
+
+            if (Request.Form["breakdown3"] != null)
+            {
+                exceptionReportModel.BreakDownLevel3 = Request.Form["breakdown3"];
+            }
+
+            if (Request.Form["breakdown4"] != null)
+            {
+                exceptionReportModel.BreakDownLevel4 = Request.Form["breakdown4"];
+            }
+
+            var dealType = "All";
+            if (Request.Form["chkDealType"] != null)
+            {
+                dealType = Request.Form["chkDealType"];
+            }
+            else if (Request.Form["chkDealType"] != null)
+            {
+                dealType = Request.Form["chkDealType"];
+            }
+            exceptionReportModel.DealType = dealType;
+
+            var reportDate = new DateTime(Convert.ToInt32(exceptionReportModel.ReportStartYear), Convert.ToInt32(exceptionReportModel.ReportStartMonth), 4);
+            var reportEndDate = new DateTime(Convert.ToInt32(exceptionReportModel.ReportEndYear), Convert.ToInt32(exceptionReportModel.ReportEndMonth), 6); //.AddMonths(1);
+
+            exceptionReportModel.ExceptionDetails = SqlMapperUtil.StoredProcWithParams<IndividualDealDetails>("sp_SalesLogReportGetAllDealsByDateRange", new { ReportStartDate = reportDate.Date, ReportEndDate = reportEndDate.Date }, "SalesCommission");
+
+
+            //Exclude the Lease Deals
+            exceptionReportModel.ExceptionDetails = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleCategory != "L");
+
+            if (dealType != "All")
+            {
+                if (dealType == "Finance")
+                {
+                    exceptionReportModel.ExceptionDetails = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleTerm != 1);
+
+                }
+                else if (dealType == "Cash")
+                {
+                    exceptionReportModel.ExceptionDetails = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleTerm == 1);
+
+                }
+
+            }
+
+            foreach (var detail in exceptionReportModel.ExceptionDetails)
+            {
+                if (detail.sl_FinMgr == null)
+                {
+                    detail.sl_FinMgr = "None";
+                }
+                if (detail.sl_SalesAssociate1 == null)
+                {
+                    detail.sl_SalesAssociate1 = "None";
+                }
+                if (detail.sl_rate_exception == null || detail.sl_rate_exception == "")
+                {
+                    detail.sl_rate_exception = "Cash Deal";
+                }
+                if (detail.sl_price_variance_exception == null)
+                {
+                    detail.sl_price_variance_exception = "";
+                }
+            }
+
+            return View(exceptionReportModel);
+        }
+
+        public ActionResult AppraisalReport()
+        {
+            var appraisalReportModel = new AppraisalReportModel();
+
+            appraisalReportModel.VehicleType = "Retail";
+            appraisalReportModel.AcquisitionType = "All";
+            appraisalReportModel.StatusOnFM = "OnFitzMall";
+            appraisalReportModel.ReportType = "sales";
+            appraisalReportModel.StatusType = "1,2";
+
+            appraisalReportModel.ReportEndMonth = DateTime.Now.Month;
+            appraisalReportModel.ReportEndYear = DateTime.Now.Year;
+
+            appraisalReportModel.ReportStartMonth = DateTime.Now.AddMonths(-1).Month;
+            appraisalReportModel.ReportStartYear = DateTime.Now.AddMonths(-1).Year;
+
+            appraisalReportModel.ReportComboEndMonth = DateTime.Now.Month;
+            appraisalReportModel.ReportComboEndYear = DateTime.Now.Year;
+
+            appraisalReportModel.ReportComboStartMonth = DateTime.Now.AddMonths(-1).Month;
+            appraisalReportModel.ReportComboStartYear = DateTime.Now.AddMonths(-1).Year;
+
+            appraisalReportModel.ReportComparisonEndMonth = DateTime.Now.AddMonths(-1).Month;
+            appraisalReportModel.ReportComparisonEndYear = DateTime.Now.AddMonths(-1).Year;
+
+            appraisalReportModel.ReportComparisonStartMonth = DateTime.Now.AddMonths(-2).Month;
+            appraisalReportModel.ReportComparisonStartYear = DateTime.Now.AddMonths(-2).Year;
+
+            return View(appraisalReportModel);
+        }
+
+
+        [HttpPost]
+        public ActionResult AppraisalReport(AppraisalReportModel appraisalReportModel)
+        {
+            var vehicleType = "All";
+            var acquisitionType = "All";
+            var statusType = "1";
+            var statusOnFM = "All";
+            var breakdownIndex = 0;
+
+            var breakdown1Filters = "";
+            var breakdown2Filters = "";
+            var breakdown3Filters = "";
+            var breakdown4Filters = "";
+
+            var bFilterResults = false;
+
+            if (Request.Form["Filter"] != null && Request.Form["Filter"] == "Filter")
+            {
+                if (Request.Form["vt"] != null)
+                {
+                    vehicleType = Request.Form["vt"];
+                }
+                appraisalReportModel.VehicleType = vehicleType;
+
+                if (Request.Form["at"] != null)
+                {
+                    acquisitionType = Request.Form["at"];
+                }
+                appraisalReportModel.AcquisitionType = acquisitionType;
+
+                if (Request.Form["rt"] != null)
+                {
+                    appraisalReportModel.ReportType = Request.Form["rt"];
+                }
+
+                if (Request.Form["st"] != null)
+                {
+                    statusType = Request.Form["st"];
+                }
+
+                appraisalReportModel.StatusType = statusType;
+
+                if (Request.Form["sfm"] != null)
+                {
+                    statusOnFM = Request.Form["sfm"];
+                }
+
+                appraisalReportModel.StatusOnFM = statusOnFM;
+
+                if (Request.Form["bd1"] != null)
+                {
+                    appraisalReportModel.BreakDownLevel1 = Request.Form["bd1"].ToString();
+                    bFilterResults = true;
+                }
+
+                if (Request.Form["bd2"] != null)
+                {
+                    appraisalReportModel.BreakDownLevel2 = Request.Form["bd2"].ToString();
+                    bFilterResults = true;
+                }
+
+                if (Request.Form["bd3"] != null)
+                {
+                    appraisalReportModel.BreakDownLevel3 = Request.Form["bd3"].ToString();
+                    bFilterResults = true;
+                }
+
+                if (Request.Form["bd4"] != null)
+                {
+                    appraisalReportModel.BreakDownLevel4 = Request.Form["bd4"].ToString();
+                    bFilterResults = true;
+                }
+
+                appraisalReportModel.ReportStartYear = Convert.ToInt32(Request.Form["startyear"]);
+                appraisalReportModel.ReportStartMonth = Convert.ToInt32(Request.Form["startmonth"]);
+
+                appraisalReportModel.ReportEndYear = Convert.ToInt32(Request.Form["endyear"]);
+                appraisalReportModel.ReportEndMonth = Convert.ToInt32(Request.Form["endmonth"]);
+
+                appraisalReportModel.ReportComboStartYear = Convert.ToInt32(Request.Form["startyear"]);
+                appraisalReportModel.ReportComboStartMonth = Convert.ToInt32(Request.Form["startmonth"]);
+
+                appraisalReportModel.ReportComboEndYear = Convert.ToInt32(Request.Form["endyear"]);
+                appraisalReportModel.ReportComboEndMonth = Convert.ToInt32(Request.Form["endmonth"]);
+
+                if (Request.Form["filterBreakdown1"] != null)
+                {
+                    breakdown1Filters = Request.Form["filterBreakdown1"].ToString();
+                    appraisalReportModel.BreakDown1Filters = breakdown1Filters;
+                }
+
+                if (Request.Form["filterBreakdown2"] != null)
+                {
+                    breakdown2Filters = Request.Form["filterBreakdown2"].ToString();
+                    appraisalReportModel.BreakDown2Filters = breakdown2Filters;
+                }
+
+                if (Request.Form["filterBreakdown3"] != null)
+                {
+                    breakdown3Filters = Request.Form["filterBreakdown3"].ToString();
+                    appraisalReportModel.BreakDown3Filters = breakdown3Filters;
+                }
+
+                if (Request.Form["filterBreakdown4"] != null)
+                {
+                    breakdown4Filters = Request.Form["filterBreakdown4"].ToString();
+                    appraisalReportModel.BreakDown4Filters = breakdown4Filters;
+                }
+
+
+            }
+            else
+            {
+
+                if (Request.Form["chkVehicleType"] != null)
+                {
+                    vehicleType = Request.Form["chkVehicleType"];
+                }
+                else if (Request.Form["chkVehicleType3"] != null)
+                {
+                    vehicleType = Request.Form["chkVehicleType3"];
+                }
+
+                appraisalReportModel.VehicleType = vehicleType;
+
+                if (Request.Form["chkAcquisitionType"] != null)
+                {
+                    acquisitionType = Request.Form["chkAcquisitionType"];
+                }
+                else if (Request.Form["chkAcquisitionType2"] != null)
+                {
+                    acquisitionType = Request.Form["chkAcquisitionType2"];
+                }
+                else if (Request.Form["chkAcquisitionType3"] != null)
+                {
+                    acquisitionType = Request.Form["chkAcquisitionType3"];
+                }
+
+                appraisalReportModel.AcquisitionType = acquisitionType;
+
+                if (Request.Form["reportType"] != null)
+                {
+                    appraisalReportModel.ReportType = Request.Form["reportType"];
+                }
+
+
+                if (Request.Form["chkStatusType"] != null)
+                {
+                    statusType = Request.Form["chkStatusType"];
+                }
+
+                appraisalReportModel.StatusType = statusType;
+
+                if (Request.Form["chkStatusFM"] != null)
+                {
+                    statusOnFM = Request.Form["chkStatusFM"];
+                }
+
+                appraisalReportModel.StatusOnFM = statusOnFM;
+
+
+                if (appraisalReportModel.ReportType == "sales")
+                {
+                    breakdownIndex = 0;
+                }
+                else if (appraisalReportModel.ReportType == "combined")
+                {
+                    breakdownIndex = 1;
+                }
+                else
+                {
+                    breakdownIndex = 2;
+                }
+
+                if (Request.Form["breakdown1"] != null)
+                {
+                    appraisalReportModel.BreakDownLevel1 = Request.Form["breakdown1"].ToString().Split(',')[breakdownIndex];
+                }
+
+                if (Request.Form["breakdown2"] != null && Request.Form["breakdown2"] != ",")
+                {
+                    appraisalReportModel.BreakDownLevel2 = Request.Form["breakdown2"].ToString().Split(',')[breakdownIndex];
+                }
+
+                if (Request.Form["breakdown3"] != null && Request.Form["breakdown3"] != "" && Request.Form["breakdown3"] != ",")
+                {
+                    appraisalReportModel.BreakDownLevel3 = Request.Form["breakdown3"].ToString().Split(',')[breakdownIndex];
+                }
+
+                if (Request.Form["breakdown4"] != null && Request.Form["breakdown4"] != "" && Request.Form["breakdown4"] != ",")
+                {
+                    appraisalReportModel.BreakDownLevel4 = Request.Form["breakdown4"].ToString().Split(',')[breakdownIndex];
+                }
+
+            }
+            var reportDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportStartYear), Convert.ToInt32(appraisalReportModel.ReportStartMonth), 1);
+            var reportEndDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportEndYear), Convert.ToInt32(appraisalReportModel.ReportEndMonth), 1); //.AddMonths(1);
+
+            if(appraisalReportModel.ReportType == "combined")
+            {
+                reportDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportComboStartYear), Convert.ToInt32(appraisalReportModel.ReportComboStartMonth), 1);
+                reportEndDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportComboEndYear), Convert.ToInt32(appraisalReportModel.ReportComboEndMonth), 1); //.AddMonths(1);
+            }
+
+            //if (appraisalReportModel.ReportType == "sales")
+            //{
+            appraisalReportModel.AppraisalSoldDetails = SqlMapperUtil.StoredProcWithParams<AppraisalSoldDetail>("sp_CommissionGetAssociateAppraisalsSoldDetails", new { StartDate = reportDate.Date, EndDate = reportEndDate.Date }, "ReynoldsData");
+
+                //Remove Duplicates
+                appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.LastModifiedDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+                if (vehicleType != "All")
+                {
+                    if (vehicleType == "Retail")
+                    {
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "R");
+
+                    }
+                    else if (vehicleType == "Wholesale")
+                    {
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "W");
+
+                    }
+
+                }
+
+                if (acquisitionType != "ALL")
+                {
+                    if (acquisitionType == "Trade")
+                    {
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "T");
+                    }
+                    else if (acquisitionType == "Purchase")
+                    {
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "P");
+                    }
+                }
+
+                foreach (var appraisal in appraisalReportModel.AppraisalSoldDetails)
+                {
+                    var stockSource = "";
+                    var stockSourceName = "";
+                    var lastChar = "";
+
+                    if (appraisal.StockNumber != null && appraisal.StockNumber.Length > 1)
+                    {
+                        stockSource = appraisal.StockNumber.Substring(1, 1);
+                        lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+                    }
+                    switch (stockSource)
+                    {
+                        case "A":
+                            stockSourceName = "Auction or Wholesale";
+                            break;
+                        case "B":
+                            stockSourceName = "Lease Buyout";
+                            break;
+                    case "C":
+                        stockSourceName = "Car Offer";
+                        break;
+                    case "D":
+                            stockSourceName = "Demo Prev Rental";
+                            break;
+                        case "E":
+                            stockSourceName = "Demo";
+                            break;
+                        case "F":
+                            stockSourceName = "Nextcar Bad Hist";
+                            break;
+                        case "G":
+                            stockSourceName = "Government Auction";
+                            break;
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "L":
+                            stockSourceName = "In House Loaner";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        case "N":
+                            stockSourceName = "Nextcar Purchase";
+                            break;
+                        case "P":
+                            stockSourceName = "Purchase/Lease Cust";
+                            break;
+                        case "R":
+                            stockSourceName = "Rental";
+                            break;
+                        case "X":
+                            stockSourceName = "Previous Repo";
+                            break;
+                        default:
+                            stockSource = "";
+                            stockSourceName = "";
+                            break;
+                    }
+
+                    if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                    {
+                        switch (lastChar)
+                        {
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        default:
+                            stockSourceName = "Trade";
+                            break;
+                    }
+                        
+                    }
+
+                    appraisal.VehicleSource = stockSourceName;
+
+                    if(appraisal.Certification == null || appraisal.Certification == "")
+                    {
+                        appraisal.Certification = "None";
+                    }
+
+                if (appraisal.Certification == "FWP")
+                {
+                    appraisal.Certification = "FP";
+                }
+
+                if (appraisal.Certification == "MC" || appraisal.Certification == "CUV" || appraisal.Certification == "MZC" || appraisal.Certification == "GMU" || appraisal.Certification == "VWC")
+                {
+                    appraisal.Certification = "CPO";
+                }
+
+                if (appraisal.SalesAssociate == null)
+                    {
+                        appraisal.SalesAssociate = "";
+                    }
+                if (appraisal.Make == null)
+                {
+                    appraisal.Make = "";
+                }
+                else
+                {
+                    appraisal.Make = appraisal.Make.Replace(" TRUCK", "");
+                }
+                
+                if(appraisal.Model != null && appraisal.Model.IndexOf(" ") > 0)
+                {
+                    appraisal.Model = appraisal.Model.Substring(0, appraisal.Model.IndexOf(" "));
+                }
+
+                if (appraisal.ZipCode == null || appraisal.ZipCode == "")
+                {
+                    appraisal.ZipCode = "None";
+                }
+
+                if (appraisal.Appraiser == null)
+                    {
+                        appraisal.Appraiser = "";
+                    }
+                }
+            //}
+            //else if(appraisalReportModel.ReportType == "inventory")
+            //{
+                appraisalReportModel.TradeAcquisitionDetails = SqlQueries.GetTradeAcquisitionReportDetailsByDate(reportDate,reportEndDate);
+
+
+                appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.AppraisalDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+            appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => statusType.Split(',').ToList().Contains(x.Status.ToString()));
+
+            if (statusOnFM.ToUpper() != "ALL")
+            {
+                if (statusOnFM.ToUpper() == "ONFITZMALL")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount > 0);
+                }
+                else if(statusOnFM.ToUpper() == "MISSINGFITZMALL")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < 1);
+
+                }
+
+            }
+
+            //if (statusType.ToUpper() != "ALL")
+            //    {
+            //        if (statusType.ToUpper() == "RETAIL")
+            //        {
+
+            //        }
+            //        else if (statusType.ToUpper() == "ONLINE")
+            //        {
+            //            appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => (x.Status == 1 || x.Status == 2) && x.ListAmount > 0);
+            //        }
+            //        else if (statusType.ToUpper() == "OTHER")
+            //        {
+            //            appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status != 1 && x.Status != 2);
+            //        }
+            //    }
+
+            if (acquisitionType != "ALL")
+            {
+                if (acquisitionType == "Trade")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Char.IsLetter(x.StockNumber.Substring(x.StockNumber.Length - 1), 0));
+                }
+                else if (acquisitionType == "Purchase")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => !Char.IsLetter(x.StockNumber.Substring(x.StockNumber.Length - 1), 0));
+                }
+            }
+
+            var additionalDetails = SqlQueries.GetTradeAcquisitionAdditionalDetails();
+
+            foreach (var appraisal in appraisalReportModel.TradeAcquisitionDetails)
+                {
+                    var stockSource = "";
+                    var stockSourceName = "";
+                    var lastChar = "";
+
+                
+                    if (appraisal.StockNumber != null && appraisal.StockNumber.Length > 1)
+                    {
+                        stockSource = appraisal.StockNumber.Substring(1, 1);
+                        lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+
+                        var details = additionalDetails.Find(x => x.StockNumber.TrimEnd() == appraisal.StockNumber.TrimEnd());
+                        if(details != null)
+                        {
+                            appraisal.StyleId = details.StyleId;
+                            appraisal.Certification = details.Certification;
+                            appraisal.BodyStyle = details.BodyStyle;
+                        }
+                    else
+                    {
+                        appraisal.StyleId = "None";
+                        appraisal.Certification = "None";
+                        appraisal.BodyStyle = "unknown";
+                    }
+
+                    }
+                switch (stockSource)
+                    {
+                        case "A":
+                            stockSourceName = "Auction or Wholesale";
+                            break;
+                        case "B":
+                            stockSourceName = "Lease Buyout";
+                            break;
+                    case "C":
+                        stockSourceName = "Car Offer";
+                        break;
+
+                    case "D":
+                            stockSourceName = "Demo Prev Rental";
+                            break;
+                        case "E":
+                            stockSourceName = "Demo";
+                            break;
+                        case "F":
+                            stockSourceName = "Nextcar Bad Hist";
+                            break;
+                        case "G":
+                            stockSourceName = "Government Auction";
+                            break;
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "L":
+                            stockSourceName = "In House Loaner";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        case "N":
+                            stockSourceName = "Nextcar Purchase";
+                            break;
+                        case "P":
+                            stockSourceName = "Purchase/Lease Cust";
+                            break;
+                        case "R":
+                            stockSourceName = "Rental";
+                            break;
+                        case "X":
+                            stockSourceName = "Previous Repo";
+                            break;
+                        default:
+                            stockSource = "";
+                            stockSourceName = "";
+                            break;
+                    }
+
+                    if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                    {
+                    switch (lastChar)
+                    {
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        default:
+                            stockSourceName = "Trade";
+                            break;
+                    }
+                }
+
+                    appraisal.VehicleSource = stockSourceName;
+
+                if (appraisal.Make == null)
+                {
+                    appraisal.Make = "";
+                }
+
+                if (appraisal.Carline != null && appraisal.Carline.IndexOf(" ") > 0)
+                {
+                    appraisal.Carline = appraisal.Carline.Substring(0, appraisal.Carline.IndexOf(" "));
+                }
+
+                if (appraisal.LeadSourceName == null)
+                    {
+                        appraisal.LeadSourceName = "";
+                    }
+
+                    if (appraisal.LeadGroup == null)
+                    {
+                        appraisal.LeadGroup = "";
+                    }
+
+                    if (appraisal.Appraiser == null)
+                    {
+                        appraisal.Appraiser = "";
+                    }
+                }
+
+            //}
+
+            // NOW CHECK TO SEE IF FILTERS WERE SELECTED AND FILTER DATA
+            if (bFilterResults)
+            {
+                #region Breakdown 1
+
+                if (appraisalReportModel.BreakDownLevel1 != null && breakdown1Filters != "")
+                {
+                    var filteredSoldResults = new List<AppraisalSoldDetail>();
+                    var filteredAcquisitionResults = new List<TradeAcquisitionDetail>();
+
+                    switch (appraisalReportModel.BreakDownLevel1)
+                    {
+
+                        case "appraiser":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Appraiser == filter));
+                            }
+                            break;
+
+
+                        case "vehiclesource":
+
+                            foreach(var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == filter));
+                            }
+
+                            break;
+
+                        case "certified":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                                {
+                                    if(cert.Name == filter)
+                                    {
+                                        switch (filter)
+                                        {
+                                            case "FitzWay Value":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FW"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F915"));
+                                                break;
+                                            case "FitzWay Plus":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FP"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F914"));
+                                                break;
+                                            case "FitzWay Certified":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FC"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F910"));
+                                                break;
+                                            case "FitzWay Handyman":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "HDM"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F916" || x.Certification.Trim() == "F917" || x.Certification.Trim() == "F918"));
+                                                break;
+                                            case "Manufacturer CPO":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "MC" || x.Certification.Trim() == "CUV" || x.Certification.Trim() == "MZC" || x.Certification.Trim() == "GMU" || x.Certification.Trim() == "VWC" || x.Certification.Trim() == "CPO"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F906" || x.Certification.Trim() == "F907" || x.Certification.Trim() == "F908" || x.Certification.Trim() == "F909" || x.Certification.Trim() == "F911" || x.Certification.Trim() == "F912" || x.Certification.Trim() == "F913" || x.Certification.Trim() == "F922" || x.Certification.Trim() == "F923"));
+                                                break;
+                                            case "Other":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                break;
+
+                                        }
+                                    }
+                                }
+                            }
+                            
+
+                            break;
+
+                        case "soldloc":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                var searchLoc = "";
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        searchLoc = store.LocationId;
+
+                                        if (searchLoc == "FAM")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FAM"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FCG"));
+
+                                        }
+                                        else if (searchLoc == "FTN")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FTN"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FTO"));
+
+                                        }
+                                        else
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == searchLoc));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == searchLoc));
+                                        }
+                                        
+                                    }
+
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+
+                            break;
+
+
+                        case "model":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Carline.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "monthyear":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.DealMonthYear.ToString("MM/yyyy") == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == filter));
+                            }
+                            break;
+
+
+                        case "modelyear":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Year == filter));
+                            }
+                            break;
+
+                        case "showroom":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.ShowroomIDMapping)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == filter));
+                                    }
+
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == filter));
+
+                                    }
+                                }
+
+                            }
+                            break;
+
+
+                        case "days":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                if (filter == "> 90")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(Convert.ToDecimal(x.DaysInStock)) >= 90));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90));
+                                }
+                                else
+                                {
+                                    var daysbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30)));
+                                    
+                                }
+                            }
+                            break;
+
+                        case "mileage":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                }
+                                else
+                                {
+                                    var milesbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+                                    
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                }
+                            }
+                                
+                            break;
+
+                        case "price":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000));
+                                }
+                                else
+                                {
+                                    var pricebreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000)));
+                                }
+                            }
+                            break;
+
+
+
+                        //Specific to Individual Reports
+                        case "associate":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "location":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location.ToUpper() == store.LocationId.ToUpper()));
+                                        
+                                    }
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc.ToUpper() == store.LocationId.ToUpper()));
+                                    }
+                                }
+
+                            }
+                            break;
+
+                        case "stock":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.StockNumber == filter));
+                            }
+                            break;
+
+                        case "zipcode":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ZipCode == filter));
+                            }
+                            break;
+
+                        case "leadgroup":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == filter));
+                            }
+                            break;
+
+                        case "lead":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == filter));
+                            }
+                            break;
+
+                        case "status":
+                            foreach (var filter in breakdown1Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == filter));
+                            }
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                    appraisalReportModel.AppraisalSoldDetails = filteredSoldResults;
+                    appraisalReportModel.TradeAcquisitionDetails = filteredAcquisitionResults;
+                }
+                #endregion Breadown 1
+
+                #region Breakdown 2
+
+                if (appraisalReportModel.BreakDownLevel2 != null && breakdown2Filters != "")
+                {
+                    var filteredSoldResults = new List<AppraisalSoldDetail>();
+                    var filteredAcquisitionResults = new List<TradeAcquisitionDetail>();
+
+                    switch (appraisalReportModel.BreakDownLevel2)
+                    {
+
+                        case "appraiser":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Appraiser == filter));
+                            }
+                            break;
+                            
+                        case "vehiclesource":
+
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == filter));
+                            }
+
+                            break;
+
+                        case "certified":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                                {
+                                    if (cert.Name == filter)
+                                    {
+                                        switch (filter)
+                                        {
+                                            case "FitzWay Value":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FW"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F915"));
+                                                break;
+                                            case "FitzWay Plus":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FP"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F914"));
+                                                break;
+                                            case "FitzWay Certified":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FC"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F910"));
+                                                break;
+                                            case "FitzWay Handyman":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "HDM"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F916" || x.Certification.Trim() == "F917" || x.Certification.Trim() == "F918"));
+                                                break;
+                                            case "Manufacturer CPO":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "MC" || x.Certification.Trim() == "CUV" || x.Certification.Trim() == "MZC" || x.Certification.Trim() == "GMU" || x.Certification.Trim() == "VWC" || x.Certification.Trim() == "CPO"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F906" || x.Certification.Trim() == "F907" || x.Certification.Trim() == "F908" || x.Certification.Trim() == "F909" || x.Certification.Trim() == "F911" || x.Certification.Trim() == "F912" || x.Certification.Trim() == "F913" || x.Certification.Trim() == "F922" || x.Certification.Trim() == "F923"));
+                                                break;
+                                            case "Other":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                break;
+
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            break;
+
+                        case "soldloc":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                var searchLoc = "";
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        searchLoc = store.LocationId;
+
+                                        if (searchLoc == "FAM")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FAM"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FCG"));
+
+                                        }
+                                        else if (searchLoc == "FTN")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FTN"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FTO"));
+
+                                        }
+                                        else
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == searchLoc));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == searchLoc));
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+
+                            break;
+                            
+                        case "model":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Carline.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "monthyear":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.DealMonthYear.ToString("MM/yyyy") == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == filter));
+                            }
+                            break;
+                            
+                        case "modelyear":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Year == filter));
+                            }
+                            break;
+
+                        case "showroom":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.ShowroomIDMapping)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == filter));
+                                    }
+
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == filter));
+
+                                    }
+                                }
+
+                            }
+                            break;
+
+
+                        case "days":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                if (filter == "> 90")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(Convert.ToDecimal(x.DaysInStock)) >= 90));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90));
+                                }
+                                else
+                                {
+                                    var daysbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30)));
+
+                                }
+                            }
+                            break;
+
+                        case "mileage":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                }
+                                else
+                                {
+                                    var milesbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                }
+                            }
+
+                            break;
+
+                        case "price":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000));
+                                }
+                                else
+                                {
+                                    var pricebreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000)));
+                                }
+                            }
+                            break;
+
+
+                        //Specific to Individual Reports
+                        case "associate":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "location":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location.ToUpper() == store.LocationId.ToUpper()));
+
+                                    }
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc.ToUpper() == store.LocationId.ToUpper()));
+                                    }
+                                }
+
+                            }
+                            break;
+
+                        case "stock":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.StockNumber == filter));
+                            }
+                            break;
+
+                        case "zipcode":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ZipCode == filter));
+                            }
+                            break;
+
+                        case "leadgroup":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == filter));
+                            }
+                            break;
+
+                        case "lead":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == filter));
+                            }
+                            break;
+
+                        case "status":
+                            foreach (var filter in breakdown2Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == filter));
+                            }
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                    appraisalReportModel.AppraisalSoldDetails = filteredSoldResults;
+                    appraisalReportModel.TradeAcquisitionDetails = filteredAcquisitionResults;
+                }
+                #endregion Breadown 2
+
+                #region Breakdown 3
+
+                if (appraisalReportModel.BreakDownLevel3 != null && breakdown3Filters != "")
+                {
+                    var filteredSoldResults = new List<AppraisalSoldDetail>();
+                    var filteredAcquisitionResults = new List<TradeAcquisitionDetail>();
+
+                    switch (appraisalReportModel.BreakDownLevel3)
+                    {
+
+                        case "appraiser":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Appraiser == filter));
+                            }
+                            break;
+                            
+                        case "vehiclesource":
+
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == filter));
+                            }
+
+                            break;
+
+                        case "certified":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                                {
+                                    if (cert.Name == filter)
+                                    {
+                                        switch (filter)
+                                        {
+                                            case "FitzWay Value":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FW"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F915"));
+                                                break;
+                                            case "FitzWay Plus":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FP"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F914"));
+                                                break;
+                                            case "FitzWay Certified":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FC"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F910"));
+                                                break;
+                                            case "FitzWay Handyman":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "HDM"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F916" || x.Certification.Trim() == "F917" || x.Certification.Trim() == "F918"));
+                                                break;
+                                            case "Manufacturer CPO":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "MC" || x.Certification.Trim() == "CUV" || x.Certification.Trim() == "MZC" || x.Certification.Trim() == "GMU" || x.Certification.Trim() == "VWC" || x.Certification.Trim() == "CPO"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F906" || x.Certification.Trim() == "F907" || x.Certification.Trim() == "F908" || x.Certification.Trim() == "F909" || x.Certification.Trim() == "F911" || x.Certification.Trim() == "F912" || x.Certification.Trim() == "F913" || x.Certification.Trim() == "F922" || x.Certification.Trim() == "F923"));
+                                                break;
+                                            case "Other":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                break;
+
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            break;
+
+                        case "soldloc":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                var searchLoc = "";
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        searchLoc = store.LocationId;
+
+                                        if (searchLoc == "FAM")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FAM"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FCG"));
+
+                                        }
+                                        else if (searchLoc == "FTN")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FTN"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FTO"));
+
+                                        }
+                                        else
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == searchLoc));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == searchLoc));
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+
+                            break;
+                            
+                        case "model":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Carline.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "monthyear":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.DealMonthYear.ToString("MM/yyyy") == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == filter));
+                            }
+                            break;
+                            
+                        case "modelyear":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Year == filter));
+                            }
+                            break;
+
+                        case "showroom":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.ShowroomIDMapping)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == filter));
+                                    }
+
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == filter));
+
+                                    }
+                                }
+
+                            }
+                            break;
+
+
+                        case "days":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                if (filter == "> 90")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(Convert.ToDecimal(x.DaysInStock)) >= 90));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90));
+                                }
+                                else
+                                {
+                                    var daysbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30)));
+
+                                }
+                            }
+                            break;
+
+                        case "mileage":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                }
+                                else
+                                {
+                                    var milesbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                }
+                            }
+
+                            break;
+
+                        case "price":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000));
+                                }
+                                else
+                                {
+                                    var pricebreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000)));
+                                }
+                            }
+                            break;
+
+
+                        //Specific to Individual Reports
+                        case "associate":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "location":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location.ToUpper() == store.LocationId.ToUpper()));
+
+                                    }
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc.ToUpper() == store.LocationId.ToUpper()));
+                                    }
+                                }
+
+                            }
+                            break;
+
+                        case "stock":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.StockNumber == filter));
+                            }
+                            break;
+
+                        case "zipcode":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ZipCode == filter));
+                            }
+                            break;
+
+                        case "leadgroup":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == filter));
+                            }
+                            break;
+
+                        case "lead":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == filter));
+                            }
+                            break;
+
+                        case "status":
+                            foreach (var filter in breakdown3Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == filter));
+                            }
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                    appraisalReportModel.AppraisalSoldDetails = filteredSoldResults;
+                    appraisalReportModel.TradeAcquisitionDetails = filteredAcquisitionResults;
+                }
+                #endregion Breadown 3
+
+                #region Breakdown 4
+
+                if (appraisalReportModel.BreakDownLevel4 != null && breakdown4Filters != "")
+                {
+                    var filteredSoldResults = new List<AppraisalSoldDetail>();
+                    var filteredAcquisitionResults = new List<TradeAcquisitionDetail>();
+
+                    switch (appraisalReportModel.BreakDownLevel4)
+                    {
+
+                        case "appraiser":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Appraiser == filter));
+                            }
+                            break;
+                            
+                        case "vehiclesource":
+
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == filter));
+                            }
+
+                            break;
+
+                        case "certified":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                                {
+                                    if (cert.Name == filter)
+                                    {
+                                        switch (filter)
+                                        {
+                                            case "FitzWay Value":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FW"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F915"));
+                                                break;
+                                            case "FitzWay Plus":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FP"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F914"));
+                                                break;
+                                            case "FitzWay Certified":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "FC"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F910"));
+                                                break;
+                                            case "FitzWay Handyman":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "HDM"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F916" || x.Certification.Trim() == "F917" || x.Certification.Trim() == "F918"));
+                                                break;
+                                            case "Manufacturer CPO":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == "MC" || x.Certification.Trim() == "CUV" || x.Certification.Trim() == "MZC" || x.Certification.Trim() == "GMU" || x.Certification.Trim() == "VWC" || x.Certification.Trim() == "CPO"));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == "F906" || x.Certification.Trim() == "F907" || x.Certification.Trim() == "F908" || x.Certification.Trim() == "F909" || x.Certification.Trim() == "F911" || x.Certification.Trim() == "F912" || x.Certification.Trim() == "F913" || x.Certification.Trim() == "F922" || x.Certification.Trim() == "F923"));
+                                                break;
+                                            case "Other":
+                                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == ""));
+                                                break;
+
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            break;
+
+                        case "soldloc":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                var searchLoc = "";
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        searchLoc = store.LocationId;
+
+                                        if (searchLoc == "FAM")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FAM"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FCG"));
+
+                                        }
+                                        else if (searchLoc == "FTN")
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == "FTN"));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == "FTO"));
+
+                                        }
+                                        else
+                                        {
+                                            filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == searchLoc));
+                                            filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == searchLoc));
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+
+                            break;
+                            
+                        case "model":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Carline.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "monthyear":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.DealMonthYear.ToString("MM/yyyy") == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == filter));
+                            }
+                            break;
+                            
+                        case "modelyear":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Year == filter));
+                            }
+                            break;
+
+                        case "showroom":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.ShowroomIDMapping)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == filter));
+                                    }
+
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == filter));
+
+                                    }
+                                }
+
+                            }
+                            break;
+
+
+                        case "days":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                if (filter == "> 90")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(Convert.ToDecimal(x.DaysInStock)) >= 90));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90));
+                                }
+                                else
+                                {
+                                    var daysbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30)));
+
+                                }
+                            }
+                            break;
+
+                        case "mileage":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000));
+                                }
+                                else
+                                {
+                                    var milesbreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000)));
+                                }
+                            }
+
+                            break;
+
+                        case "price":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+
+                                if (filter == "> 100000")
+                                {
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000));
+                                }
+                                else
+                                {
+                                    var pricebreakdown = Convert.ToDecimal(filter.Substring(filter.IndexOf("-") + 2)) + 1;
+
+                                    filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000)));
+                                    filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000)));
+                                }
+                            }
+                            break;
+
+
+                        //Specific to Individual Reports
+                        case "associate":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                            }
+                            break;
+
+                        case "location":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+
+                                foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location.ToUpper() == store.LocationId.ToUpper()));
+
+                                    }
+                                }
+
+                                foreach (var store in SalesCommission.Business.Enums.SoldLocations)
+                                {
+                                    if (store.Name == filter)
+                                    {
+                                        filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc.ToUpper() == store.LocationId.ToUpper()));
+                                    }
+                                }
+
+                            }
+                            break;
+
+                        case "stock":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == filter));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.StockNumber == filter));
+                            }
+                            break;
+
+                        case "zipcode":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == filter));
+                                //filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ZipCode == filter));
+                            }
+                            break;
+
+                        case "leadgroup":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == filter));
+                            }
+                            break;
+
+                        case "lead":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == filter));
+                            }
+                            break;
+
+                        case "status":
+                            foreach (var filter in breakdown4Filters.Split(','))
+                            {
+                                //filteredSoldResults.AddRange(appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.ToUpper() == filter.ToUpper()));
+                                filteredAcquisitionResults.AddRange(appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == filter));
+                            }
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                    appraisalReportModel.AppraisalSoldDetails = filteredSoldResults;
+                    appraisalReportModel.TradeAcquisitionDetails = filteredAcquisitionResults;
+                }
+                #endregion Breadown 4
+            }
+
+
+
+            return View(appraisalReportModel);
+            
+        }
+
+        public ActionResult AppraisalReportDetails(string startmonth, string startyear, string endmonth, string endyear, string bd1, string bd2, string bd3, string bd4, string vt, string at, string days)
+        {
+            var appraisalReportModel = new AppraisalReportModel();
+            var appraisalReportDetailsModel = new AppraisalReportDetailModel();
+
+            var bdValue1 = "";
+            var bdValue2 = "";
+            var bdValue3 = "";
+            var bdValue4 = "";
+
+            if (bd1 != null && bd1 != "")
+            {
+                appraisalReportModel.BreakDownLevel1 = bd1.Split(',')[0];
+                //bdValue1 = bd1.Split(',')[1];
+                bdValue1 = bd1.Replace(bd1.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel1 = bd1.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel1Value = bdValue1;
+            }
+
+            if (bd2 != null && bd2 != "")
+            {
+                appraisalReportModel.BreakDownLevel2 = bd2.Split(',')[0];
+                //bdValue2 = bd2.Split(',')[1];
+                bdValue2 = bd2.Replace(bd2.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel2 = bd2.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel2Value = bdValue2;
+            }
+
+            if (bd3 != null && bd3 != "")
+            {
+                appraisalReportModel.BreakDownLevel3 = bd3.Split(',')[0];
+                //bdValue3 = bd3.Split(',')[1];
+                bdValue3 = bd3.Replace(bd3.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel3 = bd3.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel3Value = bdValue3;
+            }
+
+            if (bd4 != null && bd4 != "")
+            {
+                appraisalReportModel.BreakDownLevel4 = bd4.Split(',')[0];
+                //bdValue4 = bd4.Split(',')[1];
+                bdValue4 = bd4.Replace(bd4.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel4 = bd4.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel4Value = bdValue4;
+            }
+
+            if (vt != null && vt != "")
+            {
+                appraisalReportModel.VehicleType = vt;
+                appraisalReportDetailsModel.VehicleType = vt;
+            }
+
+            if (at != null && at != "")
+            {
+                appraisalReportModel.AcquisitionType = at;
+                appraisalReportDetailsModel.AcquisitionType = at;
+            }
+
+
+            appraisalReportModel.ReportStartMonth = Convert.ToInt32(startmonth);
+            appraisalReportDetailsModel.ReportStartMonth = Convert.ToInt32(startmonth);
+
+            appraisalReportModel.ReportEndMonth = Convert.ToInt32(endmonth);
+            appraisalReportDetailsModel.ReportEndMonth = Convert.ToInt32(endmonth);
+
+            appraisalReportModel.ReportStartYear = Convert.ToInt32(startyear);
+            appraisalReportDetailsModel.ReportStartYear = Convert.ToInt32(startyear);
+
+            appraisalReportModel.ReportEndYear = Convert.ToInt32(endyear);
+            appraisalReportDetailsModel.ReportEndYear = Convert.ToInt32(endyear);
+
+            var reportDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportStartYear), Convert.ToInt32(appraisalReportModel.ReportStartMonth), 1);
+            var reportEndDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportEndYear), Convert.ToInt32(appraisalReportModel.ReportEndMonth), 1);//.AddMonths(1);
+
+            appraisalReportModel.AppraisalSoldDetails = SqlMapperUtil.StoredProcWithParams<AppraisalSoldDetail>("sp_CommissionGetAssociateAppraisalsSoldDetails", new { StartDate = reportDate.Date, EndDate = reportEndDate.Date }, "ReynoldsData");
+            //Remove Duplicates
+            appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.LastModifiedDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+
+            if (vt != "All")
+            {
+                if (vt == "Retail")
+                {
+                    appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "R");
+
+                }
+                else if (vt == "Wholesale")
+                {
+                    appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "W");
+
+                }
+
+            }
+
+            if (at != "ALL")
+            {
+                if (at == "Trade")
+                {
+                    appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "T");
+                }
+                else if (at == "Purchase")
+                {
+                    appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "P");
+                }
+            }
+
+            if (days != null && days != "")
+            {
+                switch (days)
+                {
+                    case "30":
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) < 30);
+                        break;
+                    case "3060":
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) >= 30 && Int32.Parse(x.DaysInStock) < 60);
+
+                        break;
+                    case "6090":
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) >= 60 && Int32.Parse(x.DaysInStock) < 90);
+                        break;
+                    case "90":
+                        appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) > 90);
+                        break;
+                }
+            }
+
+            foreach (var appraisal in appraisalReportModel.AppraisalSoldDetails)
+            {
+                var stockSource = "";
+                var stockSourceName = "";
+                var lastChar = "";
+
+                if (appraisal.StockNumber != null)
+                {
+                    stockSource = appraisal.StockNumber.Substring(1, 1);
+                    lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+                }
+                switch (stockSource)
+                {
+                    case "A":
+                        stockSourceName = "Auction or Wholesale";
+                        break;
+                    case "B":
+                        stockSourceName = "Lease Buyout";
+                        break;
+                    case "C":
+                        stockSourceName = "Car Offer";
+                        break;
+                    case "D":
+                        stockSourceName = "Demo Prev Rental";
+                        break;
+                    case "E":
+                        stockSourceName = "Demo";
+                        break;
+                    case "F":
+                        stockSourceName = "Nextcar Bad Hist";
+                        break;
+                    case "G":
+                        stockSourceName = "Government Auction";
+                        break;
+                    case "K":
+                        stockSourceName = "Kelly ICO";
+                        break;
+                    case "L":
+                        stockSourceName = "In House Loaner";
+                        break;
+                    case "M":
+                        stockSourceName = "Facebook Marketplace";
+                        break;
+                    case "N":
+                        stockSourceName = "Nextcar Purchase";
+                        break;
+                    case "P":
+                        stockSourceName = "Purchase/Lease Cust";
+                        break;
+                    case "R":
+                        stockSourceName = "Rental";
+                        break;
+                    case "X":
+                        stockSourceName = "Previous Repo";
+                        break;
+                    default:
+                        stockSource = "";
+                        stockSourceName = "";
+                        break;
+                }
+
+                if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                {
+                    switch (lastChar)
+                    {
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        default:
+                            stockSourceName = "Trade";
+                            break;
+                    }
+                }
+
+                appraisal.VehicleSource = stockSourceName;
+
+                if (appraisal.ZipCode == null || appraisal.ZipCode == "")
+                {
+                    appraisal.ZipCode = "None";
+                }
+
+                if (appraisal.Certification == null || appraisal.Certification == "")
+                {
+                    appraisal.Certification = "None";
+                }
+
+                if (appraisal.Certification == "FWP")
+                {
+                    appraisal.Certification = "FP";
+                }
+
+                if (appraisal.Certification == "MC" || appraisal.Certification == "CUV" || appraisal.Certification == "MZC" || appraisal.Certification == "GMU" || appraisal.Certification == "VWC")
+                {
+                    appraisal.Certification = "CPO";
+                }
+
+                if (appraisal.Make == null)
+                {
+                    appraisal.Make = "";
+                }
+                else
+                {
+                    appraisal.Make = appraisal.Make.Replace(" TRUCK", "");
+                }
+
+                if (appraisal.Model != null && appraisal.Model.IndexOf(" ") > 0)
+                {
+                    appraisal.Model = appraisal.Model.Substring(0, appraisal.Model.IndexOf(" "));
+                }
+            }
+
+            var Label1Value = "";
+            var Label2Value = "";
+            var Label3Value = "";
+            var Label4Value = "";
+
+            var BreakDown1filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+            var BreakDown2filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+            var BreakDown3filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+            var BreakDown4filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+
+            if (appraisalReportModel.AppraisalSoldDetails != null && appraisalReportModel.AppraisalSoldDetails.Count > 0)
+            {
+
+
+
+                #region Breakdown 1
+
+                if (appraisalReportModel.BreakDownLevel1 != null)
+                {
+                    Label1Value = bdValue1;
+                    switch (appraisalReportModel.BreakDownLevel1)
+                    {
+
+                        case "appraiser":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == bdValue1);
+                            break;
+
+                        case "associate":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == bdValue1);
+                            break;
+
+                        case "location":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location == bdValue1);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == bdValue1);
+                            break;
+
+                        case "certified":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification == bdValue1);
+                            foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                            {
+                                if (cert.CertificationID.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = cert.Name;
+                                }
+                            }
+                            if (Label1Value == "")
+                            {
+                                Label1Value = "None";
+                            }
+                            break;
+
+                        case "soldloc":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == bdValue1);
+                            break;
+
+                        case "make":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.Contains(bdValue1));
+                            break;
+
+                        case "stock":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == bdValue1);
+                            break;
+
+                        case "model":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model == bdValue1);
+                            break;
+
+                        case "monthyear":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue1);
+                            var dealDate = Convert.ToDateTime(bdValue1);
+                            Label1Value = dealDate.Month + "/" + dealDate.Year;
+
+                            break;
+
+                        case "zipcode":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == bdValue1);
+                            break;
+
+                        case "modelyear":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == bdValue1);
+                            break;
+
+                        case "showroom":
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == bdValue1);
+                            break;
+
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+                        default:
+                            BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location == bdValue1);
+                            break;
+
+                    }
+
+                    appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown1filteredappraisals;
+                }
+                #endregion Breadown 1
+
+                #region Breakdown 2
+
+                if (appraisalReportModel.BreakDownLevel2 != null)
+                {
+                    Label2Value = bdValue2;
+                    switch (appraisalReportModel.BreakDownLevel2)
+                    {
+
+                        case "appraiser":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Appraiser == bdValue2);
+                            break;
+
+                        case "associate":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SalesAssociate == bdValue2);
+                            break;
+
+                        case "location":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Location == bdValue2);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.VehicleSource == bdValue2);
+                            break;
+
+                        case "certified":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Certification == bdValue2);
+                            foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                            {
+                                if (cert.CertificationID.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = cert.Name;
+                                }
+                            }
+                            if (Label2Value == "")
+                            {
+                                Label2Value = "None";
+                            }
+                            break;
+
+                        case "soldloc":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SoldLocation == bdValue2);
+                            break;
+
+                        case "make":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Make.Contains(bdValue2));
+                            break;
+
+
+                        case "stock":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.StockNumber == bdValue2);
+                            break;
+
+                        case "model":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Model == bdValue2);
+                            break;
+
+                        case "monthyear":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue2);
+                            var dealDate = Convert.ToDateTime(bdValue2);
+                            Label2Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        case "zipcode":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.ZipCode == bdValue2);
+                            break;
+
+                        case "modelyear":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Year == bdValue2);
+                            break;
+
+                        case "showroom":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Showroom == bdValue2);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+                        default:
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Location == bdValue2);
+                            break;
+
+
+                    }
+                    appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown2filteredappraisals;
+                }
+                #endregion Breadown 2
+
+                #region Breakdown 3
+
+                if (appraisalReportModel.BreakDownLevel3 != null)
+                {
+                    Label3Value = bdValue3;
+                    switch (appraisalReportModel.BreakDownLevel3)
+                    {
+
+                        case "appraiser":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Appraiser == bdValue3);
+                            break;
+
+                        case "associate":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SalesAssociate == bdValue3);
+                            break;
+
+                        case "location":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Location == bdValue3);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+
+                        case "vehiclesource":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.VehicleSource == bdValue3);
+                            break;
+
+                        case "certified":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Certification == bdValue3);
+                            foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                            {
+                                if (cert.CertificationID.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = cert.Name;
+                                }
+                            }
+                            if (Label3Value == "")
+                            {
+                                Label3Value = "None";
+                            }
+                            break;
+
+                        case "soldloc":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SoldLocation == bdValue3);
+                            break;
+
+                        case "make":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Make.Contains(bdValue3));
+                            break;
+
+
+                        case "stock":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.StockNumber == bdValue3);
+                            break;
+
+                        case "model":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Model == bdValue3);
+                            break;
+
+                        case "monthyear":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue3);
+                            var dealDate = Convert.ToDateTime(bdValue3);
+                            Label3Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        case "zipcode":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.ZipCode == bdValue3);
+                            break;
+
+                        case "modelyear":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Year == bdValue3);
+                            break;
+
+
+                        case "showroom":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Showroom == bdValue3);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+                            }
+                            break;
+                        default:
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Location == bdValue3);
+                            break;
+
+                    }
+                    appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown3filteredappraisals;
+                }
+                #endregion Breadown 3
+
+                #region Breakdown 4
+
+                if (appraisalReportModel.BreakDownLevel4 != null)
+                {
+                    Label4Value = bdValue4;
+                    switch (appraisalReportModel.BreakDownLevel4)
+                    {
+
+                        case "appraiser":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Appraiser == bdValue4);
+                            break;
+
+                        case "associate":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SalesAssociate == bdValue4);
+                            break;
+
+                        case "location":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Location == bdValue4);
+
+                            foreach (var store in SalesCommission.Business.Enums.Locations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.VehicleSource == bdValue4);
+                            break;
+
+                        case "certified":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Certification == bdValue4);
+                            foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+                            {
+                                if (cert.CertificationID.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = cert.Name;
+                                }
+                            }
+                            if (Label4Value == "")
+                            {
+                                Label4Value = "None";
+                            }
+                            break;
+
+                        case "soldloc":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SoldLocation == bdValue4);
+                            break;
+
+                        case "make":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Make.Contains(bdValue4));
+                            break;
+
+                        case "stock":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.StockNumber == bdValue4);
+                            break;
+
+                        case "model":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Model == bdValue4);
+                            break;
+
+                        case "monthyear":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue4);
+                            var dealDate = Convert.ToDateTime(bdValue4);
+                            Label4Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        case "zipcode":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.ZipCode == bdValue4);
+                            break;
+
+                        case "modelyear":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Year == bdValue4);
+                            break;
+
+                        case "showroom":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Showroom == bdValue4);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+                            }
+                            break;
+                        default:
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Location == bdValue4);
+                            break;
+
+                    }
+                    appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown4filteredappraisals;
+                }
+                #endregion Breadown 4
+
+            }
+
+            //NOW GO THROUGH BREAKDOWNS AND RETURN THE LAST BREAKDOWN
+
+
+            return View(appraisalReportDetailsModel);
+        }
+
+
+        public ActionResult ExceptionReportDetails(string startmonth, string startyear, string endmonth, string endyear, string bd1, string bd2, string bd3, string bd4, string dt)
+        {
+            var exceptionReportModel = new ExceptionReportModel();
+            var exceptionReportDetailsModel = new ExceptionReportDetailModel();
+
+            var bdValue1 = "";
+            var bdValue2 = "";
+            var bdValue3 = "";
+            var bdValue4 = "";
+
+            if (bd1 != null && bd1 != "")
+            {
+                exceptionReportModel.BreakDownLevel1 = bd1.Split(',')[0];
+                //bdValue1 = bd1.Split(',')[1];
+                bdValue1 = bd1.Replace(bd1.Split(',')[0] + ",", "");
+
+                exceptionReportDetailsModel.BreakDownLevel1 = bd1.Split(',')[0];
+                exceptionReportDetailsModel.BreakDownLevel1Value = bdValue1;
+            }
+
+            if (bd2 != null && bd2 != "")
+            {
+                exceptionReportModel.BreakDownLevel2 = bd2.Split(',')[0];
+                //bdValue2 = bd2.Split(',')[1];
+                bdValue2 = bd2.Replace(bd2.Split(',')[0] + ",", "");
+
+                exceptionReportDetailsModel.BreakDownLevel2 = bd2.Split(',')[0];
+                exceptionReportDetailsModel.BreakDownLevel2Value = bdValue2;
+            }
+
+            if (bd3 != null && bd3 != "")
+            {
+                exceptionReportModel.BreakDownLevel3 = bd3.Split(',')[0];
+                //bdValue3 = bd3.Split(',')[1];
+                bdValue3 = bd3.Replace(bd3.Split(',')[0] + ",", "");
+
+                exceptionReportDetailsModel.BreakDownLevel3 = bd3.Split(',')[0];
+                exceptionReportDetailsModel.BreakDownLevel3Value = bdValue3;
+            }
+
+            if (bd4 != null && bd4 != "")
+            {
+                exceptionReportModel.BreakDownLevel4 = bd4.Split(',')[0];
+                //bdValue4 = bd4.Split(',')[1];
+                bdValue4 = bd4.Replace(bd4.Split(',')[0] + ",", "");
+
+                exceptionReportDetailsModel.BreakDownLevel4 = bd4.Split(',')[0];
+                exceptionReportDetailsModel.BreakDownLevel4Value = bdValue4;
+            }
+
+            if (dt != null && dt != "")
+            {
+                exceptionReportModel.DealType = dt;
+                exceptionReportDetailsModel.DealType = dt;
+            }
+
+            exceptionReportModel.ReportStartMonth = Convert.ToInt32(startmonth);
+            exceptionReportDetailsModel.ReportStartMonth = Convert.ToInt32(startmonth);
+
+            exceptionReportModel.ReportEndMonth = Convert.ToInt32(endmonth);
+            exceptionReportDetailsModel.ReportEndMonth = Convert.ToInt32(endmonth);
+
+            exceptionReportModel.ReportStartYear = Convert.ToInt32(startyear);
+            exceptionReportDetailsModel.ReportStartYear = Convert.ToInt32(startyear);
+
+            exceptionReportModel.ReportEndYear = Convert.ToInt32(endyear);
+            exceptionReportDetailsModel.ReportEndYear = Convert.ToInt32(endyear);
+
+            var reportDate = new DateTime(Convert.ToInt32(exceptionReportModel.ReportStartYear), Convert.ToInt32(exceptionReportModel.ReportStartMonth), 4);
+            var reportEndDate = new DateTime(Convert.ToInt32(exceptionReportModel.ReportEndYear), Convert.ToInt32(exceptionReportModel.ReportEndMonth), 6);//.AddMonths(1);
+
+            exceptionReportModel.ExceptionDetails = SqlMapperUtil.StoredProcWithParams<IndividualDealDetails>("sp_SalesLogReportGetAllDealsByDateRange", new { ReportStartDate = reportDate.Date, ReportEndDate = reportEndDate.Date }, "SalesCommission");
+
+            if (dt != "All")
+            {
+                if (dt == "Finance")
+                {
+                    exceptionReportModel.ExceptionDetails = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleTerm != 1);
+
+                }
+                else if (dt == "Cash")
+                {
+                    exceptionReportModel.ExceptionDetails = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleTerm == 1);
+
+                }
+
+            }
+
+            foreach (var detail in exceptionReportModel.ExceptionDetails)
+            {
+                if (detail.sl_FinMgr == null)
+                {
+                    detail.sl_FinMgr = "None";
+                }
+                if (detail.sl_SalesAssociate1 == null)
+                {
+                    detail.sl_SalesAssociate1 = "None";
+                }
+                if (detail.sl_rate_exception == null || detail.sl_rate_exception == "")
+                {
+                    detail.sl_rate_exception = "Cash Deal";
+                }
+                if (detail.sl_price_variance_exception == null)
+                {
+                    detail.sl_price_variance_exception = "";
+                }
+            }
+
+            var Label1Value = "";
+            var Label2Value = "";
+            var Label3Value = "";
+            var Label4Value = "";
+
+            var BreakDown1filteredappraisals = new List<SalesCommission.Models.IndividualDealDetails>();
+            var BreakDown2filteredappraisals = new List<SalesCommission.Models.IndividualDealDetails>();
+            var BreakDown3filteredappraisals = new List<SalesCommission.Models.IndividualDealDetails>();
+            var BreakDown4filteredappraisals = new List<SalesCommission.Models.IndividualDealDetails>();
+
+            if (exceptionReportModel.ExceptionDetails != null && exceptionReportModel.ExceptionDetails.Count > 0)
+            {
+                #region Breakdown 1
+
+                if (exceptionReportModel.BreakDownLevel1 != null)
+                {
+                    Label1Value = bdValue1;
+                    switch (exceptionReportModel.BreakDownLevel1)
+                    {
+                        
+                        case "location":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_VehicleLoc == bdValue1);
+                            
+                            break;
+
+                        case "bankname":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_BankName == bdValue1);
+                            break;
+
+                        case "financemanager":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_FinMgr == bdValue1);
+                            break;
+
+                        case "priceexception":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_price_variance_exception == bdValue1);
+                            
+                            break;
+
+                        case "rateexception":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_rate_exception == bdValue1);
+                            
+                            break;
+
+                        case "salesassociate":
+                            BreakDown1filteredappraisals = exceptionReportModel.ExceptionDetails.FindAll(x => x.sl_SalesAssociate1 == bdValue1);
+                            break;
+
+                    }
+
+                    exceptionReportDetailsModel.ExceptionDetails = BreakDown1filteredappraisals;
+                }
+                #endregion Breadown 1
+
+                #region Breakdown 2
+
+                if (exceptionReportModel.BreakDownLevel2 != null)
+                {
+                    Label2Value = bdValue2;
+                    switch (exceptionReportModel.BreakDownLevel2)
+                    {
+                        
+                        case "location":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_VehicleLoc == bdValue2);
+
+                            break;
+
+                        case "bankname":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_BankName == bdValue2);
+                            break;
+
+                        case "financemanager":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_FinMgr == bdValue2);
+                            break;
+
+                        case "priceexception":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_price_variance_exception == bdValue2);
+
+                            break;
+
+                        case "rateexception":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_rate_exception == bdValue2);
+
+                            break;
+
+                        case "salesassociate":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.sl_SalesAssociate1 == bdValue2);
+                            break;
+
+
+                    }
+                    exceptionReportDetailsModel.ExceptionDetails = BreakDown2filteredappraisals;
+                }
+                #endregion Breadown 2
+
+                #region Breakdown 3
+
+                if (exceptionReportModel.BreakDownLevel3 != null)
+                {
+                    Label3Value = bdValue3;
+                    switch (exceptionReportModel.BreakDownLevel3)
+                    {
+
+
+                        case "location":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_VehicleLoc == bdValue3);
+
+                            break;
+
+                        case "bankname":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_BankName == bdValue3);
+                            break;
+
+                        case "financemanager":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_FinMgr == bdValue3);
+                            break;
+
+                        case "priceexception":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_price_variance_exception == bdValue3);
+
+                            break;
+
+                        case "rateexception":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_rate_exception == bdValue3);
+
+                            break;
+
+                        case "salesassociate":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.sl_SalesAssociate1 == bdValue3);
+                            break;
+
+                    }
+                    exceptionReportDetailsModel.ExceptionDetails = BreakDown3filteredappraisals;
+                }
+                #endregion Breadown 3
+
+                #region Breakdown 4
+
+                if (exceptionReportModel.BreakDownLevel4 != null)
+                {
+                    Label4Value = bdValue4;
+                    switch (exceptionReportModel.BreakDownLevel4)
+                    {
+
+                        case "location":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_VehicleLoc == bdValue4);
+
+                            break;
+
+                        case "bankname":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_BankName == bdValue4);
+                            break;
+
+                        case "financemanager":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_FinMgr == bdValue4);
+                            break;
+
+                        case "priceexception":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_price_variance_exception == bdValue4);
+
+                            break;
+
+                        case "rateexception":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_rate_exception == bdValue4);
+
+                            break;
+
+                        case "salesassociate":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.sl_SalesAssociate1 == bdValue4);
+                            break;
+
+
+                    }
+                    exceptionReportDetailsModel.ExceptionDetails = BreakDown4filteredappraisals;
+                }
+                #endregion Breadown 4
+
+            }
+
+            //NOW GO THROUGH BREAKDOWNS AND RETURN THE LAST BREAKDOWN
+
+
+            return View(exceptionReportDetailsModel);
+        }
+
+        public ActionResult AppraisalReportTradeDetails()
+        {
+            var appraisalReportDetailsModel = new AppraisalReportDetailModel();
+
+            var bdValue1 = "";
+            var bdValue2 = "";
+            var bdValue3 = "";
+            var bdValue4 = "";
+
+            if (Request.Form["bd1"] != null && Request.Form["bd1"] != "")
+            {
+                bdValue1 = Request.Form["bd1"].Replace(Request.Form["bd1"].Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel1 = Request.Form["bd1"].Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel1Value = bdValue1;
+            }
+
+            if (Request.Form["bd2"] != null && Request.Form["bd2"] != "")
+            {
+                bdValue2 = Request.Form["bd2"].Replace(Request.Form["bd2"].Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel2 = Request.Form["bd2"].Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel2Value = bdValue2;
+            }
+
+            if (Request.Form["bd3"] != null && Request.Form["bd3"] != "")
+            {
+                bdValue3 = Request.Form["bd3"].Replace(Request.Form["bd3"].Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel3 = Request.Form["bd3"].Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel3Value = bdValue3;
+            }
+
+            if (Request.Form["bd4"] != null && Request.Form["bd4"] != "")
+            {
+                bdValue4 = Request.Form["bd4"].Replace(Request.Form["bd4"].Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel4 = Request.Form["bd4"].Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel4Value = bdValue4;
+            }
+
+            if (Request.Form["vt"] != null && Request.Form["vt"] != "")
+            {
+                appraisalReportDetailsModel.VehicleType = Request.Form["vt"];
+            }
+
+            if (Request.Form["at"] != null && Request.Form["at"] != "")
+            {
+                appraisalReportDetailsModel.AcquisitionType = Request.Form["at"];
+            }
+
+
+            appraisalReportDetailsModel.ReportStartMonth = Convert.ToInt32(Request.Form["startmonth"]);
+
+            appraisalReportDetailsModel.ReportEndMonth = Convert.ToInt32(Request.Form["endmonth"]);
+
+            appraisalReportDetailsModel.ReportStartYear = Convert.ToInt32(Request.Form["startyear"]);
+
+            appraisalReportDetailsModel.ReportEndYear = Convert.ToInt32(Request.Form["endyear"]);
+
+
+
+            if (Request.Form["tradeDeals"] != null)
+            {
+                var deals = Request.Form["tradeDeals"];
+                var trimmedDeals = "";
+
+                var tradeDeals = SqlQueries.GetTradeDealDetails(deals);
+
+                foreach(var deal in deals.Split(','))
+                {
+                    if (deal != "")
+                    {
+                        trimmedDeals += deal.Substring(3) + ",";
+                    }
+                }
+
+                var wholesaleDeals = SqlQueries.GetWholeSaleTradeDealDetails(trimmedDeals);
+
+                tradeDeals.AddRange(wholesaleDeals);
+
+                //Now get the VIN List
+                var VINList = new List<string>();
+                foreach(var deal in tradeDeals)
+                {
+                    if(deal.TradeVIN != null && deal.TradeVIN != "")
+                    {
+                        VINList.Add(deal.TradeVIN);
+                    }
+                    if (deal.Trade2VIN != null && deal.Trade2VIN != "")
+                    {
+                        VINList.Add(deal.Trade2VIN);
+                    }
+                }
+
+                SqlQueries.DeleteVINTradeSearchTable();
+                SqlQueries.InsertIntoVINTradeSearchTable(VINList);
+                appraisalReportDetailsModel.TradeAcquisitionDetails =  SqlQueries.GetTradeAcquisitionReportDetailsByVIN();
+                appraisalReportDetailsModel.TradeAcquisitionDetails = appraisalReportDetailsModel.TradeAcquisitionDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.AppraisalDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+                //appraisalReportDetailsModel.TradeAcquisitionDetails = appraisalReportDetailsModel.TradeAcquisitionDetails.FindAll(x => appraisalReportDetailsModel.StatusType.Split(',').ToList().Contains(x.Status.ToString()));
+
+                var additionalDetails = SqlQueries.GetTradeAcquisitionAdditionalDetails();
+
+                appraisalReportDetailsModel.vAutoInventoryDetails = SqlQueries.GetVAutoCurrentInventory();
+
+                foreach (var appraisal in appraisalReportDetailsModel.TradeAcquisitionDetails)
+                {
+                    var stockSource = "";
+                    var stockSourceName = "";
+                    var lastChar = "";
+
+
+                    if (appraisal.StockNumber != null && appraisal.StockNumber.Length > 1)
+                    {
+                        stockSource = appraisal.StockNumber.Substring(1, 1);
+                        lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+
+                        var details = additionalDetails.Find(x => x.StockNumber.Trim() == appraisal.StockNumber);
+                        if (details != null)
+                        {
+                            appraisal.StyleId = details.StyleId;
+                            appraisal.Certification = details.Certification;
+                            appraisal.BodyStyle = details.BodyStyle;
+                            appraisal.XrefId = details.XrefId;
+                            appraisal.LeadCount = details.LeadCount;
+                        }
+                        else
+                        {
+                            appraisal.StyleId = "None";
+                            appraisal.Certification = "None";
+                            appraisal.BodyStyle = "unknown";
+                            appraisal.BodyStyle = "";
+                        }
+
+                    }
+                    switch (stockSource)
+                    {
+                        case "A":
+                            stockSourceName = "Auction or Wholesale";
+                            break;
+                        case "B":
+                            stockSourceName = "Lease Buyout";
+                            break;
+                        case "C":
+                            stockSourceName = "Car Offer";
+                            break;
+                        case "D":
+                            stockSourceName = "Demo Prev Rental";
+                            break;
+                        case "E":
+                            stockSourceName = "Demo";
+                            break;
+                        case "F":
+                            stockSourceName = "Nextcar Bad Hist";
+                            break;
+                        case "G":
+                            stockSourceName = "Government Auction";
+                            break;
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "L":
+                            stockSourceName = "In House Loaner";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        case "N":
+                            stockSourceName = "Nextcar Purchase";
+                            break;
+                        case "P":
+                            stockSourceName = "Purchase/Lease Cust";
+                            break;
+                        case "R":
+                            stockSourceName = "Rental";
+                            break;
+                        case "X":
+                            stockSourceName = "Previous Repo";
+                            break;
+                        default:
+                            stockSource = "";
+                            stockSourceName = "";
+                            break;
+                    }
+
+                    if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                    {
+                        switch (lastChar)
+                        {
+                            case "K":
+                                stockSourceName = "Kelly ICO";
+                                break;
+                            case "M":
+                                stockSourceName = "Facebook Marketplace";
+                                break;
+                            default:
+                                stockSourceName = "Trade";
+                                break;
+                        }
+                    }
+
+                    appraisal.VehicleSource = stockSourceName;
+
+                    if (appraisal.LeadSourceName == null)
+                    {
+                        appraisal.LeadSourceName = "";
+                    }
+
+                    if (appraisal.LeadGroup == null)
+                    {
+                        appraisal.LeadGroup = "";
+                    }
+
+                    if (appraisal.Certification == null || appraisal.Certification == "")
+                    {
+                        appraisal.Certification = "None";
+                    }
+
+                    if (appraisal.Appraiser == null)
+                    {
+                        appraisal.Appraiser = "";
+                    }
+
+                    if (appraisal.Make == null)
+                    {
+                        appraisal.Make = "";
+                    }
+
+                    if (appraisal.Carline != null && appraisal.Carline.IndexOf(" ") > 0)
+                    {
+                        appraisal.Carline = appraisal.Carline.Substring(0, appraisal.Carline.IndexOf(" "));
+                    }
+                }
+
+
+                var reportDate = new DateTime(Convert.ToInt32(appraisalReportDetailsModel.ReportStartYear), Convert.ToInt32(appraisalReportDetailsModel.ReportStartMonth), 1);
+
+                appraisalReportDetailsModel.AppraisalSoldDetails = SqlMapperUtil.StoredProcWithParams<AppraisalSoldDetail>("sp_CommissionGetAssociateAppraisalsSoldDetailsByVIN", new { StartDate = reportDate.Date }, "ReynoldsData");
+                appraisalReportDetailsModel.AppraisalSoldDetails = appraisalReportDetailsModel.AppraisalSoldDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.LastModifiedDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+                foreach (var appraisal in appraisalReportDetailsModel.AppraisalSoldDetails)
+                {
+                    var stockSource = "";
+                    var stockSourceName = "";
+                    var lastChar = "";
+
+                    if (appraisal.StockNumber != null)
+                    {
+                        stockSource = appraisal.StockNumber.Substring(1, 1);
+                        lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+                    }
+                    switch (stockSource)
+                    {
+                        case "A":
+                            stockSourceName = "Auction or Wholesale";
+                            break;
+                        case "B":
+                            stockSourceName = "Lease Buyout";
+                            break;
+                        case "C":
+                            stockSourceName = "Car Offer";
+                            break;
+                        case "D":
+                            stockSourceName = "Demo Prev Rental";
+                            break;
+                        case "E":
+                            stockSourceName = "Demo";
+                            break;
+                        case "F":
+                            stockSourceName = "Nextcar Bad Hist";
+                            break;
+                        case "G":
+                            stockSourceName = "Government Auction";
+                            break;
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "L":
+                            stockSourceName = "In House Loaner";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        case "N":
+                            stockSourceName = "Nextcar Purchase";
+                            break;
+                        case "P":
+                            stockSourceName = "Purchase/Lease Cust";
+                            break;
+                        case "R":
+                            stockSourceName = "Rental";
+                            break;
+                        case "X":
+                            stockSourceName = "Previous Repo";
+                            break;
+                        default:
+                            stockSource = "";
+                            stockSourceName = "";
+                            break;
+                    }
+
+                    if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                    {
+                        switch (lastChar)
+                        {
+                            case "K":
+                                stockSourceName = "Kelly ICO";
+                                break;
+                            case "M":
+                                stockSourceName = "Facebook Marketplace";
+                                break;
+                            default:
+                                stockSourceName = "Trade";
+                                break;
+                        }
+                    }
+
+                    appraisal.VehicleSource = stockSourceName;
+
+                    if (appraisal.ZipCode == null || appraisal.ZipCode == "")
+                    {
+                        appraisal.ZipCode = "None";
+                    }
+
+                    if (appraisal.Certification == null || appraisal.Certification == "")
+                    {
+                        appraisal.Certification = "None";
+                    }
+
+                    if (appraisal.Certification == "FWP")
+                    {
+                        appraisal.Certification = "FP";
+                    }
+
+                    if (appraisal.Certification == "MC" || appraisal.Certification == "CUV" || appraisal.Certification == "MZC" || appraisal.Certification == "GMU" || appraisal.Certification == "VWC")
+                    {
+                        appraisal.Certification = "CPO";
+                    }
+
+                    if (appraisal.Make == null)
+                    {
+                        appraisal.Make = "";
+                    }
+                    else
+                    {
+                        appraisal.Make = appraisal.Make.Replace(" TRUCK", "");
+                    }
+
+                    if (appraisal.Model != null && appraisal.Model.IndexOf(" ") > 0)
+                    {
+                        appraisal.Model = appraisal.Model.Substring(0, appraisal.Model.IndexOf(" "));
+                    }
+                }
+
+
+            }
+
+
+            return View(appraisalReportDetailsModel);
+        }
+
+        //public ActionResult AppraisalReportTradeDetails(string startmonth, string startyear, string endmonth, string endyear, string bd1, string bd2, string bd3, string bd4, string vt, string at, string days)
+        //{
+        //    var appraisalReportModel = new AppraisalReportModel();
+        //    var appraisalReportDetailsModel = new AppraisalReportDetailModel();
+
+        //    var bdValue1 = "";
+        //    var bdValue2 = "";
+        //    var bdValue3 = "";
+        //    var bdValue4 = "";
+
+        //    if (bd1 != null && bd1 != "")
+        //    {
+        //        appraisalReportModel.BreakDownLevel1 = bd1.Split(',')[0];
+        //        //bdValue1 = bd1.Split(',')[1];
+        //        bdValue1 = bd1.Replace(bd1.Split(',')[0] + ",","");
+
+        //        appraisalReportDetailsModel.BreakDownLevel1 = bd1.Split(',')[0];
+        //        appraisalReportDetailsModel.BreakDownLevel1Value = bdValue1;
+        //    }
+
+        //    if (bd2 != null && bd2 != "")
+        //    {
+        //        appraisalReportModel.BreakDownLevel2 = bd2.Split(',')[0];
+        //        //bdValue2 = bd2.Split(',')[1];
+        //        bdValue2 = bd2.Replace(bd2.Split(',')[0] + ",", "");
+
+        //        appraisalReportDetailsModel.BreakDownLevel2 = bd2.Split(',')[0];
+        //        appraisalReportDetailsModel.BreakDownLevel2Value = bdValue2;
+        //    }
+
+        //    if (bd3 != null && bd3 != "")
+        //    {
+        //        appraisalReportModel.BreakDownLevel3 = bd3.Split(',')[0];
+        //        //bdValue3 = bd3.Split(',')[1];
+        //        bdValue3 = bd3.Replace(bd3.Split(',')[0] + ",", "");
+
+        //        appraisalReportDetailsModel.BreakDownLevel3 = bd3.Split(',')[0];
+        //        appraisalReportDetailsModel.BreakDownLevel3Value = bdValue3;
+        //    }
+
+        //    if (bd4 != null && bd4 != "")
+        //    {
+        //        appraisalReportModel.BreakDownLevel4 = bd4.Split(',')[0];
+        //        //bdValue4 = bd4.Split(',')[1];
+        //        bdValue4 = bd4.Replace(bd4.Split(',')[0] + ",", "");
+
+        //        appraisalReportDetailsModel.BreakDownLevel4 = bd4.Split(',')[0];
+        //        appraisalReportDetailsModel.BreakDownLevel4Value = bdValue4;
+        //    }
+
+        //    if (vt != null && vt != "")
+        //    {
+        //        appraisalReportModel.VehicleType = vt;
+        //        appraisalReportDetailsModel.VehicleType = vt;
+        //    }
+
+        //    if (at != null && at != "")
+        //    {
+        //        appraisalReportModel.AcquisitionType = at;
+        //        appraisalReportDetailsModel.AcquisitionType = at;
+        //    }
+
+
+        //    appraisalReportModel.ReportStartMonth = Convert.ToInt32(startmonth);
+        //    appraisalReportDetailsModel.ReportStartMonth = Convert.ToInt32(startmonth);
+
+        //    appraisalReportModel.ReportEndMonth = Convert.ToInt32(endmonth);
+        //    appraisalReportDetailsModel.ReportEndMonth = Convert.ToInt32(endmonth);
+
+        //    appraisalReportModel.ReportStartYear = Convert.ToInt32(startyear);
+        //    appraisalReportDetailsModel.ReportStartYear = Convert.ToInt32(startyear);
+
+        //    appraisalReportModel.ReportEndYear = Convert.ToInt32(endyear);
+        //    appraisalReportDetailsModel.ReportEndYear = Convert.ToInt32(endyear);
+
+        //    var reportDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportStartYear), Convert.ToInt32(appraisalReportModel.ReportStartMonth), 1);
+        //    var reportEndDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportEndYear), Convert.ToInt32(appraisalReportModel.ReportEndMonth), 1);//.AddMonths(1);
+
+        //    appraisalReportModel.AppraisalSoldDetails = SqlMapperUtil.StoredProcWithParams<AppraisalSoldDetail>("sp_CommissionGetAssociateAppraisalsSoldDetails", new { StartDate = reportDate.Date, EndDate = reportEndDate.Date }, "ReynoldsData");
+        //    //Remove Duplicates
+        //    appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.LastModifiedDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+
+        //    if (vt != "All")
+        //    {
+        //        if (vt == "Retail")
+        //        {
+        //            appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "R");
+
+        //        }
+        //        else if (vt == "Wholesale")
+        //        {
+        //            appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.WholesaleRetail == "W");
+
+        //        }
+
+        //    }
+
+        //    if (at != "ALL")
+        //    {
+        //        if (at == "Trade")
+        //        {
+        //            appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "T");
+        //        }
+        //        else if (at == "Purchase")
+        //        {
+        //            appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.TradePurchase == "P");
+        //        }
+        //    }
+
+        //    if (days != null && days != "")
+        //    {
+        //        switch (days)
+        //        {
+        //            case "30":
+        //                appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) < 30);
+        //                break;
+        //            case "3060":
+        //                appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) >= 30 && Int32.Parse(x.DaysInStock) < 60);
+
+        //                break;
+        //            case "6090":
+        //                appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) >= 60 && Int32.Parse(x.DaysInStock) < 90);
+        //                break;
+        //            case "90":
+        //                appraisalReportModel.AppraisalSoldDetails = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Int32.Parse(x.DaysInStock) > 90);
+        //                break;
+        //        }
+        //    }
+
+        //    foreach (var appraisal in appraisalReportModel.AppraisalSoldDetails)
+        //    {
+        //        var stockSource = "";
+        //        var stockSourceName = "";
+        //        var lastChar = "";
+
+        //        if (appraisal.StockNumber != null)
+        //        {
+        //            stockSource = appraisal.StockNumber.Substring(1, 1);
+        //            lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+        //        }
+        //        switch (stockSource)
+        //        {
+        //            case "A":
+        //                stockSourceName = "Auction or Wholesale";
+        //                break;
+        //            case "B":
+        //                stockSourceName = "Lease Buyout";
+        //                break;
+        //            case "C":
+        //                stockSourceName = "Car Offer";
+        //                break;
+        //            case "D":
+        //                stockSourceName = "Demo Prev Rental";
+        //                break;
+        //            case "E":
+        //                stockSourceName = "Demo";
+        //                break;
+        //            case "F":
+        //                stockSourceName = "Nextcar Bad Hist";
+        //                break;
+        //            case "G":
+        //                stockSourceName = "Government Auction";
+        //                break;
+        //            case "K":
+        //                stockSourceName = "Kelly ICO";
+        //                break;
+        //            case "L":
+        //                stockSourceName = "In House Loaner";
+        //                break;
+        //            case "M":
+        //                stockSourceName = "Facebook Marketplace";
+        //                break;
+        //            case "N":
+        //                stockSourceName = "Nextcar Purchase";
+        //                break;
+        //            case "P":
+        //                stockSourceName = "Purchase/Lease Cust";
+        //                break;
+        //            case "R":
+        //                stockSourceName = "Rental";
+        //                break;
+        //            case "X":
+        //                stockSourceName = "Previous Repo";
+        //                break;
+        //            default:
+        //                stockSource = "";
+        //                stockSourceName = "";
+        //                break;
+        //        }
+
+        //        if (lastChar != "" && Char.IsLetter(lastChar, 0))
+        //        {
+        //            switch (lastChar)
+        //            {
+        //                case "K":
+        //                    stockSourceName = "Kelly ICO";
+        //                    break;
+        //                case "M":
+        //                    stockSourceName = "Facebook Marketplace";
+        //                    break;
+        //                default:
+        //                    stockSourceName = "Trade";
+        //                    break;
+        //            }
+        //        }
+
+        //        appraisal.VehicleSource = stockSourceName;
+
+        //        if(appraisal.ZipCode == null || appraisal.ZipCode == "")
+        //        {
+        //            appraisal.ZipCode = "None";
+        //        }
+
+        //        if(appraisal.Certification == null || appraisal.Certification == "")
+        //        {
+        //            appraisal.Certification = "None";
+        //        }
+
+        //        if (appraisal.Certification == "FWP")
+        //        {
+        //            appraisal.Certification = "FP";
+        //        }
+
+        //        if (appraisal.Certification == "MC" || appraisal.Certification == "CUV" || appraisal.Certification == "MZC" || appraisal.Certification == "GMU" || appraisal.Certification == "VWC")
+        //        {
+        //            appraisal.Certification = "CPO";
+        //        }
+
+        //        if(appraisal.Make == null)
+        //        {
+        //            appraisal.Make = "";
+        //        }
+        //        else
+        //        {
+        //            appraisal.Make = appraisal.Make.Replace(" TRUCK", "");
+        //        }
+
+        //        if (appraisal.Model != null && appraisal.Model.IndexOf(" ") > 0)
+        //        {
+        //            appraisal.Model = appraisal.Model.Substring(0, appraisal.Model.IndexOf(" "));
+        //        }
+        //    }
+
+        //    var Label1Value = "";
+        //    var Label2Value = "";
+        //    var Label3Value = "";
+        //    var Label4Value = "";
+
+        //    var BreakDown1filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+        //    var BreakDown2filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+        //    var BreakDown3filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+        //    var BreakDown4filteredappraisals = new List<SalesCommission.Models.AppraisalSoldDetail>();
+
+        //    if (appraisalReportModel.AppraisalSoldDetails != null && appraisalReportModel.AppraisalSoldDetails.Count > 0)
+        //    {
+
+
+
+        //        #region Breakdown 1
+
+        //        if (appraisalReportModel.BreakDownLevel1 != null)
+        //        {
+        //            Label1Value = bdValue1;
+        //            switch (appraisalReportModel.BreakDownLevel1)
+        //            {
+
+        //                case "appraiser":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Appraiser == bdValue1);
+        //                    break;
+
+        //                case "associate":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SalesAssociate == bdValue1);
+        //                    break;
+
+        //                case "location":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location == bdValue1);
+
+        //                    foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        //                    {
+        //                        if (store.LocationId.ToLower().Trim() == bdValue1.ToLower().Trim())
+        //                        {
+        //                            Label1Value = store.Name;
+        //                        }
+        //                    }
+
+        //                    break;
+
+        //                case "vehiclesource":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.VehicleSource == bdValue1);
+        //                    break;
+
+        //                case "certified":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Certification == bdValue1);
+        //                    foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+        //                    {
+        //                        if (cert.CertificationID.ToLower().Trim() == bdValue1.ToLower().Trim())
+        //                        {
+        //                            Label1Value = cert.Name;
+        //                        }
+        //                    }
+        //                    if (Label1Value == "")
+        //                    {
+        //                        Label1Value = "None";
+        //                    }
+        //                    break;
+
+        //                case "soldloc":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SoldLocation == bdValue1);
+        //                    break;
+
+        //                case "make":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Make.Contains(bdValue1));
+        //                    break;
+
+        //                case "stock":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.StockNumber == bdValue1);
+        //                    break;
+
+        //                case "model":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Model == bdValue1);
+        //                    break;
+
+        //                case "monthyear":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue1);
+        //                    var dealDate = Convert.ToDateTime(bdValue1);
+        //                    Label1Value = dealDate.Month + "/" + dealDate.Year;
+
+        //                    break;
+
+        //                case "zipcode":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.ZipCode == bdValue1);
+        //                    break;
+
+        //                case "modelyear":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Year == bdValue1);
+        //                    break;
+
+        //                case "showroom":
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Showroom == bdValue1);
+        //                    break;
+
+
+        //                case "days":
+        //                    var daysbreakdown = Convert.ToDecimal(bdValue1);
+
+        //                    if (daysbreakdown == 120)
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+        //                    }
+        //                    break;
+
+        //                case "mileage":
+        //                    var milesbreakdown = Convert.ToDecimal(bdValue1);
+
+        //                    if (milesbreakdown == 500000)
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+        //                    }
+        //                    break;
+
+        //                case "price":
+        //                    var pricebreakdown = Convert.ToDecimal(bdValue1);
+
+        //                    if (pricebreakdown == 200000)
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+        //                    }
+        //                    break;
+
+        //                default:
+        //                    BreakDown1filteredappraisals = appraisalReportModel.AppraisalSoldDetails.FindAll(x => x.Location == bdValue1);
+        //                    break;
+
+        //            }
+
+        //            appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown1filteredappraisals;
+        //        }
+        //        #endregion Breadown 1
+
+        //        #region Breakdown 2
+
+        //        if (appraisalReportModel.BreakDownLevel2 != null)
+        //        {
+        //            Label2Value = bdValue2;
+        //            switch (appraisalReportModel.BreakDownLevel2)
+        //            {
+
+        //                case "appraiser":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Appraiser == bdValue2);
+        //                    break;
+
+        //                case "associate":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SalesAssociate == bdValue2);
+        //                    break;
+
+        //                case "location":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Location == bdValue2);
+
+        //                    foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        //                    {
+        //                        if (store.LocationId.ToLower().Trim() == bdValue2.ToLower().Trim())
+        //                        {
+        //                            Label2Value = store.Name;
+        //                        }
+        //                    }
+
+        //                    break;
+
+        //                case "vehiclesource":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.VehicleSource == bdValue2);
+        //                    break;
+
+        //                case "certified":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Certification == bdValue2);
+        //                    foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+        //                    {
+        //                        if (cert.CertificationID.ToLower().Trim() == bdValue2.ToLower().Trim())
+        //                        {
+        //                            Label2Value = cert.Name;
+        //                        }
+        //                    }
+        //                    if (Label2Value == "")
+        //                    {
+        //                        Label2Value = "None";
+        //                    }
+        //                    break;
+
+        //                case "soldloc":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SoldLocation == bdValue2);
+        //                    break;
+
+        //                case "make":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Make.Contains(bdValue2));
+        //                    break;
+
+
+        //                case "stock":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.StockNumber == bdValue2);
+        //                    break;
+
+        //                case "model":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Model == bdValue2);
+        //                    break;
+
+        //                case "monthyear":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue2);
+        //                    var dealDate = Convert.ToDateTime(bdValue2);
+        //                    Label2Value = dealDate.Month + "/" + dealDate.Year;
+        //                    break;
+
+        //                case "zipcode":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.ZipCode == bdValue2);
+        //                    break;
+
+        //                case "modelyear":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Year == bdValue2);
+        //                    break;
+
+        //                case "showroom":
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Showroom == bdValue2);
+        //                    break;
+
+        //                case "days":
+        //                    var daysbreakdown = Convert.ToDecimal(bdValue2);
+
+        //                    if (daysbreakdown == 120)
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+        //                    }
+        //                    break;
+
+        //                case "mileage":
+        //                    var milesbreakdown = Convert.ToDecimal(bdValue2);
+
+        //                    if (milesbreakdown == 500000)
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+        //                    }
+        //                    break;
+
+        //                case "price":
+        //                    var pricebreakdown = Convert.ToDecimal(bdValue2);
+
+        //                    if (pricebreakdown == 200000)
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+        //                    }
+        //                    break;
+
+        //                default:
+        //                    BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Location == bdValue2);
+        //                    break;
+
+
+        //            }
+        //            appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown2filteredappraisals;
+        //        }
+        //        #endregion Breadown 2
+
+        //        #region Breakdown 3
+
+        //        if (appraisalReportModel.BreakDownLevel3 != null)
+        //        {
+        //            Label3Value = bdValue3;
+        //            switch (appraisalReportModel.BreakDownLevel3)
+        //            {
+
+        //                case "appraiser":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Appraiser == bdValue3);
+        //                    break;
+
+        //                case "associate":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SalesAssociate == bdValue3);
+        //                    break;
+
+        //                case "location":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Location == bdValue3);
+
+        //                    foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+        //                    {
+        //                        if (store.LocationId.ToLower().Trim() == bdValue3.ToLower().Trim())
+        //                        {
+        //                            Label3Value = store.Name;
+        //                        }
+        //                    }
+
+        //                    break;
+
+
+        //                case "vehiclesource":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.VehicleSource == bdValue3);
+        //                    break;
+
+        //                case "certified":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Certification == bdValue3);
+        //                    foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+        //                    {
+        //                        if (cert.CertificationID.ToLower().Trim() == bdValue3.ToLower().Trim())
+        //                        {
+        //                            Label3Value = cert.Name;
+        //                        }
+        //                    }
+        //                    if (Label3Value == "")
+        //                    {
+        //                        Label3Value = "None";
+        //                    }
+        //                    break;
+
+        //                case "soldloc":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SoldLocation == bdValue3);
+        //                    break;
+
+        //                case "make":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Make.Contains(bdValue3));
+        //                    break;
+
+
+        //                case "stock":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.StockNumber == bdValue3);
+        //                    break;
+
+        //                case "model":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Model == bdValue3);
+        //                    break;
+
+        //                case "monthyear":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue3);
+        //                    var dealDate = Convert.ToDateTime(bdValue3);
+        //                    Label3Value = dealDate.Month + "/" + dealDate.Year;
+        //                    break;
+
+        //                case "zipcode":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.ZipCode == bdValue3);
+        //                    break;
+
+        //                case "modelyear":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Year == bdValue3);
+        //                    break;
+
+
+        //                case "showroom":
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Showroom == bdValue3);
+        //                    break;
+
+        //                case "days":
+        //                    var daysbreakdown = Convert.ToDecimal(bdValue3);
+
+        //                    if (daysbreakdown == 120)
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+        //                    }
+        //                    break;
+
+        //                case "mileage":
+        //                    var milesbreakdown = Convert.ToDecimal(bdValue3);
+
+        //                    if (milesbreakdown == 500000)
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+        //                    }
+        //                    break;
+
+        //                case "price":
+        //                    var pricebreakdown = Convert.ToDecimal(bdValue3);
+
+        //                    if (pricebreakdown == 200000)
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+        //                    }
+        //                    break;
+        //                default:
+        //                    BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Location == bdValue3);
+        //                    break;
+
+        //            }
+        //            appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown3filteredappraisals;
+        //        }
+        //        #endregion Breadown 3
+
+        //        #region Breakdown 4
+
+        //        if (appraisalReportModel.BreakDownLevel4 != null)
+        //        {
+        //            Label4Value = bdValue4;
+        //            switch (appraisalReportModel.BreakDownLevel4)
+        //            {
+
+        //                case "appraiser":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Appraiser == bdValue4);
+        //                    break;
+
+        //                case "associate":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SalesAssociate == bdValue4);
+        //                    break;
+
+        //                case "location":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Location == bdValue4);
+
+        //                    foreach (var store in SalesCommission.Business.Enums.Locations)
+        //                    {
+        //                        if (store.LocationId.ToLower().Trim() == bdValue4.ToLower().Trim())
+        //                        {
+        //                            Label4Value = store.Name;
+        //                        }
+        //                    }
+
+        //                    break;
+
+        //                case "vehiclesource":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.VehicleSource == bdValue4);
+        //                    break;
+
+        //                case "certified":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Certification == bdValue4);
+        //                    foreach (var cert in SalesCommission.Business.Enums.CertificationLevels)
+        //                    {
+        //                        if (cert.CertificationID.ToLower().Trim() == bdValue4.ToLower().Trim())
+        //                        {
+        //                            Label4Value = cert.Name;
+        //                        }
+        //                    }
+        //                    if (Label4Value == "")
+        //                    {
+        //                        Label4Value = "None";
+        //                    }
+        //                    break;
+
+        //                case "soldloc":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SoldLocation == bdValue4);
+        //                    break;
+
+        //                case "make":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Make.Contains(bdValue4));
+        //                    break;
+
+        //                case "stock":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.StockNumber == bdValue4);
+        //                    break;
+
+        //                case "model":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Model == bdValue4);
+        //                    break;
+
+        //                case "monthyear":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue4);
+        //                    var dealDate = Convert.ToDateTime(bdValue4);
+        //                    Label4Value = dealDate.Month + "/" + dealDate.Year;
+        //                    break;
+
+        //                case "zipcode":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.ZipCode == bdValue4);
+        //                    break;
+
+        //                case "modelyear":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Year == bdValue4);
+        //                    break;
+
+        //                case "showroom":
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Showroom == bdValue4);
+        //                    break;
+
+        //                case "days":
+        //                    var daysbreakdown = Convert.ToDecimal(bdValue4);
+
+        //                    if (daysbreakdown == 120)
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) >= 90);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.DaysInStock) < daysbreakdown && Convert.ToDecimal(x.DaysInStock) >= (daysbreakdown - 30));
+        //                    }
+        //                    break;
+
+        //                case "mileage":
+        //                    var milesbreakdown = Convert.ToDecimal(bdValue4);
+
+        //                    if (milesbreakdown == 500000)
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+        //                    }
+        //                    break;
+
+        //                case "price":
+        //                    var pricebreakdown = Convert.ToDecimal(bdValue4);
+
+        //                    if (pricebreakdown == 200000)
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SellingPrice >= 100000);
+        //                    }
+        //                    else
+        //                    {
+        //                        BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.SellingPrice < pricebreakdown && x.SellingPrice >= (pricebreakdown - 10000));
+        //                    }
+        //                    break;
+        //                default:
+        //                    BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Location == bdValue4);
+        //                    break;
+
+        //            }
+        //            appraisalReportDetailsModel.AppraisalSoldDetails = BreakDown4filteredappraisals;
+        //        }
+        //        #endregion Breadown 4
+
+        //    }
+
+        //    //NOW GO THROUGH BREAKDOWNS AND RETURN THE LAST BREAKDOWN
+
+        //    var tradeDeals = new List<string>();
+        //    foreach (var detail in appraisalReportDetailsModel.AppraisalSoldDetails)
+        //    {
+        //        if(detail.TradeCount > 0)
+        //        {
+        //            tradeDeals.Add(detail.DealNumber);
+        //        }
+
+        //    }
+
+        //    return View(appraisalReportDetailsModel);
+        //}
+
+        public ActionResult AppraisalReportInvDetails(string bd1, string bd2, string bd3, string bd4, string vs, string at, string fm, string days)
+        {
+            var appraisalReportModel = new AppraisalReportModel();
+            var appraisalReportDetailsModel = new AppraisalReportDetailModel();
+
+            var bdValue1 = "";
+            var bdValue2 = "";
+            var bdValue3 = "";
+            var bdValue4 = "";
+
+            if (bd1 != null && bd1 != "")
+            {
+                appraisalReportModel.BreakDownLevel1 = bd1.Split(',')[0];
+                //bdValue1 = bd1.Split(',')[1];
+                bdValue1 = bd1.Replace(bd1.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel1 = bd1.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel1Value = bdValue1;
+            }
+
+            if (bd2 != null && bd2 != "")
+            {
+                appraisalReportModel.BreakDownLevel2 = bd2.Split(',')[0];
+                //bdValue2 = bd2.Split(',')[1];
+                bdValue2 = bd2.Replace(bd2.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel2 = bd2.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel2Value = bdValue2;
+            }
+
+            if (bd3 != null && bd3 != "")
+            {
+                appraisalReportModel.BreakDownLevel3 = bd3.Split(',')[0];
+                //bdValue3 = bd3.Split(',')[1];
+                bdValue3 = bd3.Replace(bd3.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel3 = bd3.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel3Value = bdValue3;
+            }
+
+            if (bd4 != null && bd4 != "")
+            {
+                appraisalReportModel.BreakDownLevel4 = bd4.Split(',')[0];
+                //bdValue4 = bd4.Split(',')[1];
+                bdValue4 = bd4.Replace(bd4.Split(',')[0] + ",", "");
+
+                appraisalReportDetailsModel.BreakDownLevel4 = bd4.Split(',')[0];
+                appraisalReportDetailsModel.BreakDownLevel4Value = bdValue4;
+            }
+
+            if (vs != null && vs != "")
+            {
+                appraisalReportModel.StatusType = vs;
+                appraisalReportDetailsModel.StatusType = vs;
+            }
+
+            if (at != null && at != "")
+            {
+                appraisalReportModel.AcquisitionType = at;
+                appraisalReportDetailsModel.AcquisitionType = at;
+            }
+
+
+            if (fm != null && fm != "")
+            {
+                appraisalReportModel.StatusOnFM = fm;
+            }
+            
+            var startmonth = DateTime.Now.Month;
+            var endmonth = DateTime.Now.Month;
+
+            var startyear = DateTime.Now.Year;
+            var endyear = DateTime.Now.Year;
+
+            appraisalReportModel.ReportStartMonth = Convert.ToInt32(startmonth);
+            appraisalReportDetailsModel.ReportStartMonth = Convert.ToInt32(startmonth);
+
+            appraisalReportModel.ReportEndMonth = Convert.ToInt32(endmonth);
+            appraisalReportDetailsModel.ReportEndMonth = Convert.ToInt32(endmonth);
+
+            appraisalReportModel.ReportStartYear = Convert.ToInt32(startyear);
+            appraisalReportDetailsModel.ReportStartYear = Convert.ToInt32(startyear);
+
+            appraisalReportModel.ReportEndYear = Convert.ToInt32(endyear);
+            appraisalReportDetailsModel.ReportEndYear = Convert.ToInt32(endyear);
+
+            var reportDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportStartYear), Convert.ToInt32(appraisalReportModel.ReportStartMonth), 1);
+            var reportEndDate = new DateTime(Convert.ToInt32(appraisalReportModel.ReportEndYear), Convert.ToInt32(appraisalReportModel.ReportEndMonth), 1);//.AddMonths(1);
+
+            appraisalReportModel.TradeAcquisitionDetails = SqlQueries.GetTradeAcquisitionReportDetailsByDate(reportDate, reportEndDate);
+            appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.OrderByDescending(z => z.VIN).ThenByDescending(z => z.AppraisalDate).GroupBy(x => x.VIN).Select(g => g.First()).ToList();
+
+            appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => appraisalReportModel.StatusType.Split(',').ToList().Contains(x.Status.ToString()));
+
+            if (appraisalReportModel.StatusOnFM.ToUpper() != "ALL")
+            {
+                if (appraisalReportModel.StatusOnFM.ToUpper() == "ONFITZMALL")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount > 0);
+                }
+                else if (appraisalReportModel.StatusOnFM.ToUpper() == "MISSINGFITZMALL")
+                {
+                    appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < 1);
+
+                }
+
+            }
+
+            if (days != null && days != "")
+            {
+                switch (days)
+                {
+                    case "30":
+                        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Int32.Parse(x.Days) < 30);
+                        break;
+                    case "3060":
+                        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Int32.Parse(x.Days) >= 30 && Int32.Parse(x.Days) < 60);
+                        
+                        break;
+                    case "6090":
+                        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Int32.Parse(x.Days) >= 60 && Int32.Parse(x.Days) < 90);
+                        break;
+                    case "90":
+                        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Int32.Parse(x.Days) >90);                        
+                        break;
+                }
+            }
+
+            //if (appraisalReportModel.StatusType.ToUpper() != "ALL")
+            //{
+            //    if (appraisalReportModel.StatusType.ToUpper() == "RETAIL")
+            //    {
+            //        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status == 1 || x.Status == 2);
+            //    }
+            //    else if (appraisalReportModel.StatusType.ToUpper() == "ONLINE")
+            //    {
+            //        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => (x.Status == 1 || x.Status == 2) && x.ListAmount > 0);
+            //    }
+            //    else if (appraisalReportModel.StatusType.ToUpper() == "OTHER")
+            //    {
+            //        appraisalReportModel.TradeAcquisitionDetails = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status != 1 && x.Status != 2);
+            //    }
+            //}
+
+            var additionalDetails = SqlQueries.GetTradeAcquisitionAdditionalDetails();
+
+            appraisalReportDetailsModel.vAutoInventoryDetails = SqlQueries.GetVAutoCurrentInventory();
+
+            foreach (var appraisal in appraisalReportModel.TradeAcquisitionDetails)
+            {
+                var stockSource = "";
+                var stockSourceName = "";
+                var lastChar = "";
+
+
+                if (appraisal.StockNumber != null && appraisal.StockNumber.Length > 1)
+                {
+                    stockSource = appraisal.StockNumber.Substring(1, 1);
+                    lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
+
+                    var details = additionalDetails.Find(x => x.StockNumber.Trim() == appraisal.StockNumber);
+                    if (details != null)
+                    {
+                        appraisal.StyleId = details.StyleId;
+                        appraisal.Certification = details.Certification;
+                        appraisal.BodyStyle = details.BodyStyle;
+                        appraisal.XrefId = details.XrefId;
+                        appraisal.LeadCount = details.LeadCount;
+                        appraisal.ActiveLeadCount = details.ActiveLeadCount;
+                        appraisal.LastActiveLeadDate = details.LastActiveLeadDate;
+                    }
+                    else
+                    {
+                        appraisal.StyleId = "None";
+                        appraisal.Certification = "None";
+                        appraisal.BodyStyle = "unknown";
+                        appraisal.BodyStyle = "";
+                    }
+
+                }
+                switch (stockSource)
+                {
+                    case "A":
+                        stockSourceName = "Auction or Wholesale";
+                        break;
+                    case "B":
+                        stockSourceName = "Lease Buyout";
+                        break;
+                    case "C":
+                        stockSourceName = "Car Offer";
+                        break;
+                    case "D":
+                        stockSourceName = "Demo Prev Rental";
+                        break;
+                    case "E":
+                        stockSourceName = "Demo";
+                        break;
+                    case "F":
+                        stockSourceName = "Nextcar Bad Hist";
+                        break;
+                    case "G":
+                        stockSourceName = "Government Auction";
+                        break;
+                    case "K":
+                        stockSourceName = "Kelly ICO";
+                        break;
+                    case "L":
+                        stockSourceName = "In House Loaner";
+                        break;
+                    case "M":
+                        stockSourceName = "Facebook Marketplace";
+                        break;
+                    case "N":
+                        stockSourceName = "Nextcar Purchase";
+                        break;
+                    case "P":
+                        stockSourceName = "Purchase/Lease Cust";
+                        break;
+                    case "R":
+                        stockSourceName = "Rental";
+                        break;
+                    case "X":
+                        stockSourceName = "Previous Repo";
+                        break;
+                    default:
+                        stockSource = "";
+                        stockSourceName = "";
+                        break;
+                }
+
+                if (lastChar != "" && Char.IsLetter(lastChar, 0))
+                {
+                    switch (lastChar)
+                    {
+                        case "K":
+                            stockSourceName = "Kelly ICO";
+                            break;
+                        case "M":
+                            stockSourceName = "Facebook Marketplace";
+                            break;
+                        default:
+                            stockSourceName = "Trade";
+                            break;
+                    }
+                }
+
+                appraisal.VehicleSource = stockSourceName;
+
+                if (appraisal.LeadSourceName == null)
+                {
+                    appraisal.LeadSourceName = "";
+                }
+
+                if (appraisal.LeadGroup == null)
+                {
+                    appraisal.LeadGroup = "";
+                }
+
+                if(appraisal.Certification == null || appraisal.Certification == "")
+                {
+                    appraisal.Certification = "None";
+                }
+
+                if (appraisal.Appraiser == null)
+                {
+                    appraisal.Appraiser = "";
+                }
+
+                if(appraisal.Make == null)
+                {
+                    appraisal.Make = "";
+                }
+
+                if (appraisal.Carline != null && appraisal.Carline.IndexOf(" ") > 0)
+                {
+                    appraisal.Carline = appraisal.Carline.Substring(0, appraisal.Carline.IndexOf(" "));
+                }
+            }
+
+
+            var Label1Value = "";
+            var Label2Value = "";
+            var Label3Value = "";
+            var Label4Value = "";
+
+            var BreakDown1filteredappraisals = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+            var BreakDown2filteredappraisals = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+            var BreakDown3filteredappraisals = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+            var BreakDown4filteredappraisals = new List<SalesCommission.Models.TradeAcquisitionDetail>();
+
+            if (appraisalReportModel.TradeAcquisitionDetails != null && appraisalReportModel.TradeAcquisitionDetails.Count > 0)
+            {
+
+                
+                #region Breakdown 1
+
+                if (appraisalReportModel.BreakDownLevel1 != null)
+                {
+                    Label1Value = bdValue1;
+                    switch (appraisalReportModel.BreakDownLevel1)
+                    {
+
+                        case "appraiser":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Appraiser == bdValue1);
+                            break;
+                            
+                        case "location":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.DRloc == bdValue1);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "showroom":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == bdValue1);
+
+                            foreach (var store in SalesCommission.Business.Enums.ShowroomLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.VehicleSource == bdValue1);
+                            break;
+
+                        case "lead":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadSourceName == bdValue1);
+                            break;
+
+                        case "leadgroup":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LeadGroup == bdValue1);
+                            break;
+
+
+                        case "stock":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.StockNumber == bdValue1);
+                            break;
+
+                        case "status":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Status.ToString() == bdValue1);
+
+                            foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                            {
+                                if (status.StatusId.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Make.ToUpper().Contains(bdValue1.ToUpper()));
+                            break;
+
+                        case "model":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Carline.ToUpper() == bdValue1.ToUpper());
+                            break;
+
+                        case "certified":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Certification.Trim() == bdValue1);
+                            foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                            {
+                                if (status.CertificationID.ToLower().Trim() == bdValue1.ToLower().Trim())
+                                {
+                                    Label1Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "modelyear":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Year == bdValue1);
+                            break;
+
+
+                        case "body":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.BodyStyle == bdValue1);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue1);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+
+                        case "monthyear":
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue1);
+                            var dealDate = Convert.ToDateTime(bdValue1);
+                            Label1Value = dealDate.Month + "/" + dealDate.Year;
+
+                            break;
+
+                        default:
+                            BreakDown1filteredappraisals = appraisalReportModel.TradeAcquisitionDetails.FindAll(x => x.Loc == bdValue1);
+                            break;
+
+                    }
+
+                    appraisalReportDetailsModel.TradeAcquisitionDetails = BreakDown1filteredappraisals;
+                }
+                #endregion Breadown 1
+
+                #region Breakdown 2
+
+            
+                if (appraisalReportModel.BreakDownLevel2 != null)
+                {
+                    Label2Value = bdValue2;
+                    switch (appraisalReportModel.BreakDownLevel2)
+                    {
+
+                        case "appraiser":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Appraiser == bdValue2);
+                            break;
+
+                        case "location":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.DRloc == bdValue2);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "showroom":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Loc == bdValue2);
+
+                            foreach (var store in SalesCommission.Business.Enums.ShowroomLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.VehicleSource == bdValue2);
+                            break;
+
+                        case "lead":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.LeadSourceName == bdValue2);
+                            break;
+
+
+                        case "stock":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.StockNumber == bdValue2);
+                            break;
+
+                        case "leadgroup":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.LeadGroup == bdValue2);
+                            break;
+
+                        case "status":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Status.ToString() == bdValue2);
+
+                            foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                            {
+                                if (status.StatusId.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "make":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Make.ToUpper().Contains(bdValue2.ToUpper()));
+                            break;
+
+                        case "model":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Carline.ToUpper() == bdValue2.ToUpper());
+                            break;
+
+                        case "certified":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Certification.Trim() == bdValue2);
+                            foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                            {
+                                if (status.CertificationID.ToLower().Trim() == bdValue2.ToLower().Trim())
+                                {
+                                    Label2Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "modelyear":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Year == bdValue2);
+                            break;
+
+
+                        case "body":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.BodyStyle == bdValue2);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue2);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.ListAmount >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+
+                        case "monthyear":
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue2);
+                            var dealDate = Convert.ToDateTime(bdValue2);
+                            Label2Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        default:
+                            BreakDown2filteredappraisals = BreakDown1filteredappraisals.FindAll(x => x.Loc == bdValue2);
+                            break;
+
+
+                    }
+                    appraisalReportDetailsModel.TradeAcquisitionDetails = BreakDown2filteredappraisals;
+                }
+                #endregion Breadown 2
+
+                #region Breakdown 3
+
+                if (appraisalReportModel.BreakDownLevel3 != null)
+                {
+                    Label3Value = bdValue3;
+                    switch (appraisalReportModel.BreakDownLevel3)
+                    {
+
+                        case "appraiser":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Appraiser == bdValue3);
+                            break;
+                            
+                        case "location":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.DRloc == bdValue3);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "showroom":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Loc == bdValue3);
+
+                            foreach (var store in SalesCommission.Business.Enums.ShowroomLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "stock":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.StockNumber == bdValue3);
+                            break;
+
+                        case "vehiclesource":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.VehicleSource == bdValue3);
+                            break;
+
+                        case "lead":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.LeadSourceName == bdValue3);
+                            break;
+
+                        case "leadgroup":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.LeadGroup == bdValue3);
+                            break;
+
+                        case "status":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Status.ToString() == bdValue3);
+
+                            foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                            {
+                                if (status.StatusId.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = status.Name;
+                                }
+                            }
+                            break;
+
+
+                        case "make":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Make.ToUpper().Contains(bdValue3.ToUpper()));
+                            break;
+
+                        case "model":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Carline.ToUpper() == bdValue3.ToUpper());
+                            break;
+
+                        case "certified":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Certification.Trim() == bdValue3);
+                           foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                            {
+                                if (status.CertificationID.ToLower().Trim() == bdValue3.ToLower().Trim())
+                                {
+                                    Label3Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "modelyear":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Year == bdValue3);
+                            break;
+
+
+                        case "body":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.BodyStyle == bdValue3);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue3);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.ListAmount >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+                        case "monthyear":
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue3);
+                            var dealDate = Convert.ToDateTime(bdValue3);
+                            Label3Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        default:
+                            BreakDown3filteredappraisals = BreakDown2filteredappraisals.FindAll(x => x.Loc == bdValue3);
+                            break;
+
+                    }
+                    appraisalReportDetailsModel.TradeAcquisitionDetails = BreakDown3filteredappraisals;
+                }
+                #endregion Breadown 3
+
+                #region Breakdown 4
+
+                if (appraisalReportModel.BreakDownLevel4 != null)
+                {
+                    Label4Value = bdValue4;
+                    switch (appraisalReportModel.BreakDownLevel4)
+                    {
+
+                        case "appraiser":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Appraiser == bdValue4);
+                            break;
+
+                        case "location":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.DRloc == bdValue4);
+
+                            foreach (var store in SalesCommission.Business.Enums.AppraisalLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+                        case "showroom":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Loc == bdValue4);
+
+                            foreach (var store in SalesCommission.Business.Enums.ShowroomLocations)
+                            {
+                                if (store.LocationId.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = store.Name;
+                                }
+                            }
+
+                            break;
+
+
+                        case "vehiclesource":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.VehicleSource == bdValue4);
+                            break;
+
+
+                        case "lead":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.LeadSourceName == bdValue4);
+                            break;
+
+                        case "leadgroup":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.LeadGroup == bdValue4);
+                            break;
+
+
+                        case "stock":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.StockNumber == bdValue4);
+                            break;
+
+                        case "status":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Status.ToString() == bdValue4);
+
+                            foreach (var status in SalesCommission.Business.Enums.VehicleStatuses)
+                            {
+                                if (status.StatusId.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = status.Name;
+                                }
+                            }
+                            break;
+
+
+                        case "make":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Make.ToUpper().Contains(bdValue4.ToUpper()));
+                            break;
+
+                        case "model":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Carline.ToUpper() == bdValue4.ToUpper());
+                            break;
+
+
+                        case "certified":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Certification.Trim() == bdValue4);
+                            foreach (var status in SalesCommission.Business.Enums.CPOCodes)
+                            {
+                                if (status.CertificationID.ToLower().Trim() == bdValue4.ToLower().Trim())
+                                {
+                                    Label4Value = status.Name;
+                                }
+                            }
+                            break;
+
+                        case "modelyear":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Year == bdValue4);
+                            break;
+
+                        case "body":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.BodyStyle == bdValue4);
+                            break;
+
+                        case "days":
+                            var daysbreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (daysbreakdown == 120)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) >= 90);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Days) < daysbreakdown && Convert.ToDecimal(x.Days) >= (daysbreakdown - 30));
+                            }
+                            break;
+
+                        case "mileage":
+                            var milesbreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (milesbreakdown == 500000)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => Convert.ToDecimal(x.Miles) < milesbreakdown && Convert.ToDecimal(x.Miles) >= (milesbreakdown - 25000));
+                            }
+                            break;
+
+                        case "price":
+                            var pricebreakdown = Convert.ToDecimal(bdValue4);
+
+                            if (pricebreakdown == 200000)
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.ListAmount >= 100000);
+                            }
+                            else
+                            {
+                                BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.ListAmount < pricebreakdown && x.ListAmount >= (pricebreakdown - 10000));
+                            }
+                            break;
+
+                        case "monthyear":
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.LastModifiedDate.ToString("MM/yyyy") == bdValue4);
+                            var dealDate = Convert.ToDateTime(bdValue4);
+                            Label4Value = dealDate.Month + "/" + dealDate.Year;
+                            break;
+
+                        default:
+                            BreakDown4filteredappraisals = BreakDown3filteredappraisals.FindAll(x => x.Loc == bdValue4);
+                            break;
+
+                    }
+                    appraisalReportDetailsModel.TradeAcquisitionDetails = BreakDown4filteredappraisals;
+                }
+                #endregion Breadown 4
+
+            }
+
+            //NOW GO THROUGH BREAKDOWNS AND RETURN THE LAST BREAKDOWN
+
+
+            return View(appraisalReportDetailsModel);
+        }
+
+
+        public ActionResult AcquisitionReport()
+        {
+            var acquisitionReport = new TradeAcquisitionReportModel();
+
+            acquisitionReport.TradeAcquisitionDetails = SqlQueries.GetTradeAcquisitionReportDetails();
+
+            return View(acquisitionReport);
+
+        }
+
+        public ActionResult AppraiserReport()
+        {
+            var appraiserReport = new AppraiserReportModel();
+
+            var startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            appraiserReport.YearId = startDate.Year;
+            appraiserReport.MonthId = startDate.Month;
+
+            appraiserReport.AppraiserDetails = SqlQueries.GetAppraiserReport(startDate, endDate);
+
+            return View(appraiserReport);
+        }
+
+        [HttpPost]
+        public ActionResult AppraiserReport(AppraiserReportModel appraiserReport)
+        {
+            
+            var startDate = new DateTime(appraiserReport.YearId, appraiserReport.MonthId, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            appraiserReport.AppraiserDetails = SqlQueries.GetAppraiserReport(startDate, endDate);
+
+            return View(appraiserReport);
+        }
+
         public ActionResult SalesReport()
         {
 
@@ -1576,6 +6686,37 @@ namespace SalesCommission.Controllers
 
             salesReportModel = SqlQueries.GetSalesReportByDateRange(salesReportModel);
 
+            if(salesReportModel.VehicleType != null && salesReportModel.VehicleType.ToUpper() != "ALL" )
+            {
+
+                var filteredReports = new List<SalesReportDetail>();
+
+               if(salesReportModel.VehicleType.ToUpper() == "NEW")
+                {
+                    filteredReports = salesReportModel.SalesReportDetails.FindAll(x => x.BrandId != "UU");
+                }
+               else
+                {
+                    filteredReports = salesReportModel.SalesReportDetails.FindAll(x => x.BrandId == "UU");
+
+                    if(salesReportModel.VehicleType.ToUpper() == "HANDYMAN")
+                    {
+
+                        foreach (var report in filteredReports)
+                        {
+                            if (report.Deals != null)
+                            {
+                                report.Deals.RemoveAll(x => x.CertificationLevel != "HDM");
+                            }
+                        }
+                    }
+
+                }
+
+                salesReportModel.SalesReportDetails = filteredReports;
+
+
+            }
             salesReportModel.FactoryToDealerCash = SqlQueries.GetFTDByDateRange(salesReportModel.ReportStartYear, salesReportModel.ReportStartMonth, salesReportModel.ReportEndYear, salesReportModel.ReportEndMonth);
             return View(salesReportModel);
         }
@@ -1841,7 +6982,9 @@ namespace SalesCommission.Controllers
                 leadReportDetailsModel.VehicleType = vt;
             }
 
-            if(ft != null && ft != "")
+            leadReportModel.IncludeHandyman = true;
+
+            if (ft != null && ft != "")
             {
                 if(ft.Split(',')[0] == "t")
                 {
@@ -1860,11 +7003,15 @@ namespace SalesCommission.Controllers
                     leadReportModel.ExcludeAllBad = true;
                     leadReportDetailsModel.ExcludeAllBad = true;
                 }
-                
+
+                if (ft.Split(',')[3] == "t")
+                {
+                    leadReportModel.IncludeHandyman = false;
+                    leadReportDetailsModel.IncludeHandyman = false;
+                }
             }
 
-            leadReportModel.IncludeHandyman = false;
-            
+        
             leadReportModel.ReportStartDate = startdate;
             leadReportDetailsModel.ReportStartDate = startdate;
 
@@ -2505,8 +7652,6 @@ namespace SalesCommission.Controllers
                 leadReportModel.BreakDownLevel4 = Request.Form["breakdown4"];
             }
 
-            //leadReportModel.IncludeHandyman = includeHandyMan;
-
             var startDate = new DateTime();
             var endDate = new DateTime();
 
@@ -2563,10 +7708,17 @@ namespace SalesCommission.Controllers
                 showExcluded = true;
             }
 
+            var includeHandyMan = true;
+            if (Request.Form["chkIncludeHandyman"] != null && Request.Form["chkIncludeHandyman"].Contains("on"))
+            {
+                includeHandyMan = false;
+            }
+
             leadReportModel.CompareDates = compareDates;
             leadReportModel.ExcludeBadDuplicates = excludeBadDups;
             leadReportModel.ExcludeAllBad = excludeAllBad;
             leadReportModel.ShowExcludedGroups = showExcluded;
+            leadReportModel.IncludeHandyman = includeHandyMan;
 
             leadReportModel = SqlQueries.GetLeadReportNewByDateAndStore(leadReportModel,false);
 
@@ -2684,6 +7836,8 @@ namespace SalesCommission.Controllers
             }
 
             titleDueModel.JJFUsers = SqlQueries.GetJJFEmailUsers();
+
+            ViewBag.CanOfficeValidate = bool.Parse(Session["CanOfficeValidate"].ToString());
 
             return View(titleDueModel);
         }
@@ -3971,6 +9125,22 @@ moneyDueEmail = moneyDueEmail.Replace("{deal}", moneyDue.DealNumber);
 
             var moneyDueModel = new MoneyDueModel();
             return View(moneyDueModel);
+        }
+
+        [HttpPost]
+        public ActionResult DeleteTitleDue(string vin)
+        {
+            
+            if (vin != null)
+            {
+                var success = SqlQueries.DeleteTitleDue(vin);
+                return Json(success, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                throw new ApplicationException("Invalid vin");
+            }
+
         }
 
         //public void SetUserInformation()
