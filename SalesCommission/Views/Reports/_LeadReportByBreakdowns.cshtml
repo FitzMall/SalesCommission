@@ -329,7 +329,7 @@
                     <td class="text-center">@CompanyOtherLeadCount</td>
                     @*<td class="text-center"></td>*@
                     <td class="text-center">@CompanyOtherLeadSoldCount</td>
-                    <td class="text-center divider-column">@CompanyOtherLeadSoldCount</td>
+                    <td class="text-center divider-column">@CompanyOtherLeadSoldPercent.ToString("P", nfi)</td>
                 </tr>
             
 
@@ -755,7 +755,7 @@
 
                                 <td class="text-center">@BreakDown1OtherLeadCount</td>
                                 <td class="text-center">@BreakDown1OtherLeadSoldCount</td>
-                                <td class="text-center divider-column">@BreakDown1OtherLeadSoldCount</td>
+                                <td class="text-center divider-column">@BreakDown1OtherLeadSoldPercent.ToString("P", nfi)</td>
                             </tr>
 
                             <script type="text/javascript">
@@ -1144,7 +1144,7 @@
 
                                     <td class="text-center">@BreakDown2OtherLeadCount</td>
                                     <td class="text-center">@BreakDown2OtherLeadSoldCount</td>
-                                    <td class="text-center divider-column">@BreakDown2OtherLeadSoldCount</td>
+                                    <td class="text-center divider-column">@BreakDown2OtherLeadSoldPercent.ToString("P", nfi)</td>
                                 </tr>
 
                                 <script type="text/javascript">
@@ -1533,7 +1533,7 @@
 
                                         <td class="text-center">@BreakDown3OtherLeadCount</td>
                                         <td class="text-center">@BreakDown3OtherLeadSoldCount</td>
-                                        <td class="text-center divider-column">@BreakDown3OtherLeadSoldCount</td>
+                                        <td class="text-center divider-column">@BreakDown3OtherLeadSoldPercent.ToString("P", nfi)</td>
                                     </tr>
 
                                     <script type="text/javascript">
@@ -1919,7 +1919,7 @@
 
                                             <td class="text-center">@BreakDown4OtherLeadCount</td>
                                             <td class="text-center">@BreakDown4OtherLeadSoldCount</td>
-                                            <td class="text-center divider-column">@BreakDown4OtherLeadSoldCount</td>
+                                            <td class="text-center divider-column">@BreakDown4OtherLeadSoldPercent.ToString("P", nfi)</td>
                                         </tr>
 
                                         BreakDown4Index += 1;
@@ -2064,7 +2064,7 @@
                         <th class="text-center">@CompanyOtherLeadCount</th>
                         @*<th class="text-center"></th>*@
                         <th class="text-center">@CompanyOtherLeadSoldCount</th>
-                        <th class="text-center divider-column">@CompanyOtherLeadSoldCount</th>
+                        <th class="text-center divider-column">@CompanyOtherLeadSoldPercent.ToString("P", nfi)</th>
                     </tr>
                 </tfoot>
             </table>

@@ -34,8 +34,9 @@ namespace SalesCommission.Controllers
 
             
             salesLogReportModel.IncludeHandyman = true;
+            salesLogReportModel.ShowTransfers = true;
 
-            if(locationId != null && locationId != "")
+            if (locationId != null && locationId != "")
             {
                 
                 if (monthId != null && monthId != "")
@@ -58,7 +59,8 @@ namespace SalesCommission.Controllers
                 }
 
                 salesLogReportModel.IncludeHandyman = true;
-                salesLogReportModel = SqlQueries.GetMonthlySalesReportByStoreAndDate(salesLogReportModel, salesLogReportModel.IncludeHandyman);
+                salesLogReportModel.ShowTransfers = true;
+                salesLogReportModel = SqlQueries.GetMonthlySalesReportByStoreAndDate(salesLogReportModel, salesLogReportModel.IncludeHandyman, salesLogReportModel.ShowTransfers);
 
                 var objectivesStandardsModel = new ObjectivesStandardsModel();
                 objectivesStandardsModel.YearId = salesLogReportModel.YearId;
@@ -2169,7 +2171,13 @@ namespace SalesCommission.Controllers
                 showChargebacks = true;
             }
 
-            salesLogReportModel = SqlQueries.GetMonthlySalesReportByStoreAndDate(salesLogReportModel,includeHandyMan);
+            var showTransfers = false;
+            if ((Request.Form["chkShowTransfers"] != null && Request.Form["chkShowTransfers"] == "on") || (Request.Form["chkShowTransfers"] != null && Request.Form["chkShowTransfers"] == "True"))
+            {
+                showTransfers = true;
+            }
+
+            salesLogReportModel = SqlQueries.GetMonthlySalesReportByStoreAndDate(salesLogReportModel,includeHandyMan, showTransfers);
 
             var objectivesStandardsModel = new ObjectivesStandardsModel();
             objectivesStandardsModel.YearId = salesLogReportModel.YearId;
@@ -2204,7 +2212,7 @@ namespace SalesCommission.Controllers
             }
 
             salesLogReportModel.ShowChargebacks = showChargebacks;
-
+            salesLogReportModel.ShowTransfers = showTransfers;
 
             //foreach (var detail in salesLogReportModel.SalesReportDetails)
             //{

@@ -90,6 +90,8 @@
                     <th class="text-center">Days</th>
                     <th class="text-center">Trade</th>
                     <th class="text-center">Appraisal</th>
+                    <th class="text-center">Selling Price</th>
+                    <th class="text-center">Monthly Payment</th>
                     <th class="text-center">Deal Gross</th>
                     <th class="text-center">Fin Inc</th>
                     <th class="text-center">Bank Fee</th>
@@ -201,6 +203,8 @@
                                 <span style="color:red"><i class="fa fa-check" aria-hidden="true"></i></span>
                             }
                         </td>
+                        <td class="text-center">@deal.SellingPrice.ToString("C", nfi)</td>
+                        <td class="text-center">@deal.MonthlyPayment.ToString("C", nfi)</td>
                         <td class="text-center">@deal.DealGrossAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.FinIncAmount.ToString("C", nfi)</td>
                         <td class="text-center">@deal.BankFee.ToString("C", nfi)</td>
@@ -249,6 +253,8 @@
                     <th class="text-center"></th>
                     <th class="text-center">@TradeCount of @dealIndex</th>
                     <th class="text-center">@AppraisalCount of @TradeCount<br /><span style="color:red">@NoTradeAppraisal</span></th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center">@TotalDealGross.ToString("C", nfi)</th>
                     <th class="text-center">@TotalFinInc.ToString("C", nfi)</th>
                     <th class="text-center">@TotalBankFee.ToString("C", nfi)</th>
@@ -292,6 +298,8 @@
                     <th class="text-center"></th>
                     <th class="text-center">@TradePercent.ToString("P",nfi)</th>
                     <th class="text-center">@AppraisalPercent.ToString("P", nfi)</th>
+                    <th class="text-center"></th>
+                    <th class="text-center"></th>
                     <th class="text-center">@AvgGross.ToString("C", nfi)</th>
                     <th class="text-center">@AvgFinInc.ToString("C", nfi)</th>
                     <th class="text-center">@AvgBankFee.ToString("C", nfi)</th>

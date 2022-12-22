@@ -44,6 +44,7 @@ namespace SalesCommission.Models
         public string CustomerName { get; set; }
         public bool IncludeHandyman { get; set; }
         public bool ShowOnlyHandyman { get; set; }
+        public bool ShowTransfers { get; set; }
         public List<SalesReportDetail> SalesReportDetails { get; set; }
         public List<MonthlySalesReportDetail> MonthlySalesReportDetails { get; set; }
         public List<ObjectivesAndStandards> ObjectivesAndStandards { get; set; }

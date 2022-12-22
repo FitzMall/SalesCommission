@@ -703,8 +703,9 @@ namespace SalesCommission.Controllers
 
 
             salesLogReportModel.IncludeHandyman = true;
+            salesLogReportModel.ShowTransfers = true;
 
-            salesLogReportModel = SqlQueries.GetMonthlySalesReportByDate(salesLogReportModel, salesLogReportModel.IncludeHandyman);
+            salesLogReportModel = SqlQueries.GetMonthlySalesReportByDate(salesLogReportModel, salesLogReportModel.IncludeHandyman, salesLogReportModel.ShowTransfers);
 
             var objectivesStandardsModel = new ObjectivesStandardsModel();
             objectivesStandardsModel.YearId = salesLogReportModel.YearId;
@@ -1399,7 +1400,14 @@ namespace SalesCommission.Controllers
             }
             salesLogReportModel.IncludeHandyman = includeHandyMan;
 
-            salesLogReportModel = SqlQueries.GetMonthlySalesReportByDate(salesLogReportModel, salesLogReportModel.IncludeHandyman);
+            var showTransfers = false;
+            if (Request.Form["chkShowTransfers"] != null && Request.Form["chkShowTransfers"] == "on")
+            {
+                showTransfers = true;
+            }
+            salesLogReportModel.ShowTransfers = showTransfers;
+
+            salesLogReportModel = SqlQueries.GetMonthlySalesReportByDate(salesLogReportModel, salesLogReportModel.IncludeHandyman, salesLogReportModel.ShowTransfers);
 
             if(salesLogReportModel.SelectedStores == null || salesLogReportModel.SelectedStores.Count() == 0)
             {
@@ -1940,7 +1948,10 @@ namespace SalesCommission.Controllers
                         case "X":
                             stockSourceName = "Previous Repo";
                             break;
-                        default:
+                    case "V":
+                        stockSourceName = "VinCue";
+                        break;
+                    default:
                             stockSource = "";
                             stockSourceName = "";
                             break;
@@ -2134,7 +2145,10 @@ namespace SalesCommission.Controllers
                         case "X":
                             stockSourceName = "Previous Repo";
                             break;
-                        default:
+                        case "V":
+                            stockSourceName = "VinCue";
+                            break;
+                    default:
                             stockSource = "";
                             stockSourceName = "";
                             break;
@@ -3597,6 +3611,9 @@ namespace SalesCommission.Controllers
                     case "X":
                         stockSourceName = "Previous Repo";
                         break;
+                    case "V":
+                        stockSourceName = "VinCue";
+                        break;
                     default:
                         stockSource = "";
                         stockSourceName = "";
@@ -4677,6 +4694,9 @@ namespace SalesCommission.Controllers
                             break;
                         case "X":
                             stockSourceName = "Previous Repo";
+                            break;
+                        case "V":
+                            stockSourceName = "VinCue";
                             break;
                         default:
                             stockSource = "";
@@ -5886,6 +5906,9 @@ namespace SalesCommission.Controllers
                     case "X":
                         stockSourceName = "Previous Repo";
                         break;
+                    case "V":
+                        stockSourceName = "VinCue";
+                        break;
                     default:
                         stockSource = "";
                         stockSourceName = "";
@@ -7042,7 +7065,7 @@ namespace SalesCommission.Controllers
                     switch (leadReportModel.BreakDownLevel1)
                     {
                         case "associatename":
-                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.Sales_LastName == bdValue1);
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == bdValue1);
                             break;
 
                         case "brand":
@@ -7139,7 +7162,7 @@ namespace SalesCommission.Controllers
                     switch (leadReportModel.BreakDownLevel2)
                     {
                         case "associatename":
-                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Sales_LastName == bdValue2);
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == bdValue2);
                             break;
 
                         case "brand":
@@ -7236,7 +7259,7 @@ namespace SalesCommission.Controllers
                     switch (leadReportModel.BreakDownLevel3)
                     {
                         case "associatename":
-                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Sales_LastName == bdValue3);
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == bdValue3);
                             break;
 
                         case "brand":
@@ -7333,7 +7356,7 @@ namespace SalesCommission.Controllers
                     switch (leadReportModel.BreakDownLevel4)
                     {
                         case "associatename":
-                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Sales_LastName == bdValue4);
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.Sales_LastName + " " + x.Sales_FirstName == bdValue4);
                             break;
 
                         case "brand":

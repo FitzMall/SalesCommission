@@ -85,6 +85,7 @@
                     <div class="col-sm-8">
                         <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Deals</span>
                         <input type="checkbox" name="chkShowChargebacks" id="chkShowChargebacks" @(Model.ShowChargebacks == true ? "checked" : "") /> <span style="font-size:14px;">Show Chargebacks</span>
+                        <input type="checkbox" name="chkShowTransfers" id="chkShowTransfers" @(Model.ShowTransfers == true ? "checked" : "") /> <span style="font-size:14px;">Show InterCompany Transfers</span>
                     </div>
                 </div>
                 <div class="row">
@@ -425,143 +426,144 @@
                     nfi.CurrencySymbol = "";
                     //nfi.PercentSymbol = "";
 
-                    var newDetails = Model.SalesReportDetails.FindAll(x => x.BrandId != "UU").OrderBy(x => x.MakeName).ToList(); ;
-                    var usedDetails = Model.SalesReportDetails.FindAll(x => x.BrandId == "UU").OrderBy(x => x.MakeName).ToList(); ;
-
+                    var newDetails = Model.SalesReportDetails.FindAll(x => x.BrandId != "UU" && x.BrandId != "IC").OrderBy(x => x.MakeName).ToList();
+                    var usedDetails = Model.SalesReportDetails.FindAll(x => x.BrandId == "UU").OrderBy(x => x.MakeName).ToList();
+                    var interCompanyDetails = Model.SalesReportDetails.FindAll(x => x.BrandId == "IC").OrderBy(x => x.MakeName).ToList();
                     newDetails.AddRange(usedDetails);
+                    newDetails.AddRange(interCompanyDetails);
 
                     Model.SalesReportDetails = newDetails;
                 }
 
                 @foreach (var detail in Model.SalesReportDetails)
-                {
-                    if (detail.BrandId != "AA")
-                    {
-                        TotalDealCount = TotalDealCount + detail.DealCount;
-                    }
-                    if (detail.BrandId == "UU")
-                    {
-                        UsedMakeId = detail.MakeId;
-                        TotalUsedDeals = detail.DealCount;
-                        TotalValidatedUsedDeals = detail.DealCount - detail.UnValidatedCount;
-
-                    }
-                }
-                
-
-                @foreach (var detail in Model.SalesReportDetails)
-                {
-                    double MonthEndFTDAmount = 0;
-                    double CPOMonthEndFTDAmount = 0;
-
-                    var brandCode = detail.BrandId;
-                    var locationCode = "";
-
-                    foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
-                    {
-                        if (mapping.StoreId == Model.StoreId)
-                        {
-                            locationCode = mapping.LocationId;
-                            break;
-                        }
-                    }
-
-                    var usedId = 0;
-                    var usedBrand = "";
-                    if (detail.AutoMall.ToUpper() == "CLEARWATER")
-                    {
-                        switch (detail.MakeId) {
-                            case "41":  //Chrysler
-                                usedId = 94;//96;
-                                break;
-                            case "43": //Hyundai
-                                usedId = 70;
-                                break;
-                            case "42": //Jeep
-                                usedId = 94;
-                                break;
-                            case "44": //Subaru
-                                usedId = 95;
-                                break;
-                            //case "96":  //Chrysler
-                            //    usedBrand = "CH";
-                            //    break;
-                            case "70": //Hyundai
-                                usedBrand = "HY";
-                                break;
-                            case "94": //Jeep
-                                usedBrand = "JE,CH";
-                                break;
-                            case "95": //Subaru
-                                usedBrand = "SU";
-                                break;
-                        }
-
-                        var usedDealListing = Model.SalesReportDetails.Find(o => o.MakeId == usedId.ToString());
-                        if (usedDealListing != null)
-                        {
-                            TotalValidatedUsedDeals = usedDealListing.DealCount - usedDealListing.UnValidatedCount;
-
-                        }
-
-                        UsedMakeId = usedId.ToString();
-
-                    }
-
-                    if (brandCode == "UU" && locationCode == "CJE")
-                    {
-                        brandCode = detail.MakeName;
-                    }
-                    else if (brandCode == "UU")
-                    {
-                        brandCode = "Used";
-                    }
-                    var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == locationCode + brandCode);
-
-                    if (objectivesStandards == null)
-                    {
-                        objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
-                    }
-
-                    var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
-
-                    if (factoryToDealerCash == null)
-                    {
-                        factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
-                        MonthEndFTDAmount = 0;
-                    }
-                    else
-                    {
-                        MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
-                        //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
-                        detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
-                    }
-
-                    if (brandCode == "Used")
-                    {
-                        foreach (var ftd in Model.FactoryToDealerCash)
-                        {
-                            MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
-                        }
-                        detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
-                    }
-                    else if (detail.BrandId == "UU" && locationCode == "CJE")
-                    {
-
-                        var brands = usedBrand.Split(',');
-
-                        foreach (var brand in brands)
-                        {
-                            var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
-                            if (ftd != null)
                             {
-                                MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
-                                detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
-                            }
-                        }
-                    }
+                                if (detail.BrandId != "AA" && detail.BrandId != "IC")
+                                {
+                                    TotalDealCount = TotalDealCount + detail.DealCount;
+                                }
+                                if (detail.BrandId == "UU")
+                                {
+                                    UsedMakeId = detail.MakeId;
+                                    TotalUsedDeals = detail.DealCount;
+                                    TotalValidatedUsedDeals = detail.DealCount - detail.UnValidatedCount;
 
-                    var validatedDeals = detail.DealCount - detail.UnValidatedCount;
+                                }
+                            }
+
+
+                            @foreach (var detail in Model.SalesReportDetails)
+                {
+                                double MonthEndFTDAmount = 0;
+                                double CPOMonthEndFTDAmount = 0;
+
+                                var brandCode = detail.BrandId;
+                                var locationCode = "";
+
+                                foreach (var mapping in SalesCommission.Business.Enums.StoreLocations)
+                                {
+                                    if (mapping.StoreId == Model.StoreId)
+                                    {
+                                        locationCode = mapping.LocationId;
+                                        break;
+                                    }
+                                }
+
+                                var usedId = 0;
+                                var usedBrand = "";
+                                if (detail.AutoMall.ToUpper() == "CLEARWATER")
+                                {
+                                    switch (detail.MakeId) {
+                                        case "41":  //Chrysler
+                                            usedId = 94;//96;
+                                            break;
+                                        case "43": //Hyundai
+                                            usedId = 70;
+                                            break;
+                                        case "42": //Jeep
+                                            usedId = 94;
+                                            break;
+                                        case "44": //Subaru
+                                            usedId = 95;
+                                            break;
+                                        //case "96":  //Chrysler
+                                        //    usedBrand = "CH";
+                                        //    break;
+                                        case "70": //Hyundai
+                                            usedBrand = "HY";
+                                            break;
+                                        case "94": //Jeep
+                                            usedBrand = "JE,CH";
+                                            break;
+                                        case "95": //Subaru
+                                            usedBrand = "SU";
+                                            break;
+                                    }
+
+                                    var usedDealListing = Model.SalesReportDetails.Find(o => o.MakeId == usedId.ToString());
+                                    if (usedDealListing != null)
+                                    {
+                                        TotalValidatedUsedDeals = usedDealListing.DealCount - usedDealListing.UnValidatedCount;
+
+                                    }
+
+                                    UsedMakeId = usedId.ToString();
+
+                                }
+
+                                if (brandCode == "UU" && locationCode == "CJE")
+                                {
+                                    brandCode = detail.MakeName;
+                                }
+                                else if (brandCode == "UU")
+                                {
+                                    brandCode = "Used";
+                                }
+                                var objectivesStandards = Model.ObjectivesAndStandards.Find(o => o.LocationId == locationCode + brandCode);
+
+                                if (objectivesStandards == null)
+                                {
+                                    objectivesStandards = new SalesCommission.Models.ObjectivesAndStandards();
+                                }
+
+                                var factoryToDealerCash = Model.FactoryToDealerCash.Find(o => o.LocationId == locationCode + brandCode);
+
+                                if (factoryToDealerCash == null)
+                                {
+                                    factoryToDealerCash = new SalesCommission.Models.FactoryToDealerCash();
+                                    MonthEndFTDAmount = 0;
+                                }
+                                else
+                                {
+                                    MonthEndFTDAmount = (double)factoryToDealerCash.FTDAmount;
+                                    //detail.FTDAmount = detail.FTDAmount + (double) factoryToDealerCash.FTDAmount;
+                                    detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                }
+
+                                if (brandCode == "Used")
+                                {
+                                    foreach (var ftd in Model.FactoryToDealerCash)
+                                    {
+                                        MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
+                                    }
+                                    detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                }
+                                else if (detail.BrandId == "UU" && locationCode == "CJE")
+                                {
+
+                                    var brands = usedBrand.Split(',');
+
+                                    foreach (var brand in brands)
+                                    {
+                                        var ftd = Model.FactoryToDealerCash.Find(o => o.BrandId == brand);
+                                        if (ftd != null)
+                                        {
+                                            MonthEndFTDAmount += (double)ftd.FTDCPOAmount;
+                                            detail.TotalAmount = detail.TotalAmount + MonthEndFTDAmount;
+                                        }
+                                    }
+                                }
+
+                                var validatedDeals = detail.DealCount - detail.UnValidatedCount;
 
                      <tr>
 
@@ -577,9 +579,9 @@
 
                         @{
                             var leasePercent = ((double)detail.LeaseCount / (double)validatedDeals).ToString("P", nfi);
-                            var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
-                            var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
-                            var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                        var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
+                        var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                        var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
                     }
 
                         @if (brandCode.Contains("Used"))
@@ -588,7 +590,7 @@
                             {
                                 TotalPotentialCPO += validatedDeals;
                             }
-                            TotalPotentialHandyman += validatedDeals;
+                TotalPotentialHandyman += validatedDeals;
                             TotalHandymanCount += detail.HandymanCount;
                             TotalNextCarCount += detail.NextCarCount;
                             <td class="text-center">-</td>
@@ -714,7 +716,7 @@
 
                                 AllMakeIds = AllMakeIds + detail.MakeId + ",";
 
-                                if (detail.BrandId != "AA")
+                                if (detail.BrandId != "AA" && detail.BrandId != "IC")
                                 {
                                     TotalValidatedDealsCount = TotalValidatedDealsCount + validatedDeals;
                                     TotalUnValidatedCount = TotalUnValidatedCount + detail.UnValidatedCount;

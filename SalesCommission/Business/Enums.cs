@@ -471,6 +471,10 @@ namespace SalesCommission.Business
                 Name = "Gaithersburg Toyota"
             },
             new Store {
+                StoreId = "20193",
+                Name = "Germantown"
+            },
+            new Store {
                 StoreId = "11234",
                 Name = "Hagerstown"
             },
@@ -606,7 +610,7 @@ namespace SalesCommission.Business
             },
             new Store {
                 StoreId = "germantown",
-                Name = "8006"
+                Name = "20193"
             },
             new Store {
                 StoreId = "hagerstown",

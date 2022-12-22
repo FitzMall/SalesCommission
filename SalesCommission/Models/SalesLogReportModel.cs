@@ -16,6 +16,7 @@ namespace SalesCommission.Models
         public string CustomerName { get; set; }
         public bool IncludeHandyman { get; set; }
         public bool ShowChargebacks { get; set; }
+        public bool ShowTransfers { get; set; }
         public List<SalesReportDetail> SalesReportDetails { get; set; }
         public List<ObjectivesAndStandards> ObjectivesAndStandards { get; set; }
         public List<FactoryToDealerCash> FactoryToDealerCash { get; set; }
@@ -143,5 +144,7 @@ namespace SalesCommission.Models
         public string Trade2VIN { get; set; }
         public string SoldVIN { get; set; }
         public bool Appraisal { get; set; }
+        public decimal SellingPrice { get; set; }
+        public decimal MonthlyPayment { get; set; }
     }
 }

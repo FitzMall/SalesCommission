@@ -105,6 +105,7 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <input type="checkbox" name="chkIncludeHandyman" id="chkIncludeHandyman" @(Model.IncludeHandyman == true ? "checked" : "") /> <span style="font-size:14px;">Include Handyman Deals</span>
+                        <input type="checkbox" name="chkShowTransfers" id="chkShowTransfers" @(Model.ShowTransfers == true ? "checked" : "") /> <span style="font-size:14px;">Show InterCompany Transfers</span>
                     </div>
                 </div>
                 <div class="row">
@@ -236,17 +237,61 @@
                     double CompanyUsedTotalAmount = 0;
                     double CompanyUsedTotalFTDAmount = 0;
                     double CompanyUsedTotalDXAmount = 0;
-
                     double CompanyUsedTotalNextCarCount = 0;
+
+                    double CompanyICTotalLeaseCount = 0;
+                    double CompanyICTotalPotentialLease = 0;
+                    double CompanyICTotalHandymanCount = 0;
+                    double CompanyICTotalPotentialHandyman = 0;
+                    double CompanyICTotalCPOCount = 0;
+                    double CompanyICTotalPotentialCPO = 0;
+                    double CompanyICTotalDealCount = 0;
+                    double CompanyICTotalValidatedDealsCount = 0;
+                    double CompanyICTotalUnValidatedCount = 0;
+                    double CompanyICTotalOfficeValidatedCount = 0;
+                    double CompanyICTotalDealGrossAmount = 0;
+                    double CompanyICTotalMEFTDAmount = 0;
+                    double CompanyICTotalFinIncAmount = 0;
+                    double CompanyICTotalVSCAmount = 0;
+                    double CompanyICTotalMCAmount = 0;
+                    double CompanyICTotalGapAmount = 0;
+                    double CompanyICTotalAmount = 0;
+                    double CompanyICTotalFTDAmount = 0;
+                    double CompanyICTotalDXAmount = 0;
+                    double CompanyICTotalNextCarCount = 0;
+
+                    double CompanyAATotalLeaseCount = 0;
+                    double CompanyAATotalPotentialLease = 0;
+                    double CompanyAATotalHandymanCount = 0;
+                    double CompanyAATotalPotentialHandyman = 0;
+                    double CompanyAATotalCPOCount = 0;
+                    double CompanyAATotalPotentialCPO = 0;
+                    double CompanyAATotalDealCount = 0;
+                    double CompanyAATotalValidatedDealsCount = 0;
+                    double CompanyAATotalUnValidatedCount = 0;
+                    double CompanyAATotalOfficeValidatedCount = 0;
+                    double CompanyAATotalDealGrossAmount = 0;
+                    double CompanyAATotalMEFTDAmount = 0;
+                    double CompanyAATotalFinIncAmount = 0;
+                    double CompanyAATotalVSCAmount = 0;
+                    double CompanyAATotalMCAmount = 0;
+                    double CompanyAATotalGapAmount = 0;
+                    double CompanyAATotalAmount = 0;
+                    double CompanyAATotalFTDAmount = 0;
+                    double CompanyAATotalDXAmount = 0;
+                    double CompanyAATotalNextCarCount = 0;
 
                     double CompanyUsedTotalBackGrossAmount = 0;
                     double CompanyNewTotalBackGrossAmount = 0;
+                    double CompanyAATotalBackGrossAmount = 0;
+                    double CompanyICTotalBackGrossAmount = 0;
                     double CompanyTotalBackGrossAmount = 0;
 
                     var TotalMakeIds = "";
                     var UsedMakeIds = "";
                     var NewMakeIds = "";
-
+                    var AAMakeIds = "";
+                    var ICMakeIds = "";
                 }
 
                 @{ 
@@ -341,15 +386,21 @@
 
                     var index = 0;
 
-                    groupDetail.SalesReportDetails = groupDetail.SalesReportDetails.OrderBy(o => o.MakeName).ToList();
+                    //groupDetail.SalesReportDetails = groupDetail.SalesReportDetails.OrderBy(o => o.MakeName).ToList();
 
                     //nfi.PercentSymbol = "";
 
+                    var newDetails = groupDetail.SalesReportDetails.FindAll(x => x.BrandId != "UU" && x.BrandId != "IC").OrderBy(x => x.MakeName).ToList();
+                    var usedDetails = groupDetail.SalesReportDetails.FindAll(x => x.BrandId == "UU").OrderBy(x => x.MakeName).ToList();
+                    var interCompanyDetails = groupDetail.SalesReportDetails.FindAll(x => x.BrandId == "IC").OrderBy(x => x.MakeName).ToList();
+                    newDetails.AddRange(usedDetails);
+                    newDetails.AddRange(interCompanyDetails);
 
+                    groupDetail.SalesReportDetails = newDetails;
 
                     foreach (var detail in groupDetail.SalesReportDetails)
                     {
-                        if (detail.BrandId != "AA")
+                        if (detail.BrandId != "AA" && detail.BrandId != "IC")
                         {
                             TotalDealCount = TotalDealCount + detail.DealCount;
                         }
@@ -588,7 +639,7 @@
 
 
 
-                                    if (detail.BrandId != "AA")
+                                    if (detail.BrandId != "AA" && detail.BrandId != "IC")
                                     {
                                         TotalValidatedDealsCount = TotalValidatedDealsCount + validatedDeals;
                                         TotalUnValidatedCount = TotalUnValidatedCount + detail.UnValidatedCount;
@@ -604,6 +655,15 @@
                                         }
                                     }
 
+                                    if (detail.BrandId == "AA")
+                                    {
+                                        AAMakeIds = AAMakeIds + detail.MakeId + ',';
+                                    }
+
+                                    if (detail.BrandId == "IC")
+                                    {
+                                        ICMakeIds = ICMakeIds + detail.MakeId + ',';
+                                    }
 
                                     TotalDealGrossAmount = TotalDealGrossAmount + detail.DealGrossAmount;
                                     TotalFinIncAmount = TotalFinIncAmount + detail.FinIncAmount;
@@ -656,6 +716,62 @@
                                         CompanyUsedTotalBackGrossAmount += detail.BackGrossItemAmount;
 
                                     }
+                                    else if (detail.BrandId == "AA")
+                                    {
+                                        /* THESE ARE NOT DONE YET */
+                                        CompanyAATotalLeaseCount += detail.LeaseCount;
+                                        CompanyAATotalHandymanCount += detail.HandymanCount;
+                                        CompanyAATotalNextCarCount += detail.NextCarCount;
+                                        //CompanyAATotalPotentialHandyman += 0;
+
+                                        //CompanyAATotalPotentialCPO += 0;
+
+                                        CompanyAATotalDealCount += detail.DealCount;
+
+                                        CompanyAATotalValidatedDealsCount += validatedDeals;
+                                        CompanyAATotalUnValidatedCount += detail.UnValidatedCount;
+                                        CompanyAATotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
+                                        CompanyAATotalDealGrossAmount += detail.DealGrossAmount;
+                                        CompanyAATotalMEFTDAmount += MonthEndFTDAmount;
+                                        CompanyAATotalFinIncAmount += detail.FinIncAmount;
+                                        CompanyAATotalVSCAmount += detail.VSCAmount;
+                                        CompanyAATotalMCAmount += detail.MCAmount;
+                                        CompanyAATotalGapAmount += detail.GapAmount;
+                                        CompanyAATotalAmount += detail.TotalAmount;
+                                        CompanyAATotalFTDAmount += detail.FTDAmount;
+                                        CompanyAATotalDXAmount += detail.DXAmount;
+                                        CompanyAATotalBackGrossAmount += detail.BackGrossItemAmount;
+
+                                    }
+                                    else if (detail.BrandId == "IC")
+                                    {
+                                        /* THESE ARE NOT DONE YET */
+                                        CompanyICTotalLeaseCount += detail.LeaseCount;
+                                        CompanyICTotalHandymanCount += detail.HandymanCount;
+                                        CompanyICTotalNextCarCount += detail.NextCarCount;
+                                        //CompanyICTotalPotentialHandyman += 0;
+
+                                        //CompanyICTotalPotentialCPO += 0;
+
+                                        CompanyICTotalDealCount += detail.DealCount;
+
+                                        CompanyICTotalValidatedDealsCount += validatedDeals;
+                                        CompanyICTotalUnValidatedCount += detail.UnValidatedCount;
+                                        CompanyICTotalOfficeValidatedCount += detail.OfficeValidatedCount;
+
+                                        CompanyICTotalDealGrossAmount += detail.DealGrossAmount;
+                                        CompanyICTotalMEFTDAmount += MonthEndFTDAmount;
+                                        CompanyICTotalFinIncAmount += detail.FinIncAmount;
+                                        CompanyICTotalVSCAmount += detail.VSCAmount;
+                                        CompanyICTotalMCAmount += detail.MCAmount;
+                                        CompanyICTotalGapAmount += detail.GapAmount;
+                                        CompanyICTotalAmount += detail.TotalAmount;
+                                        CompanyICTotalFTDAmount += detail.FTDAmount;
+                                        CompanyICTotalDXAmount += detail.DXAmount;
+                                        CompanyICTotalBackGrossAmount += detail.BackGrossItemAmount;
+
+                                    }
                                     else
                                     {
                                         /* THESE ARE NOT DONE YET */
@@ -667,7 +783,7 @@
 
 
 
-                                        if (detail.BrandId != "AA")
+                                        if (detail.BrandId != "AA" && detail.BrandId != "IC")
                                         {
                                             CompanyNewTotalDealCount += detail.DealCount;
                                             CompanyNewTotalValidatedDealsCount += validatedDeals;
@@ -812,7 +928,7 @@
                     <td class="text-center" style="background-color:#d9edf7">Back PVR</td>
                     <td class="text-center" style="background-color:#d9edf7">Total PVR</td>
                 </tr>
-                <tr style="background-color:#d9edf7; font-weight:bold;">
+                <tr style="font-weight:bold;">
                     @{
                         var CompanyNewTotalLeasePercent = (CompanyNewTotalLeaseCount / CompanyNewTotalPotentialLease).ToString("P", nfi);
                         var CompanyNewTotalHandyPercent = (CompanyNewTotalHandymanCount / CompanyNewTotalPotentialHandyman).ToString("P", nfi);
@@ -861,7 +977,7 @@
                     <td class="text-center">@CompanyNewTotalBackPVRAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyNewTotalPVRAmount.ToString("C", nfi)</td>
                 </tr>
-                <tr style="background-color:#d9edf7; font-weight:bold;">
+                <tr style="font-weight:bold;">
                     @{
                         var CompanyUsedTotalLeasePercent = (CompanyUsedTotalLeaseCount / CompanyUsedTotalPotentialLease).ToString("P", nfi);
                         var CompanyUsedTotalHandyPercent = (CompanyUsedTotalHandymanCount / CompanyUsedTotalPotentialHandyman).ToString("P", nfi);
@@ -907,6 +1023,92 @@
                     <td class="text-center">@CompanyUsedTotalFrontPVRAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalBackPVRAmount.ToString("C", nfi)</td>
                     <td class="text-center">@CompanyUsedTotalPVRAmount.ToString("C", nfi)</td>
+                </tr>
+                <tr style="font-weight:bold;">
+                    @{
+                        var CompanyAATotalLeasePercent = (CompanyAATotalLeaseCount / CompanyAATotalPotentialLease).ToString("P", nfi);
+                        var CompanyAATotalHandyPercent = (CompanyAATotalHandymanCount / CompanyAATotalPotentialHandyman).ToString("P", nfi);
+                        var CompanyAATotalCPOPercent = (CompanyNewTotalCPOCount / CompanyAATotalPotentialCPO).ToString("P", nfi);
+                        var CompanyAATotalNextCarPercent = (CompanyAATotalNextCarCount / CompanyAATotalPotentialHandyman).ToString("P", nfi);
+
+                        var companyAATotalBackGrossAmount = CompanyAATotalFinIncAmount + CompanyAATotalVSCAmount + CompanyAATotalGapAmount + CompanyAATotalMCAmount;
+                        if (currentSelectedDate > grossChangeDate)
+                        {
+                            companyAATotalBackGrossAmount += CompanyAATotalBackGrossAmount;
+                        }
+
+                        var CompanyAATotalFrontPVRAmount = Math.Round((CompanyAATotalDealGrossAmount + CompanyAATotalMEFTDAmount) / CompanyAATotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
+                        var CompanyAATotalBackPVRAmount = Math.Round((companyAATotalBackGrossAmount) / CompanyAATotalValidatedDealsCount);
+                        var CompanyAATotalPVRAmount = Math.Round((CompanyAATotalDealGrossAmount + CompanyAATotalMEFTDAmount + companyAATotalBackGrossAmount) / CompanyAATotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+
+                    }
+                    <td class="text-center">Additional Gross Totals</td>
+
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@AAMakeIds/@Model.MonthId/@Model.YearId/">@CompanyAATotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@AAMakeIds/@Model.MonthId/@Model.YearId/">@CompanyAATotalValidatedDealsCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@AAMakeIds/@Model.MonthId/@Model.YearId">@CompanyAATotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@AAMakeIds/@Model.MonthId/@Model.YearId">@(CompanyAATotalValidatedDealsCount - CompanyAATotalOfficeValidatedCount)</a></td>
+
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">@CompanyAATotalDealGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalMEFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalFinIncAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalVSCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalMCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalBackGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalDXAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalFrontPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalBackPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyAATotalPVRAmount.ToString("C", nfi)</td>
+                </tr>
+                <tr style="font-weight:bold;">
+                    @{
+                        var CompanyICTotalLeasePercent = (CompanyICTotalLeaseCount / CompanyICTotalPotentialLease).ToString("P", nfi);
+                        var CompanyICTotalHandyPercent = (CompanyICTotalHandymanCount / CompanyICTotalPotentialHandyman).ToString("P", nfi);
+                        var CompanyICTotalCPOPercent = (CompanyNewTotalCPOCount / CompanyICTotalPotentialCPO).ToString("P", nfi);
+                        var CompanyICTotalNextCarPercent = (CompanyICTotalNextCarCount / CompanyICTotalPotentialHandyman).ToString("P", nfi);
+
+                        var companyICTotalBackGrossAmount = CompanyICTotalFinIncAmount + CompanyICTotalVSCAmount + CompanyICTotalGapAmount + CompanyICTotalMCAmount;
+                        if (currentSelectedDate > grossChangeDate)
+                        {
+                            companyICTotalBackGrossAmount += CompanyICTotalBackGrossAmount;
+                        }
+
+                        var CompanyICTotalFrontPVRAmount = Math.Round((CompanyICTotalDealGrossAmount + CompanyICTotalMEFTDAmount) / CompanyICTotalValidatedDealsCount); //+ CompanyTotalOtherAmount+ CompanyTotalFTDAmount
+                        var CompanyICTotalBackPVRAmount = Math.Round((companyICTotalBackGrossAmount) / CompanyICTotalValidatedDealsCount);
+                        var CompanyICTotalPVRAmount = Math.Round((CompanyICTotalDealGrossAmount + CompanyICTotalMEFTDAmount + companyICTotalBackGrossAmount) / CompanyICTotalValidatedDealsCount); //+ CompanyTotalOtherAmount + CompanyTotalFTDAmount
+
+                    }
+                    <td class="text-center">InterCompany Transfer Totals</td>
+                    
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@ICMakeIds/@Model.MonthId/@Model.YearId/">@CompanyICTotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@ICMakeIds/@Model.MonthId/@Model.YearId/">@CompanyICTotalValidatedDealsCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@ICMakeIds/@Model.MonthId/@Model.YearId">@CompanyICTotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@ICMakeIds/@Model.MonthId/@Model.YearId">@(CompanyICTotalValidatedDealsCount - CompanyICTotalOfficeValidatedCount)</a></td>
+
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">@CompanyICTotalDealGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalMEFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalFinIncAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalVSCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalMCAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalGapAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalBackGrossAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalFTDAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalDXAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalFrontPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalBackPVRAmount.ToString("C", nfi)</td>
+                    <td class="text-center">@CompanyICTotalPVRAmount.ToString("C", nfi)</td>
                 </tr>
                 <tr style="background-color:#d9edf7; font-weight:bold;">
                     @{

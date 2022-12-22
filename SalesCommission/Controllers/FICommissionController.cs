@@ -1177,10 +1177,18 @@ namespace SalesCommission.Controllers
 
 
                 associateCommissionModel.AftermarketDealDetails = FICommissionModel.AftermarketDealDetails;
-                
+
+
+                var associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                if (associateLocation == "FBS")
+                {
+                    associateLocation = "CDO";
+                }
+
                 var payscaleId = "";
 
-                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId);
+                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
                 if (managerPayscale != null)
                 {
                     payscaleId = managerPayscale.ManagerPayscaleID;
@@ -1189,13 +1197,6 @@ namespace SalesCommission.Controllers
                 if (payscaleId == null || payscaleId == "")
                 {
                     var payscaleList = SqlQueries.GetFIPayscaleSelectList();
-
-                    var associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
-
-                    if (associateLocation == "FBS")
-                    {
-                        associateLocation = "CDO";
-                    }
 
                     payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
                 }
@@ -1227,6 +1228,8 @@ namespace SalesCommission.Controllers
             associateCommissionModel.MonthId = Int32.Parse(monthId);
             associateCommissionModel.YearId = Int32.Parse(yearId);
 
+            var associateLocation = "";
+
             if (id != null && id != "")
             {
                 associateCommissionModel.AssociateInformation = SqlQueries.GetFIAssociateInformationByDate(location, associateCommissionModel.AssociateId, associateCommissionModel.YearId, associateCommissionModel.MonthId);
@@ -1249,9 +1252,16 @@ namespace SalesCommission.Controllers
                     associateCommissionModel.AftermarketDealDetails = FICommissionModel.AftermarketDealDetails;
                 //}
 
+                associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                if (associateLocation == "FBS")
+                {
+                    associateLocation = "CDO";
+                }
+
                 var payscaleId = "";
 
-                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId);
+                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
                 if (managerPayscale != null)
                 {
                     payscaleId = managerPayscale.ManagerPayscaleID;
@@ -1259,13 +1269,6 @@ namespace SalesCommission.Controllers
                 if (payscaleId == null || payscaleId == "")
                 {
                     var payscaleList = SqlQueries.GetFIPayscaleSelectList();
-
-                    var associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
-
-                    if(associateLocation == "FBS")
-                    {
-                        associateLocation = "CDO";
-                    }
 
                     payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
                 }
@@ -1295,7 +1298,7 @@ namespace SalesCommission.Controllers
 
             associateCommissionModel.FIAdjustments = SqlQueries.GetFIManagerAdjustments(id, Int32.Parse(yearId), Int32.Parse(monthId));
 
-            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId);
+            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId,associateLocation);
             if (selectedFIManager != null)
             {
                 associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;
@@ -1322,7 +1325,15 @@ namespace SalesCommission.Controllers
                 associateCommissionModel.AssociateInformation = SqlQueries.GetFIAssociateInformationDrawsAndBonus(location,associateCommissionModel.AssociateId, associateCommissionModel.YearId, associateCommissionModel.MonthId);
             }
 
-            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId);
+            var associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+            if (associateLocation == "FBS")
+            {
+                associateLocation = "CDO";
+            }
+
+
+            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId,associateLocation);
             if (selectedFIManager != null)
             {
                 associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;

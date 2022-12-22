@@ -61,12 +61,17 @@ namespace SalesCommission.Business
         }
 
 
-        public static SalesLogReportModel GetMonthlySalesReportByStoreAndDate(SalesLogReportModel salesLogReportModel, bool includeHandyman)
+        public static SalesLogReportModel GetMonthlySalesReportByStoreAndDate(SalesLogReportModel salesLogReportModel, bool includeHandyman, bool showTransfers)
         {
 
             var completeSalesLogReportModel = new SalesLogReportModel();
             var reportDate = new DateTime(salesLogReportModel.YearId, salesLogReportModel.MonthId, 1);
             var salesReportDetails = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportByDateAndStore", new { AutoMall = salesLogReportModel.StoreId, ReportDate = reportDate, IncludeHandyman = includeHandyman }, "SalesCommission");
+
+            if(!showTransfers)
+            {
+                salesReportDetails.RemoveAll(x => x.BrandId == "IC");                
+            }
 
             var leaseCounts = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportLeaseCountByDateAndStore", new { AutoMall = salesLogReportModel.StoreId, ReportDate = reportDate, IncludeHandyman = includeHandyman }, "SalesCommission");
             //BPP Collection Percentage
@@ -363,6 +368,8 @@ namespace SalesCommission.Business
             var reportEndDate = new DateTime(salesReportModel.ReportEndYear, salesReportModel.ReportEndMonth, 1).AddMonths(1);
 
             var salesReportDetails = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportByDateRange", new { ReportStartDate = reportStartDate, ReportEndDate = reportEndDate }, "SalesCommission");
+            //Do not show InterCompany Transfers in reporting
+            salesReportDetails.RemoveAll(x => x.BrandId == "IC");
 
             var leaseCounts = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportLeaseCountByDateRange", new { ReportStartDate = reportStartDate, ReportEndDate = reportEndDate }, "SalesCommission");
             //BPP Collection Percentage
@@ -490,12 +497,17 @@ namespace SalesCommission.Business
             return salesReportModel;
         }
 
-        public static MonthlySalesLogReportModel GetMonthlySalesReportByDate(MonthlySalesLogReportModel salesLogReportModel, bool includeHandyman)
+        public static MonthlySalesLogReportModel GetMonthlySalesReportByDate(MonthlySalesLogReportModel salesLogReportModel, bool includeHandyman, bool showTransfers)
         {
 
             var completeSalesLogReportModel = new MonthlySalesLogReportModel();
             var reportDate = new DateTime(salesLogReportModel.YearId, salesLogReportModel.MonthId, 1);
             var salesReportDetails = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportByDate", new { ReportDate = reportDate, IncludeHandyman = includeHandyman }, "SalesCommission");
+
+            if (!showTransfers)
+            {
+                salesReportDetails.RemoveAll(x => x.BrandId == "IC");
+            }
 
             var leaseCounts = SqlMapperUtil.StoredProcWithParams<SalesReportDetail>("sp_SalesLogReportLeaseCountByDate", new { ReportDate = reportDate, IncludeHandyman = includeHandyman }, "SalesCommission");
             //BPP Collection Percentage
@@ -508,6 +520,7 @@ namespace SalesCommission.Business
             completeSalesLogReportModel.SelectedStores = salesLogReportModel.SelectedStores;
             completeSalesLogReportModel.SelectedBrands = salesLogReportModel.SelectedBrands;
             completeSalesLogReportModel.IncludeHandyman = includeHandyman;
+            completeSalesLogReportModel.ShowTransfers = showTransfers;
 
             foreach (var detail in salesReportDetails)
             {
@@ -4821,11 +4834,11 @@ namespace SalesCommission.Business
             return associateLevelHistory;
         }
 
-        public static FIAssociate GetSelectedFIManager(int monthId, int yearId, string associateId)
+        public static FIAssociate GetSelectedFIManager(int monthId, int yearId, string associateId, string location)
         {
             var monthYear = monthId.ToString() + "/" + yearId.ToString();
 
-            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetails", new { MonthYear = monthYear, EmployeeNumber = associateId }, "SalesCommission");
+            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetails", new { MonthYear = monthYear, EmployeeNumber = associateId, Location = location }, "SalesCommission");
             var FIManager = new FIAssociate();
 
             if(selectedMangers != null && selectedMangers.Count > 0)
@@ -4840,7 +4853,7 @@ namespace SalesCommission.Business
         {
             var monthYear = monthId.ToString() + "/" + yearId.ToString();
 
-            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetailsByKey", new { MonthYear = monthYear, EmployeeNumber = associateId }, "SalesCommission");
+            var selectedMangers = SqlMapperUtil.StoredProcWithParams<FIAssociate>("sp_CommissionGetFIManagerDetailsByKey", new { MonthYear = monthYear, EmployeeNumber = associateId}, "SalesCommission");
             var FIManager = new FIAssociate();
 
             if (selectedMangers != null && selectedMangers.Count > 0)
@@ -5565,6 +5578,8 @@ namespace SalesCommission.Business
                 dealDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_SalesLogDealsByDateAndStore", new { AutoMallID = makeId, ReportDate = reportDate }, "SalesCommission");
             }
 
+            dealDetails.RemoveAll(x => x.MakeName == "InterCompany Transfer");
+
             //var otherDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_AllDealDetailsByDate", new { ReportDate = reportDate }, "ReynoldsData");
             var associates = GetSalesAssociates();
             var nextCarDeals = new List<DealDetail>();
@@ -5639,6 +5654,8 @@ namespace SalesCommission.Business
             {
                 dealDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>(storedProcName, new { AutoMallID = makeId, ReportDate = reportDate }, "SalesCommission");
             }
+
+            dealDetails.RemoveAll(x => x.MakeName == "InterCompany Transfer");
 
             //var otherDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_AllDealDetailsByDate", new { ReportDate = reportDate }, "ReynoldsData");
             var associates = GetSalesAssociates();
@@ -6899,7 +6916,7 @@ namespace SalesCommission.Business
 
                 var x = Enums.StoresReport.ToArray();
 
-                selectedStores = new string[] { "annapolis", "chambersburg", "clearwater", "frederick", "hagerstown", "lakeforest(russell)", "Lakeforest(355)", "lexingtonpark(lexpark)", "nicholson", "colonial", "wheaton" };
+                selectedStores = new string[] { "annapolis", "chambersburg", "clearwater", "frederick","germantown", "hagerstown", "lakeforest(russell)", "Lakeforest(355)", "lexingtonpark(lexpark)", "nicholson", "colonial", "wheaton" };
             }
 
 
@@ -6915,6 +6932,11 @@ namespace SalesCommission.Business
                 if (location == "FMM")
                 {
                     location = "FOC";
+                }
+
+                if(storeId == "20193")
+                {
+                    location = "LFM";
                 }
 
                 storeLead.Location = location;
