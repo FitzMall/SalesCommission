@@ -122,52 +122,52 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Sales and Commission", "Index", "Home", new { area = "" }, new { @class = "" })    </li>
+    <li>@Html.ActionLink("Sales and Commission", "Index", "Home", new { area = "" }, new { @class = "" })    </li>
 
-@if ((bool)Session["CanSeeReporting"] == true || (bool)Session["CanOfficeValidate"] == true)
-{
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            Sales
-                            <b class="caret"></b>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>@Html.ActionLink("Dashboard", "Index", "Sales")</li>
-                            <li>@Html.ActionLink("Objectives & Standards", "ObjectivesStandards", "Sales")</li>
-                            <li>@Html.ActionLink("Chargebacks", "Chargebacks", "Sales")</li>
-                        </ul>
- 
-                    </li>
-}
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            Commissions
-                            <b class="caret"></b>
-                        </a>
-                        <ul class="dropdown-menu">
+    @if ((bool)Session["CanSeeReporting"] == true || (bool)Session["CanOfficeValidate"] == true)
+    {
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                Sales
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+                <li>@Html.ActionLink("Dashboard", "Index", "Sales")</li>
+                <li>@Html.ActionLink("Objectives & Standards", "ObjectivesStandards", "Sales")</li>
+                <li>@Html.ActionLink("Chargebacks", "Chargebacks", "Sales")</li>
+            </ul>
+
+        </li>
+    }
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            Commissions
+            <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
 
 
-@if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
-{
-    <li>@Html.ActionLink("Dashboard", "Index", "Commission")</li>
-    <li>@Html.ActionLink("Score Card Dashboard", "ScorecardDashboard", "Commission")</li>
-
-            if ((bool)Session["IsCommissionAdmin"] == true)
+            @if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
             {
-               <li> @Html.ActionLink("Associates", "Associates", "Commission") </li>
+                <li>@Html.ActionLink("Dashboard", "Index", "Commission")</li>
+                <li>@Html.ActionLink("Score Card Dashboard", "ScorecardDashboard", "Commission")</li>
+
+                if ((bool)Session["IsCommissionAdmin"] == true)
+                {
+                    <li> @Html.ActionLink("Associates", "Associates", "Commission") </li>
+                }
             }
-        }
-        else
-        {
-            <li>@Html.ActionLink("My Commission", "Associate", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
-            <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+            else
+            {
+                <li>@Html.ActionLink("My Commission", "Associate", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+                <li>@Html.ActionLink("My Score Card", "Scorecard", "Commission", new { id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
 
-        }
+            }
 
-        @if ((bool)Session["IsAdmin"] == true)
-{
-                            <li class="divider"></li>
-                            <li>@Html.ActionLink("Stores", "Stores", "Commission")</li>                            
+            @if ((bool)Session["IsAdmin"] == true)
+            {
+                <li class="divider"></li>
+                            <li>@Html.ActionLink("Stores", "Stores", "Commission")</li>
                             <li>@Html.ActionLink("Manufacturer Spiff", "ManufacturerSpiff", "Commission")</li>
                             <li class="divider"></li>
                             <li>@Html.ActionLink("Payscales", "NewPayscales", "Commission")</li>
@@ -175,79 +175,99 @@
                             <li>@Html.ActionLink("Payscale Comparison All Stores", "PayscaleComparisonAll", "Commission")</li>
                             <li>@Html.ActionLink("Aftermarket Points", "AftermarketPoints", "Commission")</li>
                             <li>@Html.ActionLink("Additional Commission", "AdditionalCommission", "Commission")</li>
-        }
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            F and I Commission
-                            <b class="caret"></b>
-                        </a>
-                        <ul class="dropdown-menu">
-                            @if ((bool)Session["IsCommissionAdmin"] == true)
-                            {
-                                <li>@Html.ActionLink("Dashboard", "Index", "FICommission")</li>
+            }
+        </ul>
+    </li>
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            F and I Commission
+            <b class="caret"></b>
+        </a>
+        <ul class="dropdown-menu">
+            @if ((bool)Session["IsCommissionAdmin"] == true)
+            {
+                <li>@Html.ActionLink("Dashboard", "Index", "FICommission")</li>
                                 <li>@Html.ActionLink("Associates", "FIAssociates", "FICommission")</li>
                                 <li class="divider"></li>
                                 <li>@Html.ActionLink("Payscales", "Payscales", "FICommission")</li>
                                 <li>@Html.ActionLink("Adjustments", "Adjustments", "FICommission")</li>
-                            }
-                            else
-                            {
-                                <li>@Html.ActionLink("My Commission", "Associate", "FICommission", new {location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
-                            }
-                        </ul>
-                    </li>
-@if ((bool)Session["CanSeeReporting"] == true)
-{
-                        <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            Reports
-                            <b class="caret"></b>
-                        </a>
-                            <ul class="dropdown-menu">
-                                <li class="dropdown dropdown-submenu">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Monthly Reports</a>
-                                    <ul class="dropdown-menu">
-                                        <li>@Html.ActionLink("Monthly Sales", "Sales", "Reports")</li>
-                                        <li>@Html.ActionLink("Monthly Trades", "Trades", "Reports")</li>
-                                        <li class="divider"></li>
-                                        <li>@Html.ActionLink("Monthly Sales Trend", "SalesReport", "Reports")</li>
-                                        <li>@Html.ActionLink("Monthly Appraisal Trend", "AppraisalReport", "Reports")</li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown dropdown-submenu">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">After Sales</a>
-                                    <ul class="dropdown-menu">
-                                        <li>@Html.ActionLink("After Sales", "AfterSales", "Reports")</li>
-                                        <li>@Html.ActionLink("After Sales by Brand", "AfterSalesBrands", "Reports")</li>
-                                        <li>@Html.ActionLink("After Sales by Associates", "AfterSalesAssociates", "Reports")</li>
-                                        <li>@Html.ActionLink("After Sales by Stores", "AfterSalesStores", "Reports")</li>
-                                        <li>@Html.ActionLink("After Sales by F and I", "AfterSalesFandI", "Reports")</li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown dropdown-submenu">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Leads</a>
-                                    <ul class="dropdown-menu">
-                                        <li>@Html.ActionLink("Leads", "Leads", "Reports")</li>
-                                        <li>@Html.ActionLink("Lead Source", "LeadSource", "Reports")</li>
-                                        <li>@Html.ActionLink("Lead Report", "LeadReport", "Reports")</li>
-                                        <li>@Html.ActionLink("Lead Mapping", "LeadMapping", "Reports")</li>
-                                    </ul>
-                                </li>
-                                <li>@Html.ActionLink("Rate Exception Report", "ExceptionReport", "Reports")</li>
-                                <li class="divider"></li>
-                                <li><a href="//jjfserver/sp/datatable/dot/PMatrix.asp">Inventory Analysis and Price Matrix</a></li>
-                                <li><a href="//jjfserver/PricingReport">FitzMall New Inventory Report</a></li>
-                                <li><a href="//jjfserver/InventoryWriteDown">Used Vehicles</a></li>
-                                <li><a href="//jjfserver/InventoryWriteDown/Home/TitleStatus">Used Vehicle Title Status</a></li>
-                                <li>@Html.ActionLink("Bonus Paid", "BonusPaid", "Reports")</li>
-                                <li>@Html.ActionLink("Overdraws", "Overdraws", "Reports")</li>
-                                <li>@Html.ActionLink("Objectives and Standards", "ObjectivesAndStandards", "Reports")</li>
-                                @*<li><a href="#">Report 2</a></li>
-            <li><a href="#">Report 3</a></li>*@
-                            </ul>
-                    </li>
+            }
+            else
+            {
+                <li>@Html.ActionLink("My Commission", "Associate", "FICommission", new { location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+            }
+        </ul>
+    </li>
+    @if ((bool)Session["CanSeeReporting"] == true)
+    {
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                Reports
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+                <li class="dropdown dropdown-submenu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Monthly Reports</a>
+                    <ul class="dropdown-menu">
+                        <li>@Html.ActionLink("Monthly Sales", "Sales", "Reports")</li>
+                        <li>@Html.ActionLink("Monthly Trades", "Trades", "Reports")</li>
+                        <li class="divider"></li>
+                        <li>@Html.ActionLink("Monthly Sales Trend", "SalesReport", "Reports")</li>
+                        <li>@Html.ActionLink("Monthly Appraisal Trend", "AppraisalReport", "Reports")</li>
+                    </ul>
+                </li>
+                <li class="dropdown dropdown-submenu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">After Sales</a>
+                    <ul class="dropdown-menu">
+                        <li>@Html.ActionLink("After Sales", "AfterSales", "Reports")</li>
+                        <li>@Html.ActionLink("After Sales by Brand", "AfterSalesBrands", "Reports")</li>
+                        <li>@Html.ActionLink("After Sales by Associates", "AfterSalesAssociates", "Reports")</li>
+                        <li>@Html.ActionLink("After Sales by Stores", "AfterSalesStores", "Reports")</li>
+                        <li>@Html.ActionLink("After Sales by F and I", "AfterSalesFandI", "Reports")</li>
+                    </ul>
+                </li>
+                <li class="dropdown dropdown-submenu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Leads</a>
+                    <ul class="dropdown-menu">
+                        <li>@Html.ActionLink("Leads", "Leads", "Reports")</li>
+                        <li>@Html.ActionLink("Lead Source", "LeadSource", "Reports")</li>
+                        <li>@Html.ActionLink("Lead Report", "LeadReport", "Reports")</li>
+                        <li>@Html.ActionLink("Lead Mapping", "LeadMapping", "Reports")</li>
+                    </ul>
+                </li>
+                <li>@Html.ActionLink("Rate Exception Report", "ExceptionReport", "Reports")</li>
+                <li class="divider"></li>
+                <li><a href="//jjfserver/sp/datatable/dot/PMatrix.asp">Inventory Analysis and Price Matrix</a></li>
+                <li><a href="//jjfserver/PricingReport">FitzMall New Inventory Report</a></li>
+                <li><a href="//jjfserver/InventoryWriteDown">Used Vehicles</a></li>
+                <li><a href="//jjfserver/InventoryWriteDown/Home/TitleStatus">Used Vehicle Title Status</a></li>
+                <li>@Html.ActionLink("Bonus Paid", "BonusPaid", "Reports")</li>
+                <li>@Html.ActionLink("Overdraws", "Overdraws", "Reports")</li>
+                <li>@Html.ActionLink("Objectives and Standards", "ObjectivesAndStandards", "Reports")</li>
+                @*<li><a href="#">Report 2</a></li>
+                    <li><a href="#">Report 3</a></li>*@
+            </ul>
+        </li>
+    }
+    @if ((bool)Session["CanSeeReporting"] == true)
+    {
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                Inventory Management
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a href="//jjfserver/VehicleDashboard/Chrome">Chrome Inventory Management Tool</a></li>
+                <li class="divider"></li>
+                <li><a href="//jjfserver/sp/datatable/dot/PMatrix.asp">Inventory Analysis and Price Matrix</a></li>
+                <li><a href="//jjfserver/PricingReport">FitzMall New Inventory Report</a></li>
+                <li><a href="//jjfserver/InventoryWriteDown">Used Vehicles</a></li>
+                <li><a href="//jjfserver/InventoryWriteDown/Home/TitleStatus">Used Vehicle Title Status</a></li>
+                <li>
+                    <a href="http://jjfserver/DuplicateVINReport">Duplicate VIN Report</a>
+                </li>
+            </ul>
+    </li>
 }
 
                     @if((bool)Session["IsAdmin"] == true)

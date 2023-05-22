@@ -3671,7 +3671,18 @@ namespace SalesCommission.Controllers
                 {
                     appraisal.Model = appraisal.Model.Substring(0, appraisal.Model.IndexOf(" "));
                 }
-            }
+
+                if (appraisal.ZipCode == null || appraisal.ZipCode == "")
+                {
+                    appraisal.ZipCode = "None";
+                }
+
+                if (appraisal.Appraiser == null)
+                {
+                    appraisal.Appraiser = "";
+                }
+            
+        }
 
             var Label1Value = "";
             var Label2Value = "";

@@ -67,7 +67,10 @@
 
     if (Model.sl_TradeVIN != null && Model.sl_TradeVIN != "")
     {
-
+        if (Model.sl_TradeVIN2 == null)
+        {
+            Model.sl_TradeVIN2 = "";
+        }
         var itemTitleDue = TitleDue.FindAll(x => x.VIN.Trim() == Model.sl_TradeVIN.Trim() || x.VIN.Trim() == Model.sl_TradeVIN2.Trim());
 
         if (itemTitleDue != null && itemTitleDue.Count > 0)
@@ -1800,7 +1803,7 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
 
         </div>
     </div>
-                var bLockDown = false;
+                            var bLockDown = false;
 
                             var dealmonth = Model.sl_dealmonth.Month;
 
@@ -1809,20 +1812,32 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                             TimeSpan difference = now - then;
                             int differenceInDays = difference.Days;
 
-                if (differenceInDays > 59)
-                {
-                    bLockDown = true;
-                }
-                else if (differenceInDays > 29 && DateTime.Now.Day >= 15)
-                {
-                    bLockDown = true;
-                }
+                            if (differenceInDays > 59)
+                            {
+                                bLockDown = true;
+                            }
+                            else if (differenceInDays > 29 && DateTime.Now.Day >= 15)
+                            {
+                                bLockDown = true;
+                            }
 
+                            if (Model.sl_showroomValidatedBy != null && Model.sl_showroomValidatedBy != "")
+                            {
+                                <div class="row text-center">
+                                    <p>Showroom Validated by <strong>@Model.sl_showroomValidatedBy</strong> on <strong>@Model.sl_showroomValidatedDate.ToShortDateString()</strong></p>
+                                </div>
+                            }
+                            if (Model.sl_officeValidatedBy != null && Model.sl_officeValidatedBy != "")
+                            {
+                                <div class="row text-center">
+                                    <p>Office Validated by <strong>@Model.sl_officeValidatedBy</strong> on <strong>@Model.sl_officeValidatedDate.ToShortDateString()</strong></p>
+                                </div>
+                            }
 
-                if ((Model.sl_showroomValidatedBy == null || Model.sl_showroomValidatedBy == "") && (ViewBag.CanShowroomValidate == true || ViewBag.CanShowroomUpdate == true))
-                {
-                    if (!bLockDown)
-                    {
+                            if ((Model.sl_showroomValidatedBy == null || Model.sl_showroomValidatedBy == "") && (ViewBag.CanShowroomValidate == true || ViewBag.CanShowroomUpdate == true))
+                            {
+                                if (!bLockDown)
+                                {
                         <div class="row text-center">
                             <input type="submit" id="btnSave" name="btnSave" value="Save Comments" class="btn btn-lg btn-primary" style="margin-right:30px;">
                             <input type="submit" id="btnSubmit" name="btnSubmit" value="Showroom Validate" class="btn btn-lg btn-primary">
@@ -1831,15 +1846,6 @@ using (Html.BeginForm(null, null, FormMethod.Post, new { id = "dealdetailform" }
                 }
                 else if ((Model.sl_showroomValidatedBy != null && Model.sl_showroomValidatedBy != "") && (ViewBag.CanOfficeValidate == true))
                 {
-                    <div class="row text-center">
-                        <p>Showroom Validated by <strong>@Model.sl_showroomValidatedBy</strong> on <strong>@Model.sl_showroomValidatedDate.ToShortDateString()</strong></p>
-                    </div>
-                    if (Model.sl_officeValidatedBy != null && Model.sl_officeValidatedBy != "")
-                    {
-                        <div class="row text-center">
-                            <p>Office Validated by <strong>@Model.sl_officeValidatedBy</strong> on <strong>@Model.sl_officeValidatedDate.ToShortDateString()</strong></p>
-                        </div>
-                    }
                     <div class="row text-center">
                         <input type="submit" id="btnSave" name="btnSave" value="Save All Data" class="btn btn-lg btn-primary" style="margin-right:30px;">
                         <input type="submit" id="btnSubmit" name="btnSubmit" value="Office Validate" class="btn btn-lg btn-primary">
