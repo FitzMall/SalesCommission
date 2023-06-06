@@ -7117,7 +7117,7 @@ namespace SalesCommission.Controllers
                             break;
 
                         case "make":
-                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_Make == bdValue1);
+                            BreakDown1filteredLeads = leadReportModel.AssociateLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue1);
                             break;
 
                         case "model":
@@ -7214,7 +7214,7 @@ namespace SalesCommission.Controllers
                             break;
 
                         case "make":
-                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue2);
+                            BreakDown2filteredLeads = BreakDown1filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue2);
                             break;
 
                         case "model":
@@ -7311,7 +7311,7 @@ namespace SalesCommission.Controllers
                             break;
 
                         case "make":
-                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue3);
+                            BreakDown3filteredLeads = BreakDown2filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue3);
                             break;
 
                         case "model":
@@ -7408,7 +7408,7 @@ namespace SalesCommission.Controllers
                             break;
 
                         case "make":
-                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make == bdValue4);
+                            BreakDown4filteredLeads = BreakDown3filteredLeads.FindAll(x => x.VOfInterest_Make.Trim().ToUpper() == bdValue4);
                             break;
 
                         case "model":

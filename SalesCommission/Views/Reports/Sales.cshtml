@@ -1129,14 +1129,14 @@
 
                     }
                     <td class="text-center">Totals</td>
-                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/All/@TotalMakeIds/@Model.MonthId/@Model.YearId/">@CompanyTotalDealCount</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/Validated/@TotalMakeIds/@Model.MonthId/@Model.YearId/">@CompanyTotalValidatedDealsCount</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@CompanyTotalUnValidatedCount</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId">@(CompanyTotalValidatedDealsCount - CompanyTotalOfficeValidatedCount)</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @CompanyTotalLeaseCount / @CompanyTotalPotentialLease Deals">@CompanyTotalLeaseCount<br />@CompanyTotalLeasePercent</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/CPODeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @CompanyTotalCPOCount / @CompanyUsedTotalPotentialCPO Deals">@CompanyTotalCPOCount <br />@CompanyTotalCPOPercent</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handyman % = @CompanyTotalHandymanCount / @CompanyTotalPotentialHandyman Deals">@CompanyTotalHandymanCount <br />@CompanyTotalHandyPercent</a></td>
-                    <td class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@TotalMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="NextCar % = @CompanyUsedTotalNextCarCount / @CompanyTotalPotentialHandyman Deals">@CompanyUsedTotalNextCarCount <br />@CompanyUsedTotalNextCarPercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/?listType=All&makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId">@CompanyTotalDealCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/DealListing/?listType=Validated&makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId">@CompanyTotalValidatedDealsCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/UnvalidatedDeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId">@CompanyTotalUnValidatedCount</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/OfficeValidateDeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId">@(CompanyTotalValidatedDealsCount - CompanyTotalOfficeValidatedCount)</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId" data-toggle="tooltip" title="Lease % = @CompanyTotalLeaseCount / @CompanyTotalPotentialLease Deals">@CompanyTotalLeaseCount<br />@CompanyTotalLeasePercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/CPODeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId" data-toggle="tooltip" title="CPO % = @CompanyTotalCPOCount / @CompanyUsedTotalPotentialCPO Deals">@CompanyTotalCPOCount <br />@CompanyTotalCPOPercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/HandymanDeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId" data-toggle="tooltip" title="Handyman % = @CompanyTotalHandymanCount / @CompanyTotalPotentialHandyman Deals">@CompanyTotalHandymanCount <br />@CompanyTotalHandyPercent</a></td>
+                    <td class="text-center"><a href="@applicationPath/Sales/NextCarDeals/?makeId=@TotalMakeIds&monthId=@Model.MonthId&yearId=@Model.YearId" data-toggle="tooltip" title="NextCar % = @CompanyUsedTotalNextCarCount / @CompanyTotalPotentialHandyman Deals">@CompanyUsedTotalNextCarCount <br />@CompanyUsedTotalNextCarPercent</a></td>
 
 
 
