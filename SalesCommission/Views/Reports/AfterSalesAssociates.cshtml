@@ -481,7 +481,7 @@
                         TotalUnitCount += dealValue;
                         TotalDealCount += 1;
 
-                        BPPCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1);// * dealValue;
+                        //BPPCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1);// * dealValue;
                         NitrogenCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 2);// * dealValue;
                         ZurichShieldCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 3);// * dealValue;
                         SelectProtectionCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 4);// * dealValue;
@@ -503,7 +503,7 @@
                         Misc4Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 19);// * dealValue;
                         MDStateCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 20);// * dealValue;
 
-                        BPPUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1) * dealValue;
+                        //BPPUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1) * dealValue;
                         NitrogenUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 2) * dealValue;
                         ZurichShieldUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 3) * dealValue;
                         SelectProtectionUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 4) * dealValue;
@@ -525,6 +525,12 @@
                         Misc4UnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 19) * dealValue;
                         MDStateUnitCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 20) * dealValue;
 
+                        if (dealDetail.BPPAmount > 0)
+                        {
+                            BPPCount += 1;
+                            BPPUnitCount += dealValue;
+                            afterSalesAmount += dealDetail.BPPAmount * dealValue;
+                        }
                         if (dealDetail.FinanceIncomeAmount > 0)
                         {
                             FinanceCount += 1;// dealValue;
@@ -581,11 +587,11 @@
                                     }
                                     nonBPPDeal = true;
                                 }
-                                else if (deal.AftermarketId == 1)
-                                {
-                                    afterSalesAmount += deal.AftermarketPrice * dealValue;
-                                    BPPDeal = true;
-                                }
+                                //else if (deal.AftermarketId == 1)
+                                //{
+                                //    afterSalesAmount += deal.AftermarketPrice * dealValue;
+                                //    BPPDeal = true;
+                                //}
                                 else if (deal.AftermarketId == 20)
                                 {
                                     MSIDeal = true;

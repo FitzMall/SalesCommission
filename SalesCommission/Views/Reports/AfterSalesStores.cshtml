@@ -441,7 +441,7 @@
 
         foreach (var dealDetail in dealGroup.AftermarketDealDetails)
         {
-            BPPCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1);
+            //BPPCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 1);
             NitrogenCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 2);
             ZurichShieldCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 3);
             SelectProtectionCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 4);
@@ -463,6 +463,11 @@
             Misc4Count += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 19);
             MDStateCount += dealDetail.AftermarketItems.Count(o => o.AftermarketId == 20);
 
+            if (dealDetail.BPPAmount > 0)
+            {
+                BPPCount += 1;
+                afterSalesAmount += dealDetail.BPPAmount;
+            }
             if (dealDetail.FinanceIncomeAmount > 0)
             {
                 FinanceCount += 1;
@@ -514,11 +519,11 @@
                         }
                         nonBPPDeal = true;
                     }
-                    else if (deal.AftermarketId == 1)
-                    {
-                        afterSalesAmount += deal.AftermarketPrice;
-                        BPPDeal = true;
-                    }
+                    //else if (deal.AftermarketId == 1)
+                    //{
+                    //    afterSalesAmount += deal.AftermarketPrice;
+                    //    BPPDeal = true;
+                    //}
                     else if (deal.AftermarketId == 20)
                     {
                         MSIDeal = true;
