@@ -595,7 +595,7 @@ else
                                         var vehicleYear = Int32.Parse(deal.VehicleYear);
                                         var vehicleMiles = Int32.Parse(deal.VehicleMiles);
 
-                                        if ((currentYear - vehicleYear) < 10 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 100000)
+                                        if ((currentYear - vehicleYear) < 12 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 125000)
                                         {
                                             TotalEligibleDeals += 1;
                                         }
@@ -1211,7 +1211,7 @@ else
                                                     var vehicleYear = Int32.Parse(deal.VehicleYear);
                                                     var vehicleMiles = Int32.Parse(deal.VehicleMiles);
 
-                                                    if ((currentYear - vehicleYear) >= 10 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 100000)
+                                                    if ((currentYear - vehicleYear) >= 12 || deal.BrandId == "AA" || bHandy || vehicleMiles >= 125000)
                                                     {
 
                                                         decimal otherItemAmount = 0;
@@ -1725,7 +1725,7 @@ else
                                                                             var vehicleYear = Int32.Parse(deal.VehicleYear);
                                                                             var vehicleMiles = Int32.Parse(deal.VehicleMiles);
 
-                                                                            if ((currentYear - vehicleYear) < 10 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 100000)
+                                                                            if ((currentYear - vehicleYear) < 12 && deal.BrandId != "AA" && !bHandy && vehicleMiles < 125000)
                                                                             {
                                                                                 decimal otherItemAmount = 0;
                                                                                 if (deal.AftermarketItems.Count > 0)
