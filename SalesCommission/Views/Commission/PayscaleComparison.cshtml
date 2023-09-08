@@ -68,7 +68,10 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="row">
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
+                        @Html.DropDownListFor(n => n.PayscaleId, new MultiSelectList(SalesCommission.Business.Enums.NewPayscales, "PayscaleId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Payplans..." })
+                    </div>
+                    <div class="col-sm-3">
                         @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
                     </div>
                     <div class="col-sm-2">
@@ -115,7 +118,7 @@
 @{
     if (Model.Associates != null)
     {
-        <div class="row">
+        @*<div class="row">
             <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
                 <strong>Select Payscales to Compare:</strong>
                 @foreach (var payscale in Model.PayscaleSetup)
@@ -139,7 +142,7 @@
 
                 }
             </div>
-        </div>
+        </div>*@
 
             <table class="table table-bordered table-striped" style="font-size:12px">
                 <thead>

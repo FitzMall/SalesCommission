@@ -2540,6 +2540,12 @@ namespace SalesCommission.Business
 
                 aftermarketRecords.AddRange(store2AftermarketRecords);
             }
+            else if (FICommissionModel.StoreId == "ALL")
+            {
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByAllLocations", new {  }, "SalesCommission");
+                aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDate", new { ReportDate = reportDate, @IncludeHandyman = true }, "SalesCommission");
+
+            }
             else
             {
                 FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId }, "SalesCommission");
@@ -4054,8 +4060,17 @@ namespace SalesCommission.Business
             //Set deal number and location...
 
             var monthYear = dealMonthYear.Month.ToString() + "/" + dealMonthYear.Year.ToString();
-            var aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_CommissionGetAftermarketInputsByDate", new { MonthYear = monthYear }, "SalesCommission");
+            var aftermarketInputs = new List<AftermarketInput>();
 
+            if(location == "FHG" || location == "FHT")
+            {
+                aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_CommissionGetAftermarketInputsByDateAndId", new { MonthYear = monthYear, PlanId = "PCT" }, "SalesCommission");
+            }
+            else
+            {
+                aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_CommissionGetAftermarketInputsByDate", new { MonthYear = monthYear }, "SalesCommission");
+            }
+            
             var aftermarketTable = SqlMapperUtil.SqlWithParams<AftermarketTable>("Select * from aftermarket2 where loc = @Location and DEALNO = @DealNumber", new { Location = location, DealNumber = dealNumber }, "ReynoldsData");
             var aftermarketItems = new List<AftermarketItem>();
             //Now convert the AftermarketTable to a List of AftermarketItem
@@ -4758,6 +4773,15 @@ namespace SalesCommission.Business
 
         }
 
+        public static List<FIPayscaleSetup> GetFIPayscaleSetupsByDate(int yearId, int monthId)
+        {
+            var monthYear = monthId + "/" + yearId;
+            var FIPayscales = SqlMapperUtil.StoredProcWithParams<FIPayscaleSetup>("sp_CommissionGetFIPayscaleSetupsDate", new { MonthYear = monthYear }, "SalesCommission");
+
+            return FIPayscales;
+
+        }
+
         public static List<SelectListItem> GetMakes(string mallId)
         {
             var sqlGet = "Select id as MakeId, make as MakeName, mall_id as MallId, makecode from [Make] where on_off <> 'D' and mall_id = '" + mallId + "' order by MallId, Id";
@@ -4784,6 +4808,42 @@ namespace SalesCommission.Business
         public static List<SelectListItem> GetFIPayscaleSelectList()
         {
             var sqlGet = "SELECT distinct [PlanCode], [PlanName] FROM [SalesCommission].[dbo].[CommissionFIPayscales]";
+            var payscales = SqlMapperUtil.SqlWithParams<FIPayscale>(sqlGet, null, "SalesCommission");
+
+            var items = new List<SelectListItem>();
+
+            foreach (var payscale in payscales)
+            {
+                var item = new SelectListItem();
+                item.Text = payscale.PlanName.Trim();
+                item.Value = payscale.PlanCode.Trim();
+                items.Add(item);
+            }
+
+            return items;
+        }
+
+        public static List<SelectListItem> GetAftermarketPointsSelectList()
+        {
+            var sqlGet = "SELECT distinct [pt_LocationId] as PlanCode, [pt_PlanName] as PlanName FROM [SalesCommission].[dbo].[CommissionAftermarketPoints]";
+            var payscales = SqlMapperUtil.SqlWithParams<FIPayscale>(sqlGet, null, "SalesCommission");
+
+            var items = new List<SelectListItem>();
+
+            foreach (var payscale in payscales)
+            {
+                var item = new SelectListItem();
+                item.Text = payscale.PlanName.Trim();
+                item.Value = payscale.PlanCode.Trim();
+                items.Add(item);
+            }
+
+            return items;
+        }
+
+        public static List<SelectListItem> GetSalesPayplansSelectList()
+        {
+            var sqlGet = "SELECT distinct [ps_PlanCode] as PlanCode, [ps_PlanName] as [PlanName] FROM [SalesCommission].[dbo].[CommissionPayscaleSetup] where ps_PlanCode like 'COM%'";
             var payscales = SqlMapperUtil.SqlWithParams<FIPayscale>(sqlGet, null, "SalesCommission");
 
             var items = new List<SelectListItem>();
@@ -7201,9 +7261,13 @@ namespace SalesCommission.Business
 
                     foreach (var deal in associate.AssociateDeals)
                     {
-                        associateDealCounts.NewDealCount += deal.NewDealCount;
-                        associateDealCounts.UsedDealCount += deal.UsedDealCount;
-                        associateDealCounts.TotalDealCount += (deal.NewDealCount + deal.UsedDealCount);
+                        if(deal.MakeCode != "AA")
+                        {
+                            associateDealCounts.NewDealCount += deal.NewDealCount;
+                            associateDealCounts.UsedDealCount += deal.UsedDealCount;
+                            associateDealCounts.TotalDealCount += (deal.NewDealCount + deal.UsedDealCount);
+                        }
+
                         associateDealCounts.LeaseCount += deal.LeaseCount;
                         associateDealCounts.BPPCount += deal.BPPCount;
                         associateDealCounts.FinanceCount += deal.FinanceCount;
@@ -7290,10 +7354,28 @@ namespace SalesCommission.Business
             return aftermarketInputModel;
         }
 
+        public static AftermarketInputModel GetAftermarketInputsByDateAndId(AftermarketInputModel aftermarketInputModel)
+        {
+            var monthYear = aftermarketInputModel.MonthId.ToString() + "/" + aftermarketInputModel.YearId.ToString();
+
+            aftermarketInputModel.AftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_CommissionGetAftermarketInputsByDateAndId", new { MonthYear = monthYear, PlanId = aftermarketInputModel.PlanId }, "SalesCommission");
+
+            return aftermarketInputModel;
+        }
+
         public static AftermarketInputModel UpdateAftermarketInputsFromPrevious(AftermarketInputModel aftermarketInputModel)
         {
             // Take the current date and create new records for the previous month
             var aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_UpdateAftermarketInputsFromPreviousByDate", new { YearId = aftermarketInputModel.YearId, MonthId = aftermarketInputModel.MonthId }, "SalesCommission");
+            aftermarketInputModel.AftermarketInputs = aftermarketInputs;
+
+            return aftermarketInputModel;
+        }
+
+        public static AftermarketInputModel UpdateAftermarketInputsFromPreviousById(AftermarketInputModel aftermarketInputModel)
+        {
+            // Take the current date and create new records for the previous month
+            var aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_UpdateAftermarketInputsFromPreviousByDateAndId", new { YearId = aftermarketInputModel.YearId, MonthId = aftermarketInputModel.MonthId, PlanId = aftermarketInputModel.PlanId }, "SalesCommission");
             aftermarketInputModel.AftermarketInputs = aftermarketInputs;
 
             return aftermarketInputModel;
@@ -7559,7 +7641,7 @@ namespace SalesCommission.Business
         public static int UpdateFIPayscalesFromPrevious(FIPayscaleModel payscaleModel)
         {
             // Take the current date and create new records for the previous month
-            var payscales = SqlMapperUtil.StoredProcWithParams<NewPayscale>("sp_UpdateFIPayscalesFromPreviousByDate", new { YearId = payscaleModel.YearId, MonthId = payscaleModel.MonthId, PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+            var success = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_UpdateFIPayscalesFromPreviousByDate", new { YearId = payscaleModel.YearId, MonthId = payscaleModel.MonthId, PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
             
             return 1;
         }

@@ -44,6 +44,12 @@ namespace SalesCommission
             );
 
             RouteTable.Routes.MapRoute(
+                "FINewAssociateCommission",
+                "FICommission/NewAssociate/{location}/{id}/{monthId}/{yearId}", // URL with parameters
+                new { controller = "FICommission", action = "NewAssociate", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+            );
+
+            RouteTable.Routes.MapRoute(
                 "FIAssociateValidate",
                 "FICommission/ValidateDeals/{location}/{id}/{monthId}/{yearId}", // URL with parameters
                 new { controller = "FICommission", action = "ValidateDeals", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }

@@ -76,7 +76,7 @@
     <h1>Payscale Comparison for All Stores</h1>
     <div class="row">
         <div class="col-sm-9">
-            <h3>Select a Date:</h3>
+            <h3>Select Pay Plans and a Date:</h3>
         </div>
     </div>
     @using (Html.BeginForm())
@@ -84,9 +84,9 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="row">
-                    @*<div class="col-sm-4">
-                            @Html.DropDownListFor(n => n.StoreId, new SelectList(SalesCommission.Business.Enums.Stores, "StoreId", "Name"), "- Select a Store -", new { @class = "form-control form-inline" })
-                        </div>*@
+                    <div class="col-sm-4">
+                        @Html.DropDownListFor(n => n.PayscaleId, new MultiSelectList(SalesCommission.Business.Enums.NewPayscales, "PayscaleId", "Name"), new { @class = "form-control form-inline chosen-select", multiple = "", data_placeholder = "Select Payplans..." })
+                    </div>
                     <div class="col-sm-2">
                         @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
                     </div>
@@ -142,7 +142,7 @@
             </div>
         </div>
 
-        var firstCompare = Model.StoreComparisons[0];
+        @*var firstCompare = Model.StoreComparisons[0];
         <div class="row">
             <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
                 <strong>Select Payscales to Compare:</strong>
@@ -166,7 +166,7 @@
 
                 }
             </div>
-        </div>
+        </div>*@
 
         <div class="row">
             <div class="col-md-12" style="background-color:#d9edf7; padding:5px">
@@ -193,8 +193,8 @@
                         decimal OverallTradePercent = 0;
                         decimal OverallGAPPercent = 0;
 
-                        decimal[] OverallPayscaleTotals = new decimal[firstCompare.PayscaleSetup.Count];
-                        decimal[] OverallPayscaleDifferences = new decimal[firstCompare.PayscaleSetup.Count];
+                        decimal[] OverallPayscaleTotals = new decimal[Model.PayscaleSetup.Count];
+                        decimal[] OverallPayscaleDifferences = new decimal[Model.PayscaleSetup.Count];
 
                     }
 
@@ -215,7 +215,7 @@
                             <th class="text-center">Hours<br />Pay</th>
                             <th class="text-center" style="border-right: 4px double #808080">Actual Earned</th>
 
-                            @foreach (var payscale in firstCompare.PayscaleSetup)
+                            @foreach (var payscale in Model.PayscaleSetup)
                             {
                                 var planCode = payscale.ps_PlanCode;
                                 <th class="text-center col-@planCode">@planCode Plan</th>
@@ -248,7 +248,7 @@
                             <th class="text-center">Hours<br />Pay</th>
                             <th class="text-center" style="border-right: 4px double #808080">Actual Earned</th>
 
-                            @foreach (var payscale in comparison.PayscaleSetup)
+                            @foreach (var payscale in Model.PayscaleSetup)
                             {
                                 var planCode = payscale.ps_PlanCode;
                                 <th class="text-center col-@planCode">@planCode Plan</th>
@@ -276,8 +276,8 @@
 
                                 decimal TotalActualEarned = 0;
 
-                                decimal[] payscaleTotals = new decimal[comparison.PayscaleSetup.Count];
-                                decimal[] payscaleDifferences = new decimal[comparison.PayscaleSetup.Count];
+                                decimal[] payscaleTotals = new decimal[Model.PayscaleSetup.Count];
+                                decimal[] payscaleDifferences = new decimal[Model.PayscaleSetup.Count];
 
 
                                 foreach (var associate in comparison.Associates)
@@ -287,7 +287,7 @@
                                     var payLevelName = "";
 
 
-                                    foreach (var scale in SalesCommission.Business.Enums.Payscales)
+                                    foreach (var scale in SalesCommission.Business.Enums.NewPayscales)
                                     {
                                         if (associate.AssociatePayscale == scale.PayscaleID)
                                         {
@@ -537,7 +537,7 @@
 
                                             if (dealNU == "N")
                                             {
-                                                var spiff = comparison.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+                                                var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
 
                                                 if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
                                                 {
@@ -715,7 +715,7 @@
                                     var allPayscales = new List<SalesCommission.Models.NewPayscale>();
                                     var payscaleIndex = 0;
 
-                                    foreach (var payscale in comparison.PayscaleSetup)
+                                    foreach (var payscale in Model.PayscaleSetup)
                                     {
                                         var planCode = payscale.ps_PlanCode;
                                         var associateLevel = associate.AssociateLevel;
@@ -725,7 +725,7 @@
                                             associateLevel = "CERTELIT";
                                         }
 
-                                        allPayscales = comparison.Payscales.FindAll(o => o.ps_PlanCode == planCode && o.ps_PayLevel == associateLevel);
+                                        allPayscales = Model.Payscales.FindAll(o => o.ps_PlanCode == planCode && o.ps_PayLevel == associateLevel);
                                         //var dealPayscale = associate.AssociatePayscales.Find(o => o.ps_NewUsedHandy == deal.VehicleCondition);
 
                                         decimal dealIndex = 0;
@@ -911,7 +911,7 @@
 
                                                 if (dealNU == "N")
                                                 {
-                                                    var spiff = comparison.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
+                                                    var spiff = Model.ManufacturerSpiffs.Find(o => o.Manufacturer.Trim().ToUpper() == deal.VehicleMake.Trim().ToUpper());
 
                                                     if (spiff != null && spiff.SpiffPaid.Trim().ToUpper() == "PAID")
                                                     {
@@ -1095,7 +1095,7 @@
                                         <th class="text-center">@TotalHoursWorked</th>
                                         <th class="text-center" style="border-right: 4px double #808080">@TotalActualEarned.ToString("C", nfi)</th>
 
-                                        @foreach (var payscale in comparison.PayscaleSetup)
+                                        @foreach (var payscale in Model.PayscaleSetup)
                                         {
                                             var planCode = payscale.ps_PlanCode;
 
@@ -1125,7 +1125,7 @@
                                         @{
                                             totalIndex = 0;
                                         }
-                                        @foreach (var payscale in comparison.PayscaleSetup)
+                                        @foreach (var payscale in Model.PayscaleSetup)
                                         {
                                             var planCode = payscale.ps_PlanCode;
 
@@ -1155,7 +1155,7 @@
                                         @{ 
                                             totalIndex = 0;
                                         }
-                                        @foreach (var payscale in comparison.PayscaleSetup)
+                                        @foreach (var payscale in Model.PayscaleSetup)
                                         {
                                             var planCode = payscale.ps_PlanCode;
 
@@ -1211,7 +1211,7 @@
                             <th class="text-center" style="border-right: 4px double #808080">@OverallActualEarned</th>
 
                             
-                            @foreach (var payscale in firstCompare.PayscaleSetup)
+                            @foreach (var payscale in Model.PayscaleSetup)
                             {
                                 var planCode = payscale.ps_PlanCode;
 
@@ -1236,7 +1236,7 @@
                             <th class="text-center" style="border-right: 4px double #808080"></th>
 
 
-                            @foreach (var payscale in firstCompare.PayscaleSetup)
+                            @foreach (var payscale in Model.PayscaleSetup)
                             {
                                 var planCode = payscale.ps_PlanCode;
 
@@ -1260,7 +1260,7 @@
                             <th class="text-center" style="border-right: 4px double #808080"></th>
 
                             @{ overallIndex = 0;}
-                            @foreach (var payscale in firstCompare.PayscaleSetup)
+                            @foreach (var payscale in Model.PayscaleSetup)
                             {
                                 var planCode = payscale.ps_PlanCode;
 

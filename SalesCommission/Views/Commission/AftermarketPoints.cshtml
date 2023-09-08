@@ -27,7 +27,7 @@
     <h1>Aftermarket Points</h1>
     <div class="row">
         <div class="col-sm-8">
-            <h3>Select a Date:</h3>
+            <h3>Select a Plan and Date:</h3>
         </div>
     </div>
     @using (Html.BeginForm())
@@ -35,6 +35,9 @@
         <div class="row">
             <div class="col-sm-8">
                 <div class="row">
+                    <div class="col-sm-3">                        
+                        @Html.DropDownListFor(n => n.PlanId, Model.AftermarketPointsSelectList, new { @class = "form-control form-inline" })
+                    </div>
                     <div class="col-sm-3">
                         @Html.DropDownListFor(n => n.MonthId, new SelectList(SalesCommission.Business.Enums.Months, "MonthId", "Name"), new { @class = "form-control form-inline" })
                     </div>
@@ -60,6 +63,7 @@
         {
             <input type="hidden" id="hdn-YearId" name="hdn-YearId" value="@Model.YearId" />
             <input type="hidden" id="hdn-MonthId" name="hdn-MonthId" value="@Model.MonthId" />
+            <input type="hidden" id="hdn-PlanId" name="hdn-PlanId" value="@Model.PlanId" />
 
             <div class="row">
                 <div class="col-sm-12">
@@ -101,10 +105,18 @@
                                             <input type="text" id="fieldId-@index" name="fieldId-@index" class="form-control form-control-sm" value="@inputs.AftermarketFieldId" />
                                         </td>
                                         <td class="text-center">
-                                            <input type="text" id="points-@index" name="points-@index" class="form-control form-control-sm" value="@inputs.AftermarketPoints" />
+                                            <input type="text" id="points-@index" name="points-@index" class="form-control form-control-sm form-inline" value="@inputs.AftermarketPoints" />
+                                            @if(inputs.AftermarketPoints < 1)
+                                            {
+                                                <strong>Percentage of Profit</strong>
+                                            }
                                         </td>
                                         <td class="text-center">
                                             <input type="text" id="profitpoints-@index" name="profitpoints-@index" class="form-control form-control-sm" value="@inputs.AftermarketProfitPerPoint" />
+                                            @if (inputs.AftermarketPoints < 1)
+                                            {
+                                                <strong>Maximum Amount earned</strong>
+                                            }
                                         </td>                                        
                                     </tr>
                                     index += 1;

@@ -338,6 +338,8 @@
     <Content Include="Views\Reports\ExceptionReport.cshtml" />
     <Content Include="Views\Reports\ExceptionReportDetails.cshtml" />
     <Content Include="Views\Reports\LeadReport.cshtml" />
+    <Content Include="Views\FICommission\NewAssociate.cshtml" />
+    <Content Include="Views\FICommission\NewIndex.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -33,7 +33,7 @@ namespace SalesCommission.Models
         public List<MoneyDue> MoneyDue { get; set; }
         public List<TitleDue> TitleDue { get; set; }
         public List<FIDealApproval> DealApprovals { get; set; }
-
+        public List<FIPayscaleSetup> FIPayscales { get; set; }
     }
 
     public class FIManagerDealDetails
@@ -45,7 +45,8 @@ namespace SalesCommission.Models
         public string FIManagerSSN { get; set; }
         public string FIDepartmentCode { get; set; }
         public string FIDepartmentDescription { get; set; }
-        public DateTime FIManagerHireDate { get; set; }        
+        public DateTime FIManagerHireDate { get; set; }    
+        public string FIManagerPayscale { get; set; }
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
     }
 
@@ -91,6 +92,37 @@ namespace SalesCommission.Models
         public List<FIAdjustment> FIAdjustments { get; set; }
         public decimal GrossPercentagePaid { get; set; }
         public decimal MentorPercentagePaid { get; set; }
+        public decimal CommissionPercentage { get; set; }
+        public decimal ProductBonusPercent1 { get; set; }
+        public decimal ProductBonusThreshold1 { get; set; }
+        public decimal ProductBonusPercent2 { get; set; }
+        public decimal ProductBonusThreshold2 { get; set; }
+        public decimal ProductBonusPercent3 { get; set; }
+        public decimal ProductBonusThreshold3 { get; set; }
+        public decimal ProductBonusPercent4 { get; set; }
+        public decimal ProductBonusThreshold4 { get; set; }
+        public decimal ProductBonusPercent5 { get; set; }
+        public decimal ProductBonusThreshold5 { get; set; }
+        public decimal ProductBonusPercent6 { get; set; }
+        public decimal ProductBonusThreshold6 { get; set; }
+        public decimal ProductBonusPercent7 { get; set; }
+        public decimal ProductBonusThreshold7 { get; set; }
+        public decimal ProductBonusPercent8 { get; set; }
+        public decimal ProductBonusThreshold8 { get; set; }
+        public decimal StandardFinancePerUnit { get; set; }
+        public decimal StandardFinancePercent { get; set; }
+        public decimal StandardServicePerUnit { get; set; }
+        public decimal StandardServicePercent { get; set; }
+        public decimal StandardMaintenancePerUnit { get; set; }
+        public decimal StandardMaintenancePercent { get; set; }
+        public decimal StandardGAPPerUnit { get; set; }
+        public decimal StandardGAPPercent { get; set; }
+        public decimal StandardZurichPerUnit { get; set; }
+        public decimal StandardZurichPercent { get; set; }
+        public decimal StandardSelectProtectPerUnit { get; set; }
+        public decimal StandardSelectProtectPercent { get; set; }
+        public decimal StandardTireWheelPerUnit { get; set; }
+        public decimal StandardTireWheelPercent { get; set; }
         public decimal ManagerSalary { get; set; }
         public List<Associate> FIManagerList { get; set;}
     }

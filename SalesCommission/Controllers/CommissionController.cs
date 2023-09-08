@@ -1081,6 +1081,7 @@ namespace SalesCommission.Controllers
 
             aftermarketModel.MonthId = DateTime.Now.Month;
             aftermarketModel.YearId = DateTime.Now.Year;
+            aftermarketModel.AftermarketPointsSelectList = SqlQueries.GetAftermarketPointsSelectList().OrderBy(x => x.Text).ToList();
 
             return View(aftermarketModel);
         }
@@ -1092,12 +1093,12 @@ namespace SalesCommission.Controllers
             if (Request.Form["MonthId"] != null)
             {
                 //The Submit button was clicked...
-                aftermarketModel = SqlQueries.GetAftermarketInputsByDate(aftermarketModel);
+                aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
 
                 if (aftermarketModel.AftermarketInputs.Count == 0)
                 {
                     //Now, let's import from the previous month...
-                    aftermarketModel = SqlQueries.UpdateAftermarketInputsFromPrevious(aftermarketModel);
+                    aftermarketModel = SqlQueries.UpdateAftermarketInputsFromPreviousById(aftermarketModel);
                 }
             }
             else if (Request.Form["hdn-MonthId"] != null)
@@ -1106,7 +1107,7 @@ namespace SalesCommission.Controllers
 
                 aftermarketModel.MonthId = (Request.Form["hdn-MonthId"] != "") ? Int32.Parse(Request.Form["hdn-MonthId"]) : 0;
                 aftermarketModel.YearId = (Request.Form["hdn-YearId"] != "") ? Int32.Parse(Request.Form["hdn-YearId"]) : 0;
-
+                aftermarketModel.PlanId = (Request.Form["hdn-PlanId"] != "") ? Request.Form["hdn-PlanId"] : "";
                 var inputIndex = (Request.Form["hdn-InputIndex"] != "") ? Int32.Parse(Request.Form["hdn-InputIndex"]) : 0;
 
                 for (int i = 1; i < inputIndex; i++)
@@ -1129,9 +1130,10 @@ namespace SalesCommission.Controllers
 
                 }
 
-                aftermarketModel = SqlQueries.GetAftermarketInputsByDate(aftermarketModel);
+                aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
 
             }
+            aftermarketModel.AftermarketPointsSelectList = SqlQueries.GetAftermarketPointsSelectList().OrderBy(x => x.Text).ToList();
 
             return View(aftermarketModel);
         }
@@ -1221,7 +1223,28 @@ namespace SalesCommission.Controllers
         public ActionResult PayscaleComparison(PayscaleComparisonModel payscaleComparisonModel)
         {
 
-            payscaleComparisonModel = SqlQueries.GetPayscalesByDate(payscaleComparisonModel);
+            payscaleComparisonModel.Payscales = new List<NewPayscale>();
+            payscaleComparisonModel.PayscaleSetup = new List<NewPayscaleSetup>();
+
+
+            foreach (var id in payscaleComparisonModel.PayscaleId)
+            {
+                var payscaleModel = new PayscaleModel();
+                payscaleModel.PayscaleId = id;
+                payscaleModel.YearId = payscaleComparisonModel.YearId;
+                payscaleModel.MonthId = payscaleComparisonModel.MonthId;
+
+                var monthYear = payscaleModel.MonthId.ToString() + "/" + payscaleModel.YearId.ToString();
+                var payscales = SqlMapperUtil.StoredProcWithParams<Models.NewPayscale>("sp_CommissionGetNewPayscaleByIDAndDate", new { MonthYear = monthYear, PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+
+                payscaleComparisonModel.Payscales.AddRange(payscales);
+
+                var setup = SqlMapperUtil.StoredProcWithParams<Models.NewPayscaleSetup>("sp_CommissionGetNewPayscaleSetupById", new { PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+                payscaleComparisonModel.PayscaleSetup.AddRange(setup);
+
+            }
+
+            //payscaleComparisonModel = SqlQueries.GetPayscalesByDate(payscaleComparisonModel);
             payscaleComparisonModel.Associates = SqlQueries.GetAssociatesByStoreAndDate(payscaleComparisonModel.StoreId, payscaleComparisonModel.YearId, payscaleComparisonModel.MonthId);
             payscaleComparisonModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(payscaleComparisonModel.YearId, payscaleComparisonModel.MonthId);            
 
@@ -1313,6 +1336,28 @@ namespace SalesCommission.Controllers
         public ActionResult PayscaleComparisonAll(PayscaleComparisonAllModel payscaleComparisonAllModel)
         {
             payscaleComparisonAllModel.StoreComparisons = new List<PayscaleComparisonModel>();
+            payscaleComparisonAllModel.Payscales = new List<NewPayscale>();
+            payscaleComparisonAllModel.PayscaleSetup = new List<NewPayscaleSetup>();
+
+
+            foreach (var id in payscaleComparisonAllModel.PayscaleId)
+            {
+                var payscaleModel = new PayscaleModel();
+                payscaleModel.PayscaleId = id;
+                payscaleModel.YearId = payscaleComparisonAllModel.YearId;
+                payscaleModel.MonthId = payscaleComparisonAllModel.MonthId;
+
+                var monthYear = payscaleModel.MonthId.ToString() + "/" + payscaleModel.YearId.ToString();
+                var payscales = SqlMapperUtil.StoredProcWithParams<Models.NewPayscale>("sp_CommissionGetNewPayscaleByIDAndDate", new { MonthYear = monthYear, PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+
+                payscaleComparisonAllModel.Payscales.AddRange(payscales);
+
+                var setup = SqlMapperUtil.StoredProcWithParams<Models.NewPayscaleSetup>("sp_CommissionGetNewPayscaleSetupById", new { PayscaleID = payscaleModel.PayscaleId }, "SalesCommission");
+                payscaleComparisonAllModel.PayscaleSetup.AddRange(setup);
+
+            }
+
+            payscaleComparisonAllModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(payscaleComparisonAllModel.YearId, payscaleComparisonAllModel.MonthId);
 
             foreach (var store in SalesCommission.Business.Enums.StoreComparison)
             {
@@ -1321,9 +1366,9 @@ namespace SalesCommission.Controllers
                 payscaleComparisonModel.MonthId = payscaleComparisonAllModel.MonthId;
                 payscaleComparisonModel.YearId = payscaleComparisonAllModel.YearId;
 
-                payscaleComparisonModel = SqlQueries.GetPayscalesByDate(payscaleComparisonModel);
+                //payscaleComparisonModel = SqlQueries.GetPayscalesByDate(payscaleComparisonModel);
                 payscaleComparisonModel.Associates = SqlQueries.GetAssociatesByStoreAndDate(payscaleComparisonModel.StoreId, payscaleComparisonModel.YearId, payscaleComparisonModel.MonthId);
-                payscaleComparisonModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(payscaleComparisonModel.YearId, payscaleComparisonModel.MonthId);
+                //payscaleComparisonModel.ManufacturerSpiffs = SqlQueries.GetManufacturerSpiffs(payscaleComparisonModel.YearId, payscaleComparisonModel.MonthId);
 
                 payscaleComparisonAllModel.StoreComparisons.Add(payscaleComparisonModel);
 
@@ -2336,7 +2381,7 @@ namespace SalesCommission.Controllers
 
             payscaleModel.MonthId = DateTime.Now.Month;
             payscaleModel.YearId = DateTime.Now.Year;
-
+            payscaleModel.AftermarketPointsSelectList = SqlQueries.GetAftermarketPointsSelectList().OrderBy(x => x.Text).ToList();
             return View(payscaleModel);
         }
 
@@ -2349,6 +2394,7 @@ namespace SalesCommission.Controllers
                 var payscaleId = payscaleModel.PayscaleId;
                 var monthId = payscaleModel.MonthId;
                 var yearId = payscaleModel.YearId;
+                var planId = payscaleModel.PlanId;
 
                 //SAVE THE NEW STANDARD
                 var NewStandard = new NewPayscale();
@@ -2478,6 +2524,8 @@ namespace SalesCommission.Controllers
                 //Now, let's import from the previous month...
                 payscaleModel = SqlQueries.UpdatePayscalesFromPrevious(payscaleModel);
             }
+
+            payscaleModel.AftermarketPointsSelectList = SqlQueries.GetAftermarketPointsSelectList().OrderBy(x => x.Text).ToList();
 
             return View(payscaleModel);
 

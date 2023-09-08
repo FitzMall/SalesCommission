@@ -135,10 +135,156 @@
                 </table>
             </div>
             <div class="col-sm-4">
-                <h4>Gross Percentage Paid</h4>
-                <input type="text" class="form-control" name="grosspercent" id="grosspercent" value="@Model.GrossPercentagePaid" />
-                <h4>Mentor Percentage</h4>
-                <input type="text" class="form-control" name="mentorpercent" id="mentorpercent" value="@Model.MentorPercentagePaid" />
+                <h4>Commission Percentage</h4>
+                <input type="text" class="form-control" name="commissionpercent" id="commissionpercent" value="@Model.CommissionPercentage" />
+
+                <h4>Product Bonus Threshold</h4>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Threshold</th>
+                            <th>Percent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus1threshold" id="Bonus1threshold" value="@Model.ProductBonusThreshold1" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus1percent" id="Bonus1percent" value="@Model.ProductBonusPercent1" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus2threshold" id="Bonus2threshold" value="@Model.ProductBonusThreshold2" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus2percent" id="Bonus2percent" value="@Model.ProductBonusPercent2" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus3threshold" id="Bonus3threshold" value="@Model.ProductBonusThreshold3" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus3percent" id="Bonus3percent" value="@Model.ProductBonusPercent3" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus4threshold" id="Bonus4threshold" value="@Model.ProductBonusThreshold4" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus4percent" id="Bonus4percent" value="@Model.ProductBonusPercent4" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus5threshold" id="Bonus5threshold" value="@Model.ProductBonusThreshold5" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus5percent" id="Bonus5percent" value="@Model.ProductBonusPercent5" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>6.</td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus6threshold" id="Bonus6threshold" value="@Model.ProductBonusThreshold6" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="Bonus6percent" id="Bonus6percent" value="@Model.ProductBonusPercent6" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Standard Per Unit and Percentages</h4>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Standard</th>
+                            <th>Per Unit</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Finance Reserve</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardFinancePerUnit" id="StandardFinancePerUnit" value="@Model.StandardFinancePerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardFinancePercent" id="StandardFinancePercent" value="@Model.StandardFinancePercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Service Contract</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardServicePerUnit" id="StandardServicePerUnit" value="@Model.StandardServicePerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardServicePercent" id="StandardServicePercent" value="@Model.StandardServicePercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Maintenance</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardMaintenancePerUnit" id="StandardMaintenancePerUnit" value="@Model.StandardMaintenancePerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardMaintenancePercent" id="StandardMaintenancePercent" value="@Model.StandardMaintenancePercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>GAP</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardGAPPerUnit" id="StandardGAPPerUnit" value="@Model.StandardGAPPerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardGAPPercent" id="StandardGAPPercent" value="@Model.StandardGAPPercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Zurich Shield</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardZurichPerUnit" id="StandardZurichPerUnit" value="@Model.StandardZurichPerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardZurichPercent" id="StandardZurichPercent" value="@Model.StandardZurichPercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Select Protect</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardSelectProtectPerUnit" id="StandardSelectProtectPerUnit" value="@Model.StandardSelectProtectPerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardSelectProtectPercent" id="StandardSelectProtectPercent" value="@Model.StandardSelectProtectPercent" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tire and Wheel</td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardTireWheelPerUnit" id="StandardTireWheelPerUnit" value="@Model.StandardTireWheelPerUnit" />
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" name="StandardTireWheelPercent" id="StandardTireWheelPercent" value="@Model.StandardTireWheelPercent" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                @*<h4>Gross Percentage Paid</h4>*@
+                <input type="text" class="form-control" style="display:none" name="grosspercent" id="grosspercent" value="@Model.GrossPercentagePaid" />
+                @*<h4>Mentor Percentage</h4>*@
+                <input type="text" class="form-control" style="display:none" name="mentorpercent" id="mentorpercent" value="@Model.MentorPercentagePaid" />
                 <hr/>
                 <h3>Create New Payscale</h3>
                 <p>You can create a new payscale based upon the currently selected payscale. Enter a name and select create.</p>
@@ -150,7 +296,7 @@
         </div>
 
 
-            <div class="row">
+            <div class="row" style="display:none">
                 @{
                     var payTypes = Model.FIPayscales.Select(x => x.PayTypeCode).Distinct().ToList();
 

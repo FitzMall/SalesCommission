@@ -387,6 +387,10 @@ namespace SalesCommission.Business
 
         public static IEnumerable<Store> FIManagerStores = new List<Store> {
             new Store {
+                StoreId = "ALL",
+                Name = "ALL"
+            },
+            new Store {
                 StoreId = "FOC",
                 Name = "Annapolis"
             },
@@ -677,11 +681,31 @@ namespace SalesCommission.Business
             },
             new CertificationLevel {
                 CertificationID = "FP",
-                Name = "FitzWay Plus Used"
+                Name = "FitzWay Premium"
             },
             new CertificationLevel {
-                CertificationID = "FW",
+                CertificationID = "FWP",
+                Name = "FitzWay Premium Used"
+            },
+            new CertificationLevel {
+                CertificationID = "FS",
+                Name = "FitzWay Select"
+            },
+            new CertificationLevel {
+                CertificationID = "FWS",
+                Name = "FitzWay Select USED"
+            },
+            new CertificationLevel {
+                CertificationID = "FV",
+                Name = "Fitzway Value"
+            },
+            new CertificationLevel {
+                CertificationID = "FWV",
                 Name = "Fitzway Value Used"
+            },
+            new CertificationLevel {
+                CertificationID = "FWU",
+                Name = "Fitzway Used"
             },
             new CertificationLevel {
                 CertificationID = "HDM",
@@ -690,6 +714,10 @@ namespace SalesCommission.Business
             new CertificationLevel {
                 CertificationID = "CPO",
                 Name = "Manufacturer Certified Pre-Owned"
+            },
+            new CertificationLevel {
+                CertificationID = "WS",
+                Name = "Whosesale"
             }
 
         };
@@ -1724,11 +1752,11 @@ namespace SalesCommission.Business
         public static IEnumerable<Payscale> NewPayscales = new List<Payscale> {
             new Payscale {
                 PayscaleID = "COMSPIFF",
-                Name = "Compensation Plan with SPIFF Guarantee"
+                Name = "Compensation Plan A"
             },
             new Payscale {
                 PayscaleID = "COMNOSPIFF",
-                Name = "Compensation Plan No SPIFF Guarantee"
+                Name = "Compensation Plan B"
             },
             new Payscale {
                 PayscaleID = "COMFL",
@@ -1739,6 +1767,10 @@ namespace SalesCommission.Business
                 Name = "Compensation Plan - Frederick"
             }
             ,
+            new Payscale {
+                PayscaleID = "COMTEMP2",
+                Name = "Compensation Plan - Frederick Rt85"
+            },
             new Payscale {
                 PayscaleID = "COMCHBG",
                 Name = "Compensation Plan - Chambersburg"
@@ -1751,9 +1783,17 @@ namespace SalesCommission.Business
                 PayscaleID = "COMTEMP1",
                 Name = "Compensation Plan Temporary - Mazda"
             },
+
+        };
+
+        public static IEnumerable<Payscale> PointPlans = new List<Payscale> {
             new Payscale {
-                PayscaleID = "COMTEMP2",
-                Name = "Compensation Plan Temporary - Subaru"
+                PayscaleID = "ALL",
+                Name = "Aftermarket Points"
+            },
+            new Payscale {
+                PayscaleID = "PCT",
+                Name = "Aftermarket Points with Percents"
             }
         };
 

@@ -614,7 +614,11 @@ else
                                     if (deal.AftermarketCount > 0)
                                     {
                                         var aftermarketItems = SalesCommission.Business.SqlQueries.GetAftermarketItemsByDealKey(deal.DealKey, new DateTime(Model.YearId, Model.MonthId, 1), true);
+
                                         decimal aftermarketCount = 0;
+                                        decimal aftermarketPercentCount = 0;
+                                        decimal percentCommission = 0;
+
                                         foreach (var item in aftermarketItems)
                                         {
                                             var profit = item.AftermarketPrice - item.AftermarketCost;
@@ -733,6 +737,51 @@ else
                                                 }
 
                                             }
+                                            else if (associate.AssociateLocation == "FHG" || associate.AssociateLocation == "FHT")
+                                            {
+
+                                                if (item.AftermarketId >= 16) // FOR HAGERSTOWN ONLY, PERCENTAGE OF PROFIT, MAX of $100
+                                                {
+                                                    decimal percent = item.AftermarketPoints;
+                                                    var profitPercent = (profit * percent);
+
+                                                    var wholeProfitPercent = Math.Round(profitPercent);
+
+                                                    if (wholeProfitPercent > item.AftermarketProfitPerPoint)
+                                                    {
+                                                        wholeProfitPercent = item.AftermarketProfitPerPoint; //MAXIMUM OF $100
+                                                    }
+                                                    percentCommission += wholeProfitPercent;
+                                                    aftermarketPercentCount += 1;
+                                                }
+                                                else
+                                                {
+                                                    if (item.AftermarketProfitPerPoint == 0)
+                                                    {
+                                                        item.AftermarketProfitPerPoint = 1;
+                                                    }
+
+                                                    if (item.AftermarketProfitPerPoint > 0)
+                                                    {
+                                                        var profitPerPoint = (profit / item.AftermarketProfitPerPoint);
+
+                                                        if (profitPerPoint < item.AftermarketPoints && item.AftermarketPoints == 1)
+                                                        {
+                                                            points = 0;
+                                                        }
+                                                        else if (profitPerPoint < item.AftermarketPoints)
+                                                        {
+                                                            points = Math.Truncate(profitPerPoint);
+                                                        }
+                                                        else
+                                                        {
+                                                            points = item.AftermarketPoints;
+                                                        }
+                                                    }
+                                                }
+
+                                            }
+
                                             else
                                             {
                                                 if (item.AftermarketProfitPerPoint == 0)
@@ -784,9 +833,9 @@ else
 
                                             aftermarketCount += (points);
                                         }
-                                        aftermarketCommission = dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue);
+                                        aftermarketCommission = (dealPayscale.ps_AftermarketPerItem * (aftermarketCount * dealValue)) + (percentCommission * dealValue);
 
-                                        totalAftermarketCount += aftermarketCount;//aftermarketItems.Count;
+                                        totalAftermarketCount += aftermarketCount + aftermarketPercentCount;//aftermarketItems.Count;
                                         totalAftermarketItemsCount += aftermarketItems.Count;
                                     }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 
 namespace SalesCommission.Models
 {
@@ -334,8 +335,9 @@ namespace SalesCommission.Models
     {
         public int MonthId { get; set; }
         public int YearId { get; set; }
+        public string PlanId { get; set; }
         public List<AftermarketInput> AftermarketInputs { get; set; }
-       
+        public List<SelectListItem> AftermarketPointsSelectList { get; set; }
     }
 
     public class AftermarketInput

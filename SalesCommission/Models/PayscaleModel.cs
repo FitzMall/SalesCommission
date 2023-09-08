@@ -11,9 +11,11 @@ namespace SalesCommission.Models
         public string PayscaleId { get; set; }
         public int MonthId { get; set; }
         public int YearId { get; set; }
+        public string PlanId { get; set; }
         public List<Payscale> OldPayscales { get; set; }
         public List<NewPayscale> Payscales { get; set; }
         public List<NewPayscaleSetup> PayscaleSetup { get; set; }
+        public List<SelectListItem> AftermarketPointsSelectList { get; set; }
     }
 
     public class FIPayscaleModel
@@ -27,6 +29,39 @@ namespace SalesCommission.Models
         public decimal GrossPercentagePaid { get; set; }
         public decimal MentorPercentagePaid { get; set; }
         public string NewPayscaleName { get; set; }
+        public decimal CommissionPercentage { get; set;}
+        public decimal ProductBonusPercent1 { get; set; }
+        public decimal ProductBonusThreshold1 { get; set; }
+        public decimal ProductBonusPercent2 { get; set; }
+        public decimal ProductBonusThreshold2 { get; set; }
+        public decimal ProductBonusPercent3 { get; set; }
+        public decimal ProductBonusThreshold3 { get; set; }
+        public decimal ProductBonusPercent4 { get; set; }
+        public decimal ProductBonusThreshold4 { get; set; }
+        public decimal ProductBonusPercent5 { get; set; }
+        public decimal ProductBonusThreshold5 { get; set; }
+        public decimal ProductBonusPercent6 { get; set; }
+        public decimal ProductBonusThreshold6 { get; set; }
+        public decimal ProductBonusPercent7 { get; set; }
+        public decimal ProductBonusThreshold7 { get; set; }
+        public decimal ProductBonusPercent8 { get; set; }
+        public decimal ProductBonusThreshold8 { get; set; }
+
+        public decimal StandardFinancePerUnit { get; set; }
+        public decimal StandardFinancePercent { get; set; }
+        public decimal StandardServicePerUnit { get; set; }
+        public decimal StandardServicePercent { get; set; }
+        public decimal StandardMaintenancePerUnit { get; set; }
+        public decimal StandardMaintenancePercent { get; set; }
+        public decimal StandardGAPPerUnit { get; set; }
+        public decimal StandardGAPPercent { get; set; }
+        public decimal StandardZurichPerUnit { get; set; }
+        public decimal StandardZurichPercent { get; set; }
+        public decimal StandardSelectProtectPerUnit { get; set; }
+        public decimal StandardSelectProtectPercent { get; set; }
+        public decimal StandardTireWheelPerUnit { get; set; }
+        public decimal StandardTireWheelPercent { get; set; }
+
     }
 
     public class FIAdjustmentModel
@@ -146,6 +181,7 @@ namespace SalesCommission.Models
         public string StoreId { get; set; }
         public int MonthId { get; set; }
         public int YearId { get; set; }
+        public string[] PayscaleId { get; set; }
         public List<Associate> Associates { get; set; }
         public List<ManufacturerSpiff> ManufacturerSpiffs { get; set; }
         public List<NewPayscale> Payscales { get; set; }
@@ -156,8 +192,12 @@ namespace SalesCommission.Models
     {
         public string StoreId { get; set; }
         public string StoreName { get; set; }
+        public string[] PayscaleId { get; set; }
         public int MonthId { get; set; }
         public int YearId { get; set; }
+        public List<ManufacturerSpiff> ManufacturerSpiffs { get; set; }
+        public List<NewPayscale> Payscales { get; set; }
+        public List<NewPayscaleSetup> PayscaleSetup { get; set; }
         public List<PayscaleComparisonModel> StoreComparisons { get; set; }
     }
 
@@ -266,7 +306,37 @@ namespace SalesCommission.Models
         public string PlanName { get; set; }
         public decimal GrossPercentagePaid { get; set; }
         public decimal MentorPercentagePaid { get; set; }
-
+        public decimal CommissionPercentage { get; set; }
+        public decimal ProductBonusPercent1 { get; set; }
+        public decimal ProductBonusThreshold1 { get; set; }
+        public decimal ProductBonusPercent2 { get; set; }
+        public decimal ProductBonusThreshold2 { get; set; }
+        public decimal ProductBonusPercent3 { get; set; }
+        public decimal ProductBonusThreshold3 { get; set; }
+        public decimal ProductBonusPercent4 { get; set; }
+        public decimal ProductBonusThreshold4 { get; set; }
+        public decimal ProductBonusPercent5 { get; set; }
+        public decimal ProductBonusThreshold5 { get; set; }
+        public decimal ProductBonusPercent6 { get; set; }
+        public decimal ProductBonusThreshold6 { get; set; }
+        public decimal ProductBonusPercent7 { get; set; }
+        public decimal ProductBonusThreshold7 { get; set; }
+        public decimal ProductBonusPercent8 { get; set; }
+        public decimal ProductBonusThreshold8 { get; set; }
+        public decimal StandardFinancePerUnit { get; set; }
+        public decimal StandardFinancePercent { get; set; }
+        public decimal StandardServicePerUnit { get; set; }
+        public decimal StandardServicePercent { get; set; }
+        public decimal StandardMaintenancePerUnit { get; set; }
+        public decimal StandardMaintenancePercent { get; set; }
+        public decimal StandardGAPPerUnit { get; set; }
+        public decimal StandardGAPPercent { get; set; }
+        public decimal StandardZurichPerUnit { get; set; }
+        public decimal StandardZurichPercent { get; set; }
+        public decimal StandardSelectProtectPerUnit { get; set; }
+        public decimal StandardSelectProtectPercent { get; set; }
+        public decimal StandardTireWheelPerUnit { get; set; }
+        public decimal StandardTireWheelPercent { get; set; }
     }
 
     public class Payscale
