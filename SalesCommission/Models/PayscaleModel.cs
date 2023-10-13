@@ -61,7 +61,16 @@ namespace SalesCommission.Models
         public decimal StandardSelectProtectPercent { get; set; }
         public decimal StandardTireWheelPerUnit { get; set; }
         public decimal StandardTireWheelPercent { get; set; }
-
+        public string StandardsExpectations1 { get; set; }
+        public string StandardsExpectations2 { get; set; }
+        public string StandardsExpectations3 { get; set; }
+        public string StandardsExpectations4 { get; set; }
+        public string StandardsExpectations5 { get; set; }
+        public string StandardsExpectations6 { get; set; }
+        public string StandardsExpectations7 { get; set; }
+        public string StandardsExpectations8 { get; set; }
+        public int ActivePayscale { get; set; }
+        public int PayscaleWithProducts { get; set; }
     }
 
     public class FIAdjustmentModel
@@ -235,6 +244,7 @@ namespace SalesCommission.Models
         public decimal ps_VolumeBonusLevel7 { get; set; }
         public decimal ps_VolumeBonusLevel8 { get; set; }
         public decimal ps_VolumeBonusLevel9 { get; set; }
+        public string ps_AftermarketPlanId { get; set; }
     }
     public class NewPayscaleSetup
     {
@@ -263,7 +273,7 @@ namespace SalesCommission.Models
         public decimal ps_VolumeBonusLevel9Low { get; set; }
         public decimal ps_VolumeBonusLevel9High { get; set; }
         public string ps_PlanName { get; set; }
-
+        public string ps_AftermarketPlanId { get; set; }
     }
 
     public class FIPayscale
@@ -337,6 +347,16 @@ namespace SalesCommission.Models
         public decimal StandardSelectProtectPercent { get; set; }
         public decimal StandardTireWheelPerUnit { get; set; }
         public decimal StandardTireWheelPercent { get; set; }
+        public string StandardsExpectations1 { get; set; }
+        public string StandardsExpectations2 { get; set; }
+        public string StandardsExpectations3 { get; set; }
+        public string StandardsExpectations4 { get; set; }
+        public string StandardsExpectations5 { get; set; }
+        public string StandardsExpectations6 { get; set; }
+        public string StandardsExpectations7 { get; set; }
+        public string StandardsExpectations8 { get; set; }
+        public int ActivePayscale { get; set; }
+        public int PayscaleWithProducts { get; set; }
     }
 
     public class Payscale

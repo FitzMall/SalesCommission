@@ -10,7 +10,7 @@ namespace SalesCommission.Controllers
     public class FICommissionController : Controller
     {
         // GET: FICommission
-        public ActionResult Index()
+        public ActionResult OldIndex()
         {
             var FICommissionModel = new FICommissionModel();
 
@@ -32,7 +32,7 @@ namespace SalesCommission.Controllers
         }
 
         [HttpPost]
-        public ActionResult Index(FICommissionModel FICommissionModel)
+        public ActionResult OldIndex(FICommissionModel FICommissionModel)
         {
 
             FICommissionModel = SqlQueries.GetFIManagerDealsByDate(FICommissionModel);
@@ -60,7 +60,7 @@ namespace SalesCommission.Controllers
             return View(FICommissionModel);
         }
 
-        public ActionResult NewIndex()
+        public ActionResult Index()
         {
             var FICommissionModel = new FICommissionModel();
 
@@ -75,14 +75,14 @@ namespace SalesCommission.Controllers
                 FICommissionModel.MonthId = DateTime.Now.Month;
                 FICommissionModel.YearId = DateTime.Now.Year;
             }
-
+            FICommissionModel.ConditionFilter = "ALL";
             FICommissionModel.IncludeDeals = true;
 
             return View(FICommissionModel);
         }
 
         [HttpPost]
-        public ActionResult NewIndex(FICommissionModel FICommissionModel)
+        public ActionResult Index(FICommissionModel FICommissionModel)
         {
 
             FICommissionModel = SqlQueries.GetFIManagerDealsByDate(FICommissionModel);
@@ -765,10 +765,10 @@ namespace SalesCommission.Controllers
                 payscaleFISetup.ProductBonusThreshold5 = decimal.Parse(Request.Form["Bonus5threshold"]);
                 payscaleFISetup.ProductBonusPercent6 = decimal.Parse(Request.Form["Bonus6percent"]);
                 payscaleFISetup.ProductBonusThreshold6 = decimal.Parse(Request.Form["Bonus6threshold"]);
-                payscaleFISetup.ProductBonusPercent7 = 0;
-                payscaleFISetup.ProductBonusThreshold7 = 0;
-                payscaleFISetup.ProductBonusPercent8 = 0;
-                payscaleFISetup.ProductBonusThreshold8 = 0;
+                payscaleFISetup.ProductBonusPercent7 = decimal.Parse(Request.Form["Bonus7percent"]);
+                payscaleFISetup.ProductBonusThreshold7 = decimal.Parse(Request.Form["Bonus7threshold"]);
+                payscaleFISetup.ProductBonusPercent8 = decimal.Parse(Request.Form["Bonus8percent"]);
+                payscaleFISetup.ProductBonusThreshold8 = decimal.Parse(Request.Form["Bonus8threshold"]);
                 payscaleFISetup.StandardFinancePerUnit = decimal.Parse(Request.Form["StandardFinancePerUnit"]);
                 payscaleFISetup.StandardFinancePercent = decimal.Parse(Request.Form["StandardFinancePercent"]);
                 payscaleFISetup.StandardServicePerUnit = decimal.Parse(Request.Form["StandardServicePerUnit"]);
@@ -783,6 +783,17 @@ namespace SalesCommission.Controllers
                 payscaleFISetup.StandardSelectProtectPercent = decimal.Parse(Request.Form["StandardSelectProtectPercent"]);
                 payscaleFISetup.StandardTireWheelPerUnit = decimal.Parse(Request.Form["StandardTireWheelPerUnit"]);
                 payscaleFISetup.StandardTireWheelPercent = decimal.Parse(Request.Form["StandardTireWheelPercent"]);
+
+                payscaleFISetup.StandardsExpectations1 = Request.Form["StandardsExpectations1"];
+                payscaleFISetup.StandardsExpectations2 = Request.Form["StandardsExpectations2"];
+                payscaleFISetup.StandardsExpectations3 = Request.Form["StandardsExpectations3"];
+                payscaleFISetup.StandardsExpectations4 = Request.Form["StandardsExpectations4"];
+                payscaleFISetup.StandardsExpectations5 = Request.Form["StandardsExpectations5"];
+                payscaleFISetup.StandardsExpectations6 = Request.Form["StandardsExpectations6"];
+                payscaleFISetup.StandardsExpectations7 = Request.Form["StandardsExpectations7"];
+                payscaleFISetup.StandardsExpectations8 = Request.Form["StandardsExpectations8"];
+                payscaleFISetup.ActivePayscale = int.Parse(Request.Form["ActivePayscale"]);
+                payscaleFISetup.PayscaleWithProducts = int.Parse(Request.Form["PayscaleWithProducts"]);
 
                 var success = SqlQueries.SaveFIPayscaleSetup(payscaleFISetup);
                 //SAVE THE SETUP
@@ -920,7 +931,18 @@ namespace SalesCommission.Controllers
                     payscaleModel.StandardSelectProtectPercent = setup.StandardSelectProtectPercent;
                     payscaleModel.StandardTireWheelPerUnit = setup.StandardTireWheelPerUnit;
                     payscaleModel.StandardTireWheelPercent = setup.StandardTireWheelPercent;
-    }
+
+                    payscaleModel.StandardsExpectations1 = setup.StandardsExpectations1;
+                    payscaleModel.StandardsExpectations2 = setup.StandardsExpectations2;
+                    payscaleModel.StandardsExpectations3 = setup.StandardsExpectations3;
+                    payscaleModel.StandardsExpectations4 = setup.StandardsExpectations4;
+                    payscaleModel.StandardsExpectations5 = setup.StandardsExpectations5;
+                    payscaleModel.StandardsExpectations6 = setup.StandardsExpectations6;
+                    payscaleModel.StandardsExpectations7 = setup.StandardsExpectations7;
+                    payscaleModel.StandardsExpectations8 = setup.StandardsExpectations8;
+                    payscaleModel.ActivePayscale = setup.ActivePayscale;
+                    payscaleModel.PayscaleWithProducts = setup.PayscaleWithProducts;
+                }
             }
             return View(payscaleModel);
         }
@@ -1357,9 +1379,11 @@ namespace SalesCommission.Controllers
 
                 associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
 
-                if (associateLocation == "FBS")
+                var bNewPayscale = false;
+                if (associateLocation == "FBS" || associateLocation == "CDO")
                 {
                     associateLocation = "CDO";
+                    bNewPayscale = true;
                 }
 
                 var payscaleId = "";
@@ -1368,17 +1392,28 @@ namespace SalesCommission.Controllers
                 if (managerPayscale != null)
                 {
                     payscaleId = managerPayscale.ManagerPayscaleID;
+
                 }
                 if (payscaleId == null || payscaleId == "")
                 {
                     var payscaleList = SqlQueries.GetFIPayscaleSelectList();
 
-                    payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
+                    if (bNewPayscale)
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && x.Text.Contains("2023")).Value;
+                    }
+                    else
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Text.Contains("2023")).Value;
+                    }
+
+                    //payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
                 }
 
                 associateCommissionModel.FIPayscales = SqlQueries.GetFIPayscaleByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
 
                 var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
+
 
                 if (payscaleSetup != null && payscaleSetup.Count > 0)
                 {
@@ -1416,6 +1451,17 @@ namespace SalesCommission.Controllers
                     associateCommissionModel.StandardSelectProtectPercent = setup.StandardSelectProtectPercent;
                     associateCommissionModel.StandardTireWheelPerUnit = setup.StandardTireWheelPerUnit;
                     associateCommissionModel.StandardTireWheelPercent = setup.StandardTireWheelPercent;
+
+                    associateCommissionModel.StandardsExpectations1 = setup.StandardsExpectations1;
+                    associateCommissionModel.StandardsExpectations2 = setup.StandardsExpectations2;
+                    associateCommissionModel.StandardsExpectations3 = setup.StandardsExpectations3;
+                    associateCommissionModel.StandardsExpectations4 = setup.StandardsExpectations4;
+                    associateCommissionModel.StandardsExpectations5 = setup.StandardsExpectations5;
+                    associateCommissionModel.StandardsExpectations6 = setup.StandardsExpectations6;
+                    associateCommissionModel.StandardsExpectations7 = setup.StandardsExpectations7;
+                    associateCommissionModel.StandardsExpectations8 = setup.StandardsExpectations8;
+                    associateCommissionModel.ActivePayscale = setup.ActivePayscale;
+                    associateCommissionModel.PayscaleWithProducts = setup.PayscaleWithProducts;
                 }
 
                 associateCommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(Int32.Parse(yearId), Int32.Parse(monthId), id);

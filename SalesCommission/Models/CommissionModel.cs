@@ -26,6 +26,7 @@ namespace SalesCommission.Models
         public int MonthId { get; set; }
         public int YearId { get; set; }
         public bool IncludeDeals { get; set; }
+        public string ConditionFilter { get; set; }
         public List<Associate> FIManagers { get; set; }
         public List<ObjectivesAndStandards> ObjectivesAndStandards { get; set; }
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
@@ -123,6 +124,16 @@ namespace SalesCommission.Models
         public decimal StandardSelectProtectPercent { get; set; }
         public decimal StandardTireWheelPerUnit { get; set; }
         public decimal StandardTireWheelPercent { get; set; }
+        public string StandardsExpectations1 { get; set; }
+        public string StandardsExpectations2 { get; set; }
+        public string StandardsExpectations3 { get; set; }
+        public string StandardsExpectations4 { get; set; }
+        public string StandardsExpectations5 { get; set; }
+        public string StandardsExpectations6 { get; set; }
+        public string StandardsExpectations7 { get; set; }
+        public string StandardsExpectations8 { get; set; }
+        public int ActivePayscale { get; set; }
+        public int PayscaleWithProducts { get; set; }
         public decimal ManagerSalary { get; set; }
         public List<Associate> FIManagerList { get; set;}
     }

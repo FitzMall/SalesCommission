@@ -299,7 +299,7 @@
     <Content Include="Views\Reports\_LeadReportByBreakdownsCompare.cshtml" />
     <Content Include="Views\Reports\LeadMapping.cshtml" />
     <Content Include="Views\Reports\_AppointmentReportByBreakdowns.cshtml" />
-    <Content Include="Views\FICommission\Index.cshtml" />
+    <Content Include="Views\FICommission\OldIndex.cshtml" />
     <Content Include="Views\FICommission\Payscales.cshtml" />
     <Content Include="Views\FICommission\Associate.cshtml" />
     <Content Include="Views\FICommission\ScorecardDashboard.cshtml" />
@@ -339,7 +339,7 @@
     <Content Include="Views\Reports\ExceptionReportDetails.cshtml" />
     <Content Include="Views\Reports\LeadReport.cshtml" />
     <Content Include="Views\FICommission\NewAssociate.cshtml" />
-    <Content Include="Views\FICommission\NewIndex.cshtml" />
+    <Content Include="Views\FICommission\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

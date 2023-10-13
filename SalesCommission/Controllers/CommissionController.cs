@@ -1089,49 +1089,65 @@ namespace SalesCommission.Controllers
         [HttpPost]
         public ActionResult AftermarketPoints(AftermarketInputModel aftermarketModel)
         {
-
-            if (Request.Form["MonthId"] != null)
+            if (Request.Form["create"] != null)
             {
-                //The Submit button was clicked...
-                aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
 
-                if (aftermarketModel.AftermarketInputs.Count == 0)
-                {
-                    //Now, let's import from the previous month...
-                    aftermarketModel = SqlQueries.UpdateAftermarketInputsFromPreviousById(aftermarketModel);
-                }
-            }
-            else if (Request.Form["hdn-MonthId"] != null)
-            {
-                //var dealershipInputsModel = new DealershipModel();
+                var newPayscaleName = Request.Form["newpayscalename"];
+
 
                 aftermarketModel.MonthId = (Request.Form["hdn-MonthId"] != "") ? Int32.Parse(Request.Form["hdn-MonthId"]) : 0;
                 aftermarketModel.YearId = (Request.Form["hdn-YearId"] != "") ? Int32.Parse(Request.Form["hdn-YearId"]) : 0;
-                aftermarketModel.PlanId = (Request.Form["hdn-PlanId"] != "") ? Request.Form["hdn-PlanId"] : "";
-                var inputIndex = (Request.Form["hdn-InputIndex"] != "") ? Int32.Parse(Request.Form["hdn-InputIndex"]) : 0;
+                var planId = (Request.Form["hdn-PlanId"] != "") ? Request.Form["hdn-PlanId"] : "";
 
-                for (int i = 1; i < inputIndex; i++)
+                var aModel = SqlQueries.CreateAftermarketInputsFromPrevious(aftermarketModel.YearId, aftermarketModel.MonthId, planId, newPayscaleName);
+
+            }
+            else
+            {
+
+                if (Request.Form["MonthId"] != null)
                 {
-                    var aftermarketInput = new AftermarketInput();
+                    //The Submit button was clicked...
+                    aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
 
-                    aftermarketInput.Key = Convert.ToInt16(Request.Form["hdn-InputKey-" + i]);
-                    aftermarketInput.MonthYear = aftermarketModel.MonthId.ToString() + "/" + aftermarketModel.YearId.ToString();
+                    if (aftermarketModel.AftermarketInputs.Count == 0)
+                    {
+                        //Now, let's import from the previous month...
+                        aftermarketModel = SqlQueries.UpdateAftermarketInputsFromPreviousById(aftermarketModel);
+                    }
+                }
+                else if (Request.Form["hdn-MonthId"] != null)
+                {
+                    //var dealershipInputsModel = new DealershipModel();
 
-                    aftermarketInput.AftermarketFieldId = Convert.ToInt16(string.IsNullOrEmpty(Request.Form["fieldId-" + i]) ? "0" : Request.Form["fieldId-" + i]);
-                    aftermarketInput.AftermarketDescription = Request.Form["description-" + i];
-                    aftermarketInput.AftermarketPoints = Convert.ToDecimal(string.IsNullOrEmpty(Request.Form["points-" + i]) ? "0" : Request.Form["points-" + i]);
-                    aftermarketInput.AftermarketProfitPerPoint = Convert.ToInt16(string.IsNullOrEmpty(Request.Form["profitpoints-" + i]) ? "0" : Request.Form["profitpoints-" + i]);
+                    aftermarketModel.MonthId = (Request.Form["hdn-MonthId"] != "") ? Int32.Parse(Request.Form["hdn-MonthId"]) : 0;
+                    aftermarketModel.YearId = (Request.Form["hdn-YearId"] != "") ? Int32.Parse(Request.Form["hdn-YearId"]) : 0;
+                    aftermarketModel.PlanId = (Request.Form["hdn-PlanId"] != "") ? Request.Form["hdn-PlanId"] : "";
+                    var inputIndex = (Request.Form["hdn-InputIndex"] != "") ? Int32.Parse(Request.Form["hdn-InputIndex"]) : 0;
 
-                    aftermarketInput.UpdateUser = Session["UserName"].ToString();
-                    aftermarketInput.UpdateDate = DateTime.Now;
-                    
+                    for (int i = 1; i < inputIndex; i++)
+                    {
+                        var aftermarketInput = new AftermarketInput();
 
-                    var success = SqlQueries.SaveAftermarketInputs(aftermarketInput);
+                        aftermarketInput.Key = Convert.ToInt16(Request.Form["hdn-InputKey-" + i]);
+                        aftermarketInput.MonthYear = aftermarketModel.MonthId.ToString() + "/" + aftermarketModel.YearId.ToString();
+
+                        aftermarketInput.AftermarketFieldId = Convert.ToInt16(string.IsNullOrEmpty(Request.Form["fieldId-" + i]) ? "0" : Request.Form["fieldId-" + i]);
+                        aftermarketInput.AftermarketDescription = Request.Form["description-" + i];
+                        aftermarketInput.AftermarketPoints = Convert.ToDecimal(string.IsNullOrEmpty(Request.Form["points-" + i]) ? "0" : Request.Form["points-" + i]);
+                        aftermarketInput.AftermarketProfitPerPoint = Convert.ToInt16(string.IsNullOrEmpty(Request.Form["profitpoints-" + i]) ? "0" : Request.Form["profitpoints-" + i]);
+
+                        aftermarketInput.UpdateUser = Session["UserName"].ToString();
+                        aftermarketInput.UpdateDate = DateTime.Now;
+
+
+                        var success = SqlQueries.SaveAftermarketInputs(aftermarketInput);
+
+                    }
+
+                    aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
 
                 }
-
-                aftermarketModel = SqlQueries.GetAftermarketInputsByDateAndId(aftermarketModel);
-
             }
             aftermarketModel.AftermarketPointsSelectList = SqlQueries.GetAftermarketPointsSelectList().OrderBy(x => x.Text).ToList();
 
@@ -2427,7 +2443,7 @@ namespace SalesCommission.Controllers
                 NewStandard.ps_VolumeBonusLevel7 = Convert.ToDecimal(Request.Form["NewStandard_VolumeBonusLevel7"]);
                 NewStandard.ps_VolumeBonusLevel8 = 0;
                 NewStandard.ps_VolumeBonusLevel9 = 0;
-
+                NewStandard.ps_AftermarketPlanId = planId;
                 //Do this to prevent SQL from erroring out, these are not saved...
                 NewStandard.ps_AddDate = DateTime.Now;
                 NewStandard.ps_UpdateDate = DateTime.Now;
@@ -2466,58 +2482,61 @@ namespace SalesCommission.Controllers
                 UsedStandard.ps_VolumeBonusLevel7 = Convert.ToDecimal(Request.Form["UsedStandard_VolumeBonusLevel7"]);
                 UsedStandard.ps_VolumeBonusLevel8 = 0;
                 UsedStandard.ps_VolumeBonusLevel9 = 0;
-
+                UsedStandard.ps_AftermarketPlanId = planId;
                 //Do this to prevent SQL from erroring out, these are not saved...
                 UsedStandard.ps_AddDate = DateTime.Now;
                 UsedStandard.ps_UpdateDate = DateTime.Now;
 
                 var success4 = SqlQueries.SavePayscale(UsedStandard);
 
-               
+                //Save the Handymans...
+                //SAVE THE HANDY STANDARD
+                //var HandyStandard = new NewPayscale();
 
-                    //Save the Handymans...
-                    //SAVE THE HANDY STANDARD
-                    //var HandyStandard = new NewPayscale();
+                //HandyStandard.ps_Key = Convert.ToInt16(Request.Form["HandyStandard_Key"]);
+                //HandyStandard.ps_PlanCode = payscaleId;
+                //HandyStandard.ps_PayLevel = "STD";
+                //HandyStandard.ps_NewUsedHandy = "HANDY";
+                //HandyStandard.ps_MonthYear = monthId.ToString() + "/" + yearId.ToString();
+                //HandyStandard.ps_UpdateUser = Session["UserName"].ToString();
+                //HandyStandard.ps_BaseCommission = Convert.ToDecimal(Request.Form["HandyStandard_Base"]);
+                //HandyStandard.ps_FullBPP = Convert.ToDecimal(Request.Form["HandyStandard_FullBPP"]);
+                //HandyStandard.ps_HalfBPP = Convert.ToDecimal(Request.Form["HandyStandard_HalfBPP"]);
+                //HandyStandard.ps_TradeIn = Convert.ToDecimal(Request.Form["HandyStandard_TradeIn"]);
+                //HandyStandard.ps_FinanceLease = Convert.ToDecimal(Request.Form["HandyStandard_FinanceLease"]);
+                //HandyStandard.ps_ServiceContract = Convert.ToDecimal(Request.Form["HandyStandard_ServiceContract"]);
+                //HandyStandard.ps_Maintenance = Convert.ToDecimal(Request.Form["HandyStandard_Maintenance"]);
+                //HandyStandard.ps_GAP = Convert.ToDecimal(Request.Form["HandyStandard_GAP"]);
+                //HandyStandard.ps_AftermarketPerItem = Convert.ToDecimal(Request.Form["HandyStandard_AftermarketPerItem"]);
+                //HandyStandard.ps_InternalSurvey = Convert.ToDecimal(Request.Form["HandyStandard_InternalSurvey"]);
+                //HandyStandard.ps_ManufacturerSalesSatisfaction = Convert.ToDecimal(Request.Form["HandyStandard_ManufacturerSalesSatisfaction"]);
+                //HandyStandard.ps_ManufacturerSpiffGuarantee = Convert.ToDecimal(Request.Form["HandyStandard_ManufacturerSpiffGuarantee"]);
+                //HandyStandard.ps_LessServiceContracts = Convert.ToDecimal(Request.Form["HandyStandard_LessServiceContracts"]);
+                //HandyStandard.ps_VolumeBonusLevel1 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel1"]);
+                //HandyStandard.ps_VolumeBonusLevel2 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel2"]);
+                //HandyStandard.ps_VolumeBonusLevel3 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel3"]);
+                //HandyStandard.ps_VolumeBonusLevel4 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel4"]);
+                //HandyStandard.ps_VolumeBonusLevel5 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel5"]);
+                //HandyStandard.ps_VolumeBonusLevel6 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel6"]);
+                //HandyStandard.ps_VolumeBonusLevel7 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel7"]);
+                //HandyStandard.ps_VolumeBonusLevel8 = 0;
+                //HandyStandard.ps_VolumeBonusLevel9 = 0;
 
-                    //HandyStandard.ps_Key = Convert.ToInt16(Request.Form["HandyStandard_Key"]);
-                    //HandyStandard.ps_PlanCode = payscaleId;
-                    //HandyStandard.ps_PayLevel = "STD";
-                    //HandyStandard.ps_NewUsedHandy = "HANDY";
-                    //HandyStandard.ps_MonthYear = monthId.ToString() + "/" + yearId.ToString();
-                    //HandyStandard.ps_UpdateUser = Session["UserName"].ToString();
-                    //HandyStandard.ps_BaseCommission = Convert.ToDecimal(Request.Form["HandyStandard_Base"]);
-                    //HandyStandard.ps_FullBPP = Convert.ToDecimal(Request.Form["HandyStandard_FullBPP"]);
-                    //HandyStandard.ps_HalfBPP = Convert.ToDecimal(Request.Form["HandyStandard_HalfBPP"]);
-                    //HandyStandard.ps_TradeIn = Convert.ToDecimal(Request.Form["HandyStandard_TradeIn"]);
-                    //HandyStandard.ps_FinanceLease = Convert.ToDecimal(Request.Form["HandyStandard_FinanceLease"]);
-                    //HandyStandard.ps_ServiceContract = Convert.ToDecimal(Request.Form["HandyStandard_ServiceContract"]);
-                    //HandyStandard.ps_Maintenance = Convert.ToDecimal(Request.Form["HandyStandard_Maintenance"]);
-                    //HandyStandard.ps_GAP = Convert.ToDecimal(Request.Form["HandyStandard_GAP"]);
-                    //HandyStandard.ps_AftermarketPerItem = Convert.ToDecimal(Request.Form["HandyStandard_AftermarketPerItem"]);
-                    //HandyStandard.ps_InternalSurvey = Convert.ToDecimal(Request.Form["HandyStandard_InternalSurvey"]);
-                    //HandyStandard.ps_ManufacturerSalesSatisfaction = Convert.ToDecimal(Request.Form["HandyStandard_ManufacturerSalesSatisfaction"]);
-                    //HandyStandard.ps_ManufacturerSpiffGuarantee = Convert.ToDecimal(Request.Form["HandyStandard_ManufacturerSpiffGuarantee"]);
-                    //HandyStandard.ps_LessServiceContracts = Convert.ToDecimal(Request.Form["HandyStandard_LessServiceContracts"]);
-                    //HandyStandard.ps_VolumeBonusLevel1 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel1"]);
-                    //HandyStandard.ps_VolumeBonusLevel2 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel2"]);
-                    //HandyStandard.ps_VolumeBonusLevel3 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel3"]);
-                    //HandyStandard.ps_VolumeBonusLevel4 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel4"]);
-                    //HandyStandard.ps_VolumeBonusLevel5 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel5"]);
-                    //HandyStandard.ps_VolumeBonusLevel6 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel6"]);
-                    //HandyStandard.ps_VolumeBonusLevel7 = Convert.ToDecimal(Request.Form["HandyStandard_VolumeBonusLevel7"]);
-                    //HandyStandard.ps_VolumeBonusLevel8 = 0;
-                    //HandyStandard.ps_VolumeBonusLevel9 = 0;
+                ////Do this to prevent SQL from erroring out, these are not saved...
+                //HandyStandard.ps_AddDate = DateTime.Now;
+                //HandyStandard.ps_UpdateDate = DateTime.Now;
 
-                    ////Do this to prevent SQL from erroring out, these are not saved...
-                    //HandyStandard.ps_AddDate = DateTime.Now;
-                    //HandyStandard.ps_UpdateDate = DateTime.Now;
-
-                    //var success7 = SqlQueries.SavePayscale(HandyStandard);
+                //var success7 = SqlQueries.SavePayscale(HandyStandard);
 
 
             }
 
             payscaleModel = SqlQueries.GetPayscaleByIDAndDate(payscaleModel);
+
+            if (payscaleModel.Payscales.Count > 0 && payscaleModel.Payscales[0] != null)
+            {
+                payscaleModel.PlanId = payscaleModel.Payscales[0].ps_AftermarketPlanId;
+            }
 
             if (payscaleModel.Payscales.Count == 0)
             {

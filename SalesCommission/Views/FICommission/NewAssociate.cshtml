@@ -293,12 +293,12 @@ else
     </div>
     <div class="row">
         <div class="col-md-6 text-left">
-            <a href="@applicationPath/FICommission/Associate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
+            <a href="@applicationPath/FICommission/NewAssociate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Commission</a>
         </div>
         <div class="col-md-6 text-right">
             @if (nextMonth <= DateTime.Now)
             {
-                <a href="@applicationPath/FICommission/Associate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
+                <a href="@applicationPath/FICommission/NewAssociate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Commission ></a>
             }
         </div>
     </div>
@@ -740,11 +740,19 @@ else
                         decimal Bonus2Percentage = (Model.ProductBonusPercent2 / 100);
                         decimal Bonus3Percentage = (Model.ProductBonusPercent3 / 100);
                         decimal Bonus4Percentage = (Model.ProductBonusPercent4 / 100);
+                        decimal Bonus5Percentage = (Model.ProductBonusPercent5 / 100);
+                        decimal Bonus6Percentage = (Model.ProductBonusPercent6 / 100);
+                        decimal Bonus7Percentage = (Model.ProductBonusPercent7 / 100);
+                        decimal Bonus8Percentage = (Model.ProductBonusPercent8 / 100);
 
                         decimal Bonus1Threshold = Model.ProductBonusThreshold1;
                         decimal Bonus2Threshold = Model.ProductBonusThreshold2;
                         decimal Bonus3Threshold = Model.ProductBonusThreshold3;
                         decimal Bonus4Threshold = Model.ProductBonusThreshold4;
+                        decimal Bonus5Threshold = Model.ProductBonusThreshold5;
+                        decimal Bonus6Threshold = Model.ProductBonusThreshold6;
+                        decimal Bonus7Threshold = Model.ProductBonusThreshold7;
+                        decimal Bonus8Threshold = Model.ProductBonusThreshold8;
 
                         decimal TotalCommissionPercentage = 0;
 
@@ -780,7 +788,34 @@ else
                             TotalCommissionPercentage += Bonus4Percentage;
                         }
 
-                        decimal TotalProductBonus = ProductBonus1 + ProductBonus2 + ProductBonus3 + ProductBonus4;
+                        decimal ProductBonus5 = 0;
+                        if (TotalProductGross > Bonus5Threshold)
+                        {
+                            ProductBonus5 = (TotalProductGross * Bonus5Percentage);
+                            TotalCommissionPercentage += Bonus5Percentage;
+                        }
+
+                        decimal ProductBonus6 = 0;
+                        if (TotalProductGross > Bonus6Threshold)
+                        {
+                            ProductBonus6 = (TotalProductGross * Bonus6Percentage);
+                            TotalCommissionPercentage += Bonus6Percentage;
+                        }
+
+                        decimal ProductBonus7 = 0;
+                        if (TotalProductGross > Bonus7Threshold)
+                        {
+                            ProductBonus7 = (TotalProductGross * Bonus7Percentage);
+                            TotalCommissionPercentage += Bonus7Percentage;
+                        }
+                        decimal ProductBonus8 = 0;
+                        if (TotalProductGross > Bonus8Threshold)
+                        {
+                            ProductBonus8 = (TotalProductGross * Bonus8Percentage);
+                            TotalCommissionPercentage += Bonus8Percentage;
+                        }
+
+                        decimal TotalProductBonus = ProductBonus1 + ProductBonus2 + ProductBonus3 + ProductBonus4 + ProductBonus5 + ProductBonus6 + ProductBonus7 + ProductBonus8;
 
                         var TotalCommission = BaseCommission + TotalProductBonus;
 
@@ -810,6 +845,7 @@ else
                         decimal StandardZurichRevenue = 0;
                         decimal StandardSelectProtectRevenue = 0;
                         decimal StandardTireWheelRevenue = 0;
+                        decimal StandardCombinedRevenue = 0;
 
                         decimal MissedFinanceRevenue = 0;
                         decimal MissedServiceRevenue = 0;
@@ -819,6 +855,7 @@ else
                         decimal MissedSelectProtectRevenue = 0;
                         decimal MissedTireWheelRevenue = 0;
                         decimal MissedTotalRevenue = 0;
+                        decimal MissedCombinedRevenue = 0;
 
                         decimal MissedFinanceOpportunity = 0;
                         decimal MissedServiceOpportunity = 0;
@@ -828,6 +865,7 @@ else
                         decimal MissedSelectProtectOpportunity = 0;
                         decimal MissedTireWheelOpportunity = 0;
                         decimal MissedTotalOpportunity = 0;
+                        decimal MissedCombinedOpportunity = 0;
 
                         StandardFinanceRevenue = Math.Round(StandardFinancePerUnit * TotalDeals * StandardFinancePercentage);
                         StandardServiceRevenue = Math.Round(StandardServicePerUnit * TotalDeals * StandardServicePercentage);
@@ -837,6 +875,8 @@ else
                         StandardSelectProtectRevenue = Math.Round(StandardSelectProtectPerUnit * TotalDeals * StandardSelectProtectPercentage);
                         StandardTireWheelRevenue = Math.Round(StandardTireWheelPerUnit * TotalDeals * StandardTireWheelPercentage);
 
+                        StandardCombinedRevenue = StandardSelectProtectRevenue + StandardTireWheelRevenue;
+
                         MissedFinanceRevenue = ((StandardFinanceRevenue - TotalFinance) > 0 ? (StandardFinanceRevenue - TotalFinance) : 0);
                         MissedServiceRevenue = ((StandardServiceRevenue - TotalService) > 0 ? (StandardServiceRevenue - TotalService) : 0);
                         MissedMaintenanceRevenue = ((StandardMaintenanceRevenue - TotalMaintenance) > 0 ? (StandardMaintenanceRevenue - TotalMaintenance) : 0);
@@ -845,6 +885,8 @@ else
                         MissedSelectProtectRevenue = ((StandardSelectProtectRevenue - TotalSelectProtect) > 0 ? (StandardSelectProtectRevenue - TotalSelectProtect) : 0);
                         MissedTireWheelRevenue = ((StandardTireWheelRevenue - TotalTireWheel) > 0 ? (StandardTireWheelRevenue - TotalTireWheel) : 0);
 
+                        MissedCombinedRevenue = MissedSelectProtectRevenue + MissedTireWheelRevenue;
+
                         MissedFinanceOpportunity = Math.Round(MissedFinanceRevenue * CommissionPercentage);
                         MissedServiceOpportunity = Math.Round(MissedServiceRevenue * TotalCommissionPercentage);
                         MissedMaintenanceOpportunity = Math.Round(MissedMaintenanceRevenue * TotalCommissionPercentage);
@@ -852,6 +894,8 @@ else
                         MissedZurichOpportunity = Math.Round(MissedZurichRevenue * TotalCommissionPercentage);
                         MissedSelectProtectOpportunity = Math.Round(MissedSelectProtectRevenue * TotalCommissionPercentage);
                         MissedTireWheelOpportunity = Math.Round(MissedTireWheelRevenue * TotalCommissionPercentage);
+
+                        MissedCombinedOpportunity = Math.Round((MissedSelectProtectOpportunity + MissedTireWheelOpportunity) * TotalCommissionPercentage);
 
                         MissedTotalOpportunity = MissedFinanceOpportunity + MissedServiceOpportunity + MissedMaintenanceOpportunity + MissedGAPOpportunity + MissedZurichOpportunity + MissedSelectProtectOpportunity + MissedTireWheelOpportunity;
                         MissedTotalRevenue = MissedFinanceRevenue + MissedServiceRevenue + MissedMaintenanceRevenue + MissedGAPRevenue + MissedZurichRevenue + MissedSelectProtectRevenue + MissedTireWheelRevenue;
@@ -973,10 +1017,14 @@ else
                         <td class="text-center">@SelectProtectPercent.ToString("P", nfi)</td>
                         <td class="text-center">@StandardSelectProtectPercentage.ToString("P", nfi)</td>
                         <td></td>
-                        <td class="text-center">@StandardSelectProtectRevenue.ToString("C", nfi)</td>
+                        @*<td class="text-center">@StandardSelectProtectRevenue.ToString("C", nfi)</td>
                         <td class="text-center">@MissedSelectProtectRevenue.ToString("C", nfi)</td>
                         <td class="text-center">@TotalCommissionPercentage.ToString("P", nfi)</td>
-                        <td class="text-center">@MissedSelectProtectOpportunity</td>
+                        <td class="text-center">@MissedSelectProtectOpportunity</td>*@
+                        <td class="text-center">Combined</td>
+                        <td class="text-center">Combined</td>
+                        <td class="text-center">Combined</td>
+                        <td class="text-center">Combined</td>
                     </tr>
                     <tr>
                         <td class="text-right" colspan="4">Tire and Wheel</td>
@@ -988,10 +1036,10 @@ else
                         <td class="text-center">@TireWheelPercent.ToString("P", nfi)</td>
                         <td class="text-center">@StandardTireWheelPercentage.ToString("P", nfi)</td>
                         <td></td>
-                        <td class="text-center">@StandardTireWheelRevenue.ToString("C", nfi)</td>
-                        <td class="text-center">@MissedTireWheelRevenue.ToString("C", nfi)</td>
+                        <td class="text-center">@StandardCombinedRevenue.ToString("C", nfi)</td>
+                        <td class="text-center">@MissedCombinedRevenue.ToString("C", nfi)</td>
                         <td class="text-center">@TotalCommissionPercentage.ToString("P", nfi)</td>
-                        <td class="text-center">@MissedTireWheelOpportunity</td>
+                        <td class="text-center">@MissedCombinedOpportunity</td>
                     </tr>
                     <tr style="border-bottom: 3px double">
                         <td class="text-right" colspan="4">Other</td>
@@ -1091,8 +1139,13 @@ else
 
                         <td class="text-center"></td>
                         <td class="text-center"></td>
-                        <td class="text-center" colspan="9">1. Maintain $1,500 per VSC</td>
-
+                        <td class="text-center" colspan="5">1. @Model.StandardsExpectations1</td>
+                        <td class="text-center" colspan="4">
+                        @if (Model.StandardsExpectations5 != null && Model.StandardsExpectations5 != "")
+                        {
+                            @:5. @Model.StandardsExpectations5
+                        }
+                        </td>
 
                     </tr>
                     <tr>
@@ -1112,8 +1165,13 @@ else
                         <td class="text-center">@ProductBonus2.ToString("C", pay)</td>
                         <td class="text-center"></td>
                         <td class="text-center"></td>
-                        <td class="text-center" colspan="9">2. 50% of Revenue must come from Product Sales</td>
-
+                        <td class="text-center" colspan="5">2. @Model.StandardsExpectations2</td>
+                        <td class="text-center" colspan="4">
+                            @if (Model.StandardsExpectations6 != null && Model.StandardsExpectations6 != "")
+                            {
+                                @:6. @Model.StandardsExpectations6
+                        }
+                        </td>
                     </tr>
                     <tr>
 
@@ -1132,10 +1190,15 @@ else
                         <td class="text-center">@ProductBonus3.ToString("C", pay)</td>
                         <td class="text-center"></td>
                         <td class="text-center"></td>
-                        <td class="text-center" colspan="9">3. Maintain CSI</td>
-
+                        <td class="text-center" colspan="5">3. @Model.StandardsExpectations3</td>
+                        <td class="text-center" colspan="4">
+                            @if (Model.StandardsExpectations7 != null && Model.StandardsExpectations7 != "")
+                            {
+                                @:7. @Model.StandardsExpectations7
+                        }
+                        </td>
                     </tr>
-                    <tr style="border-bottom: 3px double">
+                    <tr >
 
                         <td class="text-right">Product Bonus 4</td>
                         @if (ProductBonus4 > 0)
@@ -1151,10 +1214,99 @@ else
                         <td class="text-center">@ProductBonus4.ToString("C", pay)</td>
                         <td class="text-center"></td>
                         <td class="text-center"></td>
-                        <td class="text-center" colspan="9">4. Chargebacks 90 days</td>
-
+                        <td class="text-center" colspan="5">4. @Model.StandardsExpectations4</td>
+                        <td class="text-center" colspan="4">
+                            @if (Model.StandardsExpectations8 != null && Model.StandardsExpectations8 != "")
+                            {
+                                @:8. @Model.StandardsExpectations8
+                        }
+                        </td>
                     </tr>
-                    <tr>
+                    @if (Bonus5Percentage > 0)
+                    {
+                        <tr>
+
+                            <td class="text-right">Product Bonus 5</td>
+                            @if (ProductBonus5 > 0)
+                            {
+                                <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            }
+                            else
+                            {
+                                <td class="text-center"></td>
+                            }
+                            <td class="text-center">@Bonus5Threshold</td>
+                            <td class="text-center">@Bonus5Percentage.ToString("P", nfi)</td>
+                            <td class="text-center">@ProductBonus5.ToString("C", pay)</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center" colspan="9"></td>                        
+                        </tr>
+                    }
+                    @if (Bonus6Percentage > 0)
+                    {
+                        <tr >
+
+                            <td class="text-right">Product Bonus 6</td>
+                            @if (ProductBonus6 > 0)
+                            {
+                                <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            }
+                            else
+                            {
+                                <td class="text-center"></td>
+                            }
+                            <td class="text-center">@Bonus6Threshold</td>
+                            <td class="text-center">@Bonus6Percentage.ToString("P", nfi)</td>
+                            <td class="text-center">@ProductBonus6.ToString("C", pay)</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center" colspan="9"></td>
+                        </tr>
+                    }
+                    @if (Bonus7Percentage > 0)
+                    {
+                        <tr >
+
+                            <td class="text-right">Product Bonus 7</td>
+                            @if (ProductBonus7 > 0)
+                            {
+                                <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            }
+                            else
+                            {
+                                <td class="text-center"></td>
+                            }
+                            <td class="text-center">@Bonus7Threshold</td>
+                            <td class="text-center">@Bonus7Percentage.ToString("P", nfi)</td>
+                            <td class="text-center">@ProductBonus7.ToString("C", pay)</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center" colspan="9"></td>
+                        </tr>
+                    }
+                    @if (Bonus8Percentage > 0)
+                    {
+                        <tr>
+
+                            <td class="text-right">Product Bonus 8</td>
+                            @if (ProductBonus8 > 0)
+                            {
+                                <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            }
+                            else
+                            {
+                                <td class="text-center"></td>
+                            }
+                            <td class="text-center">@Bonus8Threshold</td>
+                            <td class="text-center">@Bonus8Percentage.ToString("P", nfi)</td>
+                            <td class="text-center">@ProductBonus8.ToString("C", pay)</td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center" colspan="9"></td>
+                        </tr>
+                    }
+                    <tr style="border-top: 3px double">
                         <td class="text-right" colspan="4"><strong>Total Bonus</strong></td>
                         <td class="text-center"><strong>@TotalProductBonus.ToString("C",pay)</strong></td>
                         <td class="text-center"></td>

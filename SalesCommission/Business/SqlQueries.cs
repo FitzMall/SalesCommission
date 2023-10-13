@@ -1915,8 +1915,9 @@ namespace SalesCommission.Business
         {
             var completeFICommissionModel = new FICommissionModel();
             var reportDate = new DateTime(FICommissionModel.YearId, FICommissionModel.MonthId, 1);
+            var monthYear = FICommissionModel.MonthId.ToString() + '/' + FICommissionModel.YearId.ToString();
 
-            var FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId }, "SalesCommission");
+            var FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId, MonthYear = monthYear }, "SalesCommission");
             completeFICommissionModel.FIManagers = FIManagers;
 
             var aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndID", new { ReportDate = reportDate, @IncludeHandyman = true, FinanceManagerNumber = fiManagerNumber }, "SalesCommission");
@@ -2525,6 +2526,7 @@ namespace SalesCommission.Business
         {
             var completeFICommissionModel = new FICommissionModel();
             var reportDate = new DateTime(FICommissionModel.YearId, FICommissionModel.MonthId, 1);
+            var monthYear = FICommissionModel.MonthId.ToString() + "/" + FICommissionModel.YearId.ToString();
 
             var FIManagers = new List<Associate>();
             var aftermarketRecords = new List<AftermarketRecord>();
@@ -2532,7 +2534,7 @@ namespace SalesCommission.Business
             if (FICommissionModel.StoreId.Contains(","))
             {
                 var locations = FICommissionModel.StoreId.Split(',');
-                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByTwoLocations", new { Location = locations[0], Location2 = locations[1] }, "SalesCommission");
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByTwoLocations", new { Location = locations[0], Location2 = locations[1], MonthYear = monthYear }, "SalesCommission");
 
                 aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = locations[0] }, "SalesCommission");
 
@@ -2542,18 +2544,30 @@ namespace SalesCommission.Business
             }
             else if (FICommissionModel.StoreId == "ALL")
             {
-                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByAllLocations", new {  }, "SalesCommission");
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByAllLocations", new { MonthYear = monthYear }, "SalesCommission");
                 aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDate", new { ReportDate = reportDate, @IncludeHandyman = true }, "SalesCommission");
 
             }
             else
             {
-                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId }, "SalesCommission");
+                FIManagers = SqlMapperUtil.StoredProcWithParams<Associate>("sp_CommissionGetFIManagersByLocation", new { Location = FICommissionModel.StoreId, MonthYear = monthYear }, "SalesCommission");
                 aftermarketRecords = SqlMapperUtil.StoredProcWithParams<AftermarketRecord>("sp_CommissionGetFIManagerDealsByDateAndLocation", new { ReportDate = reportDate, @IncludeHandyman = true, DealLocation = FICommissionModel.StoreId }, "SalesCommission");
             }
             
             completeFICommissionModel.FIManagers = FIManagers;
            
+            if(FICommissionModel.ConditionFilter != "ALL")
+            {
+                if (FICommissionModel.ConditionFilter == "NEW")
+                {
+                    aftermarketRecords.RemoveAll(x => x.VehicleCondition == "USED");
+                }
+                if (FICommissionModel.ConditionFilter == "USED")
+                {
+                    aftermarketRecords.RemoveAll(x => x.VehicleCondition == "NEW");
+                }
+            }
+
             if (aftermarketRecords != null && aftermarketRecords.Count > 0)
             {
 
@@ -4807,7 +4821,7 @@ namespace SalesCommission.Business
 
         public static List<SelectListItem> GetFIPayscaleSelectList()
         {
-            var sqlGet = "SELECT distinct [PlanCode], [PlanName] FROM [SalesCommission].[dbo].[CommissionFIPayscales]";
+            var sqlGet = "SELECT distinct [PlanCode], [PlanName], PayscaleWithProducts FROM [SalesCommission].[dbo].[CommissionFIPayscalesSetup] where ActivePayscale = 1 order by PayscaleWithProducts desc, PlanName asc";
             var payscales = SqlMapperUtil.SqlWithParams<FIPayscale>(sqlGet, null, "SalesCommission");
 
             var items = new List<SelectListItem>();
@@ -7381,6 +7395,20 @@ namespace SalesCommission.Business
             return aftermarketInputModel;
         }
 
+        public static AftermarketInputModel CreateAftermarketInputsFromPrevious(int yearId, int monthId, string planId, string planName)
+        {
+            var aftermarketInputModel = new AftermarketInputModel();
+            aftermarketInputModel.YearId = yearId;
+            aftermarketInputModel.MonthId = monthId;
+            
+            // Take the current date and create new records for the previous month
+            var aftermarketInputs = SqlMapperUtil.StoredProcWithParams<AftermarketInput>("sp_CreateAftermarketInputsFromDateAndId", new { YearId = yearId, MonthId = monthId, PlanId = planId, PlanName = planName  }, "SalesCommission");
+            aftermarketInputModel.AftermarketInputs = aftermarketInputs;
+
+            return aftermarketInputModel;
+        }
+
+        
         public static int SaveAftermarketInputs(AftermarketInput aftermarketInput)
         {
 
