@@ -775,8 +775,11 @@
                         SelectProtectPercent = (double)SelectProtectCount / (double)TotalDeals;
                         OtherPercent = (double)OtherCount / (double)TotalDeals;
 
-                        TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / TotalDeals;
-                        ProductDollarPerDeal = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / TotalDeals;
+                        if (showroomValidatedDeals.Count > 0)
+                        {
+                            TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / showroomValidatedDeals.Count;
+                            ProductDollarPerDeal = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / showroomValidatedDeals.Count;
+                        }
                         ProductSoldRatio = ((ServiceCount + MaintenanceCount + GAPCount + ZurichCount + SelectProtectCount + TireWheelCount + OtherCount) / TotalDeals);
 
                     }
@@ -861,6 +864,10 @@
                         if(payscaleSetup != null && payscaleSetup.PlanName.Contains("2023"))
                         {
                             bNewPayscale = true;
+                        }
+                        else
+                        {
+                            bNewPayscale = false;
                         }
                     }
 
@@ -1436,7 +1443,8 @@
                                                     <td class="text-center">@deal.TireWheelAmount</td>
                                                     <td class="text-center"></td>
                                                     <td class="text-center">
-                                                        @if (bValidated)
+                                                        @*bValidated*@
+                                                        @if (true)
                                                         {
                                                         <a href="" id="link-@deal.DealKey">@otherItemAmount.ToString("C", noSymbol)</a>
                                                         if (deal.AftermarketItems.Count > 0)
@@ -1451,7 +1459,7 @@
                                                                 <tbody>
                                                                     @foreach (var item in deal.AftermarketItems)
                                                                     {
-                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 20 && item.AftermarketId != 8)
+                                                                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 4 && item.AftermarketId != 5 && item.AftermarketId != 20)
                                                                         {
                                                                             var profit = item.AftermarketPrice - item.AftermarketCost;
 

@@ -1412,7 +1412,12 @@ namespace SalesCommission.Business
                     case "CJE":
                         locationName = "Clearwater";
                         break;
-
+                    case "FHG":
+                        locationName = "Hagerstown GM";
+                        break;
+                    case "FHT":
+                        locationName = "Hagerstown CDJR";
+                        break;
                 }
 
                 deal.LocationName = locationName;

@@ -881,11 +881,13 @@ namespace SalesCommission.Controllers
             payscaleModel.PayscaleId = FIPayscaleModel.PayscaleId;
             payscaleModel.FIPayscaleSelectList = SqlQueries.GetFIPayscaleSelectList().OrderBy(x => x.Text).ToList();
 
+            var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
             payscaleModel.FIPayscales = SqlQueries.GetFIPayscaleByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
 
-            if((payscaleModel.FIPayscales == null || payscaleModel.FIPayscales.Count == 0) && !bNewPayScale)
+            if ((payscaleSetup == null || payscaleSetup.Count == 0) && !bNewPayScale)
             {
                 var success = SqlQueries.UpdateFIPayscalesFromPrevious(payscaleModel);
+                payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
                 payscaleModel.FIPayscales = SqlQueries.GetFIPayscaleByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
             }
 
@@ -893,7 +895,7 @@ namespace SalesCommission.Controllers
             {
                 payscaleModel.FIPayscaleAftermarket = SqlQueries.GetFIPayscaleAftermarketByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
 
-                var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
+                //var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(FIPayscaleModel.YearId, FIPayscaleModel.MonthId, FIPayscaleModel.PayscaleId);
 
                 if (payscaleSetup != null && payscaleSetup.Count > 0)
                 {
