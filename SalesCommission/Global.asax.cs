@@ -140,6 +140,12 @@ namespace SalesCommission
             );
 
             RouteTable.Routes.MapRoute(
+                "LeaseBuyoutDeals",
+                "Sales/LeaseBuyoutDeals/{makeId}/{monthId}/{yearId}/", // URL with parameters
+                new { controller = "Sales", action = "LeaseBuyoutDeals", makeId = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+            );
+
+            RouteTable.Routes.MapRoute(
                 "OfficeValidateDeals",
                 "Sales/OfficeValidateDeals/{makeId}/{monthId}/{yearId}/", // URL with parameters
                 new { controller = "Sales", action = "OfficeValidateDeals", makeId = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
@@ -275,6 +281,14 @@ namespace SalesCommission
                     }
                     VinName = associate.VinName;
                 }
+
+                var payscaleId = "";
+                //Get the payscale ID from the FIManager table
+                var fiPayscales = Business.SqlQueries.GetUserFIPayscale(userIdFromCookie.Trim());
+                if(fiPayscales != null && fiPayscales.Count > 0)
+                {
+                    payscaleId = fiPayscales[0];
+                }
                 Session.Add("userVinName", VinName);
                 Session.Add("AssociateId", associateId);
                 Session.Add("LocationId", locationId);
@@ -285,7 +299,7 @@ namespace SalesCommission
                 Session.Add("IsAssociateAdmin", isAssociateAdmin);
                 Session.Add("CanSeeReporting", canSeeReporting);
                 Session.Add("CanOfficeValidate", canOfficeValidate);
-
+                Session.Add("PayscaleId", payscaleId);
             }
             else
             {
@@ -298,7 +312,7 @@ namespace SalesCommission
                 Session.Add("IsAssociateAdmin", true);
                 Session.Add("CanSeeReporting", true);
                 Session.Add("CanOfficeValidate", false);
-
+                Session.Add("PayscaleId", "");
                 //Session.Add("UserId", "shaver");
                 //Session.Add("UserName", "The person formally known as Chris");
                 //Session.Add("IsAdmin", false);

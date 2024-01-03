@@ -636,6 +636,7 @@
         foreach (var breakdown1 in breakdownLevel1Values)
         {
             var label1 = breakdown1;
+            var filterSelected1 = "";
 
             var BreakDown1filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
             var BreakDown1filteredLeadsSold = new List<SalesCommission.Models.AppraisalSoldDetail>();
@@ -829,6 +830,11 @@
                 default:
                     BreakDown1filteredLeads = Model.TradeAcquisitionDetails.FindAll(x => x.Loc == breakdown1);
                     break;
+            }
+
+            if (Model.BreakDown1Filters != null && Model.BreakDown1Filters.Contains(label1))
+            {
+                filterSelected1 = "selected";
             }
 
             var BD1TotalCount = BreakDown1filteredLeads.Count;
@@ -1082,7 +1088,7 @@
             </tr>
 
                             <script type="text/javascript">
-                                $("#filterBreakdown1").append("<option value='" + "@label1" + "'>" + "@label1" + "</option>");
+                                $("#filterBreakdown1").append("<option value='" + "@label1" + "' @filterSelected1>" + "@label1" + "</option>");
 
                                 $(document).ready(function () {
                                     $(".location-bd1-collapse-@breakdown1Index-href").click(function () {
@@ -1259,6 +1265,7 @@
             {
 
                 var label2 = breakdown2;
+                var filterSelected2 = "";
 
                 var BreakDown2filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
                 var BreakDown2filteredLeadsSold = new List<SalesCommission.Models.AppraisalSoldDetail>();
@@ -1456,7 +1463,10 @@
                         break;
 
                 }
-
+                if (Model.BreakDown2Filters != null && Model.BreakDown2Filters.Contains(label2))
+                {
+                    filterSelected2 = "selected";
+                }
 
                 var BD2TotalCount = BreakDown2filteredLeads.Count;
                 var BD2TotalSoldCount = BreakDown2filteredLeadsSold.Count;
@@ -1722,7 +1732,7 @@
                                     });
 
                                     if (bAdd == true) {
-                                        $("#filterBreakdown2").append("<option value='" + "@label2" + "'>" + "@label2" + "</option>");
+                                        $("#filterBreakdown2").append("<option value='" + "@label2" + "' @filterSelected2>" + "@label2" + "</option>");
                                     }
 
                                     $(document).ready(function () {
@@ -1897,6 +1907,8 @@
                 foreach (var BreakDown3 in breakdownLevel3Values)
                 {
                     var label3 = BreakDown3;
+                    var filterSelected3 = "";
+
                     var BreakDown3filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
                     var BreakDown3filteredLeadsSold = new List<SalesCommission.Models.AppraisalSoldDetail>();
 
@@ -2093,6 +2105,10 @@
 
                     }
 
+                    if (Model.BreakDown3Filters != null && Model.BreakDown3Filters.Contains(label3))
+                    {
+                        filterSelected3 = "selected";
+                    }
 
                     var BD3TotalCount = BreakDown3filteredLeads.Count;
                     var BD3TotalSoldCount = BreakDown3filteredLeadsSold.Count;
@@ -2353,7 +2369,7 @@
                         });
 
                         if (bAdd3 == true) {
-                            $("#filterBreakdown3").append("<option value='" + "@label3" + "'>" + "@label3" + "</option>");
+                            $("#filterBreakdown3").append("<option value='" + "@label3" + "' @filterSelected3>" + "@label3" + "</option>");
                         }
 
                                         $(document).ready(function () {
@@ -2528,6 +2544,8 @@
                     foreach (var BreakDown4 in breakdownLevel4Values)
                     {
                         var label4 = BreakDown4;
+                        var filterSelected4 = "";
+
                         var BreakDown4filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
                         var BreakDown4filteredLeadsSold = new List<SalesCommission.Models.AppraisalSoldDetail>();
 
@@ -2724,6 +2742,10 @@
 
                         }
 
+                        if (Model.BreakDown4Filters != null && Model.BreakDown4Filters.Contains(label4))
+                        {
+                            filterSelected4 = "selected";
+                        }
 
                         var BD4TotalCount = BreakDown4filteredLeads.Count;
                         var BD4TotalSoldCount = BreakDown4filteredLeadsSold.Count;
@@ -2984,7 +3006,7 @@
                             });
 
                             if (bAdd4 == true) {
-                                $("#filterBreakdown4").append("<option value='" + "@label4" + "'>" + "@label4" + "</option>");
+                                $("#filterBreakdown4").append("<option value='" + "@label4" + "' @filterSelected4>" + "@label4" + "</option>");
                             }
 
                                         $(document).ready(function () {

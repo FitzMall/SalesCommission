@@ -355,6 +355,7 @@
                     <th class="text-center">&nbsp;CPO&nbsp;</th>
                     <th class="text-center">Handyman</th>
                     <th class="text-center">NextCar</th>
+                    <th class="text-center">Lease Buyouts</th>
                     <th class="text-center">Front Gross</th>
                     <th class="text-center">ME FTD</th>
                     @*<th class="text-center">Other</th>*@
@@ -376,7 +377,7 @@
                     <th  class="text-center"style="padding:2px; font-size:10px">SV</th>
                     <th  class="text-center"style="padding:2px; font-size:10px">SUV</th>
                     <th  class="text-center"style="padding:2px; font-size:10px">OUV</th>
-                    <th colspan="4" class="text-center" style="padding:2px; font-size:10px"></th>
+                    <th colspan="5" class="text-center" style="padding:2px; font-size:10px"></th>
                     <th colspan="2" class="text-center" style="padding:2px; font-size:10px">Front</th>
                     <th colspan="5" class="text-center" style="padding:2px; font-size:10px">Back</th>
                     <th colspan="6" style="padding:2px; font-size:10px"></th>
@@ -416,6 +417,7 @@
                     double TotalPotentialHandyman = 0;
                     double TotalPotentialCPO = 0;
                     double TotalPotentialLease = 0;
+                    double TotalLeaseBuyoutCount = 0;
 
                     var UsedMakeId = "";
                     var AllMakeIds = "";
@@ -580,20 +582,23 @@
 
                         @{
                             var leasePercent = ((double)detail.LeaseCount / (double)validatedDeals).ToString("P", nfi);
-                        var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
-                        var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
-                        var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                            var handyPercent = ((double)detail.HandymanCount / (double)validatedDeals).ToString("P", nfi);
+                            var cpoPercent = ((double)detail.CPOCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                            var nextCarPercent = ((double)detail.NextCarCount / TotalValidatedUsedDeals).ToString("P", nfi);
+                            var leaseBuyoutPercent = ((double)detail.LeaseBuyoutCount / validatedDeals).ToString("P", nfi);
                     }
 
                         @if (brandCode.Contains("Used"))
-                        {
-                            if (locationCode == "CJE")
-                            {
-                                TotalPotentialCPO += validatedDeals;
-                            }
-                TotalPotentialHandyman += validatedDeals;
-                            TotalHandymanCount += detail.HandymanCount;
-                            TotalNextCarCount += detail.NextCarCount;
+                                    {
+                                        if (locationCode == "CJE")
+                                        {
+                                            TotalPotentialCPO += validatedDeals;
+                                        }
+                                        TotalPotentialHandyman += validatedDeals;
+                                        TotalHandymanCount += detail.HandymanCount;
+                                        TotalNextCarCount += detail.NextCarCount;
+                                        TotalLeaseBuyoutCount += detail.LeaseBuyoutCount;
+
                             <td class="text-center">-</td>
 
 
@@ -609,6 +614,7 @@
                             }
                             <td class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handy % = @detail.HandymanCount / @validatedDeals Deals">@detail.HandymanCount<br />@handyPercent</a></td>
                             <td class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="NextCar % = @detail.NextCarCount / @TotalValidatedUsedDeals Deals">@detail.NextCarCount<br />@nextCarPercent</a></td>
+                            <td class="text-center"><a href="@applicationPath/Sales/LeaseBuyoutDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease Buyout % = @detail.LeaseBuyoutCount / @validatedDeals Deals">@detail.LeaseBuyoutCount<br />@leaseBuyoutPercent</a></td>
                         }
                         else
                         {
@@ -622,6 +628,7 @@
                             TotalLeaseCount += detail.LeaseCount;
                             <td class="text-center"><a href="@applicationPath/Sales/LeaseDeals/@detail.MakeId/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease % = @detail.LeaseCount / @validatedDeals Deals">@detail.LeaseCount<br />@leasePercent</a></td>
                             <td class="text-center"><a href="@applicationPath/Sales/CPODeals/@UsedMakeId/@Model.MonthId/@Model.YearId/@detail.MakeName" data-toggle="tooltip" title="CPO % = @detail.CPOCount / @TotalValidatedUsedDeals Used Deals">@detail.CPOCount<br />@cpoPercent</a></td>
+                            <td class="text-center">-</td>
                             <td class="text-center">-</td>
                             <td class="text-center">-</td>
                         }
@@ -663,7 +670,7 @@
 
 
                     <tr id="collapse-@index" class="collapse out" style="background-color:#f5f5f5">
-                        <td colspan="22">
+                        <td colspan="23">
                             <h4>@detail.MakeName Deals</h4>
                             <h5><a href="@applicationPath/Sales/OfficeValidateDeals/@detail.MakeId/@Model.MonthId/@Model.YearId">Office To Be Validated</a></h5>
                             <table class="table table-bordered table-striped" style="font-size:12px" id="table-@detail.MakeId">
@@ -750,6 +757,7 @@
             var totalHandyPercent = (TotalHandymanCount / TotalPotentialHandyman).ToString("P", nfi);
             var totalCPOPercent = (TotalCPOCount / TotalPotentialCPO).ToString("P", nfi);
             var TotalNextCarPercent = (TotalNextCarCount / TotalPotentialHandyman).ToString("P", nfi);
+            var TotalLeaseBuyoutPercent = (TotalLeaseBuyoutCount / TotalPotentialHandyman).ToString("P", nfi);
         }
         <th class="text-center"><a data-toggle="collapse" id="Totals" style="cursor: pointer;" data-target="#collapse-total">Totals <i class="fa fa-caret-down" aria-hidden="true"></i></a> </th>
         <th class="text-center">@TotalDealCount</th>
@@ -761,6 +769,7 @@
         <th class="text-center"><a href="@applicationPath/Sales/CPODeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="CPO % = @TotalCPOCount / @TotalPotentialCPO Deals">@TotalCPOCount<br />@totalCPOPercent</a></th>
         <th class="text-center"><a href="@applicationPath/Sales/HandymanDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Handyman % = @TotalHandymanCount / @TotalPotentialHandyman Deals">@TotalHandymanCount<br />@totalHandyPercent</a></th>
         <th class="text-center"><a href="@applicationPath/Sales/NextCarDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="NextCar % = @TotalNextCarCount / @TotalPotentialHandyman Deals">@TotalNextCarCount<br />@TotalNextCarPercent</a></th>
+        <th class="text-center"><a href="@applicationPath/Sales/LeaseBuyoutDeals/@AllMakeIds/@Model.MonthId/@Model.YearId" data-toggle="tooltip" title="Lease Buyout % = @TotalLeaseBuyoutCount / @TotalPotentialHandyman Deals">@TotalLeaseBuyoutCount<br />@TotalLeaseBuyoutPercent</a></th>
         <th class="text-center">@TotalDealGrossAmount.ToString("C", nfi)</th>
         <th class="text-center">@TotalMEFTDAmount.ToString("C", nfi)</th>
         @*<th class="text-center">@TotalOtherAmount.ToString("C", nfi)</th>*@

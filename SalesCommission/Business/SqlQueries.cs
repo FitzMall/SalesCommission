@@ -5019,6 +5019,16 @@ namespace SalesCommission.Business
             return associates;
         }
 
+        public static List<Associate> GetSalesAssociateListByMonth(int yearId, int monthId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var sqlGet = "Select distinct emp_pkey, emp_empnumber as AssociateNumber, emp_lname, emp_loc as AssociateLocation, (emp_fname + ' ' + emp_Lname) as AssociateFullName,[fi_ManagerPayscaleID] as AssociatePayscale from ivory.dbo.employees E join[SalesCommission].[dbo].[CommissionFIManagers] FI on E.emp_empnumber = FI.fi_ManagerEmployeeNumber where(emp_pos = 'SLS ASSOC' or emp_pos = 'Sales Associate' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos = 'Finance Manager') and fi_ManagerMonthyear = @MonthYear  order by emp_lname";
+            var associates = SqlMapperUtil.SqlWithParams<Associate>(sqlGet, new { MonthYear = monthYear }, "JJFServer");
+
+            return associates;
+        }
+
         public static List<SelectListItem> GetSalesAssociatesByStore(string locationCode)
         {
             var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where (emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR'  or emp_pos='Sales Associate'  or emp_pos='Sales Associate' or emp_pos='Finance Manager') and emp_loc = '" + locationCode + "' order by emp_lname";
@@ -5631,6 +5641,76 @@ namespace SalesCommission.Business
             }
 
             return leaseDeals;
+        }
+
+        public static List<DealDetail> GetSalesLogLeaseBuyoutDeals(string makeId, string monthId, string yearId)
+        {
+            var reportDate = new DateTime(Int32.Parse(yearId), Int32.Parse(monthId), 1);
+            var dealDetails = new List<DealDetail>();
+
+            //If there is a comma, we are getting multiple makes...
+            if (makeId.Contains(","))
+            {
+                var makeIds = makeId.Split(',');
+                foreach (var make in makeIds)
+                {
+                    var tempDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_SalesLogDealsByDateAndStore", new { AutoMallID = make, ReportDate = reportDate }, "SalesCommission");
+                    foreach (var detail in tempDetails)
+                    {
+                        dealDetails.Add(detail);
+                    }
+                }
+
+            }
+            else
+            {
+                dealDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_SalesLogDealsByDateAndStore", new { AutoMallID = makeId, ReportDate = reportDate }, "SalesCommission");
+            }
+
+            dealDetails.RemoveAll(x => x.MakeName == "InterCompany Transfer");
+
+            //var otherDetails = SqlMapperUtil.StoredProcWithParams<DealDetail>("sp_AllDealDetailsByDate", new { ReportDate = reportDate }, "ReynoldsData");
+            var associates = GetSalesAssociates();
+            var leaseBuyoutDeals = new List<DealDetail>();
+
+            foreach (var deal in dealDetails)
+            {
+                deal.ReportDate = reportDate;
+                if (deal.CustomerName == null || deal.CustomerName == "")
+                {
+                    deal.CustomerName = deal.BuyerName;
+
+                }
+
+                if (deal.SalesAssociate1 != null && deal.SalesAssociate1 != "")
+                {
+                    var associate = associates.Find(o => o.Value == deal.SalesAssociate1);
+                    if (associate != null)
+                    {
+                        deal.SalesAssociate1 = associate.Text;
+                    }
+                }
+
+                if (deal.SalesAssociate2 != null && deal.SalesAssociate2 != "")
+                {
+                    var associate = associates.Find(o => o.Value == deal.SalesAssociate2);
+                    if (associate != null)
+                    {
+                        deal.SalesAssociate2 = associate.Text;
+                    }
+                }
+
+                if (deal.StockNumber != null && deal.StockNumber != "" && (deal.StockNumber.Substring(1, 1) == "B") && !Char.IsLetter(deal.StockNumber[deal.StockNumber.Length - 1]))
+                {
+                    if (deal.ShowroomValidatedBy != null && deal.ShowroomValidatedBy != "")
+                    {
+                        leaseBuyoutDeals.Add(deal);
+                    }
+                }
+
+            }
+
+            return leaseBuyoutDeals;
         }
 
         public static List<DealDetail> GetSalesLogNextCarDeals(string makeId, string monthId, string yearId)
@@ -8054,6 +8134,13 @@ namespace SalesCommission.Business
             var users = SqlMapperUtil.StoredProcWithParams<JJFUser>("sp_SalesCommissionGetUserByJJFLogin", new { UserId = userId }, "SalesCommission");
 
             return users;
+        }
+
+        public static List<string> GetUserFIPayscale(string userId)
+        {
+            var payscales = SqlMapperUtil.SqlWithParams<string>("Select [fi_ManagerPayscaleID] from  [SalesCommission].[dbo].[CommissionFIManagers] where fi_ManagerEmployeeNumber = @UserId", new { UserId = userId }, "SalesCommission");
+
+            return payscales;
         }
 
         public static List<UserPersmissions> GetUserPermissions(string userId)

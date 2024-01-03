@@ -53,7 +53,7 @@ namespace SalesCommission.Models
         public string VinStore { get; set; }
         public string VinUserKey { get; set; }
         public string DMS_Id { get; set; }
-
+        public string AssociatePayscale { get; set; }
 
     }
 }

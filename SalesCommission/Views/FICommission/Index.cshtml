@@ -300,6 +300,7 @@
     decimal StoreTotalShowroomUnvalidated = 0;
     decimal StoreTotalMissedRevenue = 0;
     decimal StoreTotalMissedCommission = 0;
+    decimal StoreTotalValidatedDealCount = 0;
 
     decimal StoreTotalMoneyDue = 0;
 
@@ -356,7 +357,7 @@
                     <th class="text-center">Total<br/>Deals</th>
                     @*<th class="text-center">Eligible<br />Deals</th>*@
                     <th class="text-center">SR<br />UNV<br />Deals</th>
-                    <th class="text-center extra-right">F &amp; I<br/>UNV<br />Deals</th>
+                    <th class="text-center extra-right">SR Validated<br />Deals</th>
                     <th class="text-center aft-percent">Finance %</th>
                     <th class="text-center aft">Avg<br/>Finance<br />Reserve</th>
                     <th class="text-center extra-right aft-total">Finance $</th>
@@ -462,6 +463,9 @@
                     decimal ShowroomUnvalidated = 0;
                     decimal MissedTotalRevenue = 0;
 
+                    decimal showroomValidatedDealCount = 0;
+
+
                     var bShowOtherManager = false;
                     if (manager.FIManagerAssociateNumber == "000")
                     {
@@ -474,7 +478,7 @@
                         {
                             ShowroomUnvalidated += 1;
                         }
-                        if (deal.ShowroomValidatedBy != null || manager.FIManagerAssociateNumber == "000")
+                        if (deal.ShowroomValidatedBy != null) // || manager.FIManagerAssociateNumber == "000")
                         {
                             //TotalGross += deal.DealGrossAmount;
 
@@ -697,6 +701,9 @@
                         TotalDeals = manager.AftermarketDealDetails.Count; //USED TO BE Model.AftermarketDealDetails.Count
                     }
 
+                    showroomValidatedDealCount = manager.AftermarketDealDetails.Count - ShowroomUnvalidated;
+                    StoreTotalValidatedDealCount += showroomValidatedDealCount;
+
 
                     decimal totalDealMoneyDue = 0;
                     var totalItemMoneyDue = new List<SalesCommission.Models.MoneyDue>();
@@ -762,18 +769,28 @@
                         TotalBPPValidated = bppValidatedDeals.Count;
                     }
 
-                    if (TotalDeals > 0)
+                    if (showroomValidatedDealCount > 0)
                     {
-                        FinancePercent = (double)FinanceCount / (double)TotalDeals;
-                        ServicePercent = ((double)ServiceCount) / (double)TotalDeals;
+                        FinancePercent = (double)FinanceCount / (double)showroomValidatedDealCount; //was TotalDeals
+                        ServicePercent = ((double)ServiceCount) / (double)showroomValidatedDealCount;
                         //ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
-                        MaintenancePercent = (double)MaintenanceCount / (double)TotalDeals;
-                        TireWheelPercent = (double)TireWheelCount / (double)TotalDeals;
-                        GAPPercent = (double)GAPCount / (double)(FinanceCount - LeaseCount);
-                        ZurichPercent = (double)ZurichCount / (double)TotalDeals;
-                        LeaseWandTPercent = (double)LeaseWandTCount / (double)LeaseCount;
-                        SelectProtectPercent = (double)SelectProtectCount / (double)TotalDeals;
-                        OtherPercent = (double)OtherCount / (double)TotalDeals;
+                        MaintenancePercent = (double)MaintenanceCount / (double)showroomValidatedDealCount;
+                        TireWheelPercent = (double)TireWheelCount / (double)showroomValidatedDealCount;
+
+                        ZurichPercent = (double)ZurichCount / (double)showroomValidatedDealCount;
+
+                        SelectProtectPercent = (double)SelectProtectCount / (double)showroomValidatedDealCount;
+                        OtherPercent = (double)OtherCount / (double)showroomValidatedDealCount;
+
+                        if((FinanceCount - LeaseCount) > 0)
+                        {
+                            GAPPercent = (double)GAPCount / (double)(FinanceCount - LeaseCount);
+                        }
+                        
+                        if (LeaseCount > 0)
+                        {
+                            LeaseWandTPercent = (double)LeaseWandTCount / (double)LeaseCount;
+                        }
 
                         if (showroomValidatedDeals.Count > 0)
                         {
@@ -1099,14 +1116,15 @@
                         @*<td class="text-center">@TotalEligibleDeals</td>*@   
                         <td class="text-center">@ShowroomUnvalidated</td>   
                         <td class="text-center extra-right">
-                        @if (@manager.FIManagerAssociateNumber.Trim() != "000")
+                            @showroomValidatedDealCount
+                        @*@if (@manager.FIManagerAssociateNumber.Trim() != "000")
                         {
                             <a href="@applicationPath/FICommission/ValidateDeals/@manager.FIManagerLocation/@manager.FIManagerAssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@TotalUnvalidated</a>
                         }
                         else
                         {
                             @TotalUnvalidated
-                        }
+                        }*@
                         </td>
                         <td class="text-center aft-percent">@FinancePercent.ToString("P", nfi)<br />(@FinanceCount)</td>
                         <td class="text-center aft">@AverageFinance.ToString("C", nfi)</td>
@@ -1211,7 +1229,7 @@
                                         <tbody>
                                             @foreach (var deal in manager.AftermarketDealDetails)
                                             {
-                                                if (deal.ShowroomValidatedBy != null || manager.FIManagerAssociateNumber == "000")
+                                                if (deal.ShowroomValidatedBy != null) // || manager.FIManagerAssociateNumber == "000")
                                                 {
                                                     dealIndex += 1;
                                                     var bValidated = false;
@@ -1637,7 +1655,7 @@
                     <th class="text-center">@StoreTotalDeals</th>
                     @*<th class="text-center">@StoreTotalEligibleDeals</th>*@
                     <th class="text-center">@StoreTotalShowroomUnvalidated</th>                    
-                    <th class="text-center extra-right">@StoreTotalUnvalidated</th>
+                    <th class="text-center extra-right">@StoreTotalValidatedDealCount</th>
                     <th class="text-center aft-percent">@StoreFinancePercent.ToString("P", nfi)<br />(@StoreFinanceCount)</th>
                     <th class="text-center aft">@StoreAverageFinance.ToString("C", nfi)</th>
                     <th class="text-center extra-right aft-total">@StoreTotalFinance.ToString("C", nfi)</th>

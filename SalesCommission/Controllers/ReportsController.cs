@@ -1769,26 +1769,26 @@ namespace SalesCommission.Controllers
             else
             {
 
-                if (Request.Form["chkVehicleType"] != null)
+                if ((Request.Form["reportType"] != null && Request.Form["reportType"] == "sales") && Request.Form["chkVehicleType"] != null)
                 {
                     vehicleType = Request.Form["chkVehicleType"];
                 }
-                else if (Request.Form["chkVehicleType3"] != null)
+                else if ((Request.Form["reportType"] != null && Request.Form["reportType"] == "combo") && Request.Form["chkVehicleType3"] != null)
                 {
                     vehicleType = Request.Form["chkVehicleType3"];
                 }
 
                 appraisalReportModel.VehicleType = vehicleType;
 
-                if (Request.Form["chkAcquisitionType"] != null)
-                {
-                    acquisitionType = Request.Form["chkAcquisitionType"];
-                }
-                else if (Request.Form["chkAcquisitionType2"] != null)
+                if ((Request.Form["reportType"] != null && Request.Form["reportType"] == "sales") && Request.Form["chkAcquisitionType2"] != null)
                 {
                     acquisitionType = Request.Form["chkAcquisitionType2"];
                 }
-                else if (Request.Form["chkAcquisitionType3"] != null)
+                else if ((Request.Form["reportType"] != null && Request.Form["reportType"] == "inventory") && Request.Form["chkAcquisitionType"] != null)
+                {
+                    acquisitionType = Request.Form["chkAcquisitionType"];
+                }
+                else if ((Request.Form["reportType"] != null && Request.Form["reportType"] == "combo") && Request.Form["chkAcquisitionType3"] != null)
                 {
                     acquisitionType = Request.Form["chkAcquisitionType3"];
                 }
@@ -1950,6 +1950,12 @@ namespace SalesCommission.Controllers
                             break;
                     case "V":
                         stockSourceName = "VinCue";
+                        break;
+                    case "Y":
+                        stockSourceName = "Truecar";
+                        break;
+                    case "S":
+                        stockSourceName = "99 Drive";
                         break;
                     default:
                             stockSource = "";
@@ -2148,6 +2154,12 @@ namespace SalesCommission.Controllers
                         case "V":
                             stockSourceName = "VinCue";
                             break;
+                    case "Y":
+                        stockSourceName = "Truecar";
+                        break;
+                    case "S":
+                        stockSourceName = "99 Drive";
+                        break;
                     default:
                             stockSource = "";
                             stockSourceName = "";
@@ -3562,7 +3574,7 @@ namespace SalesCommission.Controllers
                 var stockSourceName = "";
                 var lastChar = "";
 
-                if (appraisal.StockNumber != null)
+                if (appraisal.StockNumber != null && appraisal.StockNumber != "")
                 {
                     stockSource = appraisal.StockNumber.Substring(1, 1);
                     lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
@@ -3613,6 +3625,12 @@ namespace SalesCommission.Controllers
                         break;
                     case "V":
                         stockSourceName = "VinCue";
+                        break;
+                    case "Y":
+                        stockSourceName = "Truecar";
+                        break;
+                    case "S":
+                        stockSourceName = "99 Drive";
                         break;
                     default:
                         stockSource = "";
@@ -4709,6 +4727,12 @@ namespace SalesCommission.Controllers
                         case "V":
                             stockSourceName = "VinCue";
                             break;
+                        case "Y":
+                            stockSourceName = "Truecar";
+                            break;
+                        case "S":
+                            stockSourceName = "99 Drive";
+                            break;
                         default:
                             stockSource = "";
                             stockSourceName = "";
@@ -4776,7 +4800,7 @@ namespace SalesCommission.Controllers
                     var stockSourceName = "";
                     var lastChar = "";
 
-                    if (appraisal.StockNumber != null)
+                    if (appraisal.StockNumber != null && appraisal.StockNumber != "")
                     {
                         stockSource = appraisal.StockNumber.Substring(1, 1);
                         lastChar = appraisal.StockNumber.Substring(appraisal.StockNumber.Length - 1);
@@ -4824,6 +4848,12 @@ namespace SalesCommission.Controllers
                             break;
                         case "X":
                             stockSourceName = "Previous Repo";
+                            break;
+                        case "Y":
+                            stockSourceName = "Truecar";
+                            break;
+                        case "S":
+                            stockSourceName = "99 Drive";
                             break;
                         default:
                             stockSource = "";
@@ -5919,6 +5949,12 @@ namespace SalesCommission.Controllers
                         break;
                     case "V":
                         stockSourceName = "VinCue";
+                        break;
+                    case "Y":
+                        stockSourceName = "Truecar";
+                        break;
+                    case "S":
+                        stockSourceName = "99 Drive";
                         break;
                     default:
                         stockSource = "";

@@ -458,6 +458,7 @@
         foreach (var breakdown1 in breakdownLevel1Values)
         {
             var label1 = breakdown1;
+            var filterSelected1 = "";
 
             var BreakDown1filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
 
@@ -608,6 +609,11 @@
                     break;
             }
 
+            if (Model.BreakDown1Filters != null && Model.BreakDown1Filters.Contains(label1))
+            {
+                filterSelected1 = "selected";
+            }
+
             var BD1TotalCount = BreakDown1filteredLeads.Count;
             var BD1TotalWithCost = 0;
             var BD1TotalWithInvAmount = 0;
@@ -707,9 +713,9 @@
             //    {
             //        BD1SupplyOutput = "Err";
             //    }
-        //}
+            //}
 
-        var bd1URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + "&bd3=" + "&bd4=" + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
+            var bd1URL = applicationPath + "/Reports/AppraisalReportInvDetails/" + "?bd1=" + Model.BreakDownLevel1 + "," + breakdown1 + "&bd2=" + "&bd3=" + "&bd4=" + "&vs=" + Model.StatusType + "&at=" + Model.AcquisitionType + "&fm=" + Model.StatusOnFM;
 
             <tr class="location-bd1-data-row-@breakdown1Index @label1.Replace(" ", "-").Replace(".","-").Replace("/","-").Replace("'","-").Replace("*","-").Replace("(","-").Replace(")","-")" data-collapse="location-bd1-collapse-@breakdown1Index">
                 <td class="breakdown-column"><a data-toggle="collapse" id="location-bd1-collapse-@breakdown1Index" style="cursor: pointer;" class="location-bd1-collapse-@breakdown1Index-href collapsed" data-target=".location-bd1-collapse-@breakdown1Index">@label1 </a></td>
@@ -732,7 +738,8 @@
 
 
                             <script type="text/javascript">
-                                $("#filterBreakdown1").append("<option value='" + "@label1" + "'>" + "@label1" + "</option>");
+
+                                $("#filterBreakdown1").append("<option value='" + "@label1" + "' @filterSelected1 >" + "@label1" + "</option>");
 
                                 $(document).ready(function () {
                                     $(".location-bd1-collapse-@breakdown1Index-href").click(function () {
@@ -844,6 +851,7 @@
             {
 
                 var label2 = breakdown2;
+                var filterSelected2 = "";
 
                 var BreakDown2filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
 
@@ -997,6 +1005,11 @@
 
                 }
 
+                if (Model.BreakDown2Filters != null && Model.BreakDown2Filters.Contains(label2))
+                {
+                    filterSelected2 = "selected";
+                }
+
                 var BD2TotalCount = BreakDown2filteredLeads.Count;
                 var BD2TotalWithCost = 0;
                 var BD2TotalWithInvAmount = 0;
@@ -1108,7 +1121,7 @@
                                     });
 
                                     if (bAdd == true) {
-                                        $("#filterBreakdown2").append("<option value='" + "@label2" + "'>" + "@label2" + "</option>");
+                                        $("#filterBreakdown2").append("<option value='" + "@label2" + "' @filterSelected2>" + "@label2" + "</option>");
                                     }
 
                                     $(document).ready(function () {
@@ -1221,6 +1234,8 @@
                 foreach (var BreakDown3 in breakdownLevel3Values)
                 {
                     var label3 = BreakDown3;
+                    var filterSelected3 = "";
+
                     var BreakDown3filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
 
                     switch (Model.BreakDownLevel3)
@@ -1370,6 +1385,11 @@
 
                     }
 
+                    if (Model.BreakDown3Filters != null && Model.BreakDown3Filters.Contains(label3))
+                    {
+                        filterSelected3 = "selected";
+                    }
+
                     var BD3TotalCount = BreakDown3filteredLeads.Count;
                     var BD3TotalWithCost = 0;
                     var BD3TotalWithInvAmount = 0;
@@ -1480,7 +1500,7 @@
                         });
 
                         if (bAdd3 == true) {
-                            $("#filterBreakdown3").append("<option value='" + "@label3" + "'>" + "@label3" + "</option>");
+                            $("#filterBreakdown3").append("<option value='" + "@label3" + "' @filterSelected3>" + "@label3" + "</option>");
                         }
                                         $(document).ready(function () {
                                             $(".location-bd3-collapse-@BreakDown3Index-href").click(function () {
@@ -1592,6 +1612,8 @@
                     foreach (var BreakDown4 in breakdownLevel4Values)
                     {
                         var label4 = BreakDown4;
+                        var filterSelected4 = "";
+
                         var BreakDown4filteredLeads = new List<SalesCommission.Models.TradeAcquisitionDetail>();
 
                         switch (Model.BreakDownLevel4)
@@ -1741,6 +1763,11 @@
 
                         }
 
+                        if (Model.BreakDown4Filters != null && Model.BreakDown4Filters.Contains(label4))
+                        {
+                            filterSelected4 = "selected";
+                        }
+
                         var BD4TotalCount = BreakDown4filteredLeads.Count;
                         var BD4TotalWithCost = 0;
                         var BD4TotalWithInvAmount = 0;
@@ -1852,7 +1879,7 @@
                             });
 
                             if (bAdd4 == true) {
-                                $("#filterBreakdown4").append("<option value='" + "@label4" + "'>" + "@label4" + "</option>");
+                                $("#filterBreakdown4").append("<option value='" + "@label4" + "' @filterSelected4>" + "@label4" + "</option>");
                             }
                                         $(document).ready(function () {
                                             $(".location-bd4-collapse-@BreakDown4Index-href").click(function () {

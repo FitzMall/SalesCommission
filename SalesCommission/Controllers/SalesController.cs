@@ -493,6 +493,37 @@ namespace SalesCommission.Controllers
             return View(dealListing);
         }
 
+        public ActionResult LeaseBuyoutDeals(string makeId, string monthId, string yearId)
+        {
+            //            SetUserInformation();
+
+            if (makeId == null)
+            {
+                return RedirectToAction("Index", "Sales");
+            }
+
+            var dealListing = new DealListing();
+            dealListing.Deals = SqlQueries.GetSalesLogLeaseBuyoutDeals(makeId, monthId, yearId);
+
+            var locationCode = "";
+            if (makeId.Contains(","))
+            {
+                var makeIds = makeId.Split(',');
+                locationCode = SqlQueries.GetLocationCodeByMakeId(makeIds[0]);
+            }
+            else
+            {
+                locationCode = SqlQueries.GetLocationCodeByMakeId(makeId);
+            }
+
+            dealListing.LocationCode = locationCode;
+
+            dealListing.MonthId = monthId;
+            dealListing.YearId = yearId;
+
+            return View(dealListing);
+        }
+
         public ActionResult NextCarDeals(string makeId, string monthId, string yearId)
         {
             //            SetUserInformation();

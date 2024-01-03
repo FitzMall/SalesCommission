@@ -283,9 +283,33 @@ else
                 <select id="associate-select" class="form-control chosen-select">
                     <option>Go To Associate...</option>
                     @foreach (var associate in Model.FIManagerList)
-
                     {
-                        <option value="@applicationPath/FICommission/Associate/@associate.AssociateLocation/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@associate.AssociateFullName</option>
+                        var bNewPayscale = false;
+
+                        var managerPayscale = associate.AssociatePayscale;
+
+                        if (managerPayscale != null && managerPayscale.Contains("2023"))
+                        {
+                            bNewPayscale = true;
+                        }
+                        else
+                        {
+                            bNewPayscale = false;
+                        }
+
+                        if (associate.AssociateLocation == "FBS" || associate.AssociateLocation == "CDO")
+                        {
+                            bNewPayscale = true;
+                        }
+
+                        if (bNewPayscale)
+                        {
+                            <option value="@applicationPath/FICommission/NewAssociate/@associate.AssociateLocation/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@associate.AssociateFullName</option>
+                        }
+                        else
+                        {
+                            <option value="@applicationPath/FICommission/Associate/@associate.AssociateLocation/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@associate.AssociateFullName</option>
+                        }
                     }
                 </select>
             }

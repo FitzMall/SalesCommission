@@ -1486,7 +1486,7 @@ namespace SalesCommission.Controllers
                 associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;
             }
 
-            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateList();
+            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateListByMonth(Int32.Parse(yearId), Int32.Parse(monthId));
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
 
@@ -1579,7 +1579,7 @@ namespace SalesCommission.Controllers
                 associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;
             }
 
-            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateList();
+            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateListByMonth(Int32.Parse(yearId), Int32.Parse(monthId));
 
             ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
 

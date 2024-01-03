@@ -1511,6 +1511,30 @@ namespace SalesCommission.Business
                 LocationId = "20",
                 Name = "Wheaton Used"
             },
+            new Location {
+                LocationId = "20",
+                Name = "Wheaton Used"
+            },
+                new Location {
+                LocationId = "165", 
+                Name = "InterCompany Transfer Rockville Hyundai"
+            },
+                
+            new Location { LocationId = "166",Name = "InterCompany Transfer Rockville Subaru" },
+            new Location { LocationId = "167",Name = "InterCompany Transfer Rockville Nicholson"},
+            new Location { LocationId = "168",Name = "InterCompany Transfer Gaithersburg Hyundai/Subaru"},
+            new Location { LocationId = "169",Name = "InterCompany Transfer Wheaton"},
+            new Location { LocationId = "170",Name = "InterCompany Transfer Annapolis Cadillac/Volkswagen"},
+            new Location { LocationId = "171",Name = "InterCompany Transfer Annapolis Mazda/Mitsubishi"},
+            new Location { LocationId = "172",Name = "InterCompany Transfer Frederick"},
+            new Location { LocationId = "173",Name = "InterCompany Transfer Chambersburg"},
+            new Location { LocationId = "174",Name = "InterCompany Transfer Clearwater"},
+            new Location { LocationId = "175",Name = "InterCompany Transfer Gaithersburg Toyota"},
+            new Location { LocationId = "176",Name = "InterCompany Transfer Frederick Rt 85"},
+            new Location { LocationId = "178",Name = "InterCompany Transfer Germantown"},
+            new Location { LocationId = "179",Name = "InterCompany Transfer Lexington Park"},
+            new Location { LocationId = "180",Name = "InterCompany Transfer Hagerstown Chrysler"},
+            new Location { LocationId = "181",Name = "InterCompany Transfer Hagerstown GM" }
 
         };
 

@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 
-@{ 
+@{
     var currentDate = DateTime.Now;
     var currentMonth = currentDate.Month;
     var currentYear = currentDate.Year;
@@ -13,10 +13,8 @@
     }
 
 
-
-
     var currentUserId = "";
-    if(Session["AssociateId"] != null)
+    if (Session["AssociateId"] != null)
     {
         currentUserId = Session["AssociateId"].ToString();
     }
@@ -26,6 +24,32 @@
     {
         currentLocationId = Session["LocationId"].ToString();
     }
+
+    var associatePayscale = "";
+    if (Session["PayscaleId"] != null)
+    {
+        associatePayscale = Session["PayscaleId"].ToString();
+    }
+
+    var bNewPayscale = false;
+
+    var managerPayscale = associatePayscale;
+
+    if (managerPayscale != null && managerPayscale.Contains("2023"))
+    {
+        bNewPayscale = true;
+    }
+    else
+    {
+        bNewPayscale = false;
+    }
+
+    if (currentLocationId == "FBS" || currentLocationId == "CDO")
+    {
+        bNewPayscale = true;
+    }
+
+
 
 }
 
@@ -191,10 +215,20 @@
                                 <li class="divider"></li>
                                 <li>@Html.ActionLink("Payscales", "Payscales", "FICommission")</li>
                                 <li>@Html.ActionLink("Adjustments", "Adjustments", "FICommission")</li>
+                                <li class="divider"></li>
+                                <li><a href="//jjfserver/FandIReporting/" target="_blank">F and I Reporting</a></li>
             }
             else
             {
-                <li>@Html.ActionLink("My Commission", "Associate", "FICommission", new { location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+                if (bNewPayscale)
+                {
+                    <li>@Html.ActionLink("My Commission", "NewAssociate", "FICommission", new { location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+                }
+                else
+                {
+                    <li>@Html.ActionLink("My Commission", "Associate", "FICommission", new { location = currentLocationId, id = currentUserId, monthId = currentMonth, yearId = currentYear }, null)</li>
+                }
+
             }
         </ul>
     </li>

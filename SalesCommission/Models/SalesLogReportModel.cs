@@ -50,6 +50,7 @@ namespace SalesCommission.Models
         public int HandymanCount { get; set; }
         public int CPOCount { get; set; }
         public int NextCarCount { get; set; }
+        public int LeaseBuyoutCount { get; set; }
         public double DealGrossAmount { get; set; }
         public double FinIncAmount { get; set; }
         public double VSCAmount { get; set; }

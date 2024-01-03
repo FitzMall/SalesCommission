@@ -340,6 +340,7 @@
     <Content Include="Views\Reports\LeadReport.cshtml" />
     <Content Include="Views\FICommission\NewAssociate.cshtml" />
     <Content Include="Views\FICommission\Index.cshtml" />
+    <Content Include="Views\Sales\LeaseBuyoutDeals.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
