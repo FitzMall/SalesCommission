@@ -25,6 +25,7 @@ namespace SalesCommission
                 new { controller = "FICommission", action = "Adjustments", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
             );
 
+
             RouteTable.Routes.MapRoute(
                 "AssociateCommission",
                 "Commission/Associate/{id}/{monthId}/{yearId}", // URL with parameters
@@ -93,8 +94,8 @@ namespace SalesCommission
 
             RouteTable.Routes.MapRoute(
                 "FIAssociateScorecard",
-                "FICommission/Scorecard/{id}/{monthId}/{yearId}", // URL with parameters
-                new { controller = "FICommission", action = "Scorecard", id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
+                "FICommission/Scorecard/{location}/{id}/{monthId}/{yearId}", // URL with parameters
+                new { controller = "FICommission", action = "Scorecard", location = UrlParameter.Optional, id = UrlParameter.Optional, monthId = UrlParameter.Optional, yearId = UrlParameter.Optional }
             );
 
             RouteTable.Routes.MapRoute(

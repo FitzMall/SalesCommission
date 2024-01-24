@@ -1104,9 +1104,9 @@
                             }
                             else
                             {
-                        @manager.FIManagerName<br />
+                                @manager.FIManagerName<br />
                             }
-                            @*<a class="hide-print" href="@applicationPath/FICommission/ScoreCard/@manager.FIManagerAssociateNumber.Trim()/@Model.MonthId/@Model.YearId">Score Card</a><br/>*@
+                           <a class="hide-print" href="@applicationPath/FICommission/ScoreCard/@manager.FIManagerLocation/@manager.FIManagerAssociateNumber.Trim()/@Model.MonthId/@Model.YearId">Score Card</a><br/>
                            @if (Model.IncludeDeals)
                             {
                                 <a class="hide-print" data-toggle="collapse" id="Deals" style="cursor: pointer;" data-target="#collapse-@manager.FIManagerSSN">Deal Details <i class="fa fa-caret-down" aria-hidden="true"></i></a>

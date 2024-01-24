@@ -769,29 +769,29 @@ namespace SalesCommission.Controllers
                 payscaleFISetup.ProductBonusThreshold7 = decimal.Parse(Request.Form["Bonus7threshold"]);
                 payscaleFISetup.ProductBonusPercent8 = decimal.Parse(Request.Form["Bonus8percent"]);
                 payscaleFISetup.ProductBonusThreshold8 = decimal.Parse(Request.Form["Bonus8threshold"]);
-                payscaleFISetup.StandardFinancePerUnit = decimal.Parse(Request.Form["StandardFinancePerUnit"]);
-                payscaleFISetup.StandardFinancePercent = decimal.Parse(Request.Form["StandardFinancePercent"]);
-                payscaleFISetup.StandardServicePerUnit = decimal.Parse(Request.Form["StandardServicePerUnit"]);
-                payscaleFISetup.StandardServicePercent = decimal.Parse(Request.Form["StandardServicePercent"]);
-                payscaleFISetup.StandardMaintenancePerUnit = decimal.Parse(Request.Form["StandardMaintenancePerUnit"]);
-                payscaleFISetup.StandardMaintenancePercent = decimal.Parse(Request.Form["StandardMaintenancePercent"]);
-                payscaleFISetup.StandardGAPPerUnit = decimal.Parse(Request.Form["StandardGAPPerUnit"]);
-                payscaleFISetup.StandardGAPPercent = decimal.Parse(Request.Form["StandardGAPPercent"]);
-                payscaleFISetup.StandardZurichPerUnit = decimal.Parse(Request.Form["StandardZurichPerUnit"]);
-                payscaleFISetup.StandardZurichPercent = decimal.Parse(Request.Form["StandardZurichPercent"]);
-                payscaleFISetup.StandardSelectProtectPerUnit = decimal.Parse(Request.Form["StandardSelectProtectPerUnit"]);
-                payscaleFISetup.StandardSelectProtectPercent = decimal.Parse(Request.Form["StandardSelectProtectPercent"]);
-                payscaleFISetup.StandardTireWheelPerUnit = decimal.Parse(Request.Form["StandardTireWheelPerUnit"]);
-                payscaleFISetup.StandardTireWheelPercent = decimal.Parse(Request.Form["StandardTireWheelPercent"]);
+                payscaleFISetup.StandardFinancePerUnit = decimal.Parse(Request.Form["standardsFinancePerUnit"]);
+                payscaleFISetup.StandardFinancePercent = decimal.Parse(Request.Form["standardsFinancePercent"]);
+                payscaleFISetup.StandardServicePerUnit = decimal.Parse(Request.Form["standardsServicePerUnit"]);
+                payscaleFISetup.StandardServicePercent = decimal.Parse(Request.Form["standardsServicePercent"]);
+                payscaleFISetup.StandardMaintenancePerUnit = decimal.Parse(Request.Form["standardsMaintenancePerUnit"]);
+                payscaleFISetup.StandardMaintenancePercent = decimal.Parse(Request.Form["standardsMaintenancePercent"]);
+                payscaleFISetup.StandardGAPPerUnit = decimal.Parse(Request.Form["standardsGAPPerUnit"]);
+                payscaleFISetup.StandardGAPPercent = decimal.Parse(Request.Form["standardsGAPPercent"]);
+                payscaleFISetup.StandardZurichPerUnit = decimal.Parse(Request.Form["standardsZurichPerUnit"]);
+                payscaleFISetup.StandardZurichPercent = decimal.Parse(Request.Form["standardsZurichPercent"]);
+                payscaleFISetup.StandardSelectProtectPerUnit = decimal.Parse(Request.Form["standardsSelectProtectPerUnit"]);
+                payscaleFISetup.StandardSelectProtectPercent = decimal.Parse(Request.Form["standardsSelectProtectPercent"]);
+                payscaleFISetup.StandardTireWheelPerUnit = decimal.Parse(Request.Form["standardsTireWheelPerUnit"]);
+                payscaleFISetup.StandardTireWheelPercent = decimal.Parse(Request.Form["standardsTireWheelPercent"]);
 
-                payscaleFISetup.StandardsExpectations1 = Request.Form["StandardsExpectations1"];
-                payscaleFISetup.StandardsExpectations2 = Request.Form["StandardsExpectations2"];
-                payscaleFISetup.StandardsExpectations3 = Request.Form["StandardsExpectations3"];
-                payscaleFISetup.StandardsExpectations4 = Request.Form["StandardsExpectations4"];
-                payscaleFISetup.StandardsExpectations5 = Request.Form["StandardsExpectations5"];
-                payscaleFISetup.StandardsExpectations6 = Request.Form["StandardsExpectations6"];
-                payscaleFISetup.StandardsExpectations7 = Request.Form["StandardsExpectations7"];
-                payscaleFISetup.StandardsExpectations8 = Request.Form["StandardsExpectations8"];
+                payscaleFISetup.StandardsExpectations1 = Request.Form["standardssExpectations1"];
+                payscaleFISetup.StandardsExpectations2 = Request.Form["standardssExpectations2"];
+                payscaleFISetup.StandardsExpectations3 = Request.Form["standardssExpectations3"];
+                payscaleFISetup.StandardsExpectations4 = Request.Form["standardssExpectations4"];
+                payscaleFISetup.StandardsExpectations5 = Request.Form["standardssExpectations5"];
+                payscaleFISetup.StandardsExpectations6 = Request.Form["standardssExpectations6"];
+                payscaleFISetup.StandardsExpectations7 = Request.Form["standardssExpectations7"];
+                payscaleFISetup.StandardsExpectations8 = Request.Form["standardssExpectations8"];
                 payscaleFISetup.ActivePayscale = int.Parse(Request.Form["ActivePayscale"]);
                 payscaleFISetup.PayscaleWithProducts = int.Parse(Request.Form["PayscaleWithProducts"]);
 
@@ -1880,10 +1880,524 @@ namespace SalesCommission.Controllers
             return new EmptyResult();
         }
 
-        public ActionResult ScoreCard(string id, string monthId, string yearId)
+        public ActionResult Scorecard(string location, string id, string monthId, string yearId)
         {
-            return View();
+            var associateCommissionModel = new FIAssociateCommissionModel();
+
+            associateCommissionModel.AssociateId = id;
+            associateCommissionModel.MonthId = Int32.Parse(monthId);
+            associateCommissionModel.YearId = Int32.Parse(yearId);
+            associateCommissionModel.PreviousAftermarketDealDetails = new List<PreviousAftermarketDealDetails>();
+
+            var associateLocation = location;
+
+            if (id != null && id != "")
+            {
+                associateCommissionModel.AssociateInformation = SqlQueries.GetFIAssociateInformationByDate(location, associateCommissionModel.AssociateId, associateCommissionModel.YearId, associateCommissionModel.MonthId);
+
+                // BUTCHERY AND HACKERY UNTIL WE CAN GET THE ACTUAL EMPLOYEE NUMBER FROM REYNOLDS
+                var FICommissionModel = new FICommissionModel();
+                FICommissionModel.MonthId = associateCommissionModel.MonthId;
+                FICommissionModel.YearId = associateCommissionModel.YearId;
+                FICommissionModel.StoreId = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                FICommissionModel = SqlQueries.GetFIManagerDealsByDateAndId(FICommissionModel, id);
+
+                //GET THE PREVIOUS 3 MONTHS WORTH OF DATA - CALL THE ABOVE 3 More Times
+                for (int index = 1; index < 4; index++)
+                {
+                    var previousMonth = index * -1;
+                    var currentDate = new DateTime(associateCommissionModel.YearId, associateCommissionModel.MonthId, 1);
+
+                    var reportDate = currentDate.AddMonths(previousMonth);
+
+                    var previousScorecard = new PreviousAftermarketDealDetails();
+                    previousScorecard.MonthId = reportDate.Month;
+                    previousScorecard.YearId = reportDate.Year;
+
+                    var previousFICommissionModel = new FICommissionModel();
+                    previousFICommissionModel.MonthId = reportDate.Month;
+                    previousFICommissionModel.YearId = reportDate.Year;
+                    previousFICommissionModel.StoreId = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                    previousFICommissionModel = SqlQueries.GetFIManagerDealsByDateAndId(previousFICommissionModel, id);
+                    previousScorecard.AftermarketDealDetails = previousFICommissionModel.AftermarketDealDetails;
+
+                    associateCommissionModel.PreviousAftermarketDealDetails.Add(previousScorecard);
+                }
+
+                // FICommissionModel.FIManagerDealDetails = MapFIManagerDealsById(FICommissionModel);
+
+                //END THE BUTCHERY AND HACKERY
+
+                //var FIManagerDetails = FICommissionModel.FIManagerDealDetails.Find(x => x.FIManagerAssociateNumber.Trim() == id);
+                //if (FIManagerDetails != null)
+                //{ 
+                associateCommissionModel.AftermarketDealDetails = FICommissionModel.AftermarketDealDetails;
+                //}
+
+                associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                var bNewPayscale = false;
+                if (associateLocation == "FBS" || associateLocation == "CDO")
+                {
+                    associateLocation = "CDO";
+                    bNewPayscale = true;
+                }
+
+                var payscaleId = "";
+
+                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
+                if (managerPayscale != null)
+                {
+                    payscaleId = managerPayscale.ManagerPayscaleID;
+
+                }
+                if (payscaleId == null || payscaleId == "")
+                {
+                    var payscaleList = SqlQueries.GetFIPayscaleSelectList();
+
+                    if (bNewPayscale)
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && x.Text.Contains("2023")).Value;
+                    }
+                    else
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Text.Contains("2023")).Value;
+                    }
+
+                    //payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
+                }
+
+                associateCommissionModel.FIPayscales = SqlQueries.GetFIPayscaleByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
+
+                var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
+
+
+                if (payscaleSetup != null && payscaleSetup.Count > 0)
+                {
+                    var setup = payscaleSetup[0];
+                    associateCommissionModel.GrossPercentagePaid = setup.GrossPercentagePaid;
+                    associateCommissionModel.MentorPercentagePaid = setup.MentorPercentagePaid;
+                    associateCommissionModel.CommissionPercentage = setup.CommissionPercentage;
+                    associateCommissionModel.ProductBonusPercent1 = setup.ProductBonusPercent1;
+                    associateCommissionModel.ProductBonusThreshold1 = setup.ProductBonusThreshold1;
+                    associateCommissionModel.ProductBonusPercent2 = setup.ProductBonusPercent2;
+                    associateCommissionModel.ProductBonusThreshold2 = setup.ProductBonusThreshold2;
+                    associateCommissionModel.ProductBonusPercent3 = setup.ProductBonusPercent3;
+                    associateCommissionModel.ProductBonusThreshold3 = setup.ProductBonusThreshold3;
+                    associateCommissionModel.ProductBonusPercent4 = setup.ProductBonusPercent4;
+                    associateCommissionModel.ProductBonusThreshold4 = setup.ProductBonusThreshold4;
+                    associateCommissionModel.ProductBonusPercent5 = setup.ProductBonusPercent5;
+                    associateCommissionModel.ProductBonusThreshold5 = setup.ProductBonusThreshold5;
+                    associateCommissionModel.ProductBonusPercent6 = setup.ProductBonusPercent6;
+                    associateCommissionModel.ProductBonusThreshold6 = setup.ProductBonusThreshold6;
+                    associateCommissionModel.ProductBonusPercent7 = setup.ProductBonusPercent7;
+                    associateCommissionModel.ProductBonusThreshold7 = setup.ProductBonusThreshold7;
+                    associateCommissionModel.ProductBonusPercent8 = setup.ProductBonusPercent8;
+                    associateCommissionModel.ProductBonusThreshold8 = setup.ProductBonusThreshold8;
+                    associateCommissionModel.StandardFinancePerUnit = setup.StandardFinancePerUnit;
+                    associateCommissionModel.StandardFinancePercent = setup.StandardFinancePercent;
+                    associateCommissionModel.StandardServicePerUnit = setup.StandardServicePerUnit;
+                    associateCommissionModel.StandardServicePercent = setup.StandardServicePercent;
+                    associateCommissionModel.StandardMaintenancePerUnit = setup.StandardMaintenancePerUnit;
+                    associateCommissionModel.StandardMaintenancePercent = setup.StandardMaintenancePercent;
+                    associateCommissionModel.StandardGAPPerUnit = setup.StandardGAPPerUnit;
+                    associateCommissionModel.StandardGAPPercent = setup.StandardGAPPercent;
+                    associateCommissionModel.StandardZurichPerUnit = setup.StandardZurichPerUnit;
+                    associateCommissionModel.StandardZurichPercent = setup.StandardZurichPercent;
+                    associateCommissionModel.StandardSelectProtectPerUnit = setup.StandardSelectProtectPerUnit;
+                    associateCommissionModel.StandardSelectProtectPercent = setup.StandardSelectProtectPercent;
+                    associateCommissionModel.StandardTireWheelPerUnit = setup.StandardTireWheelPerUnit;
+                    associateCommissionModel.StandardTireWheelPercent = setup.StandardTireWheelPercent;
+
+                    associateCommissionModel.StandardsExpectations1 = setup.StandardsExpectations1;
+                    associateCommissionModel.StandardsExpectations2 = setup.StandardsExpectations2;
+                    associateCommissionModel.StandardsExpectations3 = setup.StandardsExpectations3;
+                    associateCommissionModel.StandardsExpectations4 = setup.StandardsExpectations4;
+                    associateCommissionModel.StandardsExpectations5 = setup.StandardsExpectations5;
+                    associateCommissionModel.StandardsExpectations6 = setup.StandardsExpectations6;
+                    associateCommissionModel.StandardsExpectations7 = setup.StandardsExpectations7;
+                    associateCommissionModel.StandardsExpectations8 = setup.StandardsExpectations8;
+                    associateCommissionModel.ActivePayscale = setup.ActivePayscale;
+                    associateCommissionModel.PayscaleWithProducts = setup.PayscaleWithProducts;
+                }
+
+                associateCommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(Int32.Parse(yearId), Int32.Parse(monthId), id);
+
+                associateCommissionModel.FIPayscaleAftermarket = SqlQueries.GetFIPayscaleAftermarketByIDAndDate(FICommissionModel.YearId, FICommissionModel.MonthId, payscaleId);
+
+                var currentScorecard = SqlQueries.GetFIAssociateScoreCardHistoryByDate(associateCommissionModel.AssociateInformation.AssociateSSN, associateCommissionModel.YearId, associateCommissionModel.MonthId);
+                if (currentScorecard != null && currentScorecard.Count > 0)
+                {
+                    associateCommissionModel.CurrentScorecard = currentScorecard[0];
+                }
+                else
+                {
+                    associateCommissionModel.CurrentScorecard = new FIAssociateScoreCard();
+                }
+
+                var previousScorecards = new List<FIAssociateScoreCard>();
+
+                for (int index = 1; index < 4; index++)
+                {
+                    var previousMonth = index * -1;
+                    var currentDate = new DateTime(associateCommissionModel.YearId, associateCommissionModel.MonthId, 1);
+
+                    var reportDate = currentDate.AddMonths(previousMonth);
+
+                    var previousScorecard = SqlQueries.GetFIAssociateScoreCardHistoryByDate(associateCommissionModel.AssociateInformation.AssociateSSN, reportDate.Year, reportDate.Month);
+
+                    if (previousScorecard != null && previousScorecard.Count > 0)
+                    {
+                        previousScorecards.Add(previousScorecard[0]);
+                    }
+                    else
+                    {
+                        previousScorecards.Add(new FIAssociateScoreCard());
+                    }
+
+                }
+
+                associateCommissionModel.ScorecardHistory = previousScorecards;
+
+            }
+
+
+            associateCommissionModel.FIAdjustments = SqlQueries.GetFIManagerAdjustments(id, Int32.Parse(yearId), Int32.Parse(monthId));
+
+            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
+            if (selectedFIManager != null)
+            {
+                associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;
+            }
+
+            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateListByMonth(Int32.Parse(yearId), Int32.Parse(monthId));
+
+            ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
+
+            return View(associateCommissionModel);
+
         }
+
+        [HttpPost]
+        public ActionResult Scorecard(FIAssociateCommissionModel associateCommissionModel)
+        {
+            //SetUserInformation();            
+
+            var id = "";
+            var monthId = 0;
+            var yearId = 0;
+            var location = "";
+
+            if (Request.Form["hdn-MonthId"] != null && Request.Form["hdn-MonthId"].Contains(","))
+            {
+                var cleanedMonthId = Request.Form["hdn-MonthId"].Substring(Request.Form["hdn-MonthId"].IndexOf(',') + 1);
+                monthId = (cleanedMonthId != "") ? Int32.Parse(cleanedMonthId) : 0;
+            }
+            else
+            {
+                monthId = (Request.Form["hdn-MonthId"] != null && Request.Form["hdn-MonthId"] != "") ? Int32.Parse(Request.Form["hdn-MonthId"]) : 0;
+            }
+
+            if (Request.Form["hdn-YearId"] != null && Request.Form["hdn-YearId"].Contains(","))
+            {
+                var cleanedYearId = Request.Form["hdn-YearId"].Substring(Request.Form["hdn-YearId"].IndexOf(',') + 1);
+                yearId = (cleanedYearId != "") ? Int32.Parse(cleanedYearId) : 0;
+            }
+            else
+            {
+                yearId = (Request.Form["hdn-YearId"] != null && Request.Form["hdn-YearId"] != "") ? Int32.Parse(Request.Form["hdn-YearId"]) : 0;
+            }
+
+            id = (Request.Form["associate-id"] != null && Request.Form["associate-id"] != "") ? Request.Form["associate-id"].ToString() : "";
+            location = (Request.Form["associate-location"] != null && Request.Form["associate-location"] != "") ? Request.Form["associate-location"].ToString() : "";
+
+            // NOW GET ALL THE INFORMATION FROM THE REQUEST...CHECK TO SEE IF SAVE OR FINALIZE WAS PUSHED
+            if (Request.Form["SaveComments"] != null || Request.Form["FinalizeScorecard"] != null || Request.Form["ApproveScorecard"] != null)
+            {
+                var associateScoreCard = new FIAssociateScoreCard();
+
+                associateScoreCard.AssociateSSN = (Request.Form["associate-SSN"] != null && Request.Form["associate-SSN"] != "") ? Request.Form["associate-SSN"].ToString() : "";
+                associateScoreCard.MonthYear = monthId.ToString() + "/" + yearId.ToString();
+                associateScoreCard.Rolling3Month_Comments = (Request.Form["comments-rollingunits"] != null && Request.Form["comments-rollingunits"] != "") ? Request.Form["comments-rollingunits"].ToString() : "";
+                associateScoreCard.Deliveries_Comments = (Request.Form["comments-units"] != null && Request.Form["comments-units"] != "") ? Request.Form["comments-units"].ToString() : "";
+                associateScoreCard.FinancePercent_Comments = (Request.Form["comments-finance-percent"] != null && Request.Form["comments-finance-percent"] != "") ? Request.Form["comments-finance-percent"].ToString() : "";
+                associateScoreCard.FinanceReserve_Comments = (Request.Form["comments-finance-reserve"] != null && Request.Form["comments-finance-reserve"] != "") ? Request.Form["comments-finance-reserve"].ToString() : "";
+                associateScoreCard.VSCPercent_Comments = (Request.Form["comments-vsc-percentage"] != null && Request.Form["comments-vsc-percentage"] != "") ? Request.Form["comments-vsc-percentage"].ToString() : "";
+                associateScoreCard.VSCPerItem_Comments = (Request.Form["comments-vsc-peritem"] != null && Request.Form["comments-vsc-peritem"] != "") ? Request.Form["comments-vsc-peritem"].ToString() : "";
+                associateScoreCard.MaintenancePercent_Comments = (Request.Form["comments-maint-percent"] != null && Request.Form["comments-maint-percent"] != "") ? Request.Form["comments-maint-percent"].ToString() : "";
+                associateScoreCard.MaintenancePerItem_Comments = (Request.Form["comments-maint-peritem"] != null && Request.Form["comments-maint-peritem"] != "") ? Request.Form["comments-maint-peritem"].ToString() : "";
+                associateScoreCard.GAPPercent_Comments = (Request.Form["comments-GAP-percent"] != null && Request.Form["comments-GAP-percent"] != "") ? Request.Form["comments-GAP-percent"].ToString() : "";
+                associateScoreCard.GAPPerItem_Comments = (Request.Form["comments-GAP-peritem"] != null && Request.Form["comments-GAP-peritem"] != "") ? Request.Form["comments-GAP-peritem"].ToString() : "";
+                associateScoreCard.ZurichPercent_Comments = (Request.Form["comments-zurich-percent"] != null && Request.Form["comments-zurich-percent"] != "") ? Request.Form["comments-zurich-percent"].ToString() : "";
+                associateScoreCard.ZurichPerItem_Comments = (Request.Form["comments-zurich-peritem"] != null && Request.Form["comments-zurich-peritem"] != "") ? Request.Form["comments-zurich-peritem"].ToString() : "";
+                associateScoreCard.SelectProtectPercent_Comments = (Request.Form["comments-select-percent"] != null && Request.Form["comments-select-percent"] != "") ? Request.Form["comments-select-percent"].ToString() : "";
+                associateScoreCard.SelectProtectPerItem_Comments = (Request.Form["comments-select-peritem"] != null && Request.Form["comments-select-peritem"] != "") ? Request.Form["comments-select-peritem"].ToString() : "";
+                associateScoreCard.TireAndWheelPercent_Comments = (Request.Form["comments-tirewheel-percent"] != null && Request.Form["comments-tirewheel-percent"] != "") ? Request.Form["comments-tirewheel-percent"].ToString() : "";
+                associateScoreCard.TireAndWheelPerItem_Comments = (Request.Form["comments-tirewheel-peritem"] != null && Request.Form["comments-tirewheel-peritem"] != "") ? Request.Form["comments-tirewheel-peritem"].ToString() : "";
+                associateScoreCard.LeasePercent_Comments = (Request.Form["comments-lease-percent"] != null && Request.Form["comments-lease-percent"] != "") ? Request.Form["comments-lease-percent"].ToString() : "";
+                associateScoreCard.LeasePerItem_Comments = (Request.Form["comments-lease-peritem"] != null && Request.Form["comments-lease-peritem"] != "") ? Request.Form["comments-lease-peritem"].ToString() : "";
+                associateScoreCard.OtherPercent_Comments = (Request.Form["comments-other-percent"] != null && Request.Form["comments-other-percent"] != "") ? Request.Form["comments-other-percent"].ToString() : "";
+                associateScoreCard.OtherPerItem_Comments = (Request.Form["comments-other-peritem"] != null && Request.Form["comments-other-peritem"] != "") ? Request.Form["comments-other-peritem"].ToString() : "";
+                associateScoreCard.TotalGross_Comments = (Request.Form["comments-total-gross"] != null && Request.Form["comments-total-gross"] != "") ? Request.Form["comments-total-gross"].ToString() : "";
+                associateScoreCard.TotalDollarPerDeal_Comments = (Request.Form["comments-dollar-perdeal"] != null && Request.Form["comments-dollar-perdeal"] != "") ? Request.Form["comments-dollar-perdeal"].ToString() : "";
+                associateScoreCard.TotalProductDollar_Comments = (Request.Form["comments-product-dollar"] != null && Request.Form["comments-product-dollar"] != "") ? Request.Form["comments-product-dollar"].ToString() : "";
+                associateScoreCard.TotalProductDollerPerDeal_Comments = (Request.Form["comments-product-dollar-per-deal"] != null && Request.Form["comments-product-dollar-per-deal"] != "") ? Request.Form["comments-product-dollar-per-deal"].ToString() : "";
+                associateScoreCard.ProductRation_Comments = (Request.Form["comments-product-ratio"] != null && Request.Form["comments-product-ratio"] != "") ? Request.Form["comments-product-ratio"].ToString() : "";
+                associateScoreCard.KeyImprovementOpportunities = (Request.Form["comments-key-opportunities"] != null && Request.Form["comments-key-opportunities"] != "") ? Request.Form["comments-key-opportunities"].ToString() : "";
+
+                associateScoreCard.Rolling3Month_Standard = (Request.Form["standards-rollingunits"] != null) ? Decimal.Parse(Request.Form["standards-rollingunits"]) : 0;
+                associateScoreCard.Deliveries_Standard = (Request.Form["standards-units"] != null) ? Decimal.Parse(Request.Form["standards-units"]) : 0;
+                associateScoreCard.FinancePercent_Standard = (Request.Form["standards-finance-percent"] != null) ? Decimal.Parse(Request.Form["standards-finance-percent"]) : 0;
+                associateScoreCard.FinanceReserve_Standard = (Request.Form["standards-finance-reserve"] != null ) ? Decimal.Parse(Request.Form["standards-finance-reserve"]) : 0;
+                associateScoreCard.VSCPercent_Standard = (Request.Form["standards-vsc-percentage"] != null ) ? Decimal.Parse(Request.Form["standards-vsc-percentage"]) : 0;
+                associateScoreCard.VSCPerItem_Standard = (Request.Form["standards-vsc-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-vsc-peritem"]) : 0;
+                associateScoreCard.MaintenancePercent_Standard = (Request.Form["standards-maint-percent"] != null) ? Decimal.Parse(Request.Form["standards-maint-percent"]) : 0;
+                associateScoreCard.MaintenancePerItem_Standard = (Request.Form["standards-maint-peritem"] != null) ? Decimal.Parse(Request.Form["standards-maint-peritem"]) : 0;
+                associateScoreCard.GAPPercent_Standard = (Request.Form["standards-GAP-percent"] != null) ? Decimal.Parse(Request.Form["standards-GAP-percent"]) : 0;
+                associateScoreCard.GAPPerItem_Standard = (Request.Form["standards-GAP-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-GAP-peritem"]) : 0;
+                associateScoreCard.ZurichPercent_Standard = (Request.Form["standards-zurich-percent"] != null) ? Decimal.Parse(Request.Form["standards-zurich-percent"]) : 0;
+                associateScoreCard.ZurichPerItem_Standard = (Request.Form["standards-zurich-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-zurich-peritem"]) : 0;
+                associateScoreCard.SelectProtectPercent_Standard = (Request.Form["standards-select-percent"] != null ) ? Decimal.Parse(Request.Form["standards-select-percent"]) : 0;
+                associateScoreCard.SelectProtectPerItem_Standard = (Request.Form["standards-select-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-select-peritem"]) : 0;
+                associateScoreCard.TireAndWheelPercent_Standard = (Request.Form["standards-tirewheel-percent"] != null) ? Decimal.Parse(Request.Form["standards-tirewheel-percent"]) : 0;
+                associateScoreCard.TireAndWheelPerItem_Standard = (Request.Form["standards-tirewheel-peritem"] != null) ? Decimal.Parse(Request.Form["standards-tirewheel-peritem"]) : 0;
+                associateScoreCard.LeasePercent_Standard = (Request.Form["standards-lease-percent"] != null ) ? Decimal.Parse(Request.Form["standards-lease-percent"]) : 0;
+                associateScoreCard.LeasePerItem_Standard = (Request.Form["standards-lease-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-lease-peritem"]) : 0;
+                associateScoreCard.OtherPercent_Standard = (Request.Form["standards-other-percent"] != null ) ? Decimal.Parse(Request.Form["standards-other-percent"]) : 0;
+                associateScoreCard.OtherPerItem_Standard = (Request.Form["standards-other-peritem"] != null ) ? Decimal.Parse(Request.Form["standards-other-peritem"]) : 0;
+                associateScoreCard.TotalGross_Standard = (Request.Form["standards-total-gross"] != null ) ? Decimal.Parse(Request.Form["standards-total-gross"]) : 0;
+                associateScoreCard.TotalDollarPerDeal_Standard = (Request.Form["standards-dollar-perdeal"] != null ) ? Decimal.Parse(Request.Form["standards-dollar-perdeal"]) : 0;
+                associateScoreCard.TotalProductDollar_Standard = (Request.Form["standards-product-dollar"] != null) ? Decimal.Parse(Request.Form["standards-product-dollar"]) : 0;
+                associateScoreCard.TotalProductDollerPerDeal_Standard = (Request.Form["standards-product-dollar-per-deal"] != null ) ? Decimal.Parse(Request.Form["standards-product-dollar-per-deal"]) : 0;
+                associateScoreCard.ProductRation_Standard = (Request.Form["standards-product-ratio"] != null) ? Decimal.Parse(Request.Form["standards-product-ratio"]) : 0;
+
+                associateScoreCard.UpdateDate = DateTime.Now;
+                associateScoreCard.UpdateUser = Session["UserName"].ToString();
+
+                if (Request.Form["FinalizeScorecard"] != null)
+                {
+                    associateScoreCard.FinalizeDate = DateTime.Now;
+                    associateScoreCard.FinalizeUser = Session["UserName"].ToString();
+}
+                else
+                {
+                    associateScoreCard.FinalizeDate = new DateTime(1900, 1, 1);
+                    associateScoreCard.FinalizeUser = "";
+                }
+
+                if (Request.Form["ApproveScorecard"] != null)
+                {
+                    associateScoreCard.ApprovalDate = DateTime.Now;
+                    associateScoreCard.ApprovalUser = Session["UserName"].ToString();
+                    
+                }
+                else
+                {
+                    associateScoreCard.ApprovalDate = new DateTime(1900, 1, 1);
+                    associateScoreCard.ApprovalUser = "";
+                }
+
+                var done = SqlQueries.SaveFIAssociateScoreCardHistory(associateScoreCard);
+            }
+
+
+            associateCommissionModel.AssociateId = id;
+            associateCommissionModel.MonthId = monthId;
+            associateCommissionModel.YearId = yearId;
+            associateCommissionModel.PreviousAftermarketDealDetails = new List<PreviousAftermarketDealDetails>();
+
+            var associateLocation = location;
+
+            if (id != null && id != "")
+            {
+                associateCommissionModel.AssociateInformation = SqlQueries.GetFIAssociateInformationByDate(location, associateCommissionModel.AssociateId, associateCommissionModel.YearId, associateCommissionModel.MonthId);
+
+                // BUTCHERY AND HACKERY UNTIL WE CAN GET THE ACTUAL EMPLOYEE NUMBER FROM REYNOLDS
+                var FICommissionModel = new FICommissionModel();
+                FICommissionModel.MonthId = associateCommissionModel.MonthId;
+                FICommissionModel.YearId = associateCommissionModel.YearId;
+                FICommissionModel.StoreId = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                FICommissionModel = SqlQueries.GetFIManagerDealsByDateAndId(FICommissionModel, id);
+
+                //GET THE PREVIOUS 3 MONTHS WORTH OF DATA - CALL THE ABOVE 3 More Times
+                for (int index = 1; index < 4; index++)
+                {
+                    var previousMonth = index * -1;
+                    var currentDate = new DateTime(associateCommissionModel.YearId, associateCommissionModel.MonthId, 1);
+
+                    var reportDate = currentDate.AddMonths(previousMonth);
+
+                    var previousScorecard = new PreviousAftermarketDealDetails();
+                    previousScorecard.MonthId = reportDate.Month;
+                    previousScorecard.YearId = reportDate.Year;
+
+                    var previousFICommissionModel = new FICommissionModel();
+                    previousFICommissionModel.MonthId = reportDate.Month;
+                    previousFICommissionModel.YearId = reportDate.Year;
+                    previousFICommissionModel.StoreId = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                    previousFICommissionModel = SqlQueries.GetFIManagerDealsByDateAndId(previousFICommissionModel, id);
+                    previousScorecard.AftermarketDealDetails = previousFICommissionModel.AftermarketDealDetails;
+
+                    associateCommissionModel.PreviousAftermarketDealDetails.Add(previousScorecard);
+                }
+
+                // FICommissionModel.FIManagerDealDetails = MapFIManagerDealsById(FICommissionModel);
+
+                //END THE BUTCHERY AND HACKERY
+
+                //var FIManagerDetails = FICommissionModel.FIManagerDealDetails.Find(x => x.FIManagerAssociateNumber.Trim() == id);
+                //if (FIManagerDetails != null)
+                //{ 
+                associateCommissionModel.AftermarketDealDetails = FICommissionModel.AftermarketDealDetails;
+                //}
+
+                associateLocation = associateCommissionModel.AssociateInformation.AssociateLocation;
+
+                var bNewPayscale = false;
+                if (associateLocation == "FBS" || associateLocation == "CDO")
+                {
+                    associateLocation = "CDO";
+                    bNewPayscale = true;
+                }
+
+                var payscaleId = "";
+
+                var managerPayscale = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
+                if (managerPayscale != null)
+                {
+                    payscaleId = managerPayscale.ManagerPayscaleID;
+
+                }
+                if (payscaleId == null || payscaleId == "")
+                {
+                    var payscaleList = SqlQueries.GetFIPayscaleSelectList();
+
+                    if (bNewPayscale)
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && x.Text.Contains("2023")).Value;
+                    }
+                    else
+                    {
+                        payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Text.Contains("2023")).Value;
+                    }
+
+                    //payscaleId = payscaleList.Find(x => x.Value.Contains(associateLocation) && !x.Value.Contains("CST")).Value;
+                }
+
+                associateCommissionModel.FIPayscales = SqlQueries.GetFIPayscaleByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
+
+                var payscaleSetup = SqlQueries.GetFIPayscaleSetupByIDAndDate(associateCommissionModel.YearId, associateCommissionModel.MonthId, payscaleId);
+
+
+                if (payscaleSetup != null && payscaleSetup.Count > 0)
+                {
+                    var setup = payscaleSetup[0];
+                    associateCommissionModel.GrossPercentagePaid = setup.GrossPercentagePaid;
+                    associateCommissionModel.MentorPercentagePaid = setup.MentorPercentagePaid;
+                    associateCommissionModel.CommissionPercentage = setup.CommissionPercentage;
+                    associateCommissionModel.ProductBonusPercent1 = setup.ProductBonusPercent1;
+                    associateCommissionModel.ProductBonusThreshold1 = setup.ProductBonusThreshold1;
+                    associateCommissionModel.ProductBonusPercent2 = setup.ProductBonusPercent2;
+                    associateCommissionModel.ProductBonusThreshold2 = setup.ProductBonusThreshold2;
+                    associateCommissionModel.ProductBonusPercent3 = setup.ProductBonusPercent3;
+                    associateCommissionModel.ProductBonusThreshold3 = setup.ProductBonusThreshold3;
+                    associateCommissionModel.ProductBonusPercent4 = setup.ProductBonusPercent4;
+                    associateCommissionModel.ProductBonusThreshold4 = setup.ProductBonusThreshold4;
+                    associateCommissionModel.ProductBonusPercent5 = setup.ProductBonusPercent5;
+                    associateCommissionModel.ProductBonusThreshold5 = setup.ProductBonusThreshold5;
+                    associateCommissionModel.ProductBonusPercent6 = setup.ProductBonusPercent6;
+                    associateCommissionModel.ProductBonusThreshold6 = setup.ProductBonusThreshold6;
+                    associateCommissionModel.ProductBonusPercent7 = setup.ProductBonusPercent7;
+                    associateCommissionModel.ProductBonusThreshold7 = setup.ProductBonusThreshold7;
+                    associateCommissionModel.ProductBonusPercent8 = setup.ProductBonusPercent8;
+                    associateCommissionModel.ProductBonusThreshold8 = setup.ProductBonusThreshold8;
+                    associateCommissionModel.StandardFinancePerUnit = setup.StandardFinancePerUnit;
+                    associateCommissionModel.StandardFinancePercent = setup.StandardFinancePercent;
+                    associateCommissionModel.StandardServicePerUnit = setup.StandardServicePerUnit;
+                    associateCommissionModel.StandardServicePercent = setup.StandardServicePercent;
+                    associateCommissionModel.StandardMaintenancePerUnit = setup.StandardMaintenancePerUnit;
+                    associateCommissionModel.StandardMaintenancePercent = setup.StandardMaintenancePercent;
+                    associateCommissionModel.StandardGAPPerUnit = setup.StandardGAPPerUnit;
+                    associateCommissionModel.StandardGAPPercent = setup.StandardGAPPercent;
+                    associateCommissionModel.StandardZurichPerUnit = setup.StandardZurichPerUnit;
+                    associateCommissionModel.StandardZurichPercent = setup.StandardZurichPercent;
+                    associateCommissionModel.StandardSelectProtectPerUnit = setup.StandardSelectProtectPerUnit;
+                    associateCommissionModel.StandardSelectProtectPercent = setup.StandardSelectProtectPercent;
+                    associateCommissionModel.StandardTireWheelPerUnit = setup.StandardTireWheelPerUnit;
+                    associateCommissionModel.StandardTireWheelPercent = setup.StandardTireWheelPercent;
+
+                    associateCommissionModel.StandardsExpectations1 = setup.StandardsExpectations1;
+                    associateCommissionModel.StandardsExpectations2 = setup.StandardsExpectations2;
+                    associateCommissionModel.StandardsExpectations3 = setup.StandardsExpectations3;
+                    associateCommissionModel.StandardsExpectations4 = setup.StandardsExpectations4;
+                    associateCommissionModel.StandardsExpectations5 = setup.StandardsExpectations5;
+                    associateCommissionModel.StandardsExpectations6 = setup.StandardsExpectations6;
+                    associateCommissionModel.StandardsExpectations7 = setup.StandardsExpectations7;
+                    associateCommissionModel.StandardsExpectations8 = setup.StandardsExpectations8;
+                    associateCommissionModel.ActivePayscale = setup.ActivePayscale;
+                    associateCommissionModel.PayscaleWithProducts = setup.PayscaleWithProducts;
+                }
+
+                associateCommissionModel.DealApprovals = SqlQueries.GetFIDealApprovalsByDate(yearId, monthId, id);
+
+                associateCommissionModel.FIPayscaleAftermarket = SqlQueries.GetFIPayscaleAftermarketByIDAndDate(FICommissionModel.YearId, FICommissionModel.MonthId, payscaleId);
+
+                var currentScorecard = SqlQueries.GetFIAssociateScoreCardHistoryByDate(associateCommissionModel.AssociateInformation.AssociateSSN, associateCommissionModel.YearId, associateCommissionModel.MonthId);
+                if (currentScorecard != null && currentScorecard.Count > 0)
+                {
+                    associateCommissionModel.CurrentScorecard = currentScorecard[0];
+                }
+                else
+                {
+                    associateCommissionModel.CurrentScorecard = new FIAssociateScoreCard();
+                }
+
+                var previousScorecards = new List<FIAssociateScoreCard>();
+
+                for (int index = 1; index < 4; index++)
+                {
+                    var previousMonth = index * -1;
+                    var currentDate = new DateTime(associateCommissionModel.YearId, associateCommissionModel.MonthId, 1);
+
+                    var reportDate = currentDate.AddMonths(previousMonth);
+
+                    var previousScorecard = SqlQueries.GetFIAssociateScoreCardHistoryByDate(associateCommissionModel.AssociateInformation.AssociateSSN, reportDate.Year, reportDate.Month);
+
+                    if (previousScorecard != null && previousScorecard.Count > 0)
+                    {
+                        previousScorecards.Add(previousScorecard[0]);
+                    }
+                    else
+                    {
+                        previousScorecards.Add(new FIAssociateScoreCard());
+                    }
+
+                }
+
+                associateCommissionModel.ScorecardHistory = previousScorecards;
+
+            }
+
+
+            associateCommissionModel.FIAdjustments = SqlQueries.GetFIManagerAdjustments(id, yearId, monthId);
+
+            var selectedFIManager = SqlQueries.GetSelectedFIManager(associateCommissionModel.MonthId, associateCommissionModel.YearId, associateCommissionModel.AssociateId, associateLocation);
+            if (selectedFIManager != null)
+            {
+                associateCommissionModel.ManagerSalary = selectedFIManager.ManagerSalary;
+            }
+
+            associateCommissionModel.FIManagerList = SqlQueries.GetSalesAssociateListByMonth(yearId, monthId);
+
+            ViewBag.IsCommissionAdmin = Session["IsCommissionAdmin"];
+
+            return View(associateCommissionModel);
+        }
+
 
         public ActionResult ScoreCardDashboard()
         {

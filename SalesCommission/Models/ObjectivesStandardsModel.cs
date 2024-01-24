@@ -40,6 +40,7 @@ namespace SalesCommission.Models
         public decimal GPURObjective { get; set; }
         public string CreatedBy { get; set; }
         public string UpdatedBy { get; set; }
+        public decimal CPOCount { get; set; }
     }
 
     public class SavedDocument

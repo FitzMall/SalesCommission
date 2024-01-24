@@ -1,1 +1,2616 @@
-﻿
+﻿@model SalesCommission.Models.FIAssociateCommissionModel
+
+@{
+    ViewBag.Title = "F and I Score Card";
+    var applicationPath = Request.ApplicationPath;
+
+    if (applicationPath == "/")
+    {
+        applicationPath = "";
+    }
+
+    System.Globalization.NumberFormatInfo nfi = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    nfi.CurrencyDecimalDigits = 0;
+    nfi.PercentDecimalDigits = 1;
+    nfi.CurrencySymbol = "";
+    //nfi.PercentSymbol = "";
+
+    System.Globalization.NumberFormatInfo rev = new System.Globalization.CultureInfo("en-US", false).NumberFormat;
+    rev.CurrencyDecimalDigits = 0;
+    rev.PercentDecimalDigits = 1;
+
+    var bShowLevel = false;
+    if (DateTime.Now > new DateTime(Model.YearId, Model.MonthId, 24))
+    {
+        bShowLevel = true;
+    }
+
+
+}
+
+@section CSS
+{
+
+    <style type="text/css">
+        
+
+        .table thead > tr > th, .table tbody > tr > th, .table tfoot > tr > th, .table thead > tr > td, .table tbody > tr > td, .table tfoot > tr > td {
+            padding: 7px;
+            vertical-align:middle;
+        }
+        textarea {
+            max-width: none;
+        }
+
+        .form-control {
+            padding: 3px 3px;
+            margin: 4px 0px;
+            height: 28px;
+        }
+
+        .scorecard-label {
+            margin-top: 12px;
+        }
+
+        .new-used{
+            display:none;
+        }
+        .ui-slider-vertical {
+            margin-left: 25px;
+        }
+
+        .ui-spinner-button {
+            background-image: url('@applicationPath/scripts/images/ui-icons_777777_256x240.png');
+        }
+
+        .ui-spinner-up {
+            background-position: 0 -16px;
+        }
+
+        .ui-spinner-down {
+            background-position: -65px -16px;
+        }
+
+        .ui-spinner a.ui-spinner-button {
+            width: 20px;
+        }
+
+        .form-control {
+            height: 22px;
+        }
+
+        .commission-display {
+            border: none;
+            background-color: transparent;
+            text-align: center;
+            box-shadow: none;
+        }
+
+        .double-top
+        {
+            border-top-width: 2px;
+        }
+
+        @@media print
+        {
+
+        body {font-size:11px;padding-top:10px;}
+
+        .form-control {font-size:12px;}
+
+        .print-hide{ display:none;}
+        a[href]:after {
+            content: "";
+        }
+
+        .table tbody tr td
+        {
+            padding:4px;
+        }
+        .btn-primary{
+            display:none;
+        }
+
+        hr {display:none;}
+        @@page {size: landscape;}
+        }
+    </style>
+    <link href="~/Scripts/jquery-ui.css" rel="stylesheet">
+    <script src="~/Scripts/external/jquery/jquery.js" type="text/javascript"></script>
+    <script src="~/Scripts/jquery-ui.js" type="text/javascript"></script>
+
+
+}
+
+
+@if (Model.AssociateInformation == null)
+{
+    <h2>The associate you requested could not be found.</h2>
+}
+else if (Model.AftermarketDealDetails == null)
+{
+    <h2>The associate you requested has no deals for this month and year.</h2>
+}
+else if ((bool)Session["IsCommissionAdmin"] == false && (bool)Session["IsAssociateAdmin"] == false && (Session["AssociateId"].ToString().ToUpper() != Model.AssociateId.ToUpper()))
+{
+    <h2>You are not authorized to view this Associate's Score Card</h2>
+}
+else
+{
+
+    var bLocked = true;
+    var bDisabled = "disabled";
+    if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
+    {
+        bLocked = false;
+        bDisabled = "";
+    }
+
+    var payscaleName = "";
+    var payLevelName = "";
+
+    var nextMonthId = 0;
+    var previousMonthId = 0;
+    var nextMonthYearId = 0;
+    var previousMonthYearId = 0;
+
+    var currentMonth = new DateTime(Model.YearId, Model.MonthId, 1);
+    var previousMonth = currentMonth.AddMonths(-1);
+    var nextMonth = currentMonth.AddMonths(1);
+
+    previousMonthId = previousMonth.Month;
+    nextMonthId = nextMonth.Month;
+
+    previousMonthYearId = previousMonth.Year;
+    nextMonthYearId = nextMonth.Year;
+
+    foreach (var scale in SalesCommission.Business.Enums.Payscales)
+    {
+        if (Model.AssociateInformation.AssociatePayscale == scale.PayscaleID)
+        {
+            payscaleName = scale.Name;
+            break;
+        }
+    }
+
+    foreach (var level in SalesCommission.Business.Enums.PayLevels)
+    {
+        if (Model.AssociateInformation.AssociateLevel == level.PayLevelID)
+        {
+            payLevelName = level.Name;
+            break;
+        }
+    }
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-8">
+            <h2>Score Card for @Model.AssociateInformation.AssociateFirstName @Model.AssociateInformation.AssociateLastName for @Model.MonthId/@Model.YearId</h2>
+        </div>
+        <div class="col-md-2 text-right" style="margin-top:15px;">
+            <input type="button" class="btn btn-primary" value="Print" onclick="window.print();return false;" />
+        </div>
+        <div class="col-md-2">
+            @if (Model.AssociateInformation.AssociateLocation != "FTN")
+            {
+                <a href="@applicationPath/Commission/NewAssociate/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@Model.MonthId/@Model.YearId" class="btn btn-primary" style="margin-top:15px;float:right">View Commission</a>
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <p><strong>Hire Date:</strong> @Model.AssociateInformation.AssociateHireDate.ToShortDateString()</p>
+            @if (Model.AssociateInformation.AssociateStatus != "NA" && Model.AssociateInformation.AssociateStatus != "" && Model.AssociateInformation.AssociateStatus != null)
+            {
+                <p><strong>Status:</strong> @Model.AssociateInformation.AssociateStatus</p>
+                if (Model.AssociateInformation.AssociateStatus != "Mentee")
+                {
+                    <p><strong>Mentor:</strong> @Model.AssociateInformation.AssociateMentor</p>
+                }
+            }
+            @if (Model.AssociateInformation.AssociateStatus == "Mentee")
+            {
+                <p><strong>Training End Date:</strong> @Model.AssociateInformation.AssociateGraduationDate.ToShortDateString()</p>
+            }
+        </div>
+        <div class="col-md-4">
+            <p><strong>Department:</strong> @Model.AssociateInformation.AssociateDepartmentDescription</p>
+        </div>
+        <div class="col-md-4 text-right">
+            @if ((bool)Session["IsCommissionAdmin"] == true || (bool)Session["IsAssociateAdmin"] == true)
+            {
+                <select id="associate-select" class="form-control">
+                    <option>Go To Associate...</option>
+                    @foreach (var associate in Model.FIManagerList)
+
+                    {
+                        <option value="@applicationPath/FICommission/ScoreCard/@Model.AssociateInformation.AssociateLocation/@associate.AssociateNumber.Trim()/@Model.MonthId/@Model.YearId">@associate.AssociateFullName</option>
+                    }
+                </select>
+            }
+        </div>
+    </div>
+        <div class="row">
+            <div class="col-md-6 text-left">
+                <a href="@applicationPath/FICommission/ScoreCard/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@previousMonthId/@previousMonthYearId" class="btn btn-primary" style="margin-top:15px;">< Previous Scorecard</a>
+            </div>
+            <div class="col-md-6 text-right">
+                @if (nextMonth <= DateTime.Now)
+                {
+                    <a href="@applicationPath/FICommission/ScoreCard/@Model.AssociateInformation.AssociateLocation/@Model.AssociateId/@nextMonthId/@nextMonthYearId" class="btn btn-primary" style="margin-top:15px;float:right">Next Scorecard ></a>
+
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <hr />
+            </div>
+        </div>
+
+    System.Globalization.DateTimeFormatInfo mfi = new System.Globalization.DateTimeFormatInfo();
+
+    var currentDate = new DateTime(Model.YearId, Model.MonthId, 1);
+
+    var currentMonthName = mfi.GetMonthName(currentDate.Month).ToString();
+    var previousMonthName = mfi.GetMonthName(currentDate.AddMonths(-1).Month).ToString();
+    var previous2MonthName = mfi.GetMonthName(currentDate.AddMonths(-2).Month).ToString();
+    var previous3MonthName = mfi.GetMonthName(currentDate.AddMonths(-3).Month).ToString();
+
+    decimal currentUnits = 0;
+    decimal previousUnits = 0;
+    decimal previous2Units = 0;
+    decimal previous3Units = 0;
+
+    decimal month3Units = 0;
+    decimal month3Goals = 0;
+
+    decimal TotalRevenueAdjustments = 0;
+    decimal TotalCommissionAdjustments = 0;
+    decimal FinanceAdjustments = 0;
+    decimal ServiceAdjustments = 0;
+    decimal GAPAdjustments = 0;
+    decimal TotalDrawAmount = 0;
+    decimal TotalBonusAmount = 0;
+
+    decimal TotalGross = 0;
+    decimal TotalProductGross = 0;
+    decimal TotalFinance = 0;
+    decimal TotalService = 0;
+    decimal TotalMaintenance = 0;
+    decimal TotalGAP = 0;
+    decimal TotalZurich = 0;
+    decimal TotalOther = 0;
+    //decimal TotalMoneyDue = 0;
+    decimal TotalLeaseWandT = 0;
+    decimal TotalTireWheel = 0;
+    decimal TotalSelectProtect = 0;
+
+    decimal NewTotalGross = 0;
+    decimal NewTotalProductGross = 0;
+    decimal NewTotalFinance = 0;
+    decimal NewTotalService = 0;
+    decimal NewTotalMaintenance = 0;
+    decimal NewTotalGAP = 0;
+    decimal NewTotalZurich = 0;
+    decimal NewTotalOther = 0;
+    //decimal TotalMoneyDue = 0;
+    decimal NewTotalLeaseWandT = 0;
+    decimal NewTotalTireWheel = 0;
+    decimal NewTotalSelectProtect = 0;
+
+    decimal UsedTotalGross = 0;
+    decimal UsedTotalProductGross = 0;
+    decimal UsedTotalFinance = 0;
+    decimal UsedTotalService = 0;
+    decimal UsedTotalMaintenance = 0;
+    decimal UsedTotalGAP = 0;
+    decimal UsedTotalZurich = 0;
+    decimal UsedTotalOther = 0;
+    //decimal TotalMoneyDue = 0;
+    decimal UsedTotalLeaseWandT = 0;
+    decimal UsedTotalTireWheel = 0;
+    decimal UsedTotalSelectProtect = 0;
+
+    decimal AverageFinance = 0;
+    decimal AverageService = 0;
+    decimal AverageMaintenance = 0;
+    decimal AverageGAP = 0;
+    decimal AverageZurich = 0;
+    decimal AverageLeaseWandT = 0;
+    decimal AverageTireWheel = 0;
+    decimal AverageSelectProtect = 0;
+    decimal AverageOther = 0;
+
+    decimal NewAverageFinance = 0;
+    decimal NewAverageService = 0;
+    decimal NewAverageMaintenance = 0;
+    decimal NewAverageGAP = 0;
+    decimal NewAverageZurich = 0;
+    decimal NewAverageLeaseWandT = 0;
+    decimal NewAverageTireWheel = 0;
+    decimal NewAverageSelectProtect = 0;
+    decimal NewAverageOther = 0;
+
+    decimal UsedAverageFinance = 0;
+    decimal UsedAverageService = 0;
+    decimal UsedAverageMaintenance = 0;
+    decimal UsedAverageGAP = 0;
+    decimal UsedAverageZurich = 0;
+    decimal UsedAverageLeaseWandT = 0;
+    decimal UsedAverageTireWheel = 0;
+    decimal UsedAverageSelectProtect = 0;
+    decimal UsedAverageOther = 0;
+
+    decimal TotalDeals = 0;
+    decimal TotalEligibleDeals = 0;
+
+    int FinanceCount = 0;
+    int ServiceCount = 0;
+    int MaintenanceCount = 0;
+    int GAPCount = 0;
+    int ZurichCount = 0;
+    int LeaseCount = 0;
+    int LeaseWandTCount = 0;
+    int TireWheelCount = 0;
+    int SelectProtectCount = 0;
+    int OtherCount = 0;
+
+    decimal NewDealCount = 0;
+    int NewFinanceCount = 0;
+    int NewServiceCount = 0;
+    int NewMaintenanceCount = 0;
+    int NewGAPCount = 0;
+    int NewZurichCount = 0;
+    int NewLeaseCount = 0;
+    int NewLeaseWandTCount = 0;
+    int NewTireWheelCount = 0;
+    int NewSelectProtectCount = 0;
+    int NewOtherCount = 0;
+
+    decimal UsedDealCount = 0;
+    int UsedFinanceCount = 0;
+    int UsedServiceCount = 0;
+    int UsedMaintenanceCount = 0;
+    int UsedGAPCount = 0;
+    int UsedZurichCount = 0;
+    int UsedLeaseWandTCount = 0;
+    int UsedTireWheelCount = 0;
+    int UsedSelectProtectCount = 0;
+    int UsedOtherCount = 0;
+
+    double NewFinancePercent = 0;
+    double NewServicePercent = 0;
+    //double JustServicePercent = 0;
+    double NewMaintenancePercent = 0;
+    double NewGAPPercent = 0;
+    double NewZurichPercent = 0;
+    double NewLeaseWandTPercent = 0;
+    double NewTireWheelPercent = 0;
+    double NewSelectProtectPercent = 0;
+    double NewOtherPercent = 0;
+
+    decimal NewTotalDollarPerDeal = 0;
+    decimal NewProductDollarPerDeal = 0;
+
+    double UsedFinancePercent = 0;
+    double UsedServicePercent = 0;
+    //double JustServicePercent = 0;
+    double UsedMaintenancePercent = 0;
+    double UsedGAPPercent = 0;
+    double UsedZurichPercent = 0;
+    double UsedLeaseWandTPercent = 0;
+    double UsedTireWheelPercent = 0;
+    double UsedSelectProtectPercent = 0;
+    double UsedOtherPercent = 0;
+
+    decimal UsedTotalDollarPerDeal = 0;
+    decimal UsedProductDollarPerDeal = 0;
+
+    double FinancePercent = 0;
+    double ServicePercent = 0;
+    //double JustServicePercent = 0;
+    double MaintenancePercent = 0;
+    double GAPPercent = 0;
+    double ZurichPercent = 0;
+    double LeaseWandTPercent = 0;
+    double TireWheelPercent = 0;
+    double SelectProtectPercent = 0;
+    double OtherPercent = 0;
+
+    decimal TotalDollarPerDeal = 0;
+    decimal ProductDollarPerDeal = 0;
+
+    //decimal TotalUnvalidated = 0;
+    //decimal TotalBPPValidated = 0;
+    decimal ShowroomUnvalidated = 0;
+
+    decimal ProductSoldRatio = 0;
+    decimal NewProductSoldRatio = 0;
+    decimal UsedProductSoldRatio = 0;
+
+    TotalRevenueAdjustments = Model.FIAdjustments.Where(y => y.AdjustmentLine == "REVENUE").Sum(x => x.AdjustmentAmount);
+    TotalCommissionAdjustments = Model.FIAdjustments.Where(y => y.AdjustmentLine == "COMMISSION").Sum(x => x.AdjustmentAmount);
+
+    FinanceAdjustments = Model.FIAdjustments.Where(y => y.AdjustmentLine == "REVENUE" && y.AdjustmentType == "FINANCE").Sum(x => x.AdjustmentAmount);
+    ServiceAdjustments = Model.FIAdjustments.Where(y => y.AdjustmentLine == "REVENUE" && y.AdjustmentType == "SERVICE").Sum(x => x.AdjustmentAmount);
+    GAPAdjustments = Model.FIAdjustments.Where(y => y.AdjustmentLine == "REVENUE" && y.AdjustmentType == "GAP").Sum(x => x.AdjustmentAmount);
+
+
+    if (Model.AftermarketDealDetails != null)
+    {
+        foreach (var deal in Model.AftermarketDealDetails)
+        {
+            if (deal.VehicleCondition == "NEW")
+            {
+                NewDealCount += 1;
+            }
+            else
+            {
+                UsedDealCount += 1;
+            }
+
+            if (deal.ShowroomValidatedBy == null)
+            {
+                ShowroomUnvalidated += 1;
+            }
+            if (deal.ShowroomValidatedBy != null)
+            {
+                //TotalGross += deal.DealGrossAmount;
+
+                var bHandy = false;
+                if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                {
+                    bHandy = true;
+                }
+
+                if (deal.FinanceIncomeAmount > 0)
+                {
+                    TotalFinance += deal.FinanceIncomeAmount;
+                    FinanceCount += 1;
+                    if(deal.VehicleCondition == "NEW")
+                    {
+                        NewFinanceCount += 1;
+                        NewTotalFinance += deal.FinanceIncomeAmount;
+                    }
+                    else
+                    {
+                        UsedFinanceCount += 1;
+                        UsedTotalFinance += deal.FinanceIncomeAmount;
+                    }
+                }
+
+                if (deal.VSCAmount > 0)
+                {
+                    TotalService += deal.VSCAmount;
+                    ServiceCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewServiceCount += 1;
+                        NewTotalService += deal.VSCAmount;
+                    }
+                    else
+                    {
+                        UsedServiceCount += 1;
+                        UsedTotalService += deal.VSCAmount;
+                    }
+                }
+
+                if (deal.MaintenanceAmount > 0)
+                {
+                    TotalMaintenance += deal.MaintenanceAmount;
+                    MaintenanceCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewMaintenanceCount += 1;
+                        NewTotalMaintenance += deal.MaintenanceAmount;
+                    }
+                    else
+                    {
+                        UsedMaintenanceCount += 1;
+                        UsedTotalMaintenance += deal.MaintenanceAmount;
+                    }
+                }
+
+                if (deal.GAPAmount > 0)
+                {
+                    TotalGAP += deal.GAPAmount;
+                    GAPCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewGAPCount += 1;
+                        NewTotalGAP += deal.GAPAmount;
+                    }
+                    else
+                    {
+                        UsedGAPCount += 1;
+                        UsedTotalGAP += deal.GAPAmount;
+                    }
+                }
+
+                if (deal.ZurichAmount > 0)
+                {
+                    TotalZurich += deal.ZurichAmount;
+                    ZurichCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewZurichCount += 1;
+                        NewTotalZurich += deal.ZurichAmount;
+                    }
+                    else
+                    {
+                        UsedZurichCount += 1;
+                        UsedTotalZurich += deal.ZurichAmount;
+                    }
+                }
+
+                if (deal.TireWheelAmount > 0)
+                {
+                    TotalTireWheel += deal.TireWheelAmount;
+                    TireWheelCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewTireWheelCount += 1;
+                        NewTotalTireWheel += deal.TireWheelAmount;
+                    }
+                    else
+                    {
+                        UsedTireWheelCount += 1;
+                        UsedTotalTireWheel += deal.TireWheelAmount;
+                    }
+                }
+
+                if (deal.VehicleCategory == "L")
+                {
+                    LeaseCount += 1;
+                    if (deal.VehicleCondition == "NEW")
+                    {
+                        NewLeaseCount += 1;
+                    }
+
+                }
+
+                decimal otherItemAmount = 0;
+
+                if (deal.AftermarketItems.Count > 0)
+                {
+
+                    var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+                    var validation = new SalesCommission.Models.FIDealApproval();
+
+                    if (dealValidation != null && dealValidation.Count > 0)
+                    {
+                        validation = dealValidation[0];
+                    }
+
+
+
+                    foreach (var item in deal.AftermarketItems)
+                    {
+                        if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 4 && item.AftermarketId != 5 && item.AftermarketId != 20)
+                        {
+                            var amItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                            if (Model.FIPayscaleAftermarket != null && Model.FIPayscaleAftermarket.Count > 0)
+                            {
+                                amItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
+                            }
+
+                            decimal profit = 0;
+                            switch (item.AftermarketId)
+                            {
+                                case 2:
+                                    if (amItem.CoreItem || validation.NitrogenPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 4:
+                                    if (amItem.CoreItem || validation.SelectProtectionPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 5:
+                                    if (amItem.CoreItem || validation.TireWheelPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 6:
+                                    if (amItem.CoreItem || validation.KeyReplacementPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 7:
+                                    if (amItem.CoreItem || validation.WindshieldProtectionPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 8:
+                                    if (amItem.CoreItem || validation.WearAndTearPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 9:
+                                    if (amItem.CoreItem || validation.SecureGuardPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 10:
+                                    if (amItem.CoreItem || validation.FitzTotalPackagePaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 11:
+                                    if (amItem.CoreItem || validation.RustInhibitUnderCoatPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 12:
+                                    if (amItem.CoreItem || validation.UndercoatingPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 13:
+                                    if (amItem.CoreItem || validation.RustInhibitorPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 14:
+                                    if (amItem.CoreItem || validation.DataDotsPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 15:
+                                    if (amItem.CoreItem || validation.PaintDentPaid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 16:
+                                    if (amItem.CoreItem || validation.Miscellaneous1Paid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 17:
+                                    if (amItem.CoreItem || validation.Miscellaneous2Paid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 18:
+                                    if (amItem.CoreItem || validation.Miscellaneous3Paid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+                                case 19:
+                                    if (amItem.CoreItem || validation.Miscellaneous4Paid)
+                                    {
+                                        OtherCount += 1;
+                                        profit = item.AftermarketPrice - item.AftermarketCost;
+                                        if (deal.VehicleCondition == "NEW")
+                                        {
+                                            NewOtherCount += 1;
+                                        }
+                                        else
+                                        {
+                                            UsedOtherCount += 1;
+                                        }
+                                    }
+                                    break;
+
+                            }
+
+
+
+                            otherItemAmount += profit;
+                        }
+
+                        if (item.AftermarketId == 4) //SELECT PROTECT
+                        {
+                            SelectProtectCount += 1;
+                            var profit = item.AftermarketPrice - item.AftermarketCost;
+                            TotalSelectProtect += profit;
+
+                            if(deal.VehicleCondition == "NEW")
+                            {
+                                NewSelectProtectCount += 1;
+                                NewTotalSelectProtect += profit;
+                            }
+                            else
+                            {
+                                UsedSelectProtectCount += 1;
+                                UsedTotalSelectProtect += profit;
+                            }
+
+                        }
+
+                        //if (item.AftermarketId == 8) // LEASE WEAR AND TEAR
+                        //{
+                        //    LeaseWandTCount += 1;
+                        //    var profit = item.AftermarketPrice - item.AftermarketCost;
+                        //    TotalLeaseWandT += profit;
+                        //}
+                    }
+
+                }
+
+                TotalOther += otherItemAmount;
+                if (deal.VehicleCondition == "NEW")
+                {
+                    NewTotalOther += otherItemAmount;
+                }
+                else
+                {
+                    UsedTotalOther += otherItemAmount;
+                }
+            }
+
+            TotalDeals = Model.AftermarketDealDetails.Count;
+        }
+
+
+        //if (Model.DealApprovals != null)
+        //{
+        //    TotalUnvalidated = Model.AftermarketDealDetails.Count - Model.DealApprovals.Count();
+
+        //    var bppValidatedDeals = Model.DealApprovals.FindAll(x => x.BPPPaid == true);
+        //    TotalBPPValidated = bppValidatedDeals.Count;
+        //}
+
+        TotalFinance += FinanceAdjustments;
+        TotalService += ServiceAdjustments;
+        TotalGAP += GAPAdjustments;
+
+        if (TotalDeals > 0)
+        {
+            FinancePercent = (double)FinanceCount / (double)TotalDeals;
+            ServicePercent = ((double)ServiceCount) / (double)TotalDeals;
+            //ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
+            MaintenancePercent = (double)MaintenanceCount / (double)TotalDeals;
+            TireWheelPercent = (double)TireWheelCount / (double)TotalDeals;
+            GAPPercent = (double)GAPCount / (double)(FinanceCount - LeaseCount);
+            ZurichPercent = (double)ZurichCount / (double)TotalDeals;
+            LeaseWandTPercent = (double)LeaseWandTCount / (double)LeaseCount;
+            SelectProtectPercent = (double)SelectProtectCount / (double)TotalDeals;
+            OtherPercent = (double)OtherCount / (double)TotalDeals;
+
+            TotalDollarPerDeal = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / TotalDeals;
+            ProductDollarPerDeal = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect) / TotalDeals;
+
+        }
+
+        if (NewDealCount > 0)
+        {
+            NewFinancePercent = (double)NewFinanceCount / (double)NewDealCount;
+            NewServicePercent = ((double)NewServiceCount) / (double)NewDealCount;
+            //ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
+            NewMaintenancePercent = (double)NewMaintenanceCount / (double)NewDealCount;
+            NewTireWheelPercent = (double)NewTireWheelCount / (double)NewDealCount;
+            NewGAPPercent = (double)NewGAPCount / (double)(NewFinanceCount - NewLeaseCount);
+            NewZurichPercent = (double)NewZurichCount / (double)NewDealCount;
+            NewLeaseWandTPercent = (double)NewLeaseWandTCount / (double)LeaseCount;
+            NewSelectProtectPercent = (double)NewSelectProtectCount / (double)NewDealCount;
+            NewOtherPercent = (double)NewOtherCount / (double)NewDealCount;
+
+            NewTotalDollarPerDeal = (NewTotalFinance + NewTotalService + NewTotalMaintenance + NewTotalGAP + NewTotalZurich + NewTotalOther + NewTotalLeaseWandT + NewTotalTireWheel + NewTotalSelectProtect) / NewDealCount;
+            NewProductDollarPerDeal = (NewTotalService + NewTotalMaintenance + NewTotalGAP + NewTotalZurich + NewTotalOther + NewTotalLeaseWandT + NewTotalTireWheel + NewTotalSelectProtect) / NewDealCount;
+        }
+
+        if (UsedDealCount > 0)
+        {
+            UsedFinancePercent = (double)UsedFinanceCount / (double)UsedDealCount;
+            UsedServicePercent = ((double)UsedServiceCount) / (double)UsedDealCount;
+            //ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
+            UsedMaintenancePercent = (double)UsedMaintenanceCount / (double)UsedDealCount;
+            UsedTireWheelPercent = (double)UsedTireWheelCount / (double)UsedDealCount;
+            UsedGAPPercent = (double)UsedGAPCount / (double)(UsedFinanceCount);
+            UsedZurichPercent = (double)UsedZurichCount / (double)UsedDealCount;
+            UsedLeaseWandTPercent = (double)UsedLeaseWandTCount / (double)LeaseCount;
+            UsedSelectProtectPercent = (double)UsedSelectProtectCount / (double)UsedDealCount;
+            UsedOtherPercent = (double)UsedOtherCount / (double)UsedDealCount;
+
+            UsedTotalDollarPerDeal = (UsedTotalFinance + UsedTotalService + UsedTotalMaintenance + UsedTotalGAP + UsedTotalZurich + UsedTotalOther + UsedTotalLeaseWandT + UsedTotalTireWheel + UsedTotalSelectProtect) / UsedDealCount;
+            UsedProductDollarPerDeal = (UsedTotalService + UsedTotalMaintenance + UsedTotalGAP + UsedTotalZurich + UsedTotalOther + UsedTotalLeaseWandT + UsedTotalTireWheel + UsedTotalSelectProtect) / UsedDealCount;
+        }
+
+
+        TotalGross = (TotalFinance + TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect);
+        TotalProductGross = (TotalService + TotalMaintenance + TotalGAP + TotalZurich + TotalOther + TotalLeaseWandT + TotalTireWheel + TotalSelectProtect);
+
+        NewTotalGross = (NewTotalFinance + NewTotalService + NewTotalMaintenance + NewTotalGAP + NewTotalZurich + NewTotalOther + NewTotalLeaseWandT + NewTotalTireWheel + NewTotalSelectProtect);
+        NewTotalProductGross = (NewTotalService + NewTotalMaintenance + NewTotalGAP + NewTotalZurich + NewTotalOther + NewTotalLeaseWandT + NewTotalTireWheel + NewTotalSelectProtect);
+
+        UsedTotalGross = (UsedTotalFinance + UsedTotalService + UsedTotalMaintenance + UsedTotalGAP + UsedTotalZurich + UsedTotalOther + UsedTotalLeaseWandT + UsedTotalTireWheel + UsedTotalSelectProtect);
+        UsedTotalProductGross = (UsedTotalService + UsedTotalMaintenance + UsedTotalGAP + UsedTotalZurich + UsedTotalOther + UsedTotalLeaseWandT + UsedTotalTireWheel + UsedTotalSelectProtect);
+
+
+
+        if (FinanceCount > 0)
+        {
+            AverageFinance = TotalFinance / FinanceCount;
+        }
+
+        if (ServiceCount > 0)
+        {
+            AverageService = TotalService / ServiceCount;
+        }
+
+        if (MaintenanceCount > 0)
+        {
+            AverageMaintenance = TotalMaintenance / MaintenanceCount;
+        }
+
+        if (GAPCount > 0)
+        {
+            AverageGAP = TotalGAP / GAPCount;
+        }
+
+        if (ZurichCount > 0)
+        {
+            AverageZurich = TotalZurich / ZurichCount;
+        }
+
+        if (TireWheelCount > 0)
+        {
+            AverageTireWheel = TotalTireWheel / TireWheelCount;
+        }
+
+        if (LeaseWandTCount > 0)
+        {
+            AverageLeaseWandT = TotalLeaseWandT / LeaseWandTCount;
+        }
+        if (SelectProtectCount > 0)
+        {
+            AverageSelectProtect = TotalSelectProtect / SelectProtectCount;
+        }
+        if (OtherCount > 0)
+        {
+            AverageOther = TotalOther / OtherCount;
+        }
+
+
+        //Do the new and used
+        if (NewFinanceCount > 0)
+        {
+            NewAverageFinance = NewTotalFinance / NewFinanceCount;
+        }
+
+        if (NewServiceCount > 0)
+        {
+            NewAverageService = NewTotalService / NewServiceCount;
+        }
+
+        if (NewMaintenanceCount > 0)
+        {
+            NewAverageMaintenance = NewTotalMaintenance / NewMaintenanceCount;
+        }
+
+        if (NewGAPCount > 0)
+        {
+            NewAverageGAP = NewTotalGAP / NewGAPCount;
+        }
+
+        if (NewZurichCount > 0)
+        {
+            NewAverageZurich = NewTotalZurich / NewZurichCount;
+        }
+
+        if (NewTireWheelCount > 0)
+        {
+            NewAverageTireWheel = NewTotalTireWheel / NewTireWheelCount;
+        }
+
+        if (NewLeaseWandTCount > 0)
+        {
+            NewAverageLeaseWandT = NewTotalLeaseWandT / NewLeaseWandTCount;
+        }
+        if (NewSelectProtectCount > 0)
+        {
+            NewAverageSelectProtect = NewTotalSelectProtect / NewSelectProtectCount;
+        }
+
+        if (NewOtherCount > 0)
+        {
+            NewAverageOther = NewTotalOther / NewOtherCount;
+        }
+
+        if (UsedFinanceCount > 0)
+        {
+            UsedAverageFinance = UsedTotalFinance / UsedFinanceCount;
+        }
+
+        if (UsedServiceCount > 0)
+        {
+            UsedAverageService = UsedTotalService / UsedServiceCount;
+        }
+
+        if (UsedMaintenanceCount > 0)
+        {
+            UsedAverageMaintenance = UsedTotalMaintenance / UsedMaintenanceCount;
+        }
+
+        if (UsedGAPCount > 0)
+        {
+            UsedAverageGAP = UsedTotalGAP / UsedGAPCount;
+        }
+
+        if (UsedZurichCount > 0)
+        {
+            UsedAverageZurich = UsedTotalZurich / UsedZurichCount;
+        }
+
+        if (UsedTireWheelCount > 0)
+        {
+            UsedAverageTireWheel = UsedTotalTireWheel / UsedTireWheelCount;
+        }
+
+        if (UsedLeaseWandTCount > 0)
+        {
+            UsedAverageLeaseWandT = UsedTotalLeaseWandT / UsedLeaseWandTCount;
+        }
+
+        if (UsedSelectProtectCount > 0)
+        {
+            UsedAverageSelectProtect = UsedTotalSelectProtect / UsedSelectProtectCount;
+        }
+        if (UsedOtherCount > 0)
+        {
+            UsedAverageOther = UsedTotalOther / UsedOtherCount;
+        }
+    }
+
+    TotalBonusAmount = Model.AssociateInformation.AssociateBonus.Sum(x => x.BonusAmount);
+    TotalDrawAmount = (Model.AssociateInformation.AssociateDraws.Sum(x => x.DrawAmount) * -1);
+
+    decimal CommissionPercentage = (Model.CommissionPercentage / 100);
+    decimal Bonus1Percentage = (Model.ProductBonusPercent1 / 100);
+    decimal Bonus2Percentage = (Model.ProductBonusPercent2 / 100);
+    decimal Bonus3Percentage = (Model.ProductBonusPercent3 / 100);
+    decimal Bonus4Percentage = (Model.ProductBonusPercent4 / 100);
+    decimal Bonus5Percentage = (Model.ProductBonusPercent5 / 100);
+    decimal Bonus6Percentage = (Model.ProductBonusPercent6 / 100);
+    decimal Bonus7Percentage = (Model.ProductBonusPercent7 / 100);
+    decimal Bonus8Percentage = (Model.ProductBonusPercent8 / 100);
+
+    decimal Bonus1Threshold = Model.ProductBonusThreshold1;
+    decimal Bonus2Threshold = Model.ProductBonusThreshold2;
+    decimal Bonus3Threshold = Model.ProductBonusThreshold3;
+    decimal Bonus4Threshold = Model.ProductBonusThreshold4;
+    decimal Bonus5Threshold = Model.ProductBonusThreshold5;
+    decimal Bonus6Threshold = Model.ProductBonusThreshold6;
+    decimal Bonus7Threshold = Model.ProductBonusThreshold7;
+    decimal Bonus8Threshold = Model.ProductBonusThreshold8;
+
+    decimal TotalCommissionPercentage = 0;
+
+    TotalCommissionPercentage += CommissionPercentage;
+
+    var BaseCommission = (TotalGross * CommissionPercentage);
+
+    decimal ProductBonus1 = 0;
+    if (TotalProductGross > Bonus1Threshold)
+    {
+        ProductBonus1 = (TotalProductGross * Bonus1Percentage);
+        TotalCommissionPercentage += Bonus1Percentage;
+    }
+
+    decimal ProductBonus2 = 0;
+    if (TotalProductGross > Bonus2Threshold)
+    {
+        ProductBonus2 = (TotalProductGross * Bonus2Percentage);
+        TotalCommissionPercentage += Bonus2Percentage;
+    }
+
+    decimal ProductBonus3 = 0;
+    if (TotalProductGross > Bonus3Threshold)
+    {
+        ProductBonus3 = (TotalProductGross * Bonus3Percentage);
+        TotalCommissionPercentage += Bonus3Percentage;
+    }
+
+    decimal ProductBonus4 = 0;
+    if (TotalProductGross > Bonus4Threshold)
+    {
+        ProductBonus4 = (TotalProductGross * Bonus4Percentage);
+        TotalCommissionPercentage += Bonus4Percentage;
+    }
+
+    decimal ProductBonus5 = 0;
+    if (TotalProductGross > Bonus5Threshold)
+    {
+        ProductBonus5 = (TotalProductGross * Bonus5Percentage);
+        TotalCommissionPercentage += Bonus5Percentage;
+    }
+
+    decimal ProductBonus6 = 0;
+    if (TotalProductGross > Bonus6Threshold)
+    {
+        ProductBonus6 = (TotalProductGross * Bonus6Percentage);
+        TotalCommissionPercentage += Bonus6Percentage;
+    }
+
+    decimal ProductBonus7 = 0;
+    if (TotalProductGross > Bonus7Threshold)
+    {
+        ProductBonus7 = (TotalProductGross * Bonus7Percentage);
+        TotalCommissionPercentage += Bonus7Percentage;
+    }
+    decimal ProductBonus8 = 0;
+    if (TotalProductGross > Bonus8Threshold)
+    {
+        ProductBonus8 = (TotalProductGross * Bonus8Percentage);
+        TotalCommissionPercentage += Bonus8Percentage;
+    }
+
+    decimal TotalProductBonus = ProductBonus1 + ProductBonus2 + ProductBonus3 + ProductBonus4 + ProductBonus5 + ProductBonus6 + ProductBonus7 + ProductBonus8;
+
+    var TotalCommission = BaseCommission + TotalProductBonus;
+
+    var TotalCommissionDue = TotalCommission + TotalDrawAmount + TotalBonusAmount + TotalCommissionAdjustments;
+
+
+    decimal StandardFinancePerUnit = Model.StandardFinancePerUnit;
+    decimal StandardServicePerUnit = Model.StandardServicePerUnit;
+    decimal StandardMaintenancePerUnit = Model.StandardMaintenancePerUnit;
+    decimal StandardGAPPerUnit = Model.StandardGAPPerUnit;
+    decimal StandardZurichPerUnit = Model.StandardZurichPerUnit;
+    decimal StandardSelectProtectPerUnit = Model.StandardSelectProtectPerUnit;
+    decimal StandardTireWheelPerUnit = Model.StandardTireWheelPerUnit;
+
+    decimal StandardFinancePercentage = (Model.StandardFinancePercent / 100);
+    decimal StandardServicePercentage = (Model.StandardServicePercent / 100);
+    decimal StandardMaintenancePercentage = (Model.StandardMaintenancePercent / 100);
+    decimal StandardGAPPercentage = (Model.StandardGAPPercent / 100);
+    decimal StandardZurichPercentage = (Model.StandardZurichPercent / 100);
+    decimal StandardSelectProtectPercentage = (Model.StandardSelectProtectPercent / 100);
+    decimal StandardTireWheelPercentage = (Model.StandardTireWheelPercent / 100);
+
+    decimal StandardFinanceRevenue = 0;
+    decimal StandardServiceRevenue = 0;
+    decimal StandardMaintenanceRevenue = 0;
+    decimal StandardGAPRevenue = 0;
+    decimal StandardZurichRevenue = 0;
+    decimal StandardSelectProtectRevenue = 0;
+    decimal StandardTireWheelRevenue = 0;
+    decimal StandardCombinedRevenue = 0;
+
+    decimal MissedFinanceRevenue = 0;
+    decimal MissedServiceRevenue = 0;
+    decimal MissedMaintenanceRevenue = 0;
+    decimal MissedGAPRevenue = 0;
+    decimal MissedZurichRevenue = 0;
+    decimal MissedSelectProtectRevenue = 0;
+    decimal MissedTireWheelRevenue = 0;
+    decimal MissedTotalRevenue = 0;
+    decimal MissedCombinedRevenue = 0;
+
+    decimal MissedFinanceOpportunity = 0;
+    decimal MissedServiceOpportunity = 0;
+    decimal MissedMaintenanceOpportunity = 0;
+    decimal MissedGAPOpportunity = 0;
+    decimal MissedZurichOpportunity = 0;
+    decimal MissedSelectProtectOpportunity = 0;
+    decimal MissedTireWheelOpportunity = 0;
+    decimal MissedTotalOpportunity = 0;
+    decimal MissedCombinedOpportunity = 0;
+
+    StandardFinanceRevenue = Math.Round(StandardFinancePerUnit * TotalDeals * StandardFinancePercentage);
+    StandardServiceRevenue = Math.Round(StandardServicePerUnit * TotalDeals * StandardServicePercentage);
+    StandardMaintenanceRevenue = Math.Round(StandardMaintenancePerUnit * TotalDeals * StandardMaintenancePercentage);
+    StandardGAPRevenue = Math.Round(StandardGAPPerUnit * TotalDeals * StandardGAPPercentage);
+    StandardZurichRevenue = Math.Round(StandardZurichPerUnit * TotalDeals * StandardZurichPercentage);
+    StandardSelectProtectRevenue = Math.Round(StandardSelectProtectPerUnit * TotalDeals * StandardSelectProtectPercentage);
+    StandardTireWheelRevenue = Math.Round(StandardTireWheelPerUnit * TotalDeals * StandardTireWheelPercentage);
+
+    StandardCombinedRevenue = StandardSelectProtectRevenue + StandardTireWheelRevenue;
+
+    MissedFinanceRevenue = ((StandardFinanceRevenue - TotalFinance) > 0 ? (StandardFinanceRevenue - TotalFinance) : 0);
+    MissedServiceRevenue = ((StandardServiceRevenue - TotalService) > 0 ? (StandardServiceRevenue - TotalService) : 0);
+    MissedMaintenanceRevenue = ((StandardMaintenanceRevenue - TotalMaintenance) > 0 ? (StandardMaintenanceRevenue - TotalMaintenance) : 0);
+    MissedGAPRevenue = ((StandardGAPRevenue - TotalGAP) > 0 ? (StandardGAPRevenue - TotalGAP) : 0);
+    MissedZurichRevenue = ((StandardZurichRevenue - TotalZurich) > 0 ? (StandardZurichRevenue - TotalZurich) : 0);
+    MissedSelectProtectRevenue = ((StandardSelectProtectRevenue - TotalSelectProtect) > 0 ? (StandardSelectProtectRevenue - TotalSelectProtect) : 0);
+    MissedTireWheelRevenue = ((StandardTireWheelRevenue - TotalTireWheel) > 0 ? (StandardTireWheelRevenue - TotalTireWheel) : 0);
+
+    MissedCombinedRevenue = MissedSelectProtectRevenue + MissedTireWheelRevenue;
+
+    MissedFinanceOpportunity = Math.Round(MissedFinanceRevenue * CommissionPercentage);
+    MissedServiceOpportunity = Math.Round(MissedServiceRevenue * TotalCommissionPercentage);
+    MissedMaintenanceOpportunity = Math.Round(MissedMaintenanceRevenue * TotalCommissionPercentage);
+    MissedGAPOpportunity = Math.Round(MissedGAPRevenue * TotalCommissionPercentage);
+    MissedZurichOpportunity = Math.Round(MissedZurichRevenue * TotalCommissionPercentage);
+    MissedSelectProtectOpportunity = Math.Round(MissedSelectProtectRevenue * TotalCommissionPercentage);
+    MissedTireWheelOpportunity = Math.Round(MissedTireWheelRevenue * TotalCommissionPercentage);
+
+    MissedCombinedOpportunity = Math.Round((MissedSelectProtectOpportunity + MissedTireWheelOpportunity) * TotalCommissionPercentage);
+
+    MissedTotalOpportunity = MissedFinanceOpportunity + MissedServiceOpportunity + MissedMaintenanceOpportunity + MissedGAPOpportunity + MissedZurichOpportunity + MissedSelectProtectOpportunity + MissedTireWheelOpportunity;
+    MissedTotalRevenue = MissedFinanceRevenue + MissedServiceRevenue + MissedMaintenanceRevenue + MissedGAPRevenue + MissedZurichRevenue + MissedSelectProtectRevenue + MissedTireWheelRevenue;
+
+    decimal AverageTotalDollars = 0;
+    decimal AverageProductDollars = 0;
+    decimal ProductCount = ServiceCount + MaintenanceCount + GAPCount + ZurichCount + SelectProtectCount + TireWheelCount + OtherCount;
+    if (TotalDeals > 0)
+    {
+        AverageTotalDollars = Math.Round(TotalGross / TotalDeals);
+        AverageProductDollars = Math.Round(TotalProductGross / TotalDeals);
+        ProductSoldRatio = ((ServiceCount + MaintenanceCount + GAPCount + ZurichCount + SelectProtectCount + TireWheelCount + OtherCount) / TotalDeals);
+    }
+
+    if(NewDealCount > 0)
+    {
+        NewProductSoldRatio = ((NewServiceCount + NewMaintenanceCount + NewGAPCount + NewZurichCount + NewSelectProtectCount + NewTireWheelCount + NewOtherCount) / NewDealCount);
+    }
+
+    if (UsedDealCount > 0)
+    {
+        UsedProductSoldRatio = ((UsedServiceCount + UsedMaintenanceCount + UsedGAPCount + UsedZurichCount + UsedSelectProtectCount + UsedTireWheelCount + UsedOtherCount) / UsedDealCount);
+    }
+
+    var storeStandards = new SalesCommission.Models.ObjectivesAndStandards();
+    var associateGoal = new SalesCommission.Models.Goal();
+
+    using (Html.BeginForm())
+    {
+        <input type="hidden" name="hdn-MonthId" id="hdn-MonthId" value="@Model.MonthId">
+        <input type="hidden" name="hdn-YearId" id="hdn-YearId" value="@Model.YearId">
+        <input type="hidden" name="associate-SSN" id="associate-SSN" value="@Model.AssociateInformation.AssociateSSN">
+        <input type="hidden" name="associate-id" id="associate-id" value="@Model.AssociateId">
+        <input type="hidden" name="associate-location" id="associate-location" value="@Model.AssociateInformation.AssociateLocation">
+
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr style="background-color:#d9edf7">
+                            <th><input id="btnToggleNewUsed" type="button" value="Show Details" class="btn btn-primary" style="padding: 0px 5px;float:right" /></th>
+                            <th class="text-center new-used">New</th>
+                            <th class="text-center new-used">Used</th>
+                            <th class="text-center">Actual</th>
+                            <th class="text-center" colspan="2">Standard</th>
+                            <th>Comments/Action Plan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Deliveries (Current Rolling 3 month) for @currentMonthName, @previousMonthName, @previous2MonthName</strong></td>
+                            <td class="text-center new-used"></td>
+                            <td class="text-center new-used"></td>
+                            <td class="text-center">@month3Units</td>
+                            <td class="text-center">
+                                <input type="text" class="form-control" id="standards-rollingunits" name="standards-rollingunits" style="width:100px;" value="@Model.CurrentScorecard.Rolling3Month_Standard" @bDisabled/>
+                            </td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-rollingunits" name="comments-rollingunits" rows="1" @bDisabled>@Model.CurrentScorecard.Rolling3Month_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>@currentMonthName Performance</strong></td>
+                            <td class="text-center new-used"><strong>New</strong></td>
+                            <td class="text-center new-used"><strong>Used</strong></td>
+                            <td class="text-center"><strong>Actual</strong></td>
+                            <td class="text-center" colspan="2"><strong>Standard</strong></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a data-toggle="collapse" id="deliveries" style="cursor: pointer;" data-target="#collapse-deliveries">Deliveries <i class="fa fa-caret-down" aria-hidden="true"></i></a>
+                                <div id="collapse-deliveries" class="collapse out">
+                                    <h5>New Vehicles</h5>
+                                    <table class="table table-bordered table-striped" style="font-size:11px">
+                                        <thead>
+                                            <tr style="background-color:#d9edf7">
+                                                <th class="text-center"></th>
+                                                <th class="text-center">Deal #</th>
+                                                <th class="text-center">Type</th>
+                                                <th class="text-center">Year</th>
+                                                <th class="text-center">Make</th>
+                                                <th class="text-center">Model</th>
+                                                <th class="text-center">Term</th>
+                                                <th class="text-center">Markup</th>
+                                                <th class="text-center">Finance</th>
+                                                <th class="text-center">SVC</th>
+                                                <th class="text-center">Maint</th>
+                                                <th class="text-center">GAP</th>
+                                                <th class="text-center">Zurich</th>
+                                                <th class="text-center">Select<br/>Protect</th>
+                                                <th class="text-center">Tire and<br/>Wheel</th>
+                                            </tr>
+                                        </thead>
+                                        @if (Model.AftermarketDealDetails != null && Model.AftermarketDealDetails.Count > 0)
+                                        {
+                                            <tbody>
+                                                @{
+                                                    decimal afterIndex = 1;
+                                                }
+                                                @foreach (var dealDetail in Model.AftermarketDealDetails)
+                                                {
+                                                    if (dealDetail.VehicleCondition == "NEW" && dealDetail.ShowroomValidatedBy != null)
+                                                    {
+                                                        var markup = (dealDetail.APR - dealDetail.BuyRate).ToString("0.##");
+
+                                                        if (dealDetail.VehicleCategory == "L")
+                                                        {
+                                                            markup = "L";
+                                                        }
+
+                                                        decimal SelectProtectAmount = 0;
+                                                        foreach (var item in dealDetail.AftermarketItems)
+                                                        {
+                                                            if (item.AftermarketId == 4)
+                                                            {
+                                                                SelectProtectAmount = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                        }
+
+
+                                                        <tr>
+                                                            <td class="text-center">@afterIndex</td>
+                                                            @if ((bool)Session["IsCommissionAdmin"] == true)
+                                                            {
+                                                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@dealDetail.DealKey" target="_blank">@dealDetail.DealKey</a></td>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <td class="text-center">@dealDetail.DealKey</td>
+                                                            }
+
+                                                            <td class="text-center">@dealDetail.VehicleCategory</td>
+                                                            <td class="text-center">@dealDetail.VehicleYear</td>
+                                                            <td class="text-center">@dealDetail.VehicleMake</td>
+                                                            <td class="text-center">@dealDetail.ModelName</td>
+                                                            <td class="text-center">@dealDetail.VehicleTerm</td>
+                                                            <td class="text-center">@markup</td>
+                                                            <td class="text-center">@dealDetail.FinanceIncomeAmount</td>
+                                                            <td class="text-center">@dealDetail.VSCAmount</td>
+                                                            <td class="text-center">@dealDetail.MaintenanceAmount</td>
+                                                            <td class="text-center">@dealDetail.GAPAmount</td>
+                                                            <td class="text-center">@dealDetail.ZurichAmount</td>
+                                                            <td class="text-center">@SelectProtectAmount.ToString("C", nfi)</td>
+                                                            <td class="text-center">@dealDetail.TireWheelAmount</td>
+                                                        </tr>
+                                                        afterIndex += 1;
+                                                    }
+                                                }
+
+
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style="background-color:#d9edf7">
+                                                    <th class="text-right" colspan="8">Totals</th>
+                                                    <th class="text-center">@NewTotalFinance.ToString("C", nfi)<br/>@NewFinanceCount</th>
+                                                    <th class="text-center">@NewTotalService.ToString("C", nfi)<br />@NewServiceCount</th>
+                                                    <th class="text-center">@NewTotalMaintenance.ToString("C", nfi)<br />@NewMaintenanceCount</th>
+                                                    <th class="text-center">@NewTotalGAP.ToString("C", nfi)<br />@NewGAPCount</th>
+                                                    <th class="text-center">@NewTotalZurich.ToString("C", nfi)<br />@NewZurichCount</th>
+                                                    <th class="text-center">@NewTotalSelectProtect.ToString("C", nfi)<br />@NewSelectProtectCount</th>
+                                                    <th class="text-center">@NewTotalTireWheel.ToString("C", nfi)<br />@NewTireWheelCount</th>
+                                                </tr>
+                                            </tfoot>
+                                                    }
+                                    </table>
+                                    <h5>Used Vehicles</h5>
+                                    <table class="table table-bordered table-striped" style="font-size:11px">
+                                        <thead>
+                                            <tr style="background-color:#d9edf7">
+                                                <th class="text-center"></th>
+                                                <th class="text-center">Deal #</th>
+                                                <th class="text-center">Year</th>
+                                                <th class="text-center">Make</th>
+                                                <th class="text-center">Model</th>
+                                                <th class="text-center">Miles</th>
+                                                <th class="text-center">Cert<br/>Level</th>
+                                                <th class="text-center">Term</th>
+                                                <th class="text-center">Markup</th>
+                                                <th class="text-center">Finance</th>
+                                                <th class="text-center">SVC</th>
+                                                <th class="text-center">Maint</th>
+                                                <th class="text-center">GAP</th>
+                                                <th class="text-center">Zurich</th>
+                                                <th class="text-center">Select<br/>Protect</th>
+                                                <th class="text-center">Tire and<br/>Wheel</th>
+                                            </tr>
+                                        </thead>
+                                        @if (Model.AftermarketDealDetails != null && Model.AftermarketDealDetails.Count > 0)
+                                        {
+                                            <tbody>
+                                                @{
+
+                                                    decimal afterIndex = 1;
+                                                }
+                                                @foreach (var dealDetail in Model.AftermarketDealDetails)
+                                                {
+                                                    if (dealDetail.VehicleCondition == "USED" && dealDetail.ShowroomValidatedBy != null)
+                                                    {
+                                                        var markup = (dealDetail.APR - dealDetail.BuyRate).ToString("0.##");
+
+                                                        if (dealDetail.VehicleCategory == "L")
+                                                        {
+                                                            markup = "L";
+                                                        }
+
+                                                        decimal SelectProtectAmount = 0;
+                                                        foreach (var item in dealDetail.AftermarketItems)
+                                                        {
+                                                            if (item.AftermarketId == 4)
+                                                            {
+                                                                SelectProtectAmount = item.AftermarketPrice - item.AftermarketCost;
+                                                            }
+                                                        }
+
+                                                        <tr>
+                                                            <td class="text-center">@afterIndex</td>
+                                                            @if ((bool)Session["IsCommissionAdmin"] == true)
+                                                            {
+                                                                <td class="text-center"><a href="@applicationPath/Sales/DealDetail/@dealDetail.DealKey" target="_blank">@dealDetail.DealKey</a></td>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <td class="text-center">@dealDetail.DealKey</td>
+                                                            }
+                                                            <td class="text-center">@dealDetail.VehicleYear</td>
+                                                            <td class="text-center">@dealDetail.VehicleMake</td>
+                                                            <td class="text-center">@dealDetail.ModelName</td>
+                                                            <td class="text-center">@dealDetail.VehicleMiles</td>
+                                                            <td class="text-center">@dealDetail.CertificationLevel</td>
+                                                            <td class="text-center">@dealDetail.VehicleTerm</td>
+                                                            <td class="text-center">@markup</td>
+                                                            <td class="text-center">@dealDetail.FinanceIncomeAmount</td>
+                                                            <td class="text-center">@dealDetail.VSCAmount</td>
+                                                            <td class="text-center">@dealDetail.MaintenanceAmount</td>
+                                                            <td class="text-center">@dealDetail.GAPAmount</td>
+                                                            <td class="text-center">@dealDetail.ZurichAmount</td>
+                                                            <td class="text-center">@SelectProtectAmount.ToString("C", nfi)</td>
+                                                            <td class="text-center">@dealDetail.TireWheelAmount</td>
+                                                        </tr>
+                                                        afterIndex += 1;
+                                                    }
+                                                }
+
+
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style="background-color:#d9edf7">
+                                                    <th class="text-right" colspan="9">Totals</th>
+                                                    <th class="text-center">@UsedTotalFinance.ToString("C", nfi)<br />@UsedFinanceCount</th>
+                                                    <th class="text-center">@UsedTotalService.ToString("C", nfi)<br />@UsedServiceCount</th>
+                                                    <th class="text-center">@UsedTotalMaintenance.ToString("C", nfi)<br />@UsedMaintenanceCount</th>
+                                                    <th class="text-center">@UsedTotalGAP.ToString("C", nfi)<br />@UsedGAPCount</th>
+                                                    <th class="text-center">@UsedTotalZurich.ToString("C", nfi)<br />@UsedZurichCount</th>
+                                                    <th class="text-center">@UsedTotalSelectProtect.ToString("C", nfi)<br />@UsedSelectProtectCount</th>
+                                                    <th class="text-center">@UsedTotalTireWheel.ToString("C", nfi)<br />@UsedTireWheelCount</th>
+                                                </tr>
+
+                                            </tfoot>
+                                                    }
+                                    </table>
+                                </div>
+
+                            </td>
+                            <td class="text-center new-used">@NewDealCount</td>
+                            <td class="text-center new-used">@UsedDealCount</td>
+                            <td class="text-center">@TotalDeals<br/>Showroom UV: @ShowroomUnvalidated</td>
+                            <td class="text-center">
+                                <input type="text" class="form-control" id="standards-units" name="standards-units" style="width:100px;" value="@Model.CurrentScorecard.Deliveries_Standard" @bDisabled />
+                            </td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-units" name="comments-units" rows="1" @bDisabled>@Model.CurrentScorecard.Deliveries_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Finance Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewFinanceCount<br />@NewFinancePercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedFinanceCount<br />@UsedFinancePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@FinanceCount<br />@FinancePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-finance-percent" name="standards-finance-percent" style="width:100px;" value="@Model.CurrentScorecard.FinancePercent_Standard" @bDisabled /></td>
+                            <td class="text-center"  style="border-top-width:2px;">@StandardFinancePercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-finance-percent" name="comments-finance-percent" rows="1" @bDisabled>@Model.CurrentScorecard.FinancePercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Avg Finance Reserve</strong></td>
+                            <td class="text-center new-used">@NewAverageFinance.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageFinance.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageFinance.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-finance-reserve" name="standards-finance-reserve" style="width:100px;" value="@Model.CurrentScorecard.FinanceReserve_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardFinancePerUnit</td>
+                            <td><textarea class="form-control" id="comments-finance-reserve" name="comments-finance-reserve" rows="1" @bDisabled>@Model.CurrentScorecard.FinanceReserve_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>VSC Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewServiceCount<br />@NewServicePercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedServiceCount<br />@UsedServicePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@ServiceCount<br />@ServicePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-vsc-percentage" name="standards-vsc-percentage" style="width:100px;" value="@Model.CurrentScorecard.VSCPercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardServicePercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-vsc-percentage" name="comments-vsc-percentage" rows="1" @bDisabled>@Model.CurrentScorecard.VSCPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>VSC $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageService.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageService.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageService.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-vsc-peritem" name="standards-vsc-peritem" style="width:100px;" value="@Model.CurrentScorecard.VSCPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardServicePerUnit</td>
+                            <td><textarea class="form-control" id="comments-vsc-peritem" name="comments-vsc-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.VSCPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Maintenance Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewMaintenanceCount<br />@NewMaintenancePercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedMaintenanceCount<br />@UsedMaintenancePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@MaintenanceCount<br />@MaintenancePercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-maint-percent" name="standards-maint-percent" style="width:100px;" value="@Model.CurrentScorecard.MaintenancePercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardMaintenancePercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-maint-percent" name="comments-maint-percent" rows="1" @bDisabled>@Model.CurrentScorecard.MaintenancePercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintenance $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageMaintenance.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageMaintenance.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageMaintenance.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-maint-peritem" name="standards-maint-peritem" style="width:100px;" value="@Model.CurrentScorecard.MaintenancePerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardMaintenancePerUnit</td>
+                            <td><textarea class="form-control" id="comments-maint-peritem" name="comments-maint-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.MaintenancePerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>GAP Percentage of Finance</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewGAPCount<br />@NewGAPPercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedGAPCount<br />@UsedGAPPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@GAPCount<br />@GAPPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-GAP-percent" name="standards-GAP-percent" style="width:100px;" value="@Model.CurrentScorecard.GAPPercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardGAPPercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-GAP-percent" name="comments-GAP-percent" rows="1" @bDisabled>@Model.CurrentScorecard.GAPPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>GAP $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageGAP.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageGAP.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageGAP.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-GAP-peritem" name="standards-GAP-peritem" style="width:100px;" value="@Model.CurrentScorecard.GAPPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardGAPPerUnit</td>
+                            <td><textarea class="form-control" id="comments-GAP-peritem" name="comments-GAP-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.GAPPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>ZurichShield Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewZurichCount<br />@NewZurichPercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedZurichCount<br />@UsedZurichPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@ZurichCount<br />@ZurichPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-zurich-percent" name="standards-zurich-percent" style="width:100px;" value="@Model.CurrentScorecard.ZurichPercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardZurichPercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-zurich-percent" name="comments-zurich-percent" rows="1" @bDisabled>@Model.CurrentScorecard.ZurichPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ZurichShield $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageZurich.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageZurich.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageZurich.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-zurich-peritem" name="standards-zurich-peritem" style="width:100px;" value="@Model.CurrentScorecard.ZurichPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardZurichPerUnit</td>
+                            <td><textarea class="form-control" id="comments-zurich-peritem" name="comments-zurich-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.ZurichPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Select Protect Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewSelectProtectCount<br />@NewSelectProtectPercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedSelectProtectCount<br />@UsedSelectProtectPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@SelectProtectCount<br />@SelectProtectPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-select-percent" name="standards-select-percent" style="width:100px;" value="@Model.CurrentScorecard.SelectProtectPercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardSelectProtectPercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-select-percent" name="comments-select-percent" rows="1" @bDisabled>@Model.CurrentScorecard.SelectProtectPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Select Protect $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageSelectProtect.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageSelectProtect.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageSelectProtect.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-select-peritem" name="standards-select-peritem" style="width:100px;" value="@Model.CurrentScorecard.SelectProtectPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardSelectProtectPerUnit</td>
+                            <td><textarea class="form-control" id="comments-select-peritem" name="comments-select-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.SelectProtectPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Tire and Wheel Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewTireWheelCount<br />@NewTireWheelPercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedTireWheelCount<br />@UsedTireWheelPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@TireWheelCount<br />@TireWheelPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-tirewheel-percent" name="standards-tirewheel-percent" style="width:100px;" value="@Model.CurrentScorecard.TireAndWheelPercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;">@StandardTireWheelPercentage.ToString("P", nfi)</td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-tirewheel-percent" name="comments-tirewheel-percent" rows="1" @bDisabled>@Model.CurrentScorecard.TireAndWheelPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tire and Wheel $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageTireWheel.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageTireWheel.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageTireWheel.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-tirewheel-peritem" name="standards-tirewheel-peritem" style="width:100px;" value="@Model.CurrentScorecard.TireAndWheelPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center">@StandardTireWheelPerUnit</td>
+                            <td><textarea class="form-control" id="comments-tirewheel-peritem" name="comments-tirewheel-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.TireAndWheelPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Lease W&T Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewLeaseWandTCount<br />@NewLeaseWandTPercent</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">-<br />-</td>
+                            <td class="text-center " style="border-top-width:2px;">@LeaseWandTCount<br />@LeaseWandTPercent</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-lease-percent" name="standards-lease-percent" style="width:100px;" value="@Model.CurrentScorecard.LeasePercent_Standard" @bDisabled /></td>
+                            <td class="text-center" style="border-top-width:2px;"></td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-lease-percent" name="comments-lease-percent" rows="1" @bDisabled>@Model.CurrentScorecard.LeasePercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lease W&T $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageLeaseWandT.ToString("C", nfi)</td>
+                            <td class="text-center new-used">-</td>
+                            <td class="text-center">@AverageLeaseWandT.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-lease-peritem" name="standards-lease-peritem" style="width:100px;" value="@Model.CurrentScorecard.LeasePerItem_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-lease-peritem" name="comments-lease-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.LeasePerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Other Percentage</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewOtherCount<br />@NewOtherPercent.ToString("P", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@UsedOtherCount<br />@UsedOtherPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@OtherCount<br />@OtherPercent.ToString("P", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;margin-left:auto;margin-right:auto;"><input type="text" class="form-control" id="standards-other-percent" name="standards-other-percent" style="width:100px;" value="@Model.CurrentScorecard.OtherPercent_Standard" @bDisabled /></td>
+                            <td class="text-center"  style="border-top-width:2px;"></td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-other-percent" name="comments-other-percent" rows="1" @bDisabled>@Model.CurrentScorecard.OtherPercent_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Other $ per Item</strong></td>
+                            <td class="text-center new-used">@NewAverageOther.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedAverageOther.ToString("C", nfi)</td>
+                            <td class="text-center">@AverageOther.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-other-peritem" name="standards-other-peritem" style="width:100px;" value="@Model.CurrentScorecard.OtherPerItem_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-other-peritem" name="comments-other-peritem" rows="1" @bDisabled>@Model.CurrentScorecard.OtherPerItem_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="" style="border-top-width:2px;"><strong>Total Gross</strong></td>
+                            <td class="text-center new-used " style="border-top-width:2px;">@NewTotalGross.ToString("C", nfi)</td>
+                            <td class="text-center new-used " style="border-top-width:2px;"> @UsedTotalGross.ToString("C", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;">@TotalGross.ToString("C", nfi)</td>
+                            <td class="text-center " style="border-top-width:2px;"><input type="text" class="form-control" id="standards-total-gross" name="standards-total-gross" style="width:100px;" value="@Model.CurrentScorecard.TotalGross_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td class="" style="border-top-width:2px;"><textarea class="form-control" id="comments-total-gross" name="comments-total-gross" rows="1" @bDisabled>@Model.CurrentScorecard.TotalGross_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total $ per Deal</strong></td>
+                            <td class="text-center new-used">@NewTotalDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedTotalDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center">@TotalDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-dollar-perdeal" name="standards-dollar-perdeal" style="width:100px;" value="@Model.CurrentScorecard.TotalDollarPerDeal_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-dollar-perdeal" name="comments-dollar-perdeal" rows="1" @bDisabled>@Model.CurrentScorecard.TotalDollarPerDeal_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Product $</strong></td>
+                            <td class="text-center new-used">@NewTotalProductGross.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedTotalProductGross.ToString("C", nfi)</td>
+                            <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-product-dollar" name="standards-product-dollar" style="width:100px;" value="@Model.CurrentScorecard.TotalProductDollar_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-product-dollar" name="comments-product-dollar" rows="1" @bDisabled>@Model.CurrentScorecard.TotalProductDollar_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Product $ per Deal</strong></td>
+                            <td class="text-center new-used">@NewProductDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center new-used">@UsedProductDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center">@ProductDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-product-dollar-per-deal" name="standards-product-dollar-per-deal" style="width:100px;" value="@Model.CurrentScorecard.TotalProductDollerPerDeal_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-product-dollar-per-deal" name="comments-product-dollar-per-deal" rows="1" @bDisabled>@Model.CurrentScorecard.TotalProductDollerPerDeal_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Product Ratio</strong></td>
+                            <td class="text-center new-used">@NewProductSoldRatio.ToString("P", nfi)</td>
+                            <td class="text-center new-used">@UsedProductSoldRatio.ToString("P", nfi)</td>
+                            <td class="text-center">@ProductSoldRatio.ToString("P", nfi)</td>
+                            <td class="text-center"><input type="text" class="form-control" id="standards-product-ratio" name="standards-product-ratio" style="width:100px;" value="@Model.CurrentScorecard.ProductRation_Standard" @bDisabled /></td>
+                            <td class="text-center"></td>
+                            <td><textarea class="form-control" id="comments-product-ratio" name="comments-product-ratio" rows="1" @bDisabled>@Model.CurrentScorecard.ProductRation_Comments</textarea></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Key Improvement Opportunities</strong></td>
+                            <td class="text-center new-used"></td>
+                            <td class="text-center new-used"></td>
+                            <td colspan="4"><textarea class="form-control" id="comments-key-opportunities" name="comments-key-opportunities" rows="2" @bDisabled>@Model.CurrentScorecard.KeyImprovementOpportunities</textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-12" style="page-break-before: always;">
+                <table class="table table-bordered table-striped" style="font-size:13px;">
+                    <thead>
+                        <tr style="background-color:#d9edf7">
+                            <th colspan="25">Previous Months ScoreCard Data</th>
+                        </tr>
+                        <tr style="background-color:#d9edf7">
+                            <th>Month</th>
+                            <th class="text-center">Units</th>
+                            <th class="text-center">Fin %</th>
+                            <th class="text-center">Fin Res</th>
+                            <th class="text-center">VSC %</th>
+                            <th class="text-center">VSC $ per Item</th>
+                            <th class="text-center">Maint %</th>
+                            <th class="text-center">Maint $ per Item</th>
+                            <th class="text-center">GAP % Fin</th>
+                            <th class="text-center">GAP $ per Item</th>
+                            <th class="text-center">Zurich %</th>
+                            <th class="text-center">Zurich $ per Item</th>
+                            <th class="text-center">Select<br/>Protect %</th>
+                            <th class="text-center">Select<br/>Protect $ per Item</th>
+                            <th class="text-center">Tire<br/>Wheel<br />%</th>
+                            <th class="text-center">Tire<br/>Wheel $<br/>per Item</th>
+                            <th class="text-center">Lease<br/>W&T<br />%</th>
+                            <th class="text-center">Lease<br />W&T $<br />per Item</th>
+                            <th class="text-center">Other %</th>
+                            <th class="text-center">Other $ per Item</th>
+                            <th class="text-center">Total Gross</th>
+                            <th class="text-center">Total $ per Deal</th>
+                            <th class="text-center">Total Product $</th>
+                            <th class="text-center">Total Product<br/>$ per Deal</th>
+                            <th class="text-center">Product Ratio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>@currentMonthName</strong></td>
+                            <td class="text-center">@TotalDeals</td>
+                            <td class="text-center">@FinancePercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageFinance.ToString("C", nfi)</td>
+                            <td class="text-center">@ServicePercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageService.ToString("C", nfi)</td>
+                            <td class="text-center">@MaintenancePercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageMaintenance.ToString("C", nfi)</td>
+                            <td class="text-center">@GAPPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageGAP.ToString("C", nfi)</td>
+                            <td class="text-center">@ZurichPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageZurich.ToString("C", nfi)</td>
+                            <td class="text-center">@SelectProtectPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageSelectProtect.ToString("C", nfi)</td>
+                            <td class="text-center">@TireWheelPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageTireWheel.ToString("C", nfi)</td>
+                            <td class="text-center">@LeaseWandTPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageLeaseWandT.ToString("C", nfi)</td>
+                            <td class="text-center">@OtherPercent.ToString("P", nfi)</td>
+                            <td class="text-center">@AverageOther.ToString("C", nfi)</td>
+                            <td class="text-center">@TotalGross.ToString("C", nfi)</td>
+                            <td class="text-center">@TotalDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center">@TotalProductGross.ToString("C", nfi)</td>
+                            <td class="text-center">@ProductDollarPerDeal.ToString("C", nfi)</td>
+                            <td class="text-center">@ProductSoldRatio.ToString("P", nfi)</td>
+                        </tr>
+@{ 
+    decimal FourMonthTotalGross = 0;
+    decimal FourMonthTotalProductGross = 0;
+    decimal FourMonthTotalFinance = 0;
+    decimal FourMonthTotalService = 0;
+    decimal FourMonthTotalMaintenance = 0;
+    decimal FourMonthTotalGAP = 0;
+    decimal FourMonthTotalZurich = 0;
+    decimal FourMonthTotalOther = 0;
+    decimal FourMonthTotalLeaseWandT = 0;
+    decimal FourMonthTotalTireWheel = 0;
+    decimal FourMonthTotalSelectProtect = 0;
+    decimal FourMonthTotalDeals = 0;
+
+    int FourMonthFinanceCount = 0;
+    int FourMonthServiceCount = 0;
+    int FourMonthMaintenanceCount = 0;
+    int FourMonthGAPCount = 0;
+    int FourMonthZurichCount = 0;
+    int FourMonthLeaseCount = 0;
+    int FourMonthLeaseWandTCount = 0;
+    int FourMonthTireWheelCount = 0;
+    int FourMonthSelectProtectCount = 0;
+    int FourMonthOtherCount = 0;
+
+    FourMonthTotalGross += TotalGross;
+    FourMonthTotalProductGross += TotalProductGross;
+    FourMonthTotalFinance += TotalFinance;
+    FourMonthTotalService += TotalService;
+    FourMonthTotalMaintenance += TotalMaintenance;
+    FourMonthTotalGAP += TotalGAP;
+    FourMonthTotalZurich += TotalZurich;
+    FourMonthTotalOther += TotalOther;
+    FourMonthTotalLeaseWandT += TotalLeaseWandT;
+    FourMonthTotalTireWheel += TotalTireWheel;
+    FourMonthTotalSelectProtect += TotalSelectProtect;
+
+    FourMonthFinanceCount += FinanceCount;
+    FourMonthServiceCount += ServiceCount;
+    FourMonthMaintenanceCount += MaintenanceCount;
+    FourMonthGAPCount += GAPCount;
+    FourMonthZurichCount += ZurichCount;
+    FourMonthLeaseCount += LeaseCount;
+    FourMonthLeaseWandTCount += LeaseWandTCount;
+    FourMonthTireWheelCount += TireWheelCount;
+    FourMonthSelectProtectCount += SelectProtectCount;
+    FourMonthOtherCount += OtherCount;
+
+    FourMonthTotalDeals += TotalDeals;
+}
+
+                        @if (Model.PreviousAftermarketDealDetails != null)
+                        {
+                            foreach (var previousMonths in Model.PreviousAftermarketDealDetails)
+                            {
+
+                                decimal pTotalGross = 0;
+                                decimal pTotalProductGross = 0;
+                                decimal pTotalFinance = 0;
+                                decimal pTotalService = 0;
+                                decimal pTotalMaintenance = 0;
+                                decimal pTotalGAP = 0;
+                                decimal pTotalZurich = 0;
+                                decimal pTotalOther = 0;
+                                decimal pTotalLeaseWandT = 0;
+                                decimal pTotalTireWheel = 0;
+                                decimal pTotalSelectProtect = 0;
+
+                                decimal pAverageFinance = 0;
+                                decimal pAverageService = 0;
+                                decimal pAverageMaintenance = 0;
+                                decimal pAverageGAP = 0;
+                                decimal pAverageZurich = 0;
+                                decimal pAverageLeaseWandT = 0;
+                                decimal pAverageTireWheel = 0;
+                                decimal pAverageSelectProtect = 0;
+                                decimal pAverageOther = 0;
+                                decimal pTotalDeals = 0;
+
+                                int pFinanceCount = 0;
+                                int pServiceCount = 0;
+                                int pMaintenanceCount = 0;
+                                int pGAPCount = 0;
+                                int pZurichCount = 0;
+                                int pLeaseCount = 0;
+                                int pLeaseWandTCount = 0;
+                                int pTireWheelCount = 0;
+                                int pSelectProtectCount = 0;
+                                int pOtherCount = 0;
+
+                                double pFinancePercent = 0;
+                                double pServicePercent = 0;
+                                double pMaintenancePercent = 0;
+                                double pGAPPercent = 0;
+                                double pZurichPercent = 0;
+                                double pLeaseWandTPercent = 0;
+                                double pTireWheelPercent = 0;
+                                double pSelectProtectPercent = 0;
+                                double pOtherPercent = 0;
+
+                                decimal pTotalDollarPerDeal = 0;
+                                decimal pProductDollarPerDeal = 0;
+                                decimal pShowroomUnvalidated = 0;
+                                decimal pProductSoldRatio = 0;
+
+
+                                if (previousMonths.AftermarketDealDetails != null)
+                                {
+                                    foreach (var deal in previousMonths.AftermarketDealDetails)
+                                    {
+
+                                        if (deal.ShowroomValidatedBy == null)
+                                        {
+                                            pShowroomUnvalidated += 1;
+                                        }
+                                        if (deal.ShowroomValidatedBy != null)
+                                        {
+                                            //TotalGross += deal.DealGrossAmount;
+
+                                            var bHandy = false;
+                                            if (deal.CertificationLevel != null && deal.CertificationLevel.ToUpper() == "HDM")
+                                            {
+                                                bHandy = true;
+                                            }
+
+                                            if (deal.FinanceIncomeAmount > 0)
+                                            {
+                                                pTotalFinance += deal.FinanceIncomeAmount;
+                                                pFinanceCount += 1;
+                                            }
+
+                                            if (deal.VSCAmount > 0)
+                                            {
+                                                pTotalService += deal.VSCAmount;
+                                                pServiceCount += 1;
+                                            }
+
+                                            if (deal.MaintenanceAmount > 0)
+                                            {
+                                                pTotalMaintenance += deal.MaintenanceAmount;
+                                                pMaintenanceCount += 1;
+
+                                            }
+
+                                            if (deal.GAPAmount > 0)
+                                            {
+                                                pTotalGAP += deal.GAPAmount;
+                                                pGAPCount += 1;
+                                            }
+
+                                            if (deal.ZurichAmount > 0)
+                                            {
+                                                pTotalZurich += deal.ZurichAmount;
+                                                pZurichCount += 1;
+
+                                            }
+
+                                            if (deal.TireWheelAmount > 0)
+                                            {
+                                                pTotalTireWheel += deal.TireWheelAmount;
+                                                pTireWheelCount += 1;
+                                            }
+
+                                            if (deal.VehicleCategory == "L")
+                                            {
+                                                pLeaseCount += 1;
+                                            }
+
+                                            decimal otherItemAmount = 0;
+
+                                            if (deal.AftermarketItems.Count > 0)
+                                            {
+
+                                                var dealValidation = Model.DealApprovals.FindAll(x => x.DealKey.Trim() == deal.DealKey.Trim());
+                                                var validation = new SalesCommission.Models.FIDealApproval();
+
+                                                if (dealValidation != null && dealValidation.Count > 0)
+                                                {
+                                                    validation = dealValidation[0];
+                                                }
+
+
+
+                                                foreach (var item in deal.AftermarketItems)
+                                                {
+                                                    if (item.AftermarketId != 1 && item.AftermarketId != 3 && item.AftermarketId != 4 && item.AftermarketId != 5 && item.AftermarketId != 20)
+                                                    {
+                                                        var amItem = new SalesCommission.Models.FIPayscaleAftermarket();
+                                                        if (Model.FIPayscaleAftermarket != null && Model.FIPayscaleAftermarket.Count > 0)
+                                                        {
+                                                            amItem = Model.FIPayscaleAftermarket.Find(x => x.AftermarketIndex == item.AftermarketId);
+                                                        }
+
+                                                        decimal profit = 0;
+                                                        switch (item.AftermarketId)
+                                                        {
+                                                            case 2:
+                                                                if (amItem.CoreItem || validation.NitrogenPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                }
+                                                                break;
+                                                            case 4:
+                                                                if (amItem.CoreItem || validation.SelectProtectionPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 5:
+                                                                if (amItem.CoreItem || validation.TireWheelPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 6:
+                                                                if (amItem.CoreItem || validation.KeyReplacementPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                }
+                                                                break;
+                                                            case 7:
+                                                                if (amItem.CoreItem || validation.WindshieldProtectionPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 8:
+                                                                if (amItem.CoreItem || validation.WearAndTearPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 9:
+                                                                if (amItem.CoreItem || validation.SecureGuardPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 10:
+                                                                if (amItem.CoreItem || validation.FitzTotalPackagePaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 11:
+                                                                if (amItem.CoreItem || validation.RustInhibitUnderCoatPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 12:
+                                                                if (amItem.CoreItem || validation.UndercoatingPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 13:
+                                                                if (amItem.CoreItem || validation.RustInhibitorPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 14:
+                                                                if (amItem.CoreItem || validation.DataDotsPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 15:
+                                                                if (amItem.CoreItem || validation.PaintDentPaid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 16:
+                                                                if (amItem.CoreItem || validation.Miscellaneous1Paid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+                                                                }
+                                                                break;
+                                                            case 17:
+                                                                if (amItem.CoreItem || validation.Miscellaneous2Paid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                }
+                                                                break;
+                                                            case 18:
+                                                                if (amItem.CoreItem || validation.Miscellaneous3Paid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                }
+                                                                break;
+                                                            case 19:
+                                                                if (amItem.CoreItem || validation.Miscellaneous4Paid)
+                                                                {
+                                                                    pOtherCount += 1;
+                                                                    profit = item.AftermarketPrice - item.AftermarketCost;
+
+                                                                }
+                                                                break;
+
+                                                        }
+
+
+
+                                                        otherItemAmount += profit;
+                                                    }
+
+                                                    if (item.AftermarketId == 4) //SELECT PROTECT
+                                                    {
+                                                        pSelectProtectCount += 1;
+                                                        var profit = item.AftermarketPrice - item.AftermarketCost;
+                                                        pTotalSelectProtect += profit;
+
+                                                    }
+
+                                                }
+
+                                            }
+
+                                            pTotalOther += otherItemAmount;
+
+                                        }
+
+                                        pTotalDeals = previousMonths.AftermarketDealDetails.Count;
+                                    }
+
+
+                                    pTotalFinance += FinanceAdjustments;
+                                    pTotalService += ServiceAdjustments;
+                                    pTotalGAP += GAPAdjustments;
+
+                                    if (pTotalDeals > 0)
+                                    {
+                                        pFinancePercent = (double)pFinanceCount / (double)pTotalDeals;
+                                        pServicePercent = ((double)pServiceCount) / (double)pTotalDeals;
+                                        //ServicePercent = ((double)ServiceCount + (double)MaintenanceCount + LeaseWandTCount) / (double)TotalEligibleDeals;
+                                        pMaintenancePercent = (double)pMaintenanceCount / (double)pTotalDeals;
+                                        pTireWheelPercent = (double)pTireWheelCount / (double)pTotalDeals;
+                                        pGAPPercent = (double)pGAPCount / (double)(pFinanceCount - pLeaseCount);
+                                        pZurichPercent = (double)pZurichCount / (double)pTotalDeals;
+                                        pLeaseWandTPercent = (double)pLeaseWandTCount / (double)pLeaseCount;
+                                        pSelectProtectPercent = (double)pSelectProtectCount / (double)pTotalDeals;
+                                        pOtherPercent = (double)pOtherCount / (double)pTotalDeals;
+
+                                        pTotalDollarPerDeal = (pTotalFinance + pTotalService + pTotalMaintenance + pTotalGAP + pTotalZurich + pTotalOther + pTotalLeaseWandT + pTotalTireWheel + pTotalSelectProtect) / pTotalDeals;
+                                        pProductDollarPerDeal = (pTotalService + pTotalMaintenance + pTotalGAP + pTotalZurich + pTotalOther + pTotalLeaseWandT + pTotalTireWheel + pTotalSelectProtect) / pTotalDeals;
+
+                                    }
+
+                                    pTotalGross = (pTotalFinance + pTotalService + pTotalMaintenance + pTotalGAP + pTotalZurich + pTotalOther + pTotalLeaseWandT + pTotalTireWheel + pTotalSelectProtect);
+                                    pTotalProductGross = (pTotalService + pTotalMaintenance + pTotalGAP + pTotalZurich + pTotalOther + pTotalLeaseWandT + pTotalTireWheel + pTotalSelectProtect);
+
+                                    if (pFinanceCount > 0)
+                                    {
+                                        pAverageFinance = pTotalFinance / pFinanceCount;
+                                    }
+
+                                    if (pServiceCount > 0)
+                                    {
+                                        pAverageService = pTotalService / pServiceCount;
+                                    }
+
+                                    if (pMaintenanceCount > 0)
+                                    {
+                                        pAverageMaintenance = pTotalMaintenance / pMaintenanceCount;
+                                    }
+
+                                    if (pGAPCount > 0)
+                                    {
+                                        pAverageGAP = pTotalGAP / pGAPCount;
+                                    }
+
+                                    if (pZurichCount > 0)
+                                    {
+                                        pAverageZurich = pTotalZurich / pZurichCount;
+                                    }
+
+                                    if (pTireWheelCount > 0)
+                                    {
+                                        pAverageTireWheel = pTotalTireWheel / pTireWheelCount;
+                                    }
+
+                                    if (pLeaseWandTCount > 0)
+                                    {
+                                        pAverageLeaseWandT = pTotalLeaseWandT / pLeaseWandTCount;
+                                    }
+                                    if (pSelectProtectCount > 0)
+                                    {
+                                        pAverageSelectProtect = pTotalSelectProtect / pSelectProtectCount;
+                                    }
+                                    if (pOtherCount > 0)
+                                    {
+                                        pAverageOther = pTotalOther / pOtherCount;
+                                    }
+
+                                }
+
+                                decimal pAverageTotalDollars = 0;
+                                decimal pAverageProductDollars = 0;
+                                decimal pProductCount = pServiceCount + pMaintenanceCount + pGAPCount + pZurichCount + pSelectProtectCount + pTireWheelCount + pOtherCount;
+                                if (pTotalDeals > 0)
+                                {
+                                    pAverageTotalDollars = Math.Round(pTotalGross / pTotalDeals);
+                                    pAverageProductDollars = Math.Round(pTotalProductGross / pTotalDeals);
+                                    pProductSoldRatio = ((pServiceCount + pMaintenanceCount + pGAPCount + pZurichCount + pSelectProtectCount + pTireWheelCount + pOtherCount) / pTotalDeals);
+                                }
+
+                                var pMonthYear = previousMonths.MonthId + "/" + previousMonths.YearId;
+                                var pScoreCardComments = Model.ScorecardHistory.Find(x => x.MonthYear == pMonthYear);
+
+                                if(pScoreCardComments == null)
+                                {
+                                    pScoreCardComments = new SalesCommission.Models.FIAssociateScoreCard();
+                                }
+
+                                <tr>
+                                    <td><strong>@mfi.GetMonthName(previousMonths.MonthId)</strong></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.Deliveries_Comments">@pTotalDeals</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.FinancePercent_Comments">@pFinancePercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.FinanceReserve_Comments">@pAverageFinance.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.VSCPercent_Comments">@pServicePercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.VSCPerItem_Comments">@pAverageService.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.MaintenancePercent_Comments">@pMaintenancePercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.MaintenancePerItem_Comments">@pAverageMaintenance.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.GAPPercent_Comments">@pGAPPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.GAPPerItem_Comments">@pAverageGAP.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.ZurichPercent_Comments">@pZurichPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.ZurichPerItem_Comments">@pAverageZurich.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.SelectProtectPercent_Comments">@pSelectProtectPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.SelectProtectPerItem_Comments">@pAverageSelectProtect.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TireAndWheelPercent_Comments">@pTireWheelPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TireAndWheelPerItem_Comments">@pAverageTireWheel.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.LeasePercent_Comments">@pLeaseWandTPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.LeasePerItem_Comments">@pAverageLeaseWandT.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.OtherPercent_Comments">@pOtherPercent.ToString("P", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.OtherPerItem_Comments">@pAverageOther.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TotalGross_Comments">@pTotalGross.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TotalDollarPerDeal_Comments">@pTotalDollarPerDeal.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TotalProductDollar_Comments">@pTotalProductGross.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.TotalProductDollerPerDeal_Comments">@pProductDollarPerDeal.ToString("C", nfi)</a></td>
+                                    <td class="text-center"><a href="#" data-toggle="tooltip" title="@pScoreCardComments.ProductRation_Comments">@pProductSoldRatio.ToString("P", nfi)</a></td>
+
+                                </tr>
+
+                                FourMonthTotalGross += pTotalGross;
+                                FourMonthTotalProductGross += pTotalProductGross;
+                                FourMonthTotalFinance += pTotalFinance;
+                                FourMonthTotalService += pTotalService;
+                                FourMonthTotalMaintenance += pTotalMaintenance;
+                                FourMonthTotalGAP += pTotalGAP;
+                                FourMonthTotalZurich += pTotalZurich;
+                                FourMonthTotalOther += pTotalOther;
+                                FourMonthTotalLeaseWandT += pTotalLeaseWandT;
+                                FourMonthTotalTireWheel += pTotalTireWheel;
+                                FourMonthTotalSelectProtect += pTotalSelectProtect;
+
+                                FourMonthFinanceCount += pFinanceCount;
+                                FourMonthServiceCount += pServiceCount;
+                                FourMonthMaintenanceCount += pMaintenanceCount;
+                                FourMonthGAPCount += pGAPCount;
+                                FourMonthZurichCount += pZurichCount;
+                                FourMonthLeaseCount += pLeaseCount;
+                                FourMonthLeaseWandTCount += pLeaseWandTCount;
+                                FourMonthTireWheelCount += pTireWheelCount;
+                                FourMonthSelectProtectCount += pSelectProtectCount;
+                                FourMonthOtherCount += pOtherCount;
+
+                                FourMonthTotalDeals += pTotalDeals;
+                            }
+                        }
+
+                    </tbody>
+                    <tfoot>
+    
+        @{
+
+            double FourMonthFinancePercent = 0;
+            decimal FourMonthAverageFinance = 0;
+            double FourMonthServicePercent = 0;
+            decimal FourMonthAverageService = 0;
+            double FourMonthMaintenancePercent = 0;
+            decimal FourMonthAverageMaintenance = 0;
+            double FourMonthGAPPercent = 0;
+            decimal FourMonthAverageGAP = 0;
+            double FourMonthZurichPercent = 0;
+            decimal FourMonthAverageZurich = 0;
+            double FourMonthSelectProtectPercent = 0;
+            decimal FourMonthAverageSelectProtect = 0;
+            double FourMonthTireWheelPercent = 0;
+            decimal FourMonthAverageTireWheel = 0;
+            double FourMonthLeaseWandTPercent = 0;
+            decimal FourMonthAverageLeaseWandT = 0;
+            double FourMonthOtherPercent = 0;
+            decimal FourMonthAverageOther = 0;
+            decimal FourMonthTotalDollarPerDeal = 0;
+            decimal FourMonthProductDollarPerDeal = 0;
+            decimal FourMonthProductSoldRatio = 0;
+
+
+            if (FourMonthTotalDeals > 0)
+            {
+                FourMonthFinancePercent = (double)FourMonthFinanceCount / (double)FourMonthTotalDeals;
+                FourMonthServicePercent = ((double)FourMonthServiceCount) / (double)FourMonthTotalDeals;
+                FourMonthMaintenancePercent = (double)FourMonthMaintenanceCount / (double)FourMonthTotalDeals;
+                FourMonthTireWheelPercent = (double)FourMonthTireWheelCount / (double)FourMonthTotalDeals;
+                FourMonthGAPPercent = (double)FourMonthGAPCount / (double)(FourMonthFinanceCount - FourMonthLeaseCount);
+                FourMonthZurichPercent = (double)FourMonthZurichCount / (double)FourMonthTotalDeals;
+                FourMonthLeaseWandTPercent = (double)FourMonthLeaseWandTCount / (double)FourMonthLeaseCount;
+                FourMonthSelectProtectPercent = (double)FourMonthSelectProtectCount / (double)FourMonthTotalDeals;
+                FourMonthOtherPercent = (double)FourMonthOtherCount / (double)FourMonthTotalDeals;
+
+                FourMonthTotalDollarPerDeal = (FourMonthTotalFinance + FourMonthTotalService + FourMonthTotalMaintenance + FourMonthTotalGAP + FourMonthTotalZurich + FourMonthTotalOther + FourMonthTotalLeaseWandT + FourMonthTotalTireWheel + FourMonthTotalSelectProtect) / FourMonthTotalDeals;
+                FourMonthProductDollarPerDeal = (FourMonthTotalService + FourMonthTotalMaintenance + FourMonthTotalGAP + FourMonthTotalZurich + FourMonthTotalOther + FourMonthTotalLeaseWandT + FourMonthTotalTireWheel + FourMonthTotalSelectProtect) / FourMonthTotalDeals;
+
+            }
+
+            FourMonthTotalGross = (FourMonthTotalFinance + FourMonthTotalService + FourMonthTotalMaintenance + FourMonthTotalGAP + FourMonthTotalZurich + FourMonthTotalOther + FourMonthTotalLeaseWandT + FourMonthTotalTireWheel + FourMonthTotalSelectProtect);
+            FourMonthTotalProductGross = (FourMonthTotalService + FourMonthTotalMaintenance + FourMonthTotalGAP + FourMonthTotalZurich + FourMonthTotalOther + FourMonthTotalLeaseWandT + FourMonthTotalTireWheel + FourMonthTotalSelectProtect);
+
+            if (FourMonthFinanceCount > 0)
+            {
+                FourMonthAverageFinance = FourMonthTotalFinance / FourMonthFinanceCount;
+            }
+
+            if (FourMonthServiceCount > 0)
+            {
+                FourMonthAverageService = FourMonthTotalService / FourMonthServiceCount;
+            }
+
+            if (FourMonthMaintenanceCount > 0)
+            {
+                FourMonthAverageMaintenance = FourMonthTotalMaintenance / FourMonthMaintenanceCount;
+            }
+
+            if (FourMonthGAPCount > 0)
+            {
+                FourMonthAverageGAP = FourMonthTotalGAP / FourMonthGAPCount;
+            }
+
+            if (FourMonthZurichCount > 0)
+            {
+                FourMonthAverageZurich = FourMonthTotalZurich / FourMonthZurichCount;
+            }
+
+            if (FourMonthTireWheelCount > 0)
+            {
+                FourMonthAverageTireWheel = FourMonthTotalTireWheel / FourMonthTireWheelCount;
+            }
+
+            if (FourMonthLeaseWandTCount > 0)
+            {
+                FourMonthAverageLeaseWandT = FourMonthTotalLeaseWandT / FourMonthLeaseWandTCount;
+            }
+            if (FourMonthSelectProtectCount > 0)
+            {
+                FourMonthAverageSelectProtect = FourMonthTotalSelectProtect / FourMonthSelectProtectCount;
+            }
+            if (FourMonthOtherCount > 0)
+            {
+                FourMonthAverageOther = FourMonthTotalOther / FourMonthOtherCount;
+            }
+
+    
+
+        decimal FourMonthAverageTotalDollars = 0;
+        decimal FourMonthAverageProductDollars = 0;
+        decimal FourMonthProductCount = FourMonthServiceCount + FourMonthMaintenanceCount + FourMonthGAPCount + FourMonthZurichCount + FourMonthSelectProtectCount + FourMonthTireWheelCount + FourMonthOtherCount;
+        if (FourMonthTotalDeals > 0)
+        {
+                        FourMonthAverageTotalDollars = Math.Round(FourMonthTotalGross / FourMonthTotalDeals);
+                        FourMonthAverageProductDollars = Math.Round(FourMonthTotalProductGross / FourMonthTotalDeals);
+                        FourMonthProductSoldRatio = ((FourMonthServiceCount + FourMonthMaintenanceCount + FourMonthGAPCount + FourMonthZurichCount + FourMonthSelectProtectCount + FourMonthTireWheelCount + FourMonthOtherCount) / FourMonthTotalDeals);
+        }
+
+
+
+    }
+                        <tr style="background-color:#d9edf7">
+                            <th><strong>4 Month Total</strong></th>
+                            <th class="text-center">@FourMonthTotalDeals</th>
+                            <th class="text-center">@FourMonthFinancePercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageFinance.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthServicePercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageService.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthMaintenancePercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageMaintenance.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthGAPPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageGAP.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthZurichPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageZurich.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthSelectProtectPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageSelectProtect.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthTireWheelPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageTireWheel.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthLeaseWandTPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageLeaseWandT.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthOtherPercent.ToString("P", nfi)</th>
+                            <th class="text-center">@FourMonthAverageOther.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthTotalGross.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthTotalDollarPerDeal.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthTotalProductGross.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthProductDollarPerDeal.ToString("C", nfi)</th>
+                            <th class="text-center">@FourMonthProductSoldRatio.ToString("P", nfi)</th>
+
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+
+        </div>
+
+        <div class="row text-center" style="margin-bottom:15px;">
+            <div class="col-sm-12">
+                <strong>Based on Showroom Validated Deals as of @DateTime.Now.ToShortDateString()</strong>
+            </div>
+        </div>
+
+                                <div class="row text-center">
+                                    <div class="col-sm-12">
+                                        @if (!bLocked)
+                                        {
+                                            <button class="btn btn-primary" style="vertical-align: top; text-align:right" type="submit" value="submit" name="SaveComments">Save Scorecard</button>
+
+                                            if (DateTime.Now >= nextMonth)
+                                            {
+                                                <button class="btn btn-primary" style="vertical-align: top; text-align:right" type="submit" value="submit" name="FinalizeScorecard">Finalize Scorecard</button>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                                <div class="row text-center" style="margin-top:10px;">
+                                    <div class="col-sm-12">
+                                        @if (Model.CurrentScorecard.UpdateDate != null && (Model.CurrentScorecard.UpdateDate.ToShortDateString() != "1/1/1900" && Model.CurrentScorecard.UpdateDate.ToShortDateString() != "1/1/0001"))
+                                        {
+                                            @:<p><strong>Last Saved: @Model.CurrentScorecard.UpdateDate by @Model.CurrentScorecard.UpdateUser</strong></p>
+            }
+                                        @if (Model.CurrentScorecard.FinalizeDate != null && (Model.CurrentScorecard.FinalizeDate.ToShortDateString() != "1/1/1900" && Model.CurrentScorecard.FinalizeDate.ToShortDateString() != "1/1/0001"))
+                                        {
+                                            @:<p><strong>Finalized: @Model.CurrentScorecard.FinalizeDate by @Model.CurrentScorecard.FinalizeUser</strong></p>
+            }
+                                    </div>
+
+
+                                </div>
+                            }
+
+
+@section scripts
+{
+
+
+
+    <script type="text/javascript">
+
+        function compareSatisfaction() {
+            if ($('#satisfaction-actual').val() >= $('#satisfaction-objective').val()) {
+                $('#chk-MeetsSSI').prop('checked', true);
+            }
+            else {
+                $('#chk-MeetsSSI').prop('checked', false);
+            }
+        }
+
+
+        $(document).ready(function () {
+            $(function () {
+                // bind change event to select
+                $('#associate-select').on('change', function () {
+                    var url = $(this).val(); // get selected value
+                    if (url) { // require a URL
+                        window.location = url; // redirect
+                    }
+                    return false;
+                });
+            });
+
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+
+            $('#btnToggleNewUsed').click(function () {
+
+
+                if ($('#btnToggleNewUsed').val() == 'Show Details') {
+                    $('.new-used').show();
+                    $('#btnToggleNewUsed').val("Hide Details");
+                }
+                else {
+                    $('.new-used').hide();
+                    $('#btnToggleNewUsed').val("Show Details");
+                }
+
+            });
+
+            $("#new-comm-total-STD").val($("#new-unit-spinner").spinner('value') * $("#new-comm-STD").val());
+            $("#new-comm-total-CERT").val($("#new-unit-spinner").spinner('value') * $("#new-comm-CERT").val());
+            $("#new-comm-total-CERTELIT").val($("#new-unit-spinner").spinner('value') * $("#new-comm-CERTELIT").val());
+
+            $("#new-bpp-total-STD").val($("#new-bpp-spinner").spinner('value') * $("#new-bpp-STD").val());
+            $("#new-bpp-total-CERT").val($("#new-bpp-spinner").spinner('value') * $("#new-bpp-CERT").val());
+            $("#new-bpp-total-CERTELIT").val($("#new-bpp-spinner").spinner('value') * $("#new-bpp-CERTELIT").val());
+
+            $("#new-trade-total-STD").val($("#new-trade-spinner").spinner('value') * $("#new-trade-STD").val());
+            $("#new-trade-total-CERT").val($("#new-trade-spinner").spinner('value') * $("#new-trade-CERT").val());
+            $("#new-trade-total-CERTELIT").val($("#new-trade-spinner").spinner('value') * $("#new-trade-CERTELIT").val());
+
+
+            $("#new-finance-total-STD").val($("#new-finance-spinner").spinner('value') * $("#new-finance-STD").val());
+            $("#new-finance-total-CERT").val($("#new-finance-spinner").spinner('value') * $("#new-finance-CERT").val());
+            $("#new-finance-total-CERTELIT").val($("#new-finance-spinner").spinner('value') * $("#new-finance-CERTELIT").val());
+
+            $("#new-service-total-STD").val($("#new-service-spinner").spinner('value') * $("#new-service-STD").val());
+            $("#new-service-total-CERT").val($("#new-service-spinner").spinner('value') * $("#new-service-CERT").val());
+            $("#new-service-total-CERTELIT").val($("#new-service-spinner").spinner('value') * $("#new-service-CERTELIT").val());
+
+            $("#new-gap-total-STD").val($("#new-gap-spinner").spinner('value') * $("#new-gap-STD").val());
+            $("#new-gap-total-CERT").val($("#new-gap-spinner").spinner('value') * $("#new-gap-CERT").val());
+            $("#new-gap-total-CERTELIT").val($("#new-gap-spinner").spinner('value') * $("#new-gap-CERTELIT").val());
+
+            $("#new-maintenance-total-STD").val($("#new-zurich-spinner").spinner('value') * $("#new-maintenance-STD").val());
+            $("#new-maintenance-total-CERT").val($("#new-zurich-spinner").spinner('value') * $("#new-maintenance-CERT").val());
+            $("#new-maintenance-total-CERTELIT").val($("#new-zurich-spinner").spinner('value') * $("#new-maintenance-CERTELIT").val());
+
+            $("#new-aftermarket-total-STD").val($("#new-aftermarket-spinner").spinner('value') * $("#new-aftermarket-STD").val());
+            $("#new-aftermarket-total-CERT").val($("#new-aftermarket-spinner").spinner('value') * $("#new-aftermarket-CERT").val());
+            $("#new-aftermarket-total-CERTELIT").val($("#new-aftermarket-spinner").spinner('value') * $("#new-aftermarket-CERTELIT").val());
+
+            $("#new-survey-total-STD").val($("#new-survey-spinner").spinner('value') * $("#new-survey-STD").val());
+            $("#new-survey-total-CERT").val($("#new-survey-spinner").spinner('value') * $("#new-survey-CERT").val());
+            $("#new-survey-total-CERTELIT").val($("#new-survey-spinner").spinner('value') * $("#new-survey-CERTELIT").val());
+
+            $("#new-manufsurvey-total-STD").val($("#new-manufsurvey-spinner").spinner('value') * $("#new-manufsurvey-STD").val());
+            $("#new-manufsurvey-total-CERT").val($("#new-manufsurvey-spinner").spinner('value') * $("#new-manufsurvey-CERT").val());
+            $("#new-manufsurvey-total-CERTELIT").val($("#new-manufsurvey-spinner").spinner('value') * $("#new-manufsurvey-CERTELIT").val());
+
+
+            $("#used-comm-total-STD").val($("#used-unit-spinner").spinner('value') * $("#used-comm-STD").val());
+            $("#used-comm-total-CERT").val($("#used-unit-spinner").spinner('value') * $("#used-comm-CERT").val());
+            $("#used-comm-total-CERTELIT").val($("#used-unit-spinner").spinner('value') * $("#used-comm-CERTELIT").val());
+
+            $("#used-bpp-total-STD").val($("#used-bpp-spinner").spinner('value') * $("#used-bpp-STD").val());
+            $("#used-bpp-total-CERT").val($("#used-bpp-spinner").spinner('value') * $("#used-bpp-CERT").val());
+            $("#used-bpp-total-CERTELIT").val($("#used-bpp-spinner").spinner('value') * $("#used-bpp-CERTELIT").val());
+
+
+            calculateCommission();
+
+
+            //$("#new-total-STD").val(parseInt($("#new-comm-total-STD").val()) + parseInt($("#new-bpp-total-STD").val()) + parseInt($("#used-comm-total-STD").val()) + parseInt($("#used-bpp-total-STD").val()) + parseInt($("#new-trade-total-STD").val()) + parseInt($("#new-finance-total-STD").val()) + parseInt($("#new-service-total-STD").val()) + parseInt($("#new-gap-total-STD").val()) + parseInt($("#new-maintenance-total-STD").val()) + parseInt($("#new-aftermarket-total-STD").val()) + parseInt($("#new-survey-total-STD").val()) + parseInt($("#new-manufsurvey-total-STD").val()));
+            //$("#new-total-CERT").val(parseInt($("#new-comm-total-CERT").val()) + parseInt($("#new-bpp-total-CERT").val()) + parseInt($("#used-comm-total-CERT").val()) + parseInt($("#used-bpp-total-CERT").val()) + parseInt($("#new-trade-total-CERT").val()) + parseInt($("#new-finance-total-CERT").val()) + parseInt($("#new-service-total-CERT").val()) + parseInt($("#new-gap-total-CERT").val()) + parseInt($("#new-maintenance-total-CERT").val()) + parseInt($("#new-aftermarket-total-CERT").val()) + parseInt($("#new-survey-total-CERT").val()) + parseInt($("#new-manufsurvey-total-CERT").val()));
+            //$("#new-total-CERTELIT").val(parseInt($("#new-comm-total-CERTELIT").val()) + parseInt($("#new-bpp-total-CERTELIT").val()) + parseInt($("#used-comm-total-CERTELIT").val()) + parseInt($("#used-bpp-total-CERTELIT").val()) + parseInt($("#new-trade-total-CERTELIT").val()) + parseInt($("#new-finance-total-CERTELIT").val()) + parseInt($("#new-service-total-CERTELIT").val()) + parseInt($("#new-gap-total-CERTELIT").val()) + parseInt($("#new-maintenance-total-CERTELIT").val()) + parseInt($("#new-aftermarket-total-CERTELIT").val()) + parseInt($("#new-survey-total-CERTELIT").val()) + parseInt($("#new-manufsurvey-total-CERTELIT").val()));
+
+
+            //$("#STD-Total-Commission").val(parseInt($("#new-total-STD").val()));
+            //$("#CERT-Total-Commission").val(parseInt($("#new-total-CERT").val()));
+            //$("#CERTELIT-Total-Commission").val(parseInt($("#new-total-CERTELIT").val()));
+
+        });
+    </script>
+
+}

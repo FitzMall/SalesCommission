@@ -29,6 +29,13 @@ namespace SalesCommission.Models
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
     }
 
+    public class PreviousAftermarketDealDetails
+    {
+        public int MonthId { get; set; }
+        public int YearId { get; set; }
+        public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
+    }
+
     public class AftermarketDealDetail
     {
         public string MakeId { get; set; }

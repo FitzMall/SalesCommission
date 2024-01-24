@@ -2295,6 +2295,7 @@ namespace SalesCommission.Controllers
                 objectivesAndStandards.BackPVR = (Request.Form["backPVR"] != "") ? decimal.Parse(Request.Form["backPVR"]) : 0;
                 objectivesAndStandards.ManufacturerObjective = (Request.Form["manObj"] != "") ? decimal.Parse(Request.Form["manObj"]) : 0; 
                 objectivesAndStandards.FitzgeraldObjective = (Request.Form["fitzObj"] != "") ? decimal.Parse(Request.Form["fitzObj"]) : 0;
+                objectivesAndStandards.CPOCount = (Request.Form["cpoCount"] != "") ? decimal.Parse(Request.Form["cpoCount"]) : 0;
                 objectivesAndStandards.GPURObjective = objectivesAndStandards.FrontPVR + objectivesAndStandards.BackPVR;
                 objectivesAndStandards.CreatedBy = Session["UserName"].ToString();
                 objectivesAndStandards.UpdatedBy = Session["UserName"].ToString();

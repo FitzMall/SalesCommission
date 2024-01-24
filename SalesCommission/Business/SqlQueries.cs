@@ -4984,7 +4984,7 @@ namespace SalesCommission.Business
 
         public static List<SelectListItem> GetSalesAssociates()
         {
-            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos='Sales Associate' or emp_pos='Finance Manager' order by emp_lname";
+            var sqlGet = "Select distinct emp_empnumber as AssociateId, emp_lname, (emp_fname + ' ' + emp_Lname) as AssociateName from ivory.dbo.employees where emp_pos = 'SLS ASSOC' or emp_pos = 'SLS MGR' or emp_pos = 'FIN MGR' or emp_pos = 'GEN MGR' or emp_pos = 'GEN SLS MGR' or emp_pos='Sales Associate' or emp_pos='Finance Manager' or emp_lname = 'Linero' order by emp_lname";
             var salesAssociates = SqlMapperUtil.SqlWithParams<SalesAssociate>(sqlGet, null, "JJFServer");
 
             var items = new List<SelectListItem>();
@@ -6207,9 +6207,23 @@ namespace SalesCommission.Business
             return associateScorecards;
         }
 
+        public static List<FIAssociateScoreCard> GetFIAssociateScoreCardHistoryByDate(string associateSSN, int yearId, int monthId)
+        {
+            var monthYear = monthId.ToString() + "/" + yearId.ToString();
+
+            var associateScorecards = SqlMapperUtil.StoredProcWithParams<FIAssociateScoreCard>("sp_CommissionGetFIAssociateScorecardsByDate", new { AssociateSSN = associateSSN, MonthYear = monthYear }, "SalesCommission");
+
+            return associateScorecards;
+        }
+
         public static int SaveAssociateScoreCardHistory(AssociateScoreCard associateScoreCard)
         {
             int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionAddAssociateScorecardsByDate", associateScoreCard, "SalesCommission");
+            return saveObjStn;
+        }
+        public static int SaveFIAssociateScoreCardHistory(FIAssociateScoreCard associateScoreCard)
+        {
+            int saveObjStn = SqlMapperUtil.InsertUpdateOrDeleteStoredProc("sp_CommissionAddFIAssociateScorecardsByDate", associateScoreCard, "SalesCommission");
             return saveObjStn;
         }
 

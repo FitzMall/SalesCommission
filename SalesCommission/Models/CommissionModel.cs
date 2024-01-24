@@ -83,7 +83,10 @@ namespace SalesCommission.Models
         public int MonthId { get; set; }
         public int YearId { get; set; }
         public Associate AssociateInformation { get; set; }
+        public FIAssociateScoreCard CurrentScorecard { get; set; }
+        public List<FIAssociateScoreCard> ScorecardHistory { get; set; }
         public List<AftermarketDealDetail> AftermarketDealDetails { get; set; }
+        public List<PreviousAftermarketDealDetails> PreviousAftermarketDealDetails { get; set; }
         public List<FIDealApproval> DealApprovals { get; set; }
         public List<FIPayscale> FIPayscales { get; set; }
         public List<MoneyDue> MoneyDue { get; set; }
@@ -172,6 +175,71 @@ namespace SalesCommission.Models
         public string MonthYear { get; set; }
         public string AssociateCertificationLevel { get; set; }
         public string AssociatePayscale { get; set; }
+    }
+
+    public class FIAssociateScoreCard
+    {
+        public int pkey { get; set; }
+        public string AssociateSSN { get; set; }
+        public string EmployeeNumber { get; set; }
+        public string MonthYear { get; set; }
+        public string Rolling3Month_Comments { get; set; }
+        public string Deliveries_Comments { get; set; }
+        public string FinancePercent_Comments { get; set; }
+        public string FinanceReserve_Comments { get; set; }
+        public string VSCPercent_Comments { get; set; }
+        public string VSCPerItem_Comments { get; set; }
+        public string MaintenancePercent_Comments { get; set; }
+        public string MaintenancePerItem_Comments { get; set; }
+        public string GAPPercent_Comments { get; set; }
+        public string GAPPerItem_Comments { get; set; }
+        public string ZurichPercent_Comments { get; set; }
+        public string ZurichPerItem_Comments { get; set; }
+        public string SelectProtectPercent_Comments { get; set; }
+        public string SelectProtectPerItem_Comments { get; set; }
+        public string TireAndWheelPercent_Comments { get; set; }
+        public string TireAndWheelPerItem_Comments { get; set; }
+        public string LeasePercent_Comments { get; set; }
+        public string LeasePerItem_Comments { get; set; }
+        public string OtherPercent_Comments { get; set; }
+        public string OtherPerItem_Comments { get; set; }
+        public string TotalGross_Comments { get; set; }
+        public string TotalDollarPerDeal_Comments { get; set; }
+        public string TotalProductDollar_Comments { get; set; }
+        public string TotalProductDollerPerDeal_Comments { get; set; }
+        public string ProductRation_Comments { get; set; }
+        public string KeyImprovementOpportunities { get; set; }
+        public decimal Rolling3Month_Standard { get; set; }
+        public decimal Deliveries_Standard { get; set; }
+        public decimal FinancePercent_Standard { get; set; }
+        public decimal FinanceReserve_Standard { get; set; }
+        public decimal VSCPercent_Standard { get; set; }
+        public decimal VSCPerItem_Standard { get; set; }
+        public decimal MaintenancePercent_Standard { get; set; }
+        public decimal MaintenancePerItem_Standard { get; set; }
+        public decimal GAPPercent_Standard { get; set; }
+        public decimal GAPPerItem_Standard { get; set; }
+        public decimal ZurichPercent_Standard { get; set; }
+        public decimal ZurichPerItem_Standard { get; set; }
+        public decimal SelectProtectPercent_Standard { get; set; }
+        public decimal SelectProtectPerItem_Standard { get; set; }
+        public decimal TireAndWheelPercent_Standard { get; set; }
+        public decimal TireAndWheelPerItem_Standard { get; set; }
+        public decimal LeasePercent_Standard { get; set; }
+        public decimal LeasePerItem_Standard { get; set; }
+        public decimal OtherPercent_Standard { get; set; }
+        public decimal OtherPerItem_Standard { get; set; }
+        public decimal TotalGross_Standard { get; set; }
+        public decimal TotalDollarPerDeal_Standard { get; set; }
+        public decimal TotalProductDollar_Standard { get; set; }
+        public decimal TotalProductDollerPerDeal_Standard { get; set; }
+        public decimal ProductRation_Standard { get; set; }
+        public DateTime UpdateDate { get; set; }
+        public string UpdateUser { get; set; }
+        public DateTime FinalizeDate { get; set; }
+        public string FinalizeUser { get; set; }
+        public DateTime ApprovalDate { get; set; }
+        public string ApprovalUser { get; set; }
     }
 
     public class AssociateScoreCard
